@@ -63,3 +63,31 @@ func (s *screen) styleScreen() {
 	s.footer.SetBackgroundColor(palette.surface)
 	s.footer.SetTextColor(palette.accent)
 }
+
+// Pale RGB borders can collapse to white on an 8/16-color terminal. Use
+// distinct ANSI colors there, including a dark border on the light editor.
+func (s *screen) refreshBorders() {
+	if !s.limitedColors {
+		return
+	}
+	apply := func(box *tview.Box, focused, light bool) {
+		color := tcell.ColorTeal
+		background := palette.background
+		if light {
+			color = tcell.ColorNavy
+			background = palette.field
+		}
+		box.SetBorderStyle(tcell.StyleDefault.Foreground(color).Background(background).Bold(focused))
+	}
+	apply(s.editor.Box, s.editor.HasFocus(), true)
+	apply(s.table.Box, s.table.HasFocus(), false)
+	for _, form := range []*tview.Form{s.connectForm, s.prefsForm} {
+		if form != nil {
+			apply(form.Box, form.HasFocus(), false)
+		}
+	}
+	if page, root := s.pages.GetFrontPage(); page == "help" {
+		help := root.(*tview.Flex).GetItem(0).(*tview.TextView)
+		apply(help.Box, help.HasFocus(), false)
+	}
+}

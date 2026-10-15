@@ -29,6 +29,7 @@ type screen struct {
 	buttons                                  []*tview.Button
 	footerKeys                               []footerKey
 	resultsFocused                           bool
+	limitedColors                            bool
 	jobs                                     chan job
 	done                                     chan struct{}
 	busy, quitting, demo, connected          bool
@@ -59,6 +60,7 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 	}
 	s := &screen{app: tview.NewApplication(), jobs: make(chan job, 1), done: make(chan struct{}), demo: demo, prefs: prefs, prefsPath: path}
 	s.app.SetScreen(terminal)
+	s.limitedColors = terminal.Colors() > 0 && terminal.Colors() <= 16
 	s.editor = tview.NewTextArea().SetText("SELECT sysdate AS server_time FROM dual;", false)
 	s.editor.SetBorder(true)
 	s.table = tview.NewTable().SetBorders(false).SetSelectable(true, true).SetFixed(1, 0)
@@ -73,7 +75,11 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 	layout := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(s.pages, 0, 1, true).AddItem(s.footer, 1, 0, false).AddItem(s.toolbar(), 1, 0, false)
 	s.app.SetRoot(layout, true).SetFocus(s.editor).SetInputCapture(s.key).EnableMouse(prefs.Mouse)
-	s.app.SetBeforeDrawFunc(func(tcell.Screen) bool { s.refreshFooter(); return false })
+	s.app.SetBeforeDrawFunc(func(tcell.Screen) bool {
+		s.refreshFooter()
+		s.refreshBorders()
+		return false
+	})
 	lastClickX, lastClickY := -1, -1
 	s.app.SetMouseCapture(func(event *tcell.EventMouse, action tview.MouseAction) (*tcell.EventMouse, tview.MouseAction) {
 		if !s.prefs.Mouse {

@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -10,6 +11,8 @@ import (
 )
 
 func TestDemoInterfaceAndConnectionForm(t *testing.T) {
+	t.Setenv("LAZYORA_CONFIG", filepath.Join(t.TempDir(), "settings.json"))
+	t.Setenv("LC_ALL", "C")
 	terminal := tcell.NewSimulationScreen("UTF-8")
 	if err := terminal.Init(); err != nil {
 		t.Fatal(err)

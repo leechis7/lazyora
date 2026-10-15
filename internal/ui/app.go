@@ -45,15 +45,20 @@ type screen struct {
 func Run(demo bool) error { return run(demo, nil, nil) }
 
 func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
+	if terminal == nil {
+		var err error
+		terminal, err = newCompatibleScreen()
+		if err != nil {
+			return err
+		}
+	}
 	prefs := settings.Default()
 	path, prefsErr := settings.Path()
 	if prefsErr == nil {
 		prefs, prefsErr = settings.Load(path)
 	}
 	s := &screen{app: tview.NewApplication(), jobs: make(chan job, 1), done: make(chan struct{}), demo: demo, prefs: prefs, prefsPath: path}
-	if terminal != nil {
-		s.app.SetScreen(terminal)
-	}
+	s.app.SetScreen(terminal)
 	s.editor = tview.NewTextArea().SetText("SELECT sysdate AS server_time FROM dual;", false)
 	s.editor.SetBorder(true)
 	s.table = tview.NewTable().SetBorders(false).SetSelectable(true, true).SetFixed(1, 0)

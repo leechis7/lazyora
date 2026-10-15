@@ -76,7 +76,24 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 		s.app.QueueEvent(tcell.NewEventMouse(x, y, tcell.Button1, tcell.ModNone))
 		s.app.QueueEvent(tcell.NewEventMouse(x, y, tcell.ButtonNone, tcell.ModNone))
 	}
-	click(func() tview.Primitive { return s.buttons[2] })
+	wait(func() bool { return strings.Contains(s.footer.GetText(false), "F4 / Ctrl+Enter") })
+	s.app.QueueUpdate(func() {
+		_, editorY, _, _ := s.editor.GetRect()
+		_, buttonsY, _, _ := s.buttons[0].GetRect()
+		_, height := terminal.Size()
+		if editorY != 0 || buttonsY != height-1 {
+			t.Errorf("footer was not at bottom: editor=%d footer=%d", editorY, buttonsY)
+		}
+	})
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModNone))
+	wait(func() bool {
+		return strings.Contains(s.footer.GetText(false), "PgUp/PgDn") && !strings.Contains(s.footer.GetText(false), "Ctrl+Enter")
+	})
+	click(func() tview.Primitive { return s.editor })
+	wait(func() bool { return strings.Contains(s.footer.GetText(false), "F4 / Ctrl+Enter") })
+	click(func() tview.Primitive { return s.table })
+	wait(func() bool { return strings.Contains(s.footer.GetText(false), "Home/End") })
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF3, 0, tcell.ModNone))
 	wait(func() bool { return page("settings") })
 	s.app.QueueUpdateDraw(func() {
 		s.prefsForm.GetFormItem(0).(*tview.DropDown).SetCurrentOption(1)
@@ -84,6 +101,7 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 	})
 	click(func() tview.Primitive { return s.prefsForm.GetButton(0) })
 	wait(func() bool { return page("main") && s.prefs.Language == "ko" && !s.prefs.Mouse })
+	wait(func() bool { return strings.Contains(s.footer.GetText(false), "스크롤") })
 	click(func() tview.Primitive { return s.buttons[1] })
 	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModNone))
 	wait(func() bool { return s.app.GetFocus() == s.table })
@@ -99,6 +117,9 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 	wait(func() bool { return page("main") && s.prefs.Mouse })
 	click(func() tview.Primitive { return s.buttons[1] })
 	wait(func() bool { return page("connect") })
+	wait(func() bool {
+		return strings.Contains(s.footer.GetText(false), "별칭") && strings.Contains(s.buttons[2].GetLabel(), "저장")
+	})
 	s.app.QueueUpdateDraw(func() { fillConnection(s, "마우스 저장 시험", "service") })
 	click(func() tview.Primitive { return s.connectForm.GetButton(2) })
 	wait(func() bool { return strings.Contains(s.connectForm.GetTitle(), "저장했습니다") })
@@ -112,6 +133,9 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 	wait(func() bool { return page("main") })
 	click(func() tview.Primitive { return s.buttons[0] })
 	wait(func() bool { return page("help") })
+	wait(func() bool {
+		return strings.Contains(s.footer.GetText(false), "닫기") && strings.Contains(s.buttons[2].GetLabel(), "PgDn")
+	})
 	s.app.QueueEvent(tcell.NewEventMouse(10, 10, tcell.WheelDown, tcell.ModNone))
 	wait(func() bool {
 		_, root := s.pages.GetFrontPage()

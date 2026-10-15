@@ -17,26 +17,75 @@ func clickable(button *tview.Button) *tview.Button {
 	return button
 }
 
-var toolbarActions = []struct{ key, action string }{
-	{"F1", "help"}, {"F2", "connect"}, {"F3", "settings"}, {"F4", "execute"},
-	{"F5", "commit"}, {"F6", "rollback"}, {"F8", "cancel"}, {"Ctrl+Q", "quit"},
+type footerKey struct {
+	label, action string
+	key           tcell.Key
+	mod           tcell.ModMask
 }
 
 func (s *screen) toolbar() *tview.Flex {
-	bar := tview.NewFlex().SetDirection(tview.FlexRow)
-	for row := 0; row < 2; row++ {
-		line := tview.NewFlex()
-		for col := 0; col < 4; col++ {
-			action := toolbarActions[row*4+col].action
-			button := clickable(tview.NewButton("").SetSelectedFunc(func() { s.action(action) }))
-			s.buttons = append(s.buttons, button)
-			line.AddItem(button, 0, 1, false)
-		}
-		bar.AddItem(line, 1, 0, false)
+	bar := tview.NewFlex()
+	for index := range 4 {
+		button := clickable(tview.NewButton("").SetSelectedFunc(func() {
+			key := s.footerKeys[index]
+			if page, root := s.pages.GetFrontPage(); page == "help" {
+				s.app.SetFocus(root.(*tview.Flex).GetItem(0))
+			}
+			s.app.QueueEvent(tcell.NewEventKey(key.key, 0, key.mod))
+		}))
+		s.buttons = append(s.buttons, button)
+		bar.AddItem(button, 0, 1, false)
 	}
-	s.hint = tview.NewTextView()
-	bar.AddItem(s.hint, 1, 0, false)
 	return bar
+}
+
+func (s *screen) refreshFooter() {
+	if s.footer == nil {
+		return
+	}
+	page, _ := s.pages.GetFrontPage()
+	keys := []footerKey{
+		{"F1", "help", tcell.KeyF1, tcell.ModNone},
+		{"F2", "connect", tcell.KeyF2, tcell.ModNone},
+		{"F3", "settings", tcell.KeyF3, tcell.ModNone},
+		{"Ctrl+Q", "quit", tcell.KeyCtrlQ, tcell.ModNone},
+	}
+	hint := "footer_sql"
+	switch page {
+	case "main":
+		if s.table.HasFocus() {
+			s.resultsFocused = true
+		} else if s.editor.HasFocus() {
+			s.resultsFocused = false
+		}
+		if s.resultsFocused {
+			hint = "footer_results"
+		}
+	case "connect":
+		hint = "footer_connect"
+		keys[1] = footerKey{"Ctrl+Enter", "connect", tcell.KeyEnter, tcell.ModCtrl}
+		keys[2] = footerKey{"Ctrl+S", "save", tcell.KeyCtrlS, tcell.ModNone}
+		keys[3] = footerKey{"Esc", "cancel", tcell.KeyEscape, tcell.ModNone}
+	case "settings":
+		hint = "footer_settings"
+		keys[1] = footerKey{"Ctrl+S", "save", tcell.KeyCtrlS, tcell.ModNone}
+		keys[2] = footerKey{"Esc", "cancel", tcell.KeyEscape, tcell.ModNone}
+	case "help":
+		hint = "footer_help"
+		keys[0].action = "close"
+		keys[1] = footerKey{"PgUp", "previous_page", tcell.KeyPgUp, tcell.ModNone}
+		keys[2] = footerKey{"PgDn", "next_page", tcell.KeyPgDn, tcell.ModNone}
+		keys[3] = footerKey{"Esc", "close", tcell.KeyEscape, tcell.ModNone}
+	}
+	text := s.tr(hint)
+	if s.busy {
+		text = s.tr("footer_busy") + " | " + text
+	}
+	s.footer.SetText(text)
+	s.footerKeys = keys
+	for i, button := range s.buttons {
+		button.SetLabel(keys[i].label + " " + s.tr(keys[i].action))
+	}
 }
 
 func (s *screen) action(action string) {

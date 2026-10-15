@@ -4,6 +4,14 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"footer_sql":            {"F4 / Ctrl+Enter Run | Enter Newline | Tab Results", "F4 / Ctrl+Enter 실행 | Enter 줄바꿈 | Tab 결과"},
+	"footer_results":        {"↑↓←→ Move | PgUp/PgDn Page | Home/End First/Last | Tab SQL", "↑↓←→ 이동 | PgUp/PgDn 스크롤 | Home/End 처음/끝 | Tab SQL"},
+	"footer_connect":        {"Tab Fields | Alt+R Profiles | Alt+A Alias | Alt+W Password", "Tab 항목 이동 | Alt+R 저장된 접속 | Alt+A 별칭 | Alt+W 비밀번호"},
+	"footer_settings":       {"Alt+L Language | Alt+M Mouse | Space Toggle | Tab Fields", "Alt+L 언어 | Alt+M 마우스 | Space 선택 | Tab 항목 이동"},
+	"footer_help":           {"↑↓ / PgUp/PgDn Scroll | F1 / Esc Close", "↑↓ / PgUp/PgDn 스크롤 | F1 / Esc 닫기"},
+	"footer_busy":           {"F8 Cancel", "F8 실행 취소"},
+	"previous_page":         {"Previous", "이전"},
+	"next_page":             {"Next", "다음"},
 	"saved_connections":     {"Saved connections (Alt+R)", "저장된 접속 (Alt+R)"},
 	"new_connection":        {"New connection", "새 접속"},
 	"alias":                 {"Alias (Alt+A)", "별칭 (Alt+A)"},
@@ -23,17 +31,16 @@ var messages = map[string][2]string{
 	"close":                 {"Close", "닫기"},
 	"sql_title":             {" SQL — one statement or PL/SQL block ", " SQL — 한 문장 또는 PL/SQL 블록 "},
 	"results_title":         {" Results ", " 조회 결과 "},
-	"hint":                  {"Ctrl+Enter Run | F9 SQL | F10 Results | Tab Focus | Ctrl+Q Quit", "Ctrl+Enter 실행 | F9 SQL | F10 결과 | Tab 전환 | Ctrl+Q 종료"},
 	"disconnected":          {"Disconnected. F2 opens connection settings.", "연결되지 않았습니다. F2로 접속 화면을 여세요."},
 	"connect_first":         {"Connect first with F2.", "먼저 F2로 DB에 접속하세요."},
 	"cancelling":            {"Cancelling operation before exit…", "작업을 취소하고 종료하는 중…"},
-	"running":               {"Running %s… F8 cancels. Oracle DDL can implicitly commit.", "%s 중… F8 취소. Oracle DDL은 암시적으로 커밋할 수 있습니다."},
+	"running":               {"Running %s… Oracle DDL can implicitly commit.", "%s 중… Oracle DDL은 암시적으로 커밋할 수 있습니다."},
 	"error":                 {"Error: %s", "오류: %s"},
 	"connected":             {"Connected: %s@%s:%d/%s (%s). Manual commit; DDL implicitly commits.", "접속됨: %s@%s:%d/%s (%s). 수동 커밋; DDL은 암시적 커밋."},
 	"rows":                  {"%d rows · %s", "%d행 · %s"},
 	"rows_limited":          {"%d rows · %s · limited to 1000 rows", "%d행 · %s · 최대 1,000행"},
 	"limit":                 {" · limited to 1000 rows", " · 최대 1,000행"},
-	"executed":              {"Statement completed · affected rows: %d · %s · F5 Commit / F6 Rollback", "실행 완료 · 처리 행: %d · %s · F5 커밋 / F6 롤백"},
+	"executed":              {"Statement completed · affected rows: %d · %s · manual commit", "실행 완료 · 처리 행: %d · %s · 수동 커밋"},
 	"committed":             {"Commit completed.", "커밋했습니다."},
 	"rolled_back":           {"Rollback completed.", "롤백했습니다."},
 	"demo":                  {"Demo mode. F2 connects to Oracle; no statements run without a connection.", "데모 모드입니다. F2로 Oracle에 접속해야 SQL을 실행할 수 있습니다."},
@@ -83,12 +90,7 @@ func (s *screen) setStatus(key string, args ...any) {
 func (s *screen) refreshLabels() {
 	s.editor.SetTitle(s.tr("sql_title"))
 	s.table.SetTitle(s.tr("results_title"))
-	if s.hint != nil {
-		s.hint.SetText(s.tr("hint"))
-	}
-	for i, b := range s.buttons {
-		b.SetLabel(toolbarActions[i].key + " " + s.tr(toolbarActions[i].action))
-	}
+	s.refreshFooter()
 	if s.connectForm != nil {
 		s.localizeConnection()
 	}

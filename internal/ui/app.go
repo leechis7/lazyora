@@ -22,8 +22,11 @@ type screen struct {
 	pages                                    *tview.Pages
 	editor                                   *tview.TextArea
 	table                                    *tview.Table
-	status, hint                             *tview.TextView
+	status                                   *tview.TextView
+	footer                                   *tview.TextView
 	buttons                                  []*tview.Button
+	footerKeys                               []footerKey
+	resultsFocused                           bool
 	jobs                                     chan job
 	done                                     chan struct{}
 	busy, quitting, demo, connected          bool
@@ -55,10 +58,14 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 	s.table.SetBorder(true)
 	s.status = tview.NewTextView()
 	root := tview.NewFlex().SetDirection(tview.FlexRow).
-		AddItem(s.toolbar(), 3, 0, false).AddItem(s.editor, 0, 2, true).
+		AddItem(s.editor, 0, 2, true).
 		AddItem(s.table, 0, 3, false).AddItem(s.status, 2, 0, false)
 	s.pages = tview.NewPages().AddPage("main", root, true, true)
-	s.app.SetRoot(s.pages, true).SetFocus(s.editor).SetInputCapture(s.key).EnableMouse(prefs.Mouse)
+	s.footer = tview.NewTextView().SetWrap(false)
+	layout := tview.NewFlex().SetDirection(tview.FlexRow).
+		AddItem(s.pages, 0, 1, true).AddItem(s.footer, 1, 0, false).AddItem(s.toolbar(), 1, 0, false)
+	s.app.SetRoot(layout, true).SetFocus(s.editor).SetInputCapture(s.key).EnableMouse(prefs.Mouse)
+	s.app.SetBeforeDrawFunc(func(tcell.Screen) bool { s.refreshFooter(); return false })
 	lastClickX, lastClickY := -1, -1
 	s.app.SetMouseCapture(func(event *tcell.EventMouse, action tview.MouseAction) (*tcell.EventMouse, tview.MouseAction) {
 		if !s.prefs.Mouse {

@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	go_ora "github.com/sijms/go-ora/v2"
+	go_ora "github.com/sijms/go-ora/v3"
 )
 
 type Config struct {

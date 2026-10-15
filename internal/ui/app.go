@@ -24,6 +24,8 @@ type screen struct {
 	table                                    *tview.Table
 	status                                   *tview.TextView
 	footer                                   *tview.TextView
+	footerVersion                            *tview.TextView
+	footerBar                                *tview.Flex
 	buttons                                  []*tview.Button
 	footerKeys                               []footerKey
 	resultsFocused                           bool

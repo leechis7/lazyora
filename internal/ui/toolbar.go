@@ -27,8 +27,12 @@ type footerKey struct {
 
 func (s *screen) toolbar() *tview.Flex {
 	bar := tview.NewFlex()
-	for index := range 4 {
+	s.footerBar = bar
+	for index := range 6 {
 		button := clickable(tview.NewButton("").SetSelectedFunc(func() {
+			if index >= len(s.footerKeys) {
+				return
+			}
 			key := s.footerKeys[index]
 			if page, root := s.pages.GetFrontPage(); page == "help" {
 				s.app.SetFocus(root.(*tview.Flex).GetItem(0))
@@ -37,11 +41,10 @@ func (s *screen) toolbar() *tview.Flex {
 		}))
 		button.SetStyle(tcell.StyleDefault.Foreground(palette.text).Background(palette.footer))
 		s.buttons = append(s.buttons, button)
-		bar.AddItem(button, 0, 1, false)
 	}
 	version := tview.NewTextView().SetText("v" + appinfo.Version).SetTextAlign(tview.AlignRight).SetWrap(false)
 	version.SetTextColor(palette.accent).SetBackgroundColor(palette.footer)
-	bar.AddItem(version, len(appinfo.Version)+3, 0, false)
+	s.footerVersion = version
 	return bar
 }
 
@@ -59,6 +62,14 @@ func (s *screen) refreshFooter() {
 	hint := "footer_sql"
 	switch page {
 	case "main":
+		keys = []footerKey{
+			{"F1", "help", tcell.KeyF1, tcell.ModNone},
+			{"F2", "connect", tcell.KeyF2, tcell.ModNone},
+			{"F3", "settings", tcell.KeyF3, tcell.ModNone},
+			{"F5", "commit", tcell.KeyF5, tcell.ModNone},
+			{"F6", "rollback", tcell.KeyF6, tcell.ModNone},
+			{"Ctrl+Q", "quit", tcell.KeyCtrlQ, tcell.ModNone},
+		}
 		if s.table.HasFocus() {
 			s.resultsFocused = true
 		} else if s.editor.HasFocus() {
@@ -89,9 +100,12 @@ func (s *screen) refreshFooter() {
 	}
 	s.footer.SetText(text)
 	s.footerKeys = keys
-	for i, button := range s.buttons {
-		button.SetLabel(keys[i].label + " " + s.tr(keys[i].action))
+	s.footerBar.Clear()
+	for i, key := range keys {
+		s.buttons[i].SetLabel(key.label + " " + s.tr(key.action))
+		s.footerBar.AddItem(s.buttons[i], 0, 1, false)
 	}
+	s.footerBar.AddItem(s.footerVersion, len(appinfo.Version)+3, 0, false)
 }
 
 func (s *screen) action(action string) {

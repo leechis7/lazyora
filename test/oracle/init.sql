@@ -1,0 +1,29 @@
+WHENEVER OSERROR EXIT FAILURE
+WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
+SET DEFINE OFF
+
+ALTER SESSION SET CONTAINER = FREEPDB1;
+
+CREATE TABLE lazyora.sample_rows (
+    id NUMBER(10) PRIMARY KEY,
+    title VARCHAR2(100 CHAR) NOT NULL,
+    note NVARCHAR2(100),
+    amount NUMBER(18, 4),
+    created_at DATE,
+    changed_at TIMESTAMP(6)
+);
+
+INSERT INTO lazyora.sample_rows VALUES (
+    1, '첫 번째 테스트', N'한글 표시 확인', 12345.6789,
+    DATE '2026-10-15', TIMESTAMP '2026-10-15 09:30:00.123456'
+);
+INSERT INTO lazyora.sample_rows VALUES (
+    2, 'NULL 확인', NULL, NULL,
+    DATE '2026-10-16', NULL
+);
+INSERT INTO lazyora.sample_rows VALUES (
+    3, '음수와 작은 숫자', N'Oracle Free 테스트', -0.0001,
+    DATE '2026-10-17', TIMESTAMP '2026-10-17 23:59:59.999999'
+);
+
+COMMIT;

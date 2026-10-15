@@ -1,0 +1,25 @@
+name: lazyora
+
+services:
+  oracle:
+    image: gvenzl/oracle-free:23.26.3-slim
+    ports:
+      - "127.0.0.1:${ORACLE_PORT:-1521}:1521"
+    environment:
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD:?make env로 로컬 비밀번호를 생성하세요}
+      APP_USER: lazyora
+      APP_USER_PASSWORD: ${APP_USER_PASSWORD:?make env로 로컬 비밀번호를 생성하세요}
+    shm_size: 1g
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+      - ./init.sql:/container-entrypoint-initdb.d/001-sample-data.sql:ro
+      - ./grants.sql:/container-entrypoint-initdb.d/002-grants.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      start_period: 120s
+      retries: 30
+
+volumes:
+  oracle-data:

@@ -93,6 +93,8 @@ SELECT와 WITH 조회는 결과 표로 표시합니다. 결과는 최대 1,000�
 
 2026-10-15에 Docker Oracle Free 26ai (`23.26.3-slim`)에서 Service Name 접속, 샘플 데이터와 한글·NULL·NUMBER·DATE·TIMESTAMP 조회, DML 실행 후 롤백을 확인했습니다. 기존 `go-ora/v2 v2.9.0`은 같은 계정으로 인증이 실패하여 `go-ora/v3 v3.0.1`로 변경했습니다. 이 드라이버는 Go 1.24 이상을 필요로 하며 이번 검증에는 Go 1.26.9를 사용했습니다.
 
+Oracle 10g 접속 시험에서 `network.newAcceptPacketFromData`의 `slice bounds out of range [41:32]` 패닉이 보고되어, 짧은 TNS ACCEPT 응답의 길이를 확인하는 [업스트림 수정](https://github.com/sijms/go-ora/commit/9197bc12b6fea25726fa028e48c731468cd05b18)을 포함한 `go-ora/v3 v3.0.2-0.20260731135026-9197bc12b6fe`로 고정했습니다. 이 패킷 파싱 수정과 Oracle 10g 전체 접속·쿼리 지원 검증은 별개이며, 실제 10g 서버에서 재시험이 필요합니다.
+
 실제 SID 접속, COMMIT·PL/SQL·취소·재연결 동작의 전체 검증, 구형 Oracle 버전 및 CentOS 7.4 실행은 아직 남아 있습니다.
 
 ```bash

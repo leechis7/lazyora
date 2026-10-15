@@ -30,7 +30,8 @@ func TestOracleFreeIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer s.Close()
-	result, err := s.Execute(ctx, "SELECT title, note, amount, created_at, changed_at FROM sample_rows ORDER BY id;")
+	// Inspect only the seed rows; manual TUI tests may have added other rows.
+	result, err := s.Execute(ctx, "SELECT title, note, amount, created_at, changed_at FROM sample_rows WHERE id IN (1, 2, 3) ORDER BY id;")
 	if err != nil {
 		t.Fatal(err)
 	}

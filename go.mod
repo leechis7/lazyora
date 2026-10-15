@@ -6,7 +6,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/gdamore/tcell/v2 v2.13.10
 	github.com/rivo/tview v0.42.0
-	github.com/sijms/go-ora/v3 v3.0.1
+	github.com/sijms/go-ora/v3 v3.0.2-0.20260731135026-9197bc12b6fe
 )
 
 require (

@@ -3,6 +3,7 @@ package ui
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"lazyora/internal/appinfo"
 )
 
 // tview may report a rapid click on a different button as a double click.
@@ -38,6 +39,9 @@ func (s *screen) toolbar() *tview.Flex {
 		s.buttons = append(s.buttons, button)
 		bar.AddItem(button, 0, 1, false)
 	}
+	version := tview.NewTextView().SetText("v" + appinfo.Version).SetTextAlign(tview.AlignRight).SetWrap(false)
+	version.SetTextColor(palette.accent).SetBackgroundColor(palette.footer)
+	bar.AddItem(version, len(appinfo.Version)+3, 0, false)
 	return bar
 }
 

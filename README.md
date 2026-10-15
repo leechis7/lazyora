@@ -2,6 +2,8 @@
 
 Oracle 쿼리 작성·실행을 위한 Go TUI의 첫 구현입니다. lazysql의 화면 구성을 참고하여 Oracle 전용으로 작성했습니다.
 
+현재 앱 버전은 **0.0.1**입니다. 화면 우측하단에 표시하며 `--version`으로도 확인할 수 있습니다. F1 도움말에는 버전과 개발자·라이선스 정보를 표시합니다.
+
 ## 빌드와 실행
 
 Go 1.24 이상과 `make`를 설치하고, 터미널에서 `go` 명령을 사용할 수 있는 개발 머신에서 실행합니다. 최초 빌드에는 의존성 다운로드를 위한 인터넷 연결이 필요합니다.
@@ -10,6 +12,7 @@ Go 1.24 이상과 `make`를 설치하고, 터미널에서 `go` 명령을 사용�
 go version
 make build
 ./bin/lazyora-linux-amd64 --demo
+./bin/lazyora-linux-amd64 --version
 ./bin/lazyora-linux-amd64
 ```
 
@@ -105,3 +108,11 @@ go vet ./...
 4. 바인드 변수, CSV 내보내기, 객체 DDL·실행 계획
 
 참고: [lazysql](https://github.com/jorgerojas26/lazysql), [go-ora](https://github.com/sijms/go-ora).
+
+## 개발자·라이선스
+
+개발자: 이채강 (Chaekang Lee), leechis7@gmail.com
+
+Copyright (C) 2026 Chaekang Lee. LazyOra는 **GNU Affero General Public License v3.0 (AGPL-3.0-only)**로 배포합니다. 전문은 [LICENSE](LICENSE)를 참조하세요. 의존 라이브러리에는 각 프로젝트의 라이선스가 적용됩니다.
+
+앱 버전과 개발자·라이선스 정보의 원본은 `internal/appinfo/info.go`입니다. 일반 `go build`·`go run`과 Makefile 빌드가 동일한 버전을 사용합니다. 버전 변경 시 이 파일과 README의 현재 버전을 함께 갱신합니다.

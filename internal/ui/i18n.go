@@ -4,6 +4,9 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"developer":             {"Developer", "개발자"},
+	"email":                 {"Email", "이메일"},
+	"license":               {"License", "라이선스"},
 	"footer_sql":            {"F4 / Ctrl+Enter Run | Enter Newline | Tab Results", "F4 / Ctrl+Enter 실행 | Enter 줄바꿈 | Tab 결과"},
 	"footer_results":        {"↑↓←→ Move | PgUp/PgDn Page | Home/End First/Last | Tab SQL", "↑↓←→ 이동 | PgUp/PgDn 스크롤 | Home/End 처음/끝 | Tab SQL"},
 	"footer_connect":        {"Tab Fields | Alt+R Profiles | Alt+A Alias | Alt+W Password", "Tab 항목 이동 | Alt+R 저장된 접속 | Alt+A 별칭 | Alt+W 비밀번호"},

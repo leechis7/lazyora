@@ -1,6 +1,11 @@
 package ui
 
-import "github.com/rivo/tview"
+import (
+	"fmt"
+
+	"github.com/rivo/tview"
+	"lazyora/internal/appinfo"
+)
 
 var shortcutHelp = [2]string{
 	`Keyboard shortcuts
@@ -61,7 +66,10 @@ func (s *screen) showHelp() {
 	if s.prefs.Language == "ko" {
 		index = 1
 	}
-	help := tview.NewTextView().SetText(shortcutHelp[index]).SetWrap(true).SetWordWrap(true).SetScrollable(true)
+	info := fmt.Sprintf("%s v%s\n%s: %s\n%s: %s\n%s: GNU AGPL v3 (%s)\n%s\nCopyright (C) 2026 Chaekang Lee\n\n",
+		appinfo.Name, appinfo.Version, s.tr("developer"), appinfo.Developer,
+		s.tr("email"), appinfo.Email, s.tr("license"), appinfo.License, appinfo.LicenseURL)
+	help := tview.NewTextView().SetText(info + shortcutHelp[index]).SetWrap(true).SetWordWrap(true).SetScrollable(true)
 	help.SetBorder(true).SetTitle(s.tr("help_title"))
 	styleBox(help.Box)
 	help.SetTextColor(palette.text)

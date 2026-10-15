@@ -167,6 +167,7 @@ func (s *screen) connectionForm() {
 	clickable(form.GetButton(1))
 	clickable(form.GetButton(2))
 	form.SetBorder(true)
+	styleForm(form)
 	s.localizeConnection()
 	if loadErr != nil {
 		form.SetTitle(" " + fmt.Sprintf(s.tr("connection_load_error"), loadErr) + " ")

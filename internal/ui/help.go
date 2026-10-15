@@ -63,6 +63,8 @@ func (s *screen) showHelp() {
 	}
 	help := tview.NewTextView().SetText(shortcutHelp[index]).SetWrap(true).SetWordWrap(true).SetScrollable(true)
 	help.SetBorder(true).SetTitle(s.tr("help_title"))
+	styleBox(help.Box)
+	help.SetTextColor(palette.text)
 	close := clickable(tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeHelp))
 	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(help, 0, 1, true).AddItem(close, 1, 0, false)
 	s.pages.AddPage("help", root, true, true)

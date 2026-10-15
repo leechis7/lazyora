@@ -62,6 +62,7 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 		AddItem(s.table, 0, 3, false).AddItem(s.status, 2, 0, false)
 	s.pages = tview.NewPages().AddPage("main", root, true, true)
 	s.footer = tview.NewTextView().SetWrap(false)
+	s.styleScreen()
 	layout := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(s.pages, 0, 1, true).AddItem(s.footer, 1, 0, false).AddItem(s.toolbar(), 1, 0, false)
 	s.app.SetRoot(layout, true).SetFocus(s.editor).SetInputCapture(s.key).EnableMouse(prefs.Mouse)
@@ -186,11 +187,11 @@ func (s *screen) worker() {
 func (s *screen) render(result oracle.Result) {
 	s.table.Clear()
 	for col, name := range result.Columns {
-		s.table.SetCell(0, col, tview.NewTableCell(tview.Escape(name)).SetTextColor(tcell.ColorYellow).SetSelectable(false))
+		s.table.SetCell(0, col, tview.NewTableCell(tview.Escape(name)).SetStyle(tcell.StyleDefault.Foreground(palette.accent).Background(palette.surface).Bold(true)).SetSelectable(false))
 	}
 	for row, values := range result.Rows {
 		for col, value := range values {
-			s.table.SetCell(row+1, col, tview.NewTableCell(tview.Escape(value)).SetMaxWidth(80))
+			s.table.SetCell(row+1, col, tview.NewTableCell(tview.Escape(value)).SetTextColor(palette.text).SetMaxWidth(80))
 		}
 	}
 }

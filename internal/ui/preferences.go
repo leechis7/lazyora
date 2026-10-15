@@ -50,6 +50,7 @@ func (s *screen) settingsForm() {
 	clickable(form.GetButton(0))
 	clickable(form.GetButton(1))
 	form.SetBorder(true).SetTitle(s.tr("settings_title"))
+	styleForm(form)
 	s.pages.AddPage("settings", form, true, true)
 	s.app.SetFocus(form)
 }

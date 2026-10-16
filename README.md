@@ -110,6 +110,10 @@ go vet ./...
 
 ## 다음 단계
 
+개발 브랜치와 PR·CI·태그 릴리스 절차는 [개발과 릴리스](docs/development.md)를 참고하세요.
+
+버전별 변경은 [CHANGELOG](CHANGELOG.md), 기여 방법은 [CONTRIBUTING](CONTRIBUTING.md), 사용 문의는 [SUPPORT](SUPPORT.md), 보안 취약점 제보는 [SECURITY](SECURITY.md), 참여 규칙은 [CODE_OF_CONDUCT](CODE_OF_CONDUCT.md)에서 확인할 수 있습니다.
+
 1. 실제 Oracle 버전별 접속·쿼리·취소·트랜잭션 검증
 2. CentOS·SSH 터미널 조합별 회귀 검증 확대
 3. 스키마·테이블·뷰 탐색, SQL 이력, 접속 비밀번호 암호화 저장 방식 검토

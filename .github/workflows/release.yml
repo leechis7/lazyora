@@ -38,7 +38,7 @@ jobs:
         run: |
           make test
           make check
-          make build
+          make build-all
       - name: Package release files
         shell: bash
         run: |

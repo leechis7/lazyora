@@ -3,8 +3,9 @@ HOST_GOARCH = $(shell go env GOHOSTARCH)
 
 HOST_EXE = $(if $(filter windows,$(HOST_GOOS)),.exe,)
 
-.PHONY: build build-linux build-amd64 build-arm64 build-windows build-windows-amd64 build-windows-arm64 build-native test check
-build: build-linux build-windows
+.PHONY: build build-all build-linux build-amd64 build-arm64 build-windows build-windows-amd64 build-windows-arm64 build-native test check
+build: build-arm64
+build-all: build-linux build-windows
 build-linux: build-amd64 build-arm64
 build-windows: build-windows-amd64 build-windows-arm64
 build-windows-amd64:

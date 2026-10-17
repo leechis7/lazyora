@@ -95,6 +95,28 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 	wait(func() bool { return strings.Contains(s.footer.GetText(false), "F4 / Ctrl+Enter") })
 	click(func() tview.Primitive { return s.table })
 	wait(func() bool { return strings.Contains(s.footer.GetText(false), "Home/End") })
+
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF7, 0, tcell.ModNone))
+	wait(func() bool {
+		x, _, width, _ := s.editor.GetRect()
+		terminalWidth, _ := terminal.Size()
+		return s.browserHidden && x == 0 && width == terminalWidth
+	})
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF7, 0, tcell.ModNone))
+	wait(func() bool { return s.browser.HasFocus() && strings.Contains(s.footer.GetText(false), "Ctrl+R") })
+	var objectX, objectY int
+	s.app.QueueUpdate(func() {
+		x, y, _, _ := s.browser.GetInnerRect()
+		objectX, objectY = x+4, y+2 // LAZYORA, Tables, SAMPLE_ROWS
+	})
+	s.app.QueueEvent(tcell.NewEventMouse(objectX, objectY, tcell.Button1, tcell.ModNone))
+	s.app.QueueEvent(tcell.NewEventMouse(objectX, objectY, tcell.ButtonNone, tcell.ModNone))
+	wait(func() bool { return page("object") && s.object.Name == "SAMPLE_ROWS" })
+	wait(func() bool { return strings.Contains(s.footer.GetText(false), "Esc Back") })
+	click(func() tview.Primitive { return s.buttons[3] })
+	wait(func() bool { return page("main") && s.browser.HasFocus() })
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModNone))
+	wait(func() bool { return s.table.HasFocus() })
 	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF3, 0, tcell.ModNone))
 	wait(func() bool { return page("settings") })
 	s.app.QueueUpdateDraw(func() {

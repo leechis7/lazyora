@@ -34,8 +34,20 @@ func (s *screen) toolbar() *tview.Flex {
 				return
 			}
 			key := s.footerKeys[index]
+			if key.action == "source" {
+				s.showSource()
+				return
+			}
+			if key.action == "arguments" {
+				s.showArguments()
+				return
+			}
 			if page, root := s.pages.GetFrontPage(); page == "help" {
 				s.app.SetFocus(root.(*tview.Flex).GetItem(0))
+			} else if page == "object" {
+				s.app.SetFocus(s.objectTable)
+			} else if page == "arguments" {
+				s.app.SetFocus(s.argumentTable)
 			}
 			s.app.QueueEvent(tcell.NewEventKey(key.key, 0, key.mod))
 		}))
@@ -78,6 +90,9 @@ func (s *screen) refreshFooter() {
 		if s.resultsFocused {
 			hint = "footer_results"
 		}
+		if s.browser != nil && s.browser.HasFocus() {
+			hint = "footer_browser"
+		}
 	case "connect":
 		hint = "footer_connect"
 		keys[1] = footerKey{"Ctrl+Enter", "connect", tcell.KeyEnter, tcell.ModCtrl}
@@ -93,6 +108,27 @@ func (s *screen) refreshFooter() {
 		keys[1] = footerKey{"PgUp", "previous_page", tcell.KeyPgUp, tcell.ModNone}
 		keys[2] = footerKey{"PgDn", "next_page", tcell.KeyPgDn, tcell.ModNone}
 		keys[3] = footerKey{"Esc", "close", tcell.KeyEscape, tcell.ModNone}
+	case "object":
+		hint = "footer_object"
+		keys[0].action = "help"
+		keys[1] = footerKey{"PgUp", "previous_page", tcell.KeyPgUp, tcell.ModNone}
+		keys[2] = footerKey{"PgDn", "next_page", tcell.KeyPgDn, tcell.ModNone}
+		keys[3] = footerKey{"Esc", "close", tcell.KeyEscape, tcell.ModNone}
+		if s.object.HasSource() {
+			keys[1] = footerKey{"Alt+S", "source", tcell.KeyRune, tcell.ModAlt}
+		}
+		if s.object.HasArguments() {
+			keys[2] = footerKey{"Alt+A", "arguments", tcell.KeyRune, tcell.ModAlt}
+		}
+	case "source":
+		hint = "footer_source"
+		keys = []footerKey{{"Ctrl+F9", "compile", tcell.KeyF9, tcell.ModCtrl}, {"Ctrl+R", "reload", tcell.KeyCtrlR, tcell.ModNone}, {"Esc", "close", tcell.KeyEscape, tcell.ModNone}}
+	case "arguments":
+		hint = "footer_arguments"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, tcell.ModNone}, {"PgUp", "previous_page", tcell.KeyPgUp, tcell.ModNone}, {"PgDn", "next_page", tcell.KeyPgDn, tcell.ModNone}, {"Esc", "close", tcell.KeyEscape, tcell.ModNone}}
+	case "program_confirm":
+		hint = "footer_confirm"
+		keys = []footerKey{{"Esc", "cancel", tcell.KeyEscape, tcell.ModNone}}
 	case "exit":
 		hint = "footer_exit"
 		keys = []footerKey{{"Esc", "exit_cancel", tcell.KeyEscape, tcell.ModNone}}

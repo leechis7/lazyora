@@ -6,7 +6,7 @@ import (
 )
 
 func (s *screen) requestQuit() {
-	if s.exitDialog != nil || s.quitting {
+	if s.exitDialog != nil || s.programModal != nil || s.quitting {
 		return
 	}
 	if s.busy {
@@ -15,7 +15,7 @@ func (s *screen) requestQuit() {
 		s.setStatus("cancelling")
 		return
 	}
-	s.showExitConfirmation()
+	s.guardSourceDiscard(s.showExitConfirmation)
 }
 
 func (s *screen) showExitConfirmation() {

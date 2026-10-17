@@ -28,6 +28,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if page == "exit" {
 		return s.exitKey(event)
 	}
+	if page == "program_confirm" {
+		return event
+	}
 	if event.Key() == tcell.KeyF1 {
 		if page == "help" {
 			s.closeHelp()
@@ -39,6 +42,65 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if page == "help" {
 		if event.Key() == tcell.KeyEscape || (alt && letter == 'x') {
 			s.closeHelp()
+			return nil
+		}
+		return event
+	}
+	if page == "object" {
+		if alt && letter == 's' {
+			s.showSource()
+			return nil
+		}
+		if alt && letter == 'a' {
+			s.showArguments()
+			return nil
+		}
+		switch event.Key() {
+		case tcell.KeyEscape:
+			s.closeObject()
+			return nil
+		case tcell.KeyCtrlR:
+			if !s.busy {
+				s.openObject(s.object)
+			}
+			return nil
+		}
+		if alt && letter == 'x' {
+			s.closeObject()
+			return nil
+		}
+		return event
+	}
+	if page == "source" {
+		if event.Key() == tcell.KeyEscape {
+			s.closeSource()
+			return nil
+		}
+		if event.Key() == tcell.KeyCtrlR {
+			s.reloadSource()
+			return nil
+		}
+		if event.Key() == tcell.KeyF9 && event.Modifiers()&tcell.ModCtrl != 0 {
+			s.requestCompile()
+			return nil
+		}
+		if alt && letter == 'a' {
+			s.showArguments()
+			return nil
+		}
+		if event.Key() == tcell.KeyTab || event.Key() == tcell.KeyBacktab {
+			if s.sourceEditor.HasFocus() {
+				s.app.SetFocus(s.sourceDiagnostics)
+			} else {
+				s.app.SetFocus(s.sourceEditor)
+			}
+			return nil
+		}
+		return event
+	}
+	if page == "arguments" {
+		if event.Key() == tcell.KeyEscape {
+			s.closeArguments()
 			return nil
 		}
 		return event
@@ -98,6 +160,16 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		s.action("execute")
 		return nil
 	}
+	if s.browser != nil && s.browser.HasFocus() {
+		switch event.Key() {
+		case tcell.KeyLeft, tcell.KeyRight:
+			s.browserArrow(event.Key())
+			return nil
+		case tcell.KeyCtrlR:
+			s.refreshBrowser()
+			return nil
+		}
+	}
 	switch event.Key() {
 	case tcell.KeyF2:
 		s.action("connect")
@@ -111,6 +183,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	case tcell.KeyF6:
 		s.action("rollback")
 		return nil
+	case tcell.KeyF7:
+		s.toggleBrowser()
+		return nil
 	case tcell.KeyF9:
 		s.app.SetFocus(s.editor)
 		return nil
@@ -118,11 +193,21 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		s.app.SetFocus(s.table)
 		return nil
 	case tcell.KeyTab, tcell.KeyBacktab:
-		if s.app.GetFocus() == s.editor {
-			s.app.SetFocus(s.table)
-		} else {
-			s.app.SetFocus(s.editor)
+		panels := []tview.Primitive{s.editor, s.table}
+		if s.browser != nil && !s.browserHidden {
+			panels = append(panels, s.browser)
 		}
+		step := 1
+		if event.Key() == tcell.KeyBacktab {
+			step = len(panels) - 1
+		}
+		for i, panel := range panels {
+			if panel.HasFocus() {
+				s.app.SetFocus(panels[(i+step)%len(panels)])
+				return nil
+			}
+		}
+		s.app.SetFocus(s.editor)
 		return nil
 	}
 	return event

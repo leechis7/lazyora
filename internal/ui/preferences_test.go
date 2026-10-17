@@ -18,7 +18,7 @@ func TestLanguageChangePreservesSQLResultsAndConnectionInputs(t *testing.T) {
 	s.connectionForm()
 	s.connectForm.GetFormItem(connectionUser).(*tview.InputField).SetText("my_user")
 	s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).SetText("my_password")
-	s.key(tcell.NewEventKey(tcell.KeyF3, 0, tcell.ModNone))
+	s.settingsForm()
 	s.prefsForm.GetFormItem(0).(*choiceField).SetCurrentOption(1)
 	s.prefsForm.GetFormItem(1).(*tview.Checkbox).SetChecked(false)
 	s.key(tcell.NewEventKey(tcell.KeyCtrlS, 0, tcell.ModCtrl))
@@ -99,9 +99,9 @@ func TestConnectionAndPaneShortcuts(t *testing.T) {
 		}
 	}
 	s := shortcutScreen(t)
-	s.key(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModNone))
+	s.key(tcell.NewEventKey(tcell.KeyF6, 0, tcell.ModNone))
 	if s.app.GetFocus() != s.table {
-		t.Fatal("F10 did not focus results")
+		t.Fatal("F6 did not focus results")
 	}
 	s.key(tcell.NewEventKey(tcell.KeyF6, 0, tcell.ModNone))
 	if s.app.GetFocus() != s.editor {

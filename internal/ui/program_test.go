@@ -9,7 +9,8 @@ import (
 
 func programScreen(t *testing.T) *screen {
 	s := demoBrowserScreen(t)
-	node := s.browser.GetCurrentNode().GetChildren()[3].GetChildren()[0]
+	s.browserTypes.SetCurrentOption(3)
+	node := s.browser.GetCurrentNode()
 	s.activateBrowser(node)
 	s.key(tcell.NewEventKey(tcell.KeyRune, 's', tcell.ModAlt))
 	return s
@@ -53,7 +54,7 @@ func TestCompileRequiresConfirmationAndPinsSelectedObject(t *testing.T) {
 	source := `CREATE OR REPLACE FUNCTION "LAZYORA"."SAMPLE_FUNCTION" RETURN NUMBER IS BEGIN RETURN 1; END;`
 	s.acceptSource(source)
 	s.sourceEditor.SetText(source+"\n", false)
-	s.key(tcell.NewEventKey(tcell.KeyF9, 0, tcell.ModCtrl))
+	s.key(tcell.NewEventKey(tcell.KeyF9, 0, tcell.ModNone))
 	if s.programModal == nil || len(s.jobs) != 0 {
 		t.Fatal("compile bypassed confirmation")
 	}

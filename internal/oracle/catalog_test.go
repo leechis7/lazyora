@@ -11,7 +11,7 @@ import (
 
 func TestCatalogWithoutStartingTransaction(t *testing.T) {
 	s, mock := mockSession(t)
-	mock.ExpectQuery("SELECT SYS_CONTEXT").WillReturnRows(sqlmock.NewRows([]string{"SCHEMA"}).AddRow("Mixed Case"))
+	mock.ExpectQuery("SELECT SYS_CONTEXT.*SESSION_USER").WillReturnRows(sqlmock.NewRows([]string{"SCHEMA"}).AddRow("Mixed Case"))
 	mock.ExpectQuery("SELECT username FROM all_users").WillReturnRows(sqlmock.NewRows([]string{"USERNAME"}).AddRow("SYS").AddRow("Mixed Case")).RowsWillBeClosed()
 	catalog, err := s.Catalog(context.Background())
 	if err != nil || catalog.Current != "Mixed Case" || len(catalog.Schemas) != 2 {

@@ -12,13 +12,15 @@ git pull --ff-only origin dev
 git switch -c feature/LORA-17-schema-browser
 ```
 
+로컬 개발·검증의 기본 빌드는 `make build`로 Linux ARM64 하나만 생성합니다. 다른 OS/아키텍처의 로컬 바이너리는 사용자가 요청할 때만 개별 타깃으로 만듭니다. GitHub CI·Release는 `make build-all`로 전체 지원 대상을 빌드합니다.
+
 개발 및 로컬 검증 후 승인받아 한국어 메시지로 커밋하고 브랜치를 게시합니다. `dev` 대상 PR을 만들면 CI가 실행됩니다. 테스트·vet·Linux/Windows AMD64·ARM64 빌드가 통과한 뒤 PR을 병합하고, `dev` 푸시에서도 통합 검증을 수행합니다. 병합 후 끝난 feature 브랜치는 정리합니다.
 
 CI에서 만든 바이너리는 실행 결과의 `binaries` 아티팩트에서 7일 동안 받을 수 있습니다. GitHub 아티팩트 다운로드 시 실행 권한이 사라졌다면 `chmod +x`를 적용합니다. CI에는 실DB·구형 커널 검증이 포함되지 않으므로 Oracle·CentOS 시험은 별도로 진행합니다.
 
 ## 릴리스
 
-1. `dev`에서 릴리스 준비용 feature 브랜치를 만들고 `internal/appinfo/info.go`와 README의 버전을 갱신합니다. CHANGELOG의 `Unreleased` 변경을 해당 버전과 날짜로 옮기고 비교 링크도 갱신합니다. 버전 태그는 `vX.Y.Z` 형식으로 사용합니다.
+1. `dev`에서 릴리스 준비용 feature 브랜치를 만들고 `internal/appinfo/info.go`와 README의 버전을 갱신합니다. CHANGELOG의 `Unreleased` 변경을 해당 버전과 날짜로 옮기고 비교 링크도 갱신합니다. `docs/releases/vX.Y.Z.md`에 기능·단축키 변경·다운로드·지원 범위를 적으면 Release Actions가 해당 문서를 릴리스 본문으로 사용합니다. 버전 태그는 `vX.Y.Z` 형식으로 사용합니다.
 2. 변경을 `dev`로 병합하고 `dev → main` PR을 생성합니다.
 3. CI 통과와 필요한 실환경 시험을 확인한 뒤 사용자 승인으로 `main`에 병합합니다. `dev → main` 병합은 merge commit을 사용하여 두 브랜치의 커밋 관계를 유지합니다.
 4. 사용자 릴리스 요청 후 아래와 같이 해당 `main` 커밋에 태그를 붙여 게시합니다. 아래 버전 번호는 예시입니다.

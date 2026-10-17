@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 )
 
 func (o Object) HasSource() bool {
@@ -185,12 +186,14 @@ func (s *Session) Compile(ctx context.Context, object Object, source string) (Co
 		return result, err
 	}
 	s.pending = true
+	started := time.Now()
 	var execErr error
 	if s.tx != nil {
 		_, execErr = s.tx.ExecContext(ctx, statement)
 	} else {
 		_, execErr = s.conn.ExecContext(ctx, statement)
 	}
+	s.recordStatement(started, statement, -1, execErr)
 	result.Applied = source != "" && execErr == nil
 	compiledObject, err := s.ObjectInfo(ctx, object)
 	if err != nil {

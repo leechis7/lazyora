@@ -7,7 +7,7 @@ import (
 )
 
 type Catalog struct {
-	Current string
+	Current string // Login user (SESSION_USER), the default browser owner.
 	Schemas []string
 }
 
@@ -36,7 +36,7 @@ func (s *Session) dictionaryQuery(ctx context.Context, query string, args ...any
 
 func (s *Session) Catalog(ctx context.Context) (Catalog, error) {
 	var catalog Catalog
-	rows, err := s.dictionaryQuery(ctx, "SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') FROM dual")
+	rows, err := s.dictionaryQuery(ctx, "SELECT SYS_CONTEXT('USERENV', 'SESSION_USER') FROM dual")
 	if err != nil {
 		return catalog, err
 	}

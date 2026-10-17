@@ -48,6 +48,10 @@ func (s *screen) resultMouse(action tview.MouseAction, event *tcell.EventMouse) 
 	row, col := s.table.CellAt(x, y)
 	valid := s.table.InRect(x, y) && row > 0 && row < s.table.GetRowCount() && col >= 0 && col < s.table.GetColumnCount()
 	switch action {
+	case tview.MouseRightClick:
+		s.app.SetFocus(s.table)
+		s.showContextMenu()
+		return tview.MouseConsumed, nil
 	case tview.MouseLeftDown:
 		s.clearResultSelection()
 		if valid {

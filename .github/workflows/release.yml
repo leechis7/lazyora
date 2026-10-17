@@ -38,7 +38,7 @@ jobs:
         run: |
           make test
           make check
-          make build
+          make build-all
       - name: Package release files
         shell: bash
         run: |
@@ -57,4 +57,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          gh release create "$RELEASE_TAG" dist/* --verify-tag --generate-notes --title "$RELEASE_TAG"
+          notes_file="docs/releases/${RELEASE_TAG}.md"
+          if [[ -f "$notes_file" ]]; then
+            gh release create "$RELEASE_TAG" dist/* --verify-tag --notes-file "$notes_file" --title "$RELEASE_TAG"
+          else
+            gh release create "$RELEASE_TAG" dist/* --verify-tag --generate-notes --title "$RELEASE_TAG"
+          fi

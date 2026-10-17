@@ -25,6 +25,7 @@ type Session struct {
 	conn      *sql.Conn
 	tx        *sql.Tx
 	pending   bool
+	work      PendingWork
 	finishErr error
 }
 
@@ -63,7 +64,7 @@ func (s *Session) Execute(ctx context.Context, text string) (Result, error) {
 	}
 	word, _ := leadingWord(statement)
 	if word == "COMMIT" || word == "ROLLBACK" {
-		return result, errors.New("use F5 Commit or F6 Rollback")
+		return result, errors.New("use the session Commit or Rollback actions")
 	}
 	if s.tx == nil {
 		// Do not use the per-query context here: database/sql would roll the
@@ -80,9 +81,12 @@ func (s *Session) Execute(ctx context.Context, text string) (Result, error) {
 		var exec sql.Result
 		exec, err = s.tx.ExecContext(ctx, statement)
 		if err == nil {
-			result.Affected, _ = exec.RowsAffected()
+			if affected, rowsErr := exec.RowsAffected(); rowsErr == nil {
+				result.Affected = affected
+			}
 		}
 		result.Elapsed = time.Since(start)
+		s.recordStatement(start, statement, result.Affected, err)
 		return result, err
 	}
 	rows, err := s.tx.QueryContext(ctx, statement)
@@ -133,6 +137,10 @@ func formatValue(value any) string {
 
 func (s *Session) Finish(commit bool) error {
 	if s.tx == nil {
+		if s.finishErr == nil {
+			s.pending = false
+			s.work = PendingWork{}
+		}
 		return s.finishErr
 	}
 	tx := s.tx
@@ -149,6 +157,7 @@ func (s *Session) Finish(commit bool) error {
 		return s.finishErr
 	}
 	s.pending = false
+	s.work = PendingWork{}
 	return nil
 }
 

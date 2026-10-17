@@ -49,7 +49,7 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
             raise AssertionError("TUI did not reach: " + repr(text))
 
     def sql(text, key=b"\x1b[20~", newline=False):
-        send(b"\x1b[17~")  # F6 focuses SQL, does not execute rollback.
+        send(b"\x1bOQ\x1bOQ")  # F2 twice: focus SQL and keep the split layout.
         send(b"\x01\x0b")  # Home and delete the current single-line query.
         send(text.encode())
         output.clear()
@@ -66,30 +66,60 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         wait_for(b"\x1b]52;c;" + base64.b64encode(text.encode()))
 
     try:
-        wait_for("F2")
-        send(b"\x1bOQ")
+        wait_for("Load saved connection")  # Startup opens the login dialog.
+        send(b"\x1b")
+        send(b"\x1bl")  # Alt+L reopens it.
         wait_for("Load saved connection")
+        send(b"\x1bn\t\x1b[C\x1b[C\x1b[D\x1b[D")  # Name -> buttons; arrows only move focus.
         send(b"\x1b[13;5u")  # CSI-u Ctrl+Enter connects.
         wait_for("SAMPLE_ROWS")
         read_for(0.3)
+        output.clear()
+        send(b"\x1bo\r\x1b[B\r")  # Alt+O -> View.
+        wait_for("SAMPLE_ROWS_VIEW")
+        output.clear()
+        send(b"\x1bo\r\x1b[H\x1b[B\x1b[B\x1b[B\r")  # Function.
+        wait_for("BROWSER_FUNCTION")
+        output.clear()
+        send(b"\x1bo\r\x1b[H\r")  # Back to Table.
+        wait_for("SAMPLE_ROWS")
+        send(b"\x1bu\rLAZYORA\r")  # Alt+U user chooser, keep login account.
+        print("Startup login, Alt+L, Alt+U user and Alt+O object types: passed")
         sql("SELECT 11 AS ELEVEN FROM dual", b"\x1b[13;5u", newline=True)
         sql("SELECT 12 AS TWELVE FROM dual", b"\x1b[27;5;13~")
         sql("SELECT 13 AS THIRTEEN FROM dual", b"\x1b\r")
         print("Ctrl+Enter CSI-u/modifyOtherKeys and Alt+Enter: passed; plain Enter stays newline")
+        output.clear()
+        send(b"\x1b[19~")  # F8 SQL history.
+        wait_for("SQL history")
+        send(b"\x1b")
+        output.clear()
+        send(b"\x1b[18~")  # F7 clear SQL; default cancels.
+        wait_for("Clear all SQL editor text?")
+        send(b"\x1b[D\x1b[C")  # Left Proceed, Right Cancel; no activation.
+        send(b"\r")
+        output.clear()
+        send(b"\x06")  # Ctrl+F literal search.
+        wait_for("case sensitive")
+        send(b"THIRTEEN\r")
+        wait_for("Match at byte")
+        send(b"\x1b[17~\x1b[17~")  # F6 result -> SQL.
+        output.clear()
+        send(b"\x1b[21~")  # F10 context menu, not focus movement.
+        wait_for("Context menu")
+        send(b"\x1b")
+        print("Toad F7 confirmation, F8 history, Ctrl+F, F6 and F10: passed")
         sql("SELECT '한글 [red]' AS name, CAST(NULL AS VARCHAR2(10)) AS note FROM dual")
-        send(b"\x1b[21~")  # F10 results.
-        send(b"\x1b[23~")  # F11 maximize with chrome.
-        send(b"\x1b[23~")  # F11 restore split.
-        send(b"\x1b[23;5~")  # Ctrl+F11 fullscreen.
+        send(b"\x1b[1;2Q")  # Shift+F2 fullscreen results.
         output.clear()
         send(b"\x1by")
         copied("한글 [red]\tNULL")
         output.clear()
         send(b"\x03")
         copied("한글 [red]")
-        send(b"\x1b[23;5~")
+        send(b"\x1b[1;2Q")  # Shift+F2 restores split.
         sql("SELECT 11 AS a,22 AS b FROM dual UNION ALL SELECT 33,44 FROM dual")
-        send(b"\x1b[21~\x1b[23;5~")
+        send(b"\x1b[1;2Q")
         read_for(0.2)
         # Maximized results: header at y=1, data rows y=2/3 (zero based).
         send(b"\x1b[<0;2;3M")
@@ -103,9 +133,9 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         send(b"\x1b[B\x1b[B\r")
         wait_for("Mouse reporting is off")
         send(b"\x1b")
-        send(b"\x1b[23;5~")
-        print("OSC 52 row/cell/drag range, fallback preview, maximize and restore: passed")
-        send(b"\x1b[17~\x01\x0b")
+        send(b"\x1b[1;2Q")  # Shift+F2 restores split.
+        print("OSC 52 row/cell/drag range, fallback preview, Shift+F2 fullscreen and restore: passed")
+        send(b"\x1bOQ\x1bOQ\x01\x0b")
         send(b"LAZYORA.SAMPLE_ROWS")
         output.clear()
         send(b"\x1bOS")  # F4 describe, never executes SQL.
@@ -115,14 +145,28 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         send(b"\x1bx")
         send(b"\x1b[B\r")  # Script is disabled.
         wait_for("not supported yet")
-        send(b"\x1b[17~\x01\x0b")
+        send(b"\x1bOQ\x1bOQ\x01\x0b")
         send(b"UPDATE sample_rows SET title=title WHERE id=1")
         output.clear()
         send(b"\x1b[20~")
         wait_for("affected rows: 1")
         output.clear()
+        send(b"\x11")
+        wait_for("Tracked statements: 1")
+        send(b"\x1bv")  # Exit > View pending work.
+        wait_for("Client execution log")
+        output.clear()
+        send(b"\x03")
+        copied("UPDATE sample_rows SET title=title WHERE id=1")
+        send(b"\x1b")  # Back to exit dialog; default remains Keep working.
+        send(b"\r")
+        output.clear()
         send(b"\x1br")
         wait_for("Rollback completed")
+        output.clear()
+        send(b"\x11")
+        wait_for("No uncommitted changes are tracked")
+        send(b"\x1b")
         send(b"\x1b[20~")
         wait_for("affected rows: 1")
         output.clear()
@@ -146,7 +190,7 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
             read_for(0.1)
             time.sleep(0.05)
         assert pid is None, "TUI did not exit"
-        print("F4 describe, menus, Alt+C/Alt+R transactions and confirmed exit: passed")
+        print("F4 describe, pending SQL details/copy, commit/rollback clearing and confirmed exit: passed")
     finally:
         if pid is not None:
             os.kill(pid, signal.SIGTERM)

@@ -87,7 +87,7 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 			t.Errorf("footer was not at bottom: editor=%d footer=%d", editorY, buttonsY)
 		}
 	})
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModNone))
+	s.app.QueueUpdateDraw(func() { s.focusPanel("results") })
 	wait(func() bool {
 		return strings.Contains(s.footer.GetText(false), "Ctrl+C") && !strings.Contains(s.footer.GetText(false), "Ctrl+Enter")
 	})
@@ -96,18 +96,18 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 	click(func() tview.Primitive { return s.table })
 	wait(func() bool { return strings.Contains(s.footer.GetText(false), "Alt+Y") })
 
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF7, 0, tcell.ModNone))
+	s.app.QueueUpdateDraw(func() { s.invoke("browser") })
 	wait(func() bool {
 		x, _, width, _ := s.editor.GetRect()
 		terminalWidth, _ := terminal.Size()
 		return s.browserHidden && x == 0 && width == terminalWidth
 	})
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF7, 0, tcell.ModNone))
+	s.app.QueueUpdateDraw(func() { s.invoke("browser") })
 	wait(func() bool { return s.browser.HasFocus() && strings.Contains(s.footer.GetText(false), "Ctrl+R") })
 	var objectX, objectY int
 	s.app.QueueUpdate(func() {
 		x, y, _, _ := s.browser.GetInnerRect()
-		objectX, objectY = x+4, y+2 // LAZYORA, Tables, SAMPLE_ROWS
+		objectX, objectY = x+4, y // SAMPLE_ROWS in the flat object list
 	})
 	s.app.QueueEvent(tcell.NewEventMouse(objectX, objectY, tcell.Button1, tcell.ModNone))
 	s.app.QueueEvent(tcell.NewEventMouse(objectX, objectY, tcell.ButtonNone, tcell.ModNone))
@@ -115,9 +115,9 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 	wait(func() bool { return strings.Contains(s.footer.GetText(false), "Esc Back") })
 	click(func() tview.Primitive { return s.buttons[3] })
 	wait(func() bool { return page("main") && s.browser.HasFocus() })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModNone))
+	s.app.QueueUpdateDraw(func() { s.focusPanel("results") })
 	wait(func() bool { return s.table.HasFocus() })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF3, 0, tcell.ModNone))
+	s.app.QueueUpdateDraw(func() { s.invoke("settings") })
 	wait(func() bool { return page("settings") })
 	s.app.QueueUpdateDraw(func() {
 		s.prefsForm.GetFormItem(0).(*choiceField).SetCurrentOption(1)
@@ -127,14 +127,14 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 	wait(func() bool { return page("main") && s.prefs.Language == "ko" && !s.prefs.Mouse })
 	wait(func() bool { return strings.Contains(s.footer.GetText(false), "복사") })
 	click(func() tview.Primitive { return s.buttons[1] })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModNone))
+	s.app.QueueUpdateDraw(func() { s.focusPanel("results") })
 	wait(func() bool { return s.app.GetFocus() == s.table })
 	s.app.QueueUpdate(func() {
 		if !page("main") {
 			t.Error("disabled mouse still opened connection")
 		}
 	})
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF3, 0, tcell.ModNone))
+	s.app.QueueUpdateDraw(func() { s.invoke("settings") })
 	wait(func() bool { return page("settings") })
 	s.app.QueueUpdate(func() { s.prefsForm.GetFormItem(1).(*tview.Checkbox).SetChecked(true) })
 	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyCtrlS, 0, tcell.ModCtrl))

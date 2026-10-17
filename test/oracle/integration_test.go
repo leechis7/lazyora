@@ -34,6 +34,20 @@ func TestOracleFreeIntegration(t *testing.T) {
 	if err != nil || catalog.Current != "LAZYORA" {
 		t.Fatalf("catalog=%+v err=%v", catalog, err)
 	}
+	// The browser default follows the login account even if CURRENT_SCHEMA changes.
+	if _, err = s.Execute(ctx, "ALTER SESSION SET CURRENT_SCHEMA = SYS"); err != nil {
+		t.Fatal(err)
+	}
+	changed, err := s.Catalog(ctx)
+	if err != nil || changed.Current != "LAZYORA" {
+		t.Fatalf("login default changed with current schema: %+v %v", changed, err)
+	}
+	if _, err = s.Execute(ctx, "ALTER SESSION SET CURRENT_SCHEMA = LAZYORA"); err != nil {
+		t.Fatal(err)
+	}
+	if err = s.Finish(false); err != nil {
+		t.Fatal(err)
+	}
 	objects, err := s.Objects(ctx, catalog.Current)
 	if err != nil {
 		t.Fatal(err)
@@ -131,6 +145,10 @@ func TestOracleFreeIntegration(t *testing.T) {
 	}
 	if !s.PendingChanges() {
 		t.Fatal("DML did not mark pending changes")
+	}
+	work := s.PendingWork()
+	if len(work.Statements) != 1 || work.Statements[0].Affected != 1 || !strings.Contains(work.Statements[0].SQL, "UPDATE sample_rows") {
+		t.Fatalf("unexpected pending work: %+v", work)
 	}
 	result, err = s.Execute(ctx, "SELECT title FROM sample_rows WHERE id = 1")
 	if err != nil {

@@ -18,7 +18,7 @@ func (s *screen) rebuildPanels() {
 	s.editor.SetRect(0, 0, 0, 0)
 	s.table.SetRect(0, 0, 0, 0)
 	if s.browser != nil {
-		s.browser.SetRect(0, 0, 0, 0)
+		s.hideBrowserRect()
 	}
 	switch s.maximized {
 	case "sql":
@@ -28,7 +28,7 @@ func (s *screen) rebuildPanels() {
 	default:
 		s.queryLayout.AddItem(s.editor, 0, 2, true).AddItem(s.table, 0, 3, false)
 		if s.browser != nil && !s.browserHidden {
-			s.mainLayout.AddItem(s.browser, 0, 1, false)
+			s.mainLayout.AddItem(s.browserPanel, 0, 1, false)
 		}
 	}
 	if !s.fullscreen {
@@ -89,7 +89,7 @@ func (s *screen) cyclePanel(reverse bool) {
 	}
 	panels := []tview.Primitive{s.editor, s.table}
 	if s.browser != nil && !s.browserHidden {
-		panels = append(panels, s.browser)
+		panels = append(panels, s.browserUsers, s.browserTypes, s.browser)
 	}
 	step := 1
 	if reverse {
@@ -125,5 +125,32 @@ func (s *screen) syncChrome() {
 	} else {
 		s.rootLayout.AddItem(s.menuLayout, 1, 0, false).AddItem(s.pages, 0, 1, true).
 			AddItem(s.footer, 1, 0, false).AddItem(s.footerBar, 1, 0, false)
+	}
+}
+
+func (s *screen) togglePanelFullscreen(panel string) {
+	if s.fullscreen && s.maximized != "" && s.maximized != panel {
+		s.focusPanel(panel)
+		return
+	}
+	s.focusPanel(panel)
+	s.toggleFullscreen()
+}
+
+func (s *screen) toggleQueryResults() {
+	if s.editor.HasFocus() {
+		s.focusPanel("results")
+	} else {
+		s.focusPanel("sql")
+	}
+}
+
+func (s *screen) hideBrowserRect() {
+	s.browser.SetRect(0, 0, 0, 0)
+	if s.browserPanel != nil {
+		s.browserPanel.SetRect(0, 0, 0, 0)
+		s.browserForm.SetRect(0, 0, 0, 0)
+		s.browserUsers.SetRect(0, 0, 0, 0)
+		s.browserTypes.SetRect(0, 0, 0, 0)
 	}
 }

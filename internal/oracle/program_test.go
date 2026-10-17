@@ -73,6 +73,12 @@ func TestCompilePreservesSourceAndReportsErrors(t *testing.T) {
 	if !s.PendingChanges() {
 		t.Fatal("DDL should retain conservative change warning")
 	}
+	if work := s.PendingWork(); len(work.Statements) != 1 || work.Statements[0].SQL != source {
+		t.Fatal("compile DDL missing from journal")
+	}
+	if err := s.Finish(false); err != nil || len(s.PendingWork().Statements) != 0 {
+		t.Fatal("DDL-only journal was not cleared by resolution")
+	}
 }
 
 func TestCompilePermissionFailureIsNotSuccess(t *testing.T) {

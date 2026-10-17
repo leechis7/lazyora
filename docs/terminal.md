@@ -12,7 +12,7 @@
 \e[13;5u
 ```
 
-이 문자열은 ESC `[13;5u`(CSI-u Ctrl+Enter)를 보냅니다. 드라이버는 xterm modifyOtherKeys 형식 `\e[27;5;13~`도 지원합니다. 실제 앱에서 일반 Enter 줄바꿈과 두 Ctrl+Enter 형식, Alt+Enter를 `make -C test/oracle tui-test`로 검증합니다. 직접 시험할 때 F2 접속과 메인 SQL 실행을 각각 확인하세요. 매핑을 사용할 수 없으면 F9 또는 Alt+Enter를 사용합니다.
+이 문자열은 ESC `[13;5u`(CSI-u Ctrl+Enter)를 보냅니다. 드라이버는 xterm modifyOtherKeys 형식 `\e[27;5;13~`도 지원합니다. 실제 앱에서 일반 Enter 줄바꿈과 두 Ctrl+Enter 형식, Alt+Enter를 `make -C test/oracle tui-test`로 검증합니다. 직접 시험할 때 세션 → 접속과 메인 SQL 실행을 각각 확인하세요. 매핑을 사용할 수 없으면 F9 또는 Alt+Enter를 사용합니다.
 
 근거: [VanDyke 키 매핑 안내](https://www.vandyke.com/support/tips/map-keyboard-shortcut-to-perform-menu-toolbar-function-securecrt.html), [Send String 이스케이프 표기](https://www.vandyke.com/support/tips/literal-backslash-character-in-send-string-function.html), [키보드 프로토콜](https://sw.kovidgoyal.net/kitty/keyboard-protocol/). 설치된 tcell 입력 처리 코드에서도 위 두 형식을 확인했습니다. CentOS·SecureCRT 실기에서 매핑 적용 후의 추가 확인은 필요합니다.
 

@@ -18,7 +18,7 @@ func (s *screen) showProgramConfirm(message string, action func()) {
 	s.programFocus = s.app.GetFocus()
 	s.programModal = tview.NewModal().SetText(message).AddButtons([]string{s.tr("proceed"), s.tr("cancel")}).
 		SetBackgroundColor(palette.background).SetTextColor(palette.text).
-		SetButtonStyle(buttonStyle()).SetButtonActivatedStyle(focusStyle()).SetFocus(1)
+		SetButtonStyle(buttonStyle()).SetButtonActivatedStyle(buttonFocusStyle()).SetFocus(1)
 	styleBox(s.programModal.Box)
 	s.programModal.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if action == tview.MouseLeftDoubleClick {

@@ -3,11 +3,16 @@ HOST_GOARCH = $(shell go env GOHOSTARCH)
 
 HOST_EXE = $(if $(filter windows,$(HOST_GOOS)),.exe,)
 
-.PHONY: build build-all build-linux build-amd64 build-arm64 build-windows build-windows-amd64 build-windows-arm64 build-native test check
+.PHONY: build build-all build-linux build-amd64 build-arm64 build-windows build-windows-amd64 build-windows-arm64 build-darwin build-darwin-amd64 build-darwin-arm64 build-native test check
 build: build-arm64
-build-all: build-linux build-windows
+build-all: build-linux build-windows build-darwin
 build-linux: build-amd64 build-arm64
 build-windows: build-windows-amd64 build-windows-arm64
+build-darwin: build-darwin-amd64 build-darwin-arm64
+build-darwin-amd64:
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 GOAMD64=v1 go build -trimpath -o bin/lazyora-darwin-amd64 ./cmd/lazyora
+build-darwin-arm64:
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -trimpath -o bin/lazyora-darwin-arm64 ./cmd/lazyora
 build-windows-amd64:
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 GOAMD64=v1 go build -trimpath -o bin/lazyora-windows-amd64.exe ./cmd/lazyora
 build-windows-arm64:

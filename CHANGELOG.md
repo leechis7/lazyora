@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### 추가
+
+- macOS Intel(AMD64)·Apple Silicon(ARM64) 바이너리를 GitHub CI 빌드·릴리스 첨부·SHA256SUMS에 포함합니다. 로컬 기본 빌드는 Linux ARM64를 유지합니다.
+
 ## [0.1.0] - 2026-10-18
 
 ### 주요 단축키 변경

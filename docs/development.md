@@ -2,6 +2,8 @@
 
 `main`은 릴리스용 브랜치, `dev`는 다음 버전의 개발 내용을 통합하는 브랜치입니다. 기능·버그 수정·문서 작업은 `dev`에서 분기합니다. 커밋과 GitHub 업로드는 사용자의 명시적인 승인 후 진행합니다.
 
+소스 빌드 방법과 호환성·검증 기록은 [빌드와 검증](build.md)을 참고하세요.
+
 ## 기능 개발
 
 먼저 Jira 관련 일감을 확인하고, 없으면 사용자 승인 후 등록합니다. 작업 브랜치에는 Jira 번호와 주제를 넣습니다.
@@ -14,7 +16,7 @@ git switch -c feature/LORA-17-schema-browser
 
 로컬 개발·검증의 기본 빌드는 `make build`로 Linux ARM64 하나만 생성합니다. 다른 OS/아키텍처의 로컬 바이너리는 사용자가 요청할 때만 개별 타깃으로 만듭니다. GitHub CI·Release는 `make build-all`로 전체 지원 대상을 빌드합니다.
 
-개발 및 로컬 검증 후 승인받아 한국어 메시지로 커밋하고 브랜치를 게시합니다. `dev` 대상 PR을 만들면 CI가 실행됩니다. 테스트·vet·Linux/Windows AMD64·ARM64 빌드가 통과한 뒤 PR을 병합하고, `dev` 푸시에서도 통합 검증을 수행합니다. 병합 후 끝난 feature 브랜치는 정리합니다.
+개발 및 로컬 검증 후 승인받아 한국어 메시지로 커밋하고 브랜치를 게시합니다. `dev` 대상 PR을 만들면 CI가 실행됩니다. 테스트·vet·Linux/Windows/macOS AMD64·ARM64 빌드가 통과한 뒤 PR을 병합하고, `dev` 푸시에서도 통합 검증을 수행합니다. 병합 후 끝난 feature 브랜치는 정리합니다.
 
 CI에서 만든 바이너리는 실행 결과의 `binaries` 아티팩트에서 7일 동안 받을 수 있습니다. GitHub 아티팩트 다운로드 시 실행 권한이 사라졌다면 `chmod +x`를 적용합니다. CI에는 실DB·구형 커널 검증이 포함되지 않으므로 Oracle·CentOS 시험은 별도로 진행합니다.
 
@@ -32,7 +34,7 @@ git tag -a v0.0.2 -m 'v0.0.2 릴리스'
 git push origin v0.0.2
 ```
 
-Release Actions는 태그와 소스 버전의 일치 여부 및 태그 커밋의 `main` 포함 여부를 확인하고 테스트·vet·Linux/Windows 빌드를 수행합니다. 성공하면 Linux AMD64/ARM64 실행파일과 Windows AMD64/ARM64 `.exe`, LICENSE, README.md, SHA256SUMS를 첨부한 정식 GitHub Release를 발행합니다. `main` 병합만으로 릴리스를 발행하지 않습니다. 기존 태그와 릴리스는 덮어쓰지 않습니다.
+Release Actions는 태그와 소스 버전의 일치 여부 및 태그 커밋의 `main` 포함 여부를 확인하고 테스트·vet·Linux/Windows/macOS 빌드를 수행합니다. 성공하면 Linux AMD64/ARM64 실행파일과 Windows AMD64/ARM64 `.exe`와 macOS AMD64/ARM64 실행파일, LICENSE, README.md, SHA256SUMS를 첨부한 정식 GitHub Release를 발행합니다. `main` 병합만으로 릴리스를 발행하지 않습니다. 기존 태그와 릴리스는 덮어쓰지 않습니다.
 
 릴리스 후 `main`의 merge commit 또는 긴급 수정이 `dev`에도 포함되도록 `main → dev`를 merge commit으로 동기화합니다. 정상 릴리스 시 `dev → main` PR을 squash/rebase 방식으로 병합하지 않습니다.
 

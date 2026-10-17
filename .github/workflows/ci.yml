@@ -30,7 +30,7 @@ jobs:
         run: make test
       - name: Vet
         run: make check
-      - name: Build Linux and Windows AMD64/ARM64
+      - name: Build Linux, Windows and macOS AMD64/ARM64
         run: make build-all
       - name: Check executable version
         run: ./bin/lazyora-linux-amd64 --version

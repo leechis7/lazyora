@@ -25,6 +25,9 @@ Ctrl+Q / Ctrl+C      Confirm exit (also when no changes are pending)
 Connection: Ctrl+Enter or Alt+C connects; Esc or Alt+X cancels.
 Alt+H/P/U/W/T/N selects host/port/user/password/type/service name.
 Alt+R selects saved connections; Alt+A selects alias; Ctrl+S/Alt+S saves.
+White fields accept text; dark fields with v select an option.
+The upper section loads profiles; the lower section edits details, starting with Alias.
+Tab/Shift+Tab cycles both sections. New connection restores defaults and clears passwords.
 Connection profiles never store passwords. Selecting one clears the password.
 Settings: Ctrl+S or Alt+S saves; Esc or Alt+X cancels.
 Alt+L selects language; Alt+M selects the mouse checkbox (Space toggles).
@@ -64,6 +67,9 @@ Ctrl+Q / Ctrl+C      종료 확인 (변경 내역이 없어도 확인)
 접속 화면: Ctrl+Enter 또는 Alt+C 접속, Esc 또는 Alt+X 취소
 Alt+H/P/U/W/T/N: 호스트/포트/계정/비밀번호/접속 방식/서비스 이름 선택
 Alt+R: 저장된 접속 선택, Alt+A: 별칭 입력, Ctrl+S/Alt+S: 접속 정보 저장
+흰 배경은 직접 입력, 어두운 배경과 v 표시는 선택박스입니다.
+위쪽은 저장된 접속 불러오기, 아래쪽은 별칭부터 시작하는 접속 정보 편집 영역입니다.
+Tab/Shift+Tab으로 두 영역을 순환합니다. 새 접속은 기본값을 복원하고 비밀번호를 비웁니다.
 비밀번호는 저장하지 않으며 저장된 접속 선택 시 비밀번호 칸을 비웁니다.
 설정 화면: Ctrl+S 또는 Alt+S 저장, Esc 또는 Alt+X 취소
 Alt+L: 언어 선택, Alt+M: 마우스 항목 선택 (Space로 켜기·끄기)

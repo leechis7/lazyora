@@ -120,7 +120,7 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF3, 0, tcell.ModNone))
 	wait(func() bool { return page("settings") })
 	s.app.QueueUpdateDraw(func() {
-		s.prefsForm.GetFormItem(0).(*tview.DropDown).SetCurrentOption(1)
+		s.prefsForm.GetFormItem(0).(*choiceField).SetCurrentOption(1)
 		s.prefsForm.GetFormItem(1).(*tview.Checkbox).SetChecked(false)
 	})
 	click(func() tview.Primitive { return s.prefsForm.GetButton(0) })
@@ -144,6 +144,10 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 	wait(func() bool {
 		return strings.Contains(s.footer.GetText(false), "별칭") && strings.Contains(s.buttons[2].GetLabel(), "저장")
 	})
+	click(func() tview.Primitive { return s.connectProfiles.GetFormItem(0) })
+	wait(func() bool { return s.connectProfiles.GetFormItem(0).(*choiceField).IsOpen() })
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone))
+	wait(func() bool { return !s.connectProfiles.GetFormItem(0).(*choiceField).IsOpen() })
 	s.app.QueueUpdateDraw(func() { fillConnection(s, "마우스 저장 시험", "service") })
 	click(func() tview.Primitive { return s.connectForm.GetButton(2) })
 	wait(func() bool { return strings.Contains(s.connectForm.GetTitle(), "저장했습니다") })
@@ -151,8 +155,8 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 	if err != nil || len(profiles) != 1 || profiles[0].Alias != "마우스 저장 시험" {
 		t.Fatalf("mouse save did not persist the profile: %+v %v", profiles, err)
 	}
-	click(func() tview.Primitive { return s.connectForm.GetFormItem(2) })
-	wait(func() bool { return s.connectForm.GetFormItem(2).HasFocus() })
+	click(func() tview.Primitive { return s.connectForm.GetFormItem(connectionUser) })
+	wait(func() bool { return s.connectForm.GetFormItem(connectionUser).HasFocus() })
 	click(func() tview.Primitive { return s.connectForm.GetButton(1) })
 	wait(func() bool { return page("main") })
 	click(func() tview.Primitive { return s.buttons[0] })

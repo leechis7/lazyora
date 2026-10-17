@@ -44,8 +44,8 @@ func styleForm(form *tview.Form) {
 		switch item := form.GetFormItem(index).(type) {
 		case *tview.InputField:
 			item.SetBackgroundColor(palette.background)
-		case *tview.DropDown:
-			item.SetFocusedStyle(focusStyle()).SetListStyles(fieldStyle(), focusStyle())
+		case *choiceField:
+			item.SetFocusedStyle(focusStyle())
 		case *tview.Checkbox:
 			item.SetActivatedStyle(focusStyle())
 		}
@@ -101,7 +101,7 @@ func (s *screen) refreshBorders() {
 			apply(table.Box, table.HasFocus(), false)
 		}
 	}
-	for _, form := range []*tview.Form{s.connectForm, s.prefsForm} {
+	for _, form := range []*tview.Form{s.connectForm, s.connectProfiles, s.prefsForm} {
 		if form != nil {
 			apply(form.Box, form.HasFocus(), false)
 		}

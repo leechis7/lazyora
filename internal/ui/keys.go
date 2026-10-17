@@ -131,6 +131,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return event
 	}
 	if page == "connect" {
+		if s.connectionTab(event) {
+			return nil
+		}
 		if event.Key() == tcell.KeyCtrlS || (alt && letter == 's') {
 			s.saveConnection()
 			return nil
@@ -144,7 +147,11 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 			return nil
 		}
 		if alt {
-			for i, key := range []rune{'h', 'p', 'u', 'w', 't', 'n', 'r', 'a'} {
+			if letter == 'r' {
+				focusForm(s, s.connectProfiles, 0)
+				return nil
+			}
+			for i, key := range []rune{'a', 'h', 'p', 'u', 'w', 't', 'n'} {
 				if letter == key {
 					focusForm(s, s.connectForm, i)
 					return nil

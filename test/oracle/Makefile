@@ -1,4 +1,4 @@
-.PHONY: env up down status logs shell test run grant-admin browser-fixture
+.PHONY: env up down status logs shell test tui-test run grant-admin browser-fixture
 
 env:
 	sh env.sh
@@ -21,3 +21,7 @@ test:
 run: up
 	$(MAKE) -C ../.. build-native
 	sh run.sh
+
+tui-test:
+	$(MAKE) -C ../.. build-native
+	sh tui-test.sh

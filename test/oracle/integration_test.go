@@ -81,6 +81,10 @@ func TestOracleFreeIntegration(t *testing.T) {
 			t.Fatalf("missing %s fixture; run browser-fixture", kind)
 		}
 	}
+	described, describeErr := s.FindObject(ctx, "sample_rows")
+	if describeErr != nil || described.Owner != "LAZYORA" || described.Kind != "TABLE" {
+		t.Fatalf("describe: %+v %v", described, describeErr)
+	}
 	columns, err := s.Columns(ctx, sampleTable)
 	if err != nil || len(columns) != 6 {
 		t.Fatalf("table columns=%+v err=%v", columns, err)

@@ -48,7 +48,7 @@ docker compose -f test/oracle/compose.yaml exec oracle \
 make -C test/oracle run
 ```
 
-`run.sh`가 로컬 `.env`를 읽어 접속 화면의 기본값을 채웁니다. 실행 후 **F2 → Ctrl+Enter 또는 Alt+C**로 접속하고 **Ctrl+Enter 또는 F4**로 편집기의 기본 조회문을 실행합니다. 접속 버튼을 마우스로 클릭해도 됩니다. **F1**은 단축키 도움말, **F3**은 언어·마우스 설정입니다. 입력 항목은 클릭하거나 Alt+H/P/U/W/T/N으로 선택할 수 있습니다. 비밀번호를 직접 복사하거나 명령행에 입력할 필요는 없습니다. DB 접속은 사용자가 접속을 실행할 때 이루어집니다.
+`run.sh`가 로컬 `.env`를 읽어 접속 화면의 기본값을 채웁니다. 실행 후 **F2 → Ctrl+Enter 또는 Alt+C**로 접속하고 **Ctrl+Enter·Alt+Enter 또는 F9**로 편집기의 기본 조회문을 실행합니다. 접속 버튼을 마우스로 클릭해도 됩니다. **F1**은 단축키 도움말, **F3**은 언어·마우스 설정입니다. 입력 항목은 클릭하거나 Alt+H/P/U/W/T/N으로 선택할 수 있습니다. 비밀번호를 직접 복사하거나 명령행에 입력할 필요는 없습니다. DB 접속은 사용자가 접속을 실행할 때 이루어집니다.
 
 이미 DB가 실행 중이고 빌드도 되어 있으면 다음 명령으로 실행파일만 바로 엽니다. CPU 아키텍처에 맞는 파일을 자동 선택합니다.
 
@@ -56,7 +56,7 @@ make -C test/oracle run
 sh test/oracle/run.sh
 ```
 
-첫 DB 초기화 때 `init.sql`로 `lazyora.sample_rows` 테이블과 샘플 3행을 생성합니다. 한글, NULL, 양수·음수 소수, DATE, TIMESTAMP를 포함합니다. TUI에서 F4로 다음 SQL을 실행해 확인합니다.
+첫 DB 초기화 때 `init.sql`로 `lazyora.sample_rows` 테이블과 샘플 3행을 생성합니다. 한글, NULL, 양수·음수 소수, DATE, TIMESTAMP를 포함합니다. TUI에서 F9로 다음 SQL을 실행해 확인합니다.
 
 ```sql
 SELECT * FROM sample_rows ORDER BY id;
@@ -68,7 +68,7 @@ SELECT * FROM sample_rows ORDER BY id;
 make -C test/oracle browser-fixture
 ```
 
-접속 후 Tab 또는 클릭으로 왼쪽 탐색기에 이동하여 `LAZYORA → 테이블 → SAMPLE_ROWS` 또는 `뷰 → SAMPLE_ROWS_VIEW`를 Enter/클릭으로 열면 컬럼 상세를 확인할 수 있습니다. F7은 스키마 창 표시·숨김 토글입니다. 함수·패키지 등은 기본 정보와 상태를 보여줍니다. Ctrl+R로 새로고침하고 Esc로 돌아옵니다. SQL로 UPDATE 후 객체를 탐색하고 F6으로 롤백하면 탐색이 미완료 트랜잭션을 유지하는지도 직접 확인할 수 있습니다.
+접속 후 Tab 또는 클릭으로 왼쪽 탐색기에 이동하여 `LAZYORA → 테이블 → SAMPLE_ROWS` 또는 `뷰 → SAMPLE_ROWS_VIEW`를 Enter/클릭으로 열면 컬럼 상세를 확인할 수 있습니다. F7은 스키마 창 표시·숨김 토글입니다. 함수·패키지 등은 기본 정보와 상태를 보여줍니다. Ctrl+R로 새로고침하고 Esc로 돌아옵니다. SQL로 UPDATE 후 객체를 탐색하고 Alt+R로 롤백하면 탐색이 미완료 트랜잭션을 유지하는지도 직접 확인할 수 있습니다.
 
 상태 확인, 로그 보기와 중지:
 
@@ -93,3 +93,12 @@ make -C test/oracle up
 
 
 소스·컴파일 검사는 함수·프로시저·패키지/타입 및 본문·트리거의 소스 조회와 재컴파일, 인자·반환값·오버로드 조회, 오류가 있는 함수의 INVALID 상태·오류 행/열과 수정 후 VALID 복구를 실제 DB에서 확인합니다. `browser-fixture`는 이 검사용 객체를 생성·갱신합니다.
+
+
+실행파일의 실제 키 바이트·메뉴·범위 복사·전체화면·객체 조회·트랜잭션을 Linux PTY로 시험하려면 Python 3가 있는 환경에서 실행합니다. DB가 실행 중이고 browser-fixture가 적용돼 있어야 합니다. 비밀번호는 .env에서 읽으며 출력하지 않습니다.
+
+```bash
+make -C test/oracle tui-test
+```
+
+Ctrl+Enter는 CSI-u와 modifyOtherKeys 두 형식, Alt+Enter를 검사합니다. 이것이 SecureCRT 실기 키 매핑 확인을 대신하는 것은 아닙니다. 복사는 터미널에 출력한 OSC 52 페이로드를 확인하며 PC 클립보드의 실제 수신 여부는 터미널에서 확인해야 합니다.

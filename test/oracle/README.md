@@ -10,7 +10,7 @@ make -C test/oracle status
 make -C test/oracle test
 ```
 
-`up`은 `.env`가 없으면 임의의 로컬 비밀번호를 생성하고, DB가 healthy 상태가 될 때까지 기다립니다. `.env`는 Git에서 제외하며 기존 파일이 있으면 덮어쓰지 않습니다. 직접 설정하려면 `.env.example`을 `.env`로 복사하고 두 비밀번호를 채웁니다. `make test`는 실제 Go 드라이버로 접속하여 샘플 데이터·한글·NULL·날짜와 DML 롤백을 확인합니다. 기존 자동 테스트에서는 이 실DB 테스트를 건너뜁니다.
+`up`은 `.env`가 없으면 임의의 로컬 비밀번호를 생성하고, DB가 healthy 상태가 될 때까지 기다립니다. `.env`는 Git에서 제외하며 기존 파일이 있으면 덮어쓰지 않습니다. 직접 설정하려면 `.env.example`을 `.env`로 복사하고 두 비밀번호를 채웁니다. `make test`는 실제 Go 드라이버로 접속하여 샘플 데이터·한글·NULL·날짜, 스키마·13종 객체·컬럼 조회와 탐색 전후 DML 롤백을 확인합니다. 기존 자동 테스트에서는 이 실DB 테스트를 건너뜁니다.
 
 | 접속 항목 | 값 |
 | --- | --- |
@@ -62,6 +62,14 @@ sh test/oracle/run.sh
 SELECT * FROM sample_rows ORDER BY id;
 ```
 
+`browser.sql`은 뷰·함수·프로시저·패키지/본문·시퀀스·동의어·인덱스·트리거·타입/본문·구체화 뷰 표본을 생성합니다. 구체화 뷰 소유자에게 필요한 `CREATE TABLE` 권한은 시험 계정에 직접 부여합니다. 새 DB에는 자동 적용합니다. 기존 DB에서는 아래 명령을 한 번 실행합니다. 기존 테이블과 행은 유지합니다.
+
+```bash
+make -C test/oracle browser-fixture
+```
+
+접속 후 Tab 또는 클릭으로 왼쪽 탐색기에 이동하여 `LAZYORA → 테이블 → SAMPLE_ROWS` 또는 `뷰 → SAMPLE_ROWS_VIEW`를 Enter/클릭으로 열면 컬럼 상세를 확인할 수 있습니다. F7은 스키마 창 표시·숨김 토글입니다. 함수·패키지 등은 기본 정보와 상태를 보여줍니다. Ctrl+R로 새로고침하고 Esc로 돌아옵니다. SQL로 UPDATE 후 객체를 탐색하고 F6으로 롤백하면 탐색이 미완료 트랜잭션을 유지하는지도 직접 확인할 수 있습니다.
+
 상태 확인, 로그 보기와 중지:
 
 ```bash
@@ -83,3 +91,5 @@ make -C test/oracle up
 
 참고: [Oracle Free 이미지 및 초기화 동작](https://github.com/gvenzl/oci-oracle-free). 이 DB로 최신 Oracle에서의 동작을 검증할 수 있으며, 구형 Oracle 버전이나 CentOS 7.4 커널 호환성 검증은 별도로 진행합니다.
 
+
+소스·컴파일 검사는 함수·프로시저·패키지/타입 및 본문·트리거의 소스 조회와 재컴파일, 인자·반환값·오버로드 조회, 오류가 있는 함수의 INVALID 상태·오류 행/열과 수정 후 VALID 복구를 실제 DB에서 확인합니다. `browser-fixture`는 이 검사용 객체를 생성·갱신합니다.

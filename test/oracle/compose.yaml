@@ -14,6 +14,7 @@ services:
       - oracle-data:/opt/oracle/oradata
       - ./init.sql:/container-entrypoint-initdb.d/001-sample-data.sql:ro
       - ./grants.sql:/container-entrypoint-initdb.d/002-grants.sql:ro
+      - ./browser.sql:/container-entrypoint-initdb.d/003-browser.sql:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh"]
       interval: 10s

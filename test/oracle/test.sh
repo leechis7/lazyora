@@ -11,4 +11,4 @@ set -a
 set +a
 export LAZYORA_INTEGRATION=1
 cd ../..
-go test ./test/oracle -run '^TestOracleFreeIntegration$' -v -count=1
+go test ./test/oracle -run '^TestOracle(Free|Program)Integration$' -v -count=1

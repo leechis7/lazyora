@@ -26,10 +26,10 @@ func (s *screen) settingsForm() {
 	if s.prefs.Language == "ko" {
 		selected = 1
 	}
-	form.AddDropDown(s.tr("language"), []string{"English", "한국어"}, selected, nil).
+	form.AddFormItem(s.newChoice(s.tr("language"), []string{"English", "한국어"}, selected, nil)).
 		AddCheckbox(s.tr("mouse")+" — "+s.tr("mouse_label"), s.prefs.Mouse, nil)
 	s.savePrefs = func() {
-		index, _ := form.GetFormItem(0).(*tview.DropDown).GetCurrentOption()
+		index, _ := form.GetFormItem(0).(*choiceField).GetCurrentOption()
 		language := "en"
 		if index == 1 {
 			language = "ko"

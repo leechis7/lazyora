@@ -2,80 +2,130 @@ package ui
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/rivo/tview"
 	"lazyora/internal/appinfo"
 )
 
-var shortcutHelp = [2]string{
-	`Keyboard shortcuts
+type helpSection struct {
+	id       string
+	title    [2]string
+	commands []string
+	notes    [2]string
+}
 
-F1 / Esc             Open / close help
-F2                   Connect / reconnect
-F3                   Settings (language and mouse)
-Ctrl+Enter / F4       Run SQL
-F5 / F6              Commit / rollback
-F8                   Request cancellation
-F9 / F10             Focus SQL editor / results
-Tab / Shift+Tab      Change focus
-Enter                Newline in the SQL editor
-Ctrl+Q / Ctrl+C      Quit and roll back pending changes
+var helpSections = []helpSection{
+	{"sql", [2]string{"SQL editor", "SQL 편집"}, []string{"execute", "find", "find_next", "find_previous", "replace", "clear_sql", "history"}, [2]string{
+		"Enter inserts a newline. Alt+Enter / Shift+F9 also execute.\nExecute selected text; without a selection, execute the whole editor as one SQL statement or BEGIN/DECLARE block.\nFind is literal and case sensitive; next/previous wraps.\nHistory: this run only, up to 100 entries in memory. Loading does not execute SQL.",
+		"Enter는 줄바꿈입니다. Alt+Enter / Shift+F9로도 실행합니다.\n선택한 SQL을 실행하며, 선택이 없으면 편집기 전체를 한 문장 또는 BEGIN/DECLARE 블록으로 실행합니다.\n찾기는 대소문자를 구분하는 일반 문자열 검색이며 끝에서 순환합니다.\n이력은 이번 실행의 SQL 최대 100개를 메모리에만 보관하며, 불러와도 자동 실행하지 않습니다."}},
+	{"results", [2]string{"Results and copying", "조회 결과 · 복사"}, []string{"copy", "copy_row"}, [2]string{
+		"Click a cell. Drag or Shift+arrows selects a rectangle; arrows / PgUp / PgDn scroll.\nCopy format: TSV, with quoted tabs/newlines inside values; NULL stays NULL.\nIf clipboard transfer is blocked: Edit > Copy preview, then select and copy using your terminal.",
+		"셀을 클릭하거나 드래그·Shift+방향키로 범위를 선택합니다. 방향키·PgUp·PgDn으로 이동합니다.\n복사 형식은 TSV이며, 값 안의 탭·줄바꿈은 인용 처리하고 NULL은 그대로 복사합니다.\n클립보드 전송이 막히면 편집 > 복사 내용 보기에서 터미널의 선택·복사를 사용하세요."}},
+	{"navigation", [2]string{"Windows, menus and buttons", "화면 · 메뉴 · 버튼"}, []string{"fullscreen_sql", "fullscreen_results", "focus_toggle", "browser", "context_menu", "help"}, [2]string{
+		"Tab / Shift+Tab cycles visible panels. Repeat the fullscreen key to restore split.\nView > Maximize retains menus/status/footer; Alt+B / View > Schemas shows/hides the browser.\nAlt+M opens menus; Alt+F/E/S/X/V/T/H opens File/Edit/Session/Execute/View/Tools/Help.\nMenus: arrows select, Enter runs, Esc closes. F10 / right-click opens a context menu.\nButtons: Tab reaches the row, Left/Right selects, Enter runs. Focus is white bold underlined text on dark blue.",
+		"Tab / Shift+Tab으로 표시 중인 창을 순환합니다. 전체화면 키를 다시 누르면 분할 화면으로 복원합니다.\n보기 > 창 최대화는 메뉴·상태·푸터를 유지합니다. Alt+B 또는 보기 > 스키마로 탐색기를 표시·숨깁니다.\nAlt+M 메뉴 열기. Alt+F/E/S/X/V/T/H는 파일/편집/세션/실행/보기/도구/도움말입니다.\n메뉴는 방향키 선택, Enter 실행, Esc 닫기입니다. F10 / 우클릭은 문맥 메뉴입니다.\n버튼은 Tab으로 접근, 좌우로 선택, Enter로 실행합니다. 선택은 진한 파랑 배경·흰색 굵은 밑줄 글자입니다."}},
+	{"connection", [2]string{"Connection and settings", "접속 · 환경설정"}, []string{"connect"}, [2]string{
+		"Startup opens login; Alt+L reopens it. Session > Connect (Alt+S, Enter)   |   Tools > Settings (Alt+T, Enter)\nConnection: profiles above; editable fields below, starting with Alias.\n  Alt+R profiles, Alt+A alias, Alt+H/P/U/W/T/N host/port/user/password/type/name\n  Ctrl+Enter / Alt+Enter / Alt+C connect, Ctrl+S / Alt+S save, Esc cancel\nSettings: Alt+L language, Alt+M mouse, Space toggle, Ctrl+S save.\nWhite fields accept text; dark fields with v select options. Passwords are never saved.",
+		"시작하면 접속 창이 열립니다. Alt+L로 다시 열거나 세션 > 접속(Alt+S, Enter)   |   도구 > 설정(Alt+T, Enter)\n접속 화면 위쪽은 저장된 접속 선택, 아래쪽은 별칭부터 시작하는 정보 편집입니다.\n  Alt+R 저장된 접속, Alt+A 별칭, Alt+H/P/U/W/T/N 호스트/포트/계정/암호/방식/이름\n  Ctrl+Enter / Alt+Enter / Alt+C 접속, Ctrl+S / Alt+S 저장, Esc 취소\n환경설정: Alt+L 언어, Alt+M 마우스, Space 선택, Ctrl+S 저장.\n흰 배경은 텍스트 입력, 어두운 배경과 v는 선택박스입니다. 비밀번호는 저장하지 않습니다."}},
+	{"schema", [2]string{"Schema, object details and source", "스키마 · 객체 상세 · 소스"}, []string{"browser_user", "browser_type", "describe", "quick_describe"}, [2]string{
+		"Browser: choose User and Type above the object list. The login user and Tables are selected initially.\nAlt+U selects User; Alt+O selects Type. Tab cycles the selectors and list.\nArrows move, Enter/click opens, Ctrl+R refreshes. Selecting a browser user does not change the SQL session.\nObject: Alt+S source/edit, Alt+A arguments, Ctrl+R refresh, Esc back.\nSource: F9 apply/compile, Ctrl+R reload, Tab cycles source/errors/buttons.\nCompilation is DDL and may commit prior DML, even when compilation fails.\nDiscarding unapplied source edits requires confirmation.",
+		"탐색기 위쪽에서 사용자와 객체 종류를 선택합니다. 기본값은 접속 계정과 테이블입니다.\nAlt+U 사용자, Alt+O 객체 종류로 이동하고 Tab으로 선택칸과 목록을 순환합니다.\n방향키 이동, Enter/클릭 상세 조회, Ctrl+R 새로고침. 사용자 선택은 SQL 세션을 변경하지 않습니다.\n객체 상세: Alt+S 소스·편집, Alt+A 인자, Ctrl+R 새로고침, Esc 돌아가기.\n소스: F9 적용·컴파일, Ctrl+R 다시 조회, Tab 소스/오류/버튼 이동.\n컴파일은 DDL이므로 실패하더라도 이전 DML이 커밋될 수 있습니다.\nDB에 적용하지 않은 소스 편집을 버릴 때는 확인합니다."}},
+	{"transactions", [2]string{"Commit, rollback and exit", "커밋 · 롤백 · 종료"}, []string{"commit", "rollback", "pending_work", "cancel", "quit"}, [2]string{
+		"DML uses manual commit. DDL / PL/SQL may commit implicitly.\nSession > View pending work lists SQL, time, outcome and affected rows since the last successful commit/rollback.\nExit > View pending work (Alt+V) opens the same details; Esc returns without resolving anything.\nThis is a memory-only execution journal (latest 100 statements, up to 64 KiB SQL each), not a row-level diff.\nExit always asks. Pending changes: commit and exit / rollback and exit / keep working.\nThe default is keep working; Esc cancels exit. Forced termination cannot show confirmation.",
+		"DML은 수동 커밋입니다. DDL·PL/SQL은 암시적 커밋을 수행할 수 있습니다.\n세션 > 미커밋 내역 보기에서 마지막 커밋·롤백 이후 SQL·시각·결과·처리 행 수를 확인합니다.\n종료창의 내역 보기(Alt+V)도 같은 상세를 열며 Esc로 돌아가도 DB 상태는 바뀌지 않습니다.\n메모리 실행 기록(최근 100개, SQL당 64 KiB)이며 행별 변경 비교는 아닙니다.\n종료는 항상 확인합니다. 미커밋 가능 내역이 있으면 커밋 후 종료 / 롤백 후 종료 / 계속 사용을 선택합니다.\n기본 선택은 계속 사용이며 Esc는 종료를 취소합니다. 강제 종료에는 확인창을 보장하지 않습니다."}},
+	{"terminal", [2]string{"Terminal compatibility and limits", "터미널 호환성 · 지원 범위"}, []string{"script", "parse", "debug_continue"}, [2]string{
+		"If Ctrl+Enter arrives as plain Enter, use F9 or Alt+Enter.\nSecureCRT: Session Options > Terminal > Emulation > Mapped Keys > Send String: \\e[13;5u\nClipboard transfer uses OSC 52 and depends on terminal permissions. See docs/terminal.md.\nUp to 1,000 result rows. Automatic SQL statement splitting, scripts and debugging are not implemented.",
+		"Ctrl+Enter가 일반 Enter로 전달되면 F9 또는 Alt+Enter를 사용하세요.\nSecureCRT: Session Options > Terminal > Emulation > Mapped Keys > Send String: \\e[13;5u\n클립보드 전송은 OSC 52와 터미널 권한에 따라 동작합니다. docs/terminal.md를 참고하세요.\n결과는 최대 1,000행입니다. SQL 문장 자동 구분·스크립트 실행·디버거는 아직 지원하지 않습니다."}},
+}
 
-Connection: Ctrl+Enter or Alt+C connects; Esc or Alt+X cancels.
-Alt+H/P/U/W/T/N selects host/port/user/password/type/service name.
-Alt+R selects saved connections; Alt+A selects alias; Ctrl+S/Alt+S saves.
-Connection profiles never store passwords. Selecting one clears the password.
-Settings: Ctrl+S or Alt+S saves; Esc or Alt+X cancels.
-Alt+L selects language; Alt+M selects the mouse checkbox (Space toggles).
-Mouse: click toolbar buttons, fields or result cells; wheel scrolls.
+func (s *screen) helpLanguage() int {
+	if s.prefs.Language == "ko" {
+		return 1
+	}
+	return 0
+}
 
-Run executes the whole editor as one SQL statement or BEGIN/DECLARE block.
-Results are limited to 1,000 rows. DML needs manual commit; DDL can commit implicitly.
-Ctrl+Enter needs a terminal that reports modifiers; otherwise use F4.
-Arrow keys and PageUp/PageDown scroll this help.`,
-	`키보드 단축키
+func helpHeading(id, title string) string {
+	return fmt.Sprintf("[\"%s\"][::b]%s[::-][\"\"]\n\n", id, tview.Escape(title))
+}
 
-F1 / Esc             도움말 열기 / 닫기
-F2                   접속 / 재접속
-F3                   설정 (언어·마우스)
-Ctrl+Enter / F4       SQL 실행
-F5 / F6              커밋 / 롤백
-F8                   실행 취소 요청
-F9 / F10             SQL 편집기 / 결과 표로 이동
-Tab / Shift+Tab      포커스 전환
-Enter                SQL 편집기에서 줄바꿈
-Ctrl+Q / Ctrl+C      종료 (미완료 트랜잭션 롤백)
+func (s *screen) mainHelp() string {
+	var out strings.Builder
+	language := s.helpLanguage()
+	for i, section := range helpSections {
+		out.WriteString(helpHeading(section.id, fmt.Sprintf("%d  %s", i+1, section.title[language])))
+		for _, id := range section.commands {
+			// Common command definitions keep the help aligned with actual bindings.
+			fmt.Fprintf(&out, "  [::b]%-26s[::-] %s\n", tview.Escape(bindingLabels(id, 2)), tview.Escape(s.tr(commandFor(id).label)))
+		}
+		if len(section.commands) > 0 {
+			out.WriteByte('\n')
+		}
+		notes := section.notes[language]
+		out.WriteString(tview.Escape(notes) + "\n\n\n")
+	}
+	out.WriteString(helpHeading("about", s.tr("help_about")))
+	fmt.Fprintf(&out, "%s v%s\n%s: %s\n%s: %s\n%s: %s\n%s\nCopyright (C) 2026 Chaekang Lee\n", appinfo.Name, appinfo.Version, s.tr("developer"), appinfo.Developer, s.tr("email"), appinfo.Email, s.tr("license"), appinfo.License, appinfo.LicenseURL)
+	return out.String()
+}
 
-접속 화면: Ctrl+Enter 또는 Alt+C 접속, Esc 또는 Alt+X 취소
-Alt+H/P/U/W/T/N: 호스트/포트/계정/비밀번호/접속 방식/서비스 이름 선택
-Alt+R: 저장된 접속 선택, Alt+A: 별칭 입력, Ctrl+S/Alt+S: 접속 정보 저장
-비밀번호는 저장하지 않으며 저장된 접속 선택 시 비밀번호 칸을 비웁니다.
-설정 화면: Ctrl+S 또는 Alt+S 저장, Esc 또는 Alt+X 취소
-Alt+L: 언어 선택, Alt+M: 마우스 항목 선택 (Space로 켜기·끄기)
-마우스: 버튼·입력 항목·결과 셀 클릭, 휠 스크롤
-
-편집기 전체 내용을 SQL 한 문장 또는 BEGIN/DECLARE 블록 하나로 실행합니다.
-결과는 최대 1,000행입니다. DML은 수동 커밋, DDL은 암시적 커밋이 가능합니다.
-Ctrl+Enter를 구분하지 못하는 터미널에서는 F4를 사용하세요.
-위/아래 화살표와 PageUp/PageDown으로 도움말을 스크롤할 수 있습니다.`,
+func (s *screen) helpContext(page string) string {
+	switch page {
+	case "connect":
+		return s.tr("footer_connect") + "\nCtrl+Enter / Alt+C: " + s.tr("connect") + " | Ctrl+S: " + s.tr("save")
+	case "settings":
+		return s.tr("footer_settings") + "\nCtrl+S: " + s.tr("save") + " | Esc: " + s.tr("cancel")
+	case "object":
+		return s.tr("footer_object") + "\nAlt+S: " + s.tr("source") + " | Alt+A: " + s.tr("arguments")
+	case "source":
+		return s.tr("footer_source")
+	case "arguments":
+		return s.tr("footer_arguments")
+	case "search":
+		return s.tr("footer_search")
+	case "pending":
+		return s.tr("footer_pending")
+	case "history":
+		return s.tr("footer_history")
+	case "copy":
+		return s.tr("copy_preview_hint")
+	}
+	if s.browserHasFocus() {
+		return s.tr("footer_browser")
+	}
+	if s.table.HasFocus() {
+		return fmt.Sprintf(s.tr("footer_results"), shortcut("copy"), shortcut("copy_row"), shortcut("focus_toggle"), "F2 / Shift+F2")
+	}
+	return fmt.Sprintf(s.tr("footer_sql"), bindingLabels("execute", 2), shortcut("describe"), shortcut("focus_toggle"), "F2 / Shift+F2")
 }
 
 func (s *screen) showHelp() {
 	s.helpFocus = s.app.GetFocus()
-	index := 0
-	if s.prefs.Language == "ko" {
-		index = 1
-	}
-	info := fmt.Sprintf("%s v%s\n%s: %s\n%s: %s\n%s: GNU AGPL v3 (%s)\n%s\nCopyright (C) 2026 Chaekang Lee\n\n",
-		appinfo.Name, appinfo.Version, s.tr("developer"), appinfo.Developer,
-		s.tr("email"), appinfo.Email, s.tr("license"), appinfo.License, appinfo.LicenseURL)
-	help := tview.NewTextView().SetText(info + shortcutHelp[index]).SetWrap(true).SetWordWrap(true).SetScrollable(true)
+	page, _ := s.pages.GetFrontPage()
+	text := fmt.Sprintf("[::b]%s v%s[::-]  ·  %s\n%s\n\n", appinfo.Name, appinfo.Version, s.tr("help_title"), s.tr("help_navigation"))
+	text += helpHeading("current", s.tr("help_current")) + tview.Escape(s.helpContext(page)) + "\n\n" + s.tr("help_contents") + "\n\n\n" + s.mainHelp()
+	help := tview.NewTextView().SetDynamicColors(true).SetRegions(true).SetText(text).SetWrap(true).SetWordWrap(true).SetScrollable(true)
 	help.SetBorder(true).SetTitle(s.tr("help_title"))
+	help.SetBorderPadding(1, 1, 2, 2)
 	styleBox(help.Box)
 	help.SetTextColor(palette.text)
 	close := clickable(tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeHelp))
 	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(help, 0, 1, true).AddItem(close, 1, 0, false)
 	s.pages.AddPage("help", root, true, true)
+	s.app.SetFocus(help)
+}
+
+func (s *screen) helpJump(section int) {
+	_, root := s.pages.GetFrontPage()
+	help := root.(*tview.Flex).GetItem(0).(*tview.TextView)
+	id := "current"
+	if section > 0 && section <= len(helpSections) {
+		id = helpSections[section-1].id
+	} else if section == 8 {
+		id = "about"
+	}
+	help.Highlight(id).ScrollToHighlight()
 	s.app.SetFocus(help)
 }
 

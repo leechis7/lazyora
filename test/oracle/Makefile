@@ -1,4 +1,4 @@
-.PHONY: env up down status logs shell test run grant-admin
+.PHONY: env up down status logs shell test tui-test run grant-admin browser-fixture
 
 env:
 	sh env.sh
@@ -14,8 +14,14 @@ shell:
 	docker compose exec oracle sqlplus -L lazyora@//localhost:1521/FREEPDB1
 grant-admin:
 	docker compose exec -T oracle sqlplus -L -s / as sysdba < grants.sql
+browser-fixture:
+	docker compose exec -T oracle sqlplus -L -s / as sysdba < browser.sql
 test:
 	sh test.sh
 run: up
 	$(MAKE) -C ../.. build-native
 	sh run.sh
+
+tui-test:
+	$(MAKE) -C ../.. build-native
+	sh tui-test.sh

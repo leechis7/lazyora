@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate release tag and main ancestry
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+          version=$(sed -nE 's/^[[:space:]]*Version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' internal/appinfo/info.go)
+          [[ "$RELEASE_TAG" == "v$version" ]]
+          git merge-base --is-ancestor HEAD origin/main
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.26.9'
+          cache-dependency-path: go.sum
+      - name: Test, vet and build
+        run: |
+          make test
+          make check
+          make build-all
+      - name: Package release files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp bin/lazyora-linux-amd64 bin/lazyora-linux-arm64 bin/lazyora-windows-amd64.exe bin/lazyora-windows-arm64.exe LICENSE README.md dist/
+          ./dist/lazyora-linux-amd64 --version
+          cd dist
+          sha256sum lazyora-linux-amd64 lazyora-linux-arm64 lazyora-windows-amd64.exe lazyora-windows-arm64.exe LICENSE README.md > SHA256SUMS
+          sha256sum --check SHA256SUMS
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          notes_file="docs/releases/${RELEASE_TAG}.md"
+          if [[ -f "$notes_file" ]]; then
+            gh release create "$RELEASE_TAG" dist/* --verify-tag --notes-file "$notes_file" --title "$RELEASE_TAG"
+          else
+            gh release create "$RELEASE_TAG" dist/* --verify-tag --generate-notes --title "$RELEASE_TAG"
+          fi

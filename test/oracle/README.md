@@ -10,7 +10,7 @@ make -C test/oracle status
 make -C test/oracle test
 ```
 
-`up`은 `.env`가 없으면 임의의 로컬 비밀번호를 생성하고, DB가 healthy 상태가 될 때까지 기다립니다. `.env`는 Git에서 제외하며 기존 파일이 있으면 덮어쓰지 않습니다. 직접 설정하려면 `.env.example`을 `.env`로 복사하고 두 비밀번호를 채웁니다. `make test`는 실제 Go 드라이버로 접속하여 샘플 데이터·한글·NULL·날짜와 DML 롤백을 확인합니다. 기존 자동 테스트에서는 이 실DB 테스트를 건너뜁니다.
+`up`은 `.env`가 없으면 임의의 로컬 비밀번호를 생성하고, DB가 healthy 상태가 될 때까지 기다립니다. `.env`는 Git에서 제외하며 기존 파일이 있으면 덮어쓰지 않습니다. 직접 설정하려면 `.env.example`을 `.env`로 복사하고 두 비밀번호를 채웁니다. `make test`는 실제 Go 드라이버로 접속하여 샘플 데이터·한글·NULL·날짜, 스키마·13종 객체·컬럼 조회와 탐색 전후 DML 롤백을 확인합니다. 기존 자동 테스트에서는 이 실DB 테스트를 건너뜁니다.
 
 | 접속 항목 | 값 |
 | --- | --- |
@@ -48,7 +48,7 @@ docker compose -f test/oracle/compose.yaml exec oracle \
 make -C test/oracle run
 ```
 
-`run.sh`가 로컬 `.env`를 읽어 접속 화면의 기본값을 채웁니다. 실행 후 **F2 → Ctrl+Enter 또는 Alt+C**로 접속하고 **Ctrl+Enter 또는 F4**로 편집기의 기본 조회문을 실행합니다. 접속 버튼을 마우스로 클릭해도 됩니다. **F1**은 단축키 도움말, **F3**은 언어·마우스 설정입니다. 입력 항목은 클릭하거나 Alt+H/P/U/W/T/N으로 선택할 수 있습니다. 비밀번호를 직접 복사하거나 명령행에 입력할 필요는 없습니다. DB 접속은 사용자가 접속을 실행할 때 이루어집니다.
+`run.sh`가 로컬 `.env`를 읽어 접속 화면의 기본값을 채웁니다. 실행 시 먼저 열린 접속 화면에서 **Ctrl+Enter 또는 Alt+C**로 접속하고 **Ctrl+Enter·Alt+Enter 또는 F9**로 편집기의 기본 조회문을 실행합니다. 접속 버튼을 마우스로 클릭해도 됩니다. 접속 화면은 Alt+L로 다시 엽니다. **F1**은 단축키 도움말, **도구 → 설정**은 언어·마우스 설정입니다. 입력 항목은 클릭하거나 Alt+H/P/U/W/T/N으로 선택할 수 있습니다. 비밀번호를 직접 복사하거나 명령행에 입력할 필요는 없습니다. DB 접속은 사용자가 접속을 실행할 때 이루어집니다.
 
 이미 DB가 실행 중이고 빌드도 되어 있으면 다음 명령으로 실행파일만 바로 엽니다. CPU 아키텍처에 맞는 파일을 자동 선택합니다.
 
@@ -56,11 +56,19 @@ make -C test/oracle run
 sh test/oracle/run.sh
 ```
 
-첫 DB 초기화 때 `init.sql`로 `lazyora.sample_rows` 테이블과 샘플 3행을 생성합니다. 한글, NULL, 양수·음수 소수, DATE, TIMESTAMP를 포함합니다. TUI에서 F4로 다음 SQL을 실행해 확인합니다.
+첫 DB 초기화 때 `init.sql`로 `lazyora.sample_rows` 테이블과 샘플 3행을 생성합니다. 한글, NULL, 양수·음수 소수, DATE, TIMESTAMP를 포함합니다. TUI에서 F9로 다음 SQL을 실행해 확인합니다.
 
 ```sql
 SELECT * FROM sample_rows ORDER BY id;
 ```
+
+`browser.sql`은 뷰·함수·프로시저·패키지/본문·시퀀스·동의어·인덱스·트리거·타입/본문·구체화 뷰 표본을 생성합니다. 구체화 뷰 소유자에게 필요한 `CREATE TABLE` 권한은 시험 계정에 직접 부여합니다. 새 DB에는 자동 적용합니다. 기존 DB에서는 아래 명령을 한 번 실행합니다. 기존 테이블과 행은 유지합니다.
+
+```bash
+make -C test/oracle browser-fixture
+```
+
+접속 후 Tab 또는 클릭으로 왼쪽 탐색기에 이동하여 위쪽 사용자가 `LAZYORA`인지 확인한 뒤 객체 종류 `테이블`의 `SAMPLE_ROWS` 또는 `뷰`의 `SAMPLE_ROWS_VIEW`를 Enter/클릭으로 열면 컬럼 상세를 확인할 수 있습니다. 보기 → 스키마는 스키마 창 표시·숨김 토글입니다. 함수·패키지 등은 기본 정보와 상태를 보여줍니다. Ctrl+R로 새로고침하고 Esc로 돌아옵니다. SQL로 UPDATE 후 객체를 탐색하고 Alt+R로 롤백하면 탐색이 미완료 트랜잭션을 유지하는지도 직접 확인할 수 있습니다.
 
 상태 확인, 로그 보기와 중지:
 
@@ -83,3 +91,14 @@ make -C test/oracle up
 
 참고: [Oracle Free 이미지 및 초기화 동작](https://github.com/gvenzl/oci-oracle-free). 이 DB로 최신 Oracle에서의 동작을 검증할 수 있으며, 구형 Oracle 버전이나 CentOS 7.4 커널 호환성 검증은 별도로 진행합니다.
 
+
+소스·컴파일 검사는 함수·프로시저·패키지/타입 및 본문·트리거의 소스 조회와 재컴파일, 인자·반환값·오버로드 조회, 오류가 있는 함수의 INVALID 상태·오류 행/열과 수정 후 VALID 복구를 실제 DB에서 확인합니다. `browser-fixture`는 이 검사용 객체를 생성·갱신합니다.
+
+
+실행파일의 실제 키 바이트·메뉴·범위 복사·전체화면·객체 조회·트랜잭션을 Linux PTY로 시험하려면 Python 3가 있는 환경에서 실행합니다. DB가 실행 중이고 browser-fixture가 적용돼 있어야 합니다. 비밀번호는 .env에서 읽으며 출력하지 않습니다.
+
+```bash
+make -C test/oracle tui-test
+```
+
+Ctrl+Enter는 CSI-u와 modifyOtherKeys 두 형식, Alt+Enter를 검사합니다. 이것이 SecureCRT 실기 키 매핑 확인을 대신하는 것은 아닙니다. 복사는 터미널에 출력한 OSC 52 페이로드를 확인하며 PC 클립보드의 실제 수신 여부는 터미널에서 확인해야 합니다.

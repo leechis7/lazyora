@@ -21,9 +21,12 @@ type Result struct {
 // Session is used only by the UI's single worker. A pinned connection preserves
 // ALTER SESSION state, and the explicit transaction prevents DML auto-commit.
 type Session struct {
-	db   *sql.DB
-	conn *sql.Conn
-	tx   *sql.Tx
+	db        *sql.DB
+	conn      *sql.Conn
+	tx        *sql.Tx
+	pending   bool
+	work      PendingWork
+	finishErr error
 }
 
 func Open(ctx context.Context, config Config) (*Session, error) {
@@ -52,13 +55,16 @@ func Open(ctx context.Context, config Config) (*Session, error) {
 func (s *Session) Execute(ctx context.Context, text string) (Result, error) {
 	start := time.Now()
 	result := Result{Affected: -1}
+	if s.finishErr != nil {
+		return result, s.finishErr
+	}
 	statement, query, err := Prepare(text)
 	if err != nil {
 		return result, err
 	}
 	word, _ := leadingWord(statement)
 	if word == "COMMIT" || word == "ROLLBACK" {
-		return result, errors.New("use F5 Commit or F6 Rollback")
+		return result, errors.New("use the session Commit or Rollback actions")
 	}
 	if s.tx == nil {
 		// Do not use the per-query context here: database/sql would roll the
@@ -69,12 +75,18 @@ func (s *Session) Execute(ctx context.Context, text string) (Result, error) {
 		}
 	}
 	if !query {
+		// A failed/cancelled statement or PL/SQL block may have executed part
+		// of its work. Keep a conservative warning until explicit resolution.
+		s.pending = true
 		var exec sql.Result
 		exec, err = s.tx.ExecContext(ctx, statement)
 		if err == nil {
-			result.Affected, _ = exec.RowsAffected()
+			if affected, rowsErr := exec.RowsAffected(); rowsErr == nil {
+				result.Affected = affected
+			}
 		}
 		result.Elapsed = time.Since(start)
+		s.recordStatement(start, statement, result.Affected, err)
 		return result, err
 	}
 	rows, err := s.tx.QueryContext(ctx, statement)
@@ -125,15 +137,34 @@ func formatValue(value any) string {
 
 func (s *Session) Finish(commit bool) error {
 	if s.tx == nil {
-		return nil
+		if s.finishErr == nil {
+			s.pending = false
+			s.work = PendingWork{}
+		}
+		return s.finishErr
 	}
 	tx := s.tx
 	s.tx = nil
+	var err error
 	if commit {
-		return tx.Commit()
+		err = tx.Commit()
+	} else {
+		err = tx.Rollback()
 	}
-	return tx.Rollback()
+	if err != nil {
+		s.pending = true
+		s.finishErr = fmt.Errorf("transaction outcome is uncertain; reconnect before executing more SQL: %w", err)
+		return s.finishErr
+	}
+	s.pending = false
+	s.work = PendingWork{}
+	return nil
 }
+
+// PendingChanges reports statements that may have changed data and have not
+// been resolved by this client. DDL/PLSQL may commit internally, so this is a
+// conservative client-side warning, not a database transaction inventory.
+func (s *Session) PendingChanges() bool { return s.pending }
 
 func (s *Session) Close() {
 	_ = s.Finish(false)

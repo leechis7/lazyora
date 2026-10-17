@@ -13,17 +13,129 @@ func focusForm(s *screen, form *tview.Form, index int) {
 }
 
 func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
-	page, _ := s.pages.GetFrontPage()
-	ctrlEnter := event.Key() == tcell.KeyEnter && event.Modifiers()&tcell.ModCtrl != 0
+	// tcell reports legacy ESC CR as Ctrl+Alt+m rather than KeyEnter+Alt.
+	if event.Key() == tcell.KeyRune && event.Rune() == 'm' && event.Modifiers()&(tcell.ModAlt|tcell.ModCtrl) == tcell.ModAlt|tcell.ModCtrl {
+		event = tcell.NewEventKey(tcell.KeyEnter, 0, event.Modifiers()&^tcell.ModCtrl)
+	}
+
+	page, pageRoot := s.pages.GetFrontPage()
+	executeEnter := event.Key() == tcell.KeyEnter && event.Modifiers()&(tcell.ModCtrl|tcell.ModAlt) != 0
 	alt := event.Modifiers()&tcell.ModAlt != 0
 	letter := unicode.ToLower(event.Rune())
-	if event.Key() == tcell.KeyCtrlQ || event.Key() == tcell.KeyCtrlC {
+	if event.Key() == tcell.KeyCtrlQ {
 		s.action("quit")
 		return nil
 	}
-	if event.Key() == tcell.KeyF8 {
+	if s.buttonArrow(event) {
+		return nil
+	}
+	if event.Key() == tcell.KeyTab || event.Key() == tcell.KeyBacktab {
+		switch page {
+		case "help":
+			s.dialogTab(event, pageRoot.(*tview.Flex).GetItem(0))
+			return nil
+		case "object":
+			s.dialogTab(event, s.objectTable)
+			return nil
+		case "source":
+			s.dialogTab(event, s.sourceEditor, s.sourceDiagnostics)
+			return nil
+		case "pending":
+			s.dialogTab(event, s.pendingTable, s.pendingSQL)
+			return nil
+		case "arguments":
+			s.dialogTab(event, s.argumentTable)
+			return nil
+		}
+	}
+	if page == "main" || page == "menu" {
+		if alt {
+			if letter == 'm' {
+				s.showMenu(0)
+				return nil
+			}
+			for index, group := range menuGroups {
+				if letter == group.key {
+					s.showMenu(index)
+					return nil
+				}
+			}
+		}
+	}
+	if page == "menu" {
+		return s.menuKey(event)
+	}
+	if (page == "copy" || page == "describe") && event.Key() == tcell.KeyF1 {
+		s.showHelp()
+		return nil
+	}
+	if page == "pending" && event.Key() != tcell.KeyF1 {
+		if event.Key() == tcell.KeyEscape {
+			s.closePendingWork()
+			return nil
+		}
+		if event.Key() == tcell.KeyCtrlC {
+			s.sendClipboard(s.pendingSQL.GetText(false))
+			return nil
+		}
+		return event
+	}
+	if page == "copy" {
+		if event.Key() == tcell.KeyEscape {
+			s.closeCopyPreview()
+			return nil
+		}
+		return event
+	}
+	if page == "describe" {
+		if event.Key() == tcell.KeyEnter && s.describeForm.GetFormItem(0).HasFocus() {
+			s.describeAction()
+			return nil
+		}
+		if event.Key() == tcell.KeyEscape {
+			s.closeDescribe()
+			return nil
+		}
+		return event
+	}
+	if page == "search" {
+		if event.Key() == tcell.KeyEscape {
+			s.closeSearch()
+			return nil
+		}
+		if event.Key() == tcell.KeyEnter && s.searchForm.GetFormItem(0).HasFocus() {
+			s.searchAction("next")
+			return nil
+		}
+		if event.Key() == tcell.KeyF3 {
+			action := "next"
+			if event.Modifiers()&tcell.ModShift != 0 {
+				action = "previous"
+			}
+			s.searchAction(action)
+			return nil
+		}
+		return event
+	}
+	if page == "history" {
+		if event.Key() == tcell.KeyEscape || event.Key() == tcell.KeyF8 {
+			s.closeHistory()
+			return nil
+		}
+		return event
+	}
+	if page == "main" && s.browserHasFocus() && (s.browserUsers.IsOpen() || s.browserTypes.IsOpen()) && event.Key() == tcell.KeyEscape {
+		return event
+	}
+	if s.busy && event.Key() == tcell.KeyEscape && page != "exit" && page != "program_confirm" {
 		s.action("cancel")
 		return nil
+	}
+	if page == "exit" {
+		return s.exitKey(event)
+	}
+	if page == "program_confirm" {
+		return event
 	}
 	if event.Key() == tcell.KeyF1 {
 		if page == "help" {
@@ -34,15 +146,66 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 	}
 	if page == "help" {
+		if event.Key() == tcell.KeyRune && event.Modifiers() == 0 && event.Rune() >= '0' && event.Rune() <= '8' {
+			s.helpJump(int(event.Rune() - '0'))
+			return nil
+		}
 		if event.Key() == tcell.KeyEscape || (alt && letter == 'x') {
 			s.closeHelp()
 			return nil
 		}
 		return event
 	}
-	if event.Key() == tcell.KeyF3 && page != "settings" {
-		s.settingsForm()
-		return nil
+	if page == "object" {
+		if alt && letter == 's' {
+			s.showSource()
+			return nil
+		}
+		if alt && letter == 'a' {
+			s.showArguments()
+			return nil
+		}
+		switch event.Key() {
+		case tcell.KeyEscape:
+			s.closeObject()
+			return nil
+		case tcell.KeyCtrlR:
+			if !s.busy {
+				s.openObject(s.object)
+			}
+			return nil
+		}
+		if alt && letter == 'x' {
+			s.closeObject()
+			return nil
+		}
+		return event
+	}
+	if page == "source" {
+		if event.Key() == tcell.KeyEscape {
+			s.closeSource()
+			return nil
+		}
+		if event.Key() == tcell.KeyCtrlR {
+			s.reloadSource()
+			return nil
+		}
+		if event.Key() == tcell.KeyF9 && event.Modifiers() == tcell.ModNone {
+			s.requestCompile()
+			return nil
+		}
+		if alt && letter == 'a' {
+			s.showArguments()
+			return nil
+		}
+		return event
+	}
+	if page == "arguments" {
+		if event.Key() == tcell.KeyEscape {
+			s.closeArguments()
+			return nil
+		}
+		return event
 	}
 	if page == "settings" {
 		if event.Key() == tcell.KeyEscape || (alt && letter == 'x') {
@@ -66,6 +229,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return event
 	}
 	if page == "connect" {
+		if s.connectionTab(event) {
+			return nil
+		}
 		if event.Key() == tcell.KeyCtrlS || (alt && letter == 's') {
 			s.saveConnection()
 			return nil
@@ -74,12 +240,16 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 			s.closeConnection()
 			return nil
 		}
-		if ctrlEnter || (alt && letter == 'c') {
+		if executeEnter || (alt && letter == 'c') {
 			s.connectAction()
 			return nil
 		}
 		if alt {
-			for i, key := range []rune{'h', 'p', 'u', 'w', 't', 'n', 'r', 'a'} {
+			if letter == 'r' {
+				focusForm(s, s.connectProfiles, 0)
+				return nil
+			}
+			for i, key := range []rune{'a', 'h', 'p', 'u', 'w', 't', 'n'} {
 				if letter == key {
 					focusForm(s, s.connectForm, i)
 					return nil
@@ -91,35 +261,35 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if page != "main" {
 		return event
 	}
-	if ctrlEnter {
-		s.action("execute")
+	if s.browserHasFocus() {
+		if (s.browserUsers.IsOpen() || s.browserTypes.IsOpen()) && event.Modifiers()&(tcell.ModCtrl|tcell.ModAlt) == 0 {
+			return event
+		}
+		if event.Key() == tcell.KeyCtrlR {
+			s.refreshBrowser()
+			return nil
+		}
+	}
+
+	if s.table.HasFocus() {
+		switch event.Key() {
+		case tcell.KeyUp, tcell.KeyDown, tcell.KeyLeft, tcell.KeyRight:
+			if event.Modifiers()&tcell.ModShift != 0 {
+				s.extendResultSelection(event.Key())
+				return nil
+			}
+			s.clearResultSelection()
+		case tcell.KeyEscape:
+			s.clearResultSelection()
+			return nil
+		}
+	}
+	if s.commandKey(event) {
 		return nil
 	}
 	switch event.Key() {
-	case tcell.KeyF2:
-		s.action("connect")
-		return nil
-	case tcell.KeyF4:
-		s.action("execute")
-		return nil
-	case tcell.KeyF5:
-		s.action("commit")
-		return nil
-	case tcell.KeyF6:
-		s.action("rollback")
-		return nil
-	case tcell.KeyF9:
-		s.app.SetFocus(s.editor)
-		return nil
-	case tcell.KeyF10:
-		s.app.SetFocus(s.table)
-		return nil
 	case tcell.KeyTab, tcell.KeyBacktab:
-		if s.app.GetFocus() == s.editor {
-			s.app.SetFocus(s.table)
-		} else {
-			s.app.SetFocus(s.editor)
-		}
+		s.cyclePanel(event.Key() == tcell.KeyBacktab)
 		return nil
 	}
 	return event

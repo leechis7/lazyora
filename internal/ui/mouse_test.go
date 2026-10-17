@@ -39,6 +39,8 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 	}
 	t.Cleanup(func() {
 		s.app.QueueEvent(tcell.NewEventKey(tcell.KeyCtrlQ, 0, tcell.ModNone))
+		s.app.QueueEvent(tcell.NewEventKey(tcell.KeyLeft, 0, tcell.ModNone))
+		s.app.QueueEvent(tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone))
 		select {
 		case err := <-finished:
 			if err != nil {
@@ -76,41 +78,63 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 		s.app.QueueEvent(tcell.NewEventMouse(x, y, tcell.Button1, tcell.ModNone))
 		s.app.QueueEvent(tcell.NewEventMouse(x, y, tcell.ButtonNone, tcell.ModNone))
 	}
-	wait(func() bool { return strings.Contains(s.footer.GetText(false), "F4 / Ctrl+Enter") })
+	wait(func() bool { return strings.Contains(s.footer.GetText(false), "F9 / Ctrl+Enter") })
 	s.app.QueueUpdate(func() {
 		_, editorY, _, _ := s.editor.GetRect()
 		_, buttonsY, _, _ := s.buttons[0].GetRect()
 		_, height := terminal.Size()
-		if editorY != 0 || buttonsY != height-1 {
+		if editorY != 1 || buttonsY != height-1 {
 			t.Errorf("footer was not at bottom: editor=%d footer=%d", editorY, buttonsY)
 		}
 	})
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModNone))
+	s.app.QueueUpdateDraw(func() { s.focusPanel("results") })
 	wait(func() bool {
-		return strings.Contains(s.footer.GetText(false), "PgUp/PgDn") && !strings.Contains(s.footer.GetText(false), "Ctrl+Enter")
+		return strings.Contains(s.footer.GetText(false), "Ctrl+C") && !strings.Contains(s.footer.GetText(false), "Ctrl+Enter")
 	})
 	click(func() tview.Primitive { return s.editor })
-	wait(func() bool { return strings.Contains(s.footer.GetText(false), "F4 / Ctrl+Enter") })
+	wait(func() bool { return strings.Contains(s.footer.GetText(false), "F9 / Ctrl+Enter") })
 	click(func() tview.Primitive { return s.table })
-	wait(func() bool { return strings.Contains(s.footer.GetText(false), "Home/End") })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF3, 0, tcell.ModNone))
+	wait(func() bool { return strings.Contains(s.footer.GetText(false), "Alt+Y") })
+
+	s.app.QueueUpdateDraw(func() { s.invoke("browser") })
+	wait(func() bool {
+		x, _, width, _ := s.editor.GetRect()
+		terminalWidth, _ := terminal.Size()
+		return s.browserHidden && x == 0 && width == terminalWidth
+	})
+	s.app.QueueUpdateDraw(func() { s.invoke("browser") })
+	wait(func() bool { return s.browser.HasFocus() && strings.Contains(s.footer.GetText(false), "Ctrl+R") })
+	var objectX, objectY int
+	s.app.QueueUpdate(func() {
+		x, y, _, _ := s.browser.GetInnerRect()
+		objectX, objectY = x+4, y // SAMPLE_ROWS in the flat object list
+	})
+	s.app.QueueEvent(tcell.NewEventMouse(objectX, objectY, tcell.Button1, tcell.ModNone))
+	s.app.QueueEvent(tcell.NewEventMouse(objectX, objectY, tcell.ButtonNone, tcell.ModNone))
+	wait(func() bool { return page("object") && s.object.Name == "SAMPLE_ROWS" })
+	wait(func() bool { return strings.Contains(s.footer.GetText(false), "Esc Back") })
+	click(func() tview.Primitive { return s.buttons[3] })
+	wait(func() bool { return page("main") && s.browser.HasFocus() })
+	s.app.QueueUpdateDraw(func() { s.focusPanel("results") })
+	wait(func() bool { return s.table.HasFocus() })
+	s.app.QueueUpdateDraw(func() { s.invoke("settings") })
 	wait(func() bool { return page("settings") })
 	s.app.QueueUpdateDraw(func() {
-		s.prefsForm.GetFormItem(0).(*tview.DropDown).SetCurrentOption(1)
+		s.prefsForm.GetFormItem(0).(*choiceField).SetCurrentOption(1)
 		s.prefsForm.GetFormItem(1).(*tview.Checkbox).SetChecked(false)
 	})
 	click(func() tview.Primitive { return s.prefsForm.GetButton(0) })
 	wait(func() bool { return page("main") && s.prefs.Language == "ko" && !s.prefs.Mouse })
-	wait(func() bool { return strings.Contains(s.footer.GetText(false), "스크롤") })
+	wait(func() bool { return strings.Contains(s.footer.GetText(false), "복사") })
 	click(func() tview.Primitive { return s.buttons[1] })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModNone))
+	s.app.QueueUpdateDraw(func() { s.focusPanel("results") })
 	wait(func() bool { return s.app.GetFocus() == s.table })
 	s.app.QueueUpdate(func() {
 		if !page("main") {
 			t.Error("disabled mouse still opened connection")
 		}
 	})
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF3, 0, tcell.ModNone))
+	s.app.QueueUpdateDraw(func() { s.invoke("settings") })
 	wait(func() bool { return page("settings") })
 	s.app.QueueUpdate(func() { s.prefsForm.GetFormItem(1).(*tview.Checkbox).SetChecked(true) })
 	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyCtrlS, 0, tcell.ModCtrl))
@@ -120,6 +144,10 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 	wait(func() bool {
 		return strings.Contains(s.footer.GetText(false), "별칭") && strings.Contains(s.buttons[2].GetLabel(), "저장")
 	})
+	click(func() tview.Primitive { return s.connectProfiles.GetFormItem(0) })
+	wait(func() bool { return s.connectProfiles.GetFormItem(0).(*choiceField).IsOpen() })
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone))
+	wait(func() bool { return !s.connectProfiles.GetFormItem(0).(*choiceField).IsOpen() })
 	s.app.QueueUpdateDraw(func() { fillConnection(s, "마우스 저장 시험", "service") })
 	click(func() tview.Primitive { return s.connectForm.GetButton(2) })
 	wait(func() bool { return strings.Contains(s.connectForm.GetTitle(), "저장했습니다") })
@@ -127,8 +155,8 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 	if err != nil || len(profiles) != 1 || profiles[0].Alias != "마우스 저장 시험" {
 		t.Fatalf("mouse save did not persist the profile: %+v %v", profiles, err)
 	}
-	click(func() tview.Primitive { return s.connectForm.GetFormItem(2) })
-	wait(func() bool { return s.connectForm.GetFormItem(2).HasFocus() })
+	click(func() tview.Primitive { return s.connectForm.GetFormItem(connectionUser) })
+	wait(func() bool { return s.connectForm.GetFormItem(connectionUser).HasFocus() })
 	click(func() tview.Primitive { return s.connectForm.GetButton(1) })
 	wait(func() bool { return page("main") })
 	click(func() tview.Primitive { return s.buttons[0] })
@@ -148,4 +176,10 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 	if err != nil || loaded.Language != "ko" || !loaded.Mouse {
 		t.Fatalf("saved settings were not restored: %+v %v", loaded, err)
 	}
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyCtrlQ, 0, tcell.ModNone))
+	wait(func() bool { return page("exit") })
+	click(func() tview.Primitive { return s.editor })
+	wait(func() bool { return s.exitDialog != nil && s.exitDialog.HasFocus() })
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyEscape, 0, tcell.ModNone))
+	wait(func() bool { return page("main") })
 }

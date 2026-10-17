@@ -39,7 +39,7 @@ func TestDemoInterfaceAndConnectionForm(t *testing.T) {
 		t.Fatal("missing demo result")
 	}
 	// Exercise real key dispatch, not just the widget construction.
-	ui.app.QueueEvent(tcell.NewEventKey(tcell.KeyF4, 0, tcell.ModNone))
+	ui.app.QueueEvent(tcell.NewEventKey(tcell.KeyF9, 0, tcell.ModNone))
 	ui.app.QueueUpdate(func() {})
 	ui.app.QueueEvent(tcell.NewEventKey(tcell.KeyF2, 0, tcell.ModNone))
 	ui.app.QueueEvent(tcell.NewEventKey(tcell.KeyEscape, 0, tcell.ModNone))

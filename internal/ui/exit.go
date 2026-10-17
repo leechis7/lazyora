@@ -93,16 +93,19 @@ func (s *screen) exitKey(event *tcell.EventKey) *tcell.EventKey {
 	if s.busy {
 		return nil
 	}
+	if event.Modifiers()&tcell.ModAlt != 0 && event.Rune() == 'c' {
+		s.confirmExit("exit_commit")
+		return nil
+	}
+	if event.Modifiers()&tcell.ModAlt != 0 && event.Rune() == 'r' {
+		s.confirmExit("exit_rollback")
+		return nil
+	}
 	switch event.Key() {
 	case tcell.KeyEscape:
 		s.cancelExit()
 		return nil
-	case tcell.KeyF5:
-		s.confirmExit("exit_commit")
-		return nil
-	case tcell.KeyF6:
-		s.confirmExit("exit_rollback")
-		return nil
+
 	}
 	return event
 }

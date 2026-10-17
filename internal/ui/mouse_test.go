@@ -78,23 +78,23 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 		s.app.QueueEvent(tcell.NewEventMouse(x, y, tcell.Button1, tcell.ModNone))
 		s.app.QueueEvent(tcell.NewEventMouse(x, y, tcell.ButtonNone, tcell.ModNone))
 	}
-	wait(func() bool { return strings.Contains(s.footer.GetText(false), "F4 / Ctrl+Enter") })
+	wait(func() bool { return strings.Contains(s.footer.GetText(false), "F9 / Ctrl+Enter") })
 	s.app.QueueUpdate(func() {
 		_, editorY, _, _ := s.editor.GetRect()
 		_, buttonsY, _, _ := s.buttons[0].GetRect()
 		_, height := terminal.Size()
-		if editorY != 0 || buttonsY != height-1 {
+		if editorY != 1 || buttonsY != height-1 {
 			t.Errorf("footer was not at bottom: editor=%d footer=%d", editorY, buttonsY)
 		}
 	})
 	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModNone))
 	wait(func() bool {
-		return strings.Contains(s.footer.GetText(false), "PgUp/PgDn") && !strings.Contains(s.footer.GetText(false), "Ctrl+Enter")
+		return strings.Contains(s.footer.GetText(false), "Ctrl+C") && !strings.Contains(s.footer.GetText(false), "Ctrl+Enter")
 	})
 	click(func() tview.Primitive { return s.editor })
-	wait(func() bool { return strings.Contains(s.footer.GetText(false), "F4 / Ctrl+Enter") })
+	wait(func() bool { return strings.Contains(s.footer.GetText(false), "F9 / Ctrl+Enter") })
 	click(func() tview.Primitive { return s.table })
-	wait(func() bool { return strings.Contains(s.footer.GetText(false), "Home/End") })
+	wait(func() bool { return strings.Contains(s.footer.GetText(false), "Alt+Y") })
 
 	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF7, 0, tcell.ModNone))
 	wait(func() bool {
@@ -125,7 +125,7 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 	})
 	click(func() tview.Primitive { return s.prefsForm.GetButton(0) })
 	wait(func() bool { return page("main") && s.prefs.Language == "ko" && !s.prefs.Mouse })
-	wait(func() bool { return strings.Contains(s.footer.GetText(false), "스크롤") })
+	wait(func() bool { return strings.Contains(s.footer.GetText(false), "복사") })
 	click(func() tview.Primitive { return s.buttons[1] })
 	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModNone))
 	wait(func() bool { return s.app.GetFocus() == s.table })

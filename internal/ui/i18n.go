@@ -4,6 +4,35 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"fullscreen":             {"Fullscreen / restore", "전체화면 / 복원"},
+	"maximize_short":         {"Max", "최대화"},
+	"fullscreen_short":       {"Full", "전체화면"},
+	"copy_empty":             {"No data selected to copy.", "복사할 데이터를 선택하세요."},
+	"copy_requested":         {"Clipboard request sent (%d bytes). Edit > Copy preview if unsupported.", "클립보드 전송 요청 (%d바이트). 미지원 시 편집 > 복사 내용 보기."},
+	"copy_preview":           {"Copy preview", "복사 내용 보기"},
+	"copy_preview_hint":      {"Mouse reporting is off. Select text with your terminal and copy; arrows/PgUp/PgDn scroll, Esc closes.", "터미널에서 글자를 선택해 복사하세요. 방향키/PgUp/PgDn 스크롤, Esc 닫기 (마우스 보고 일시 중지)."},
+	"copy_selection":         {"Copy cell / range", "셀 / 범위 복사"},
+	"copy_row":               {"Copy row", "행 복사"},
+	"cancel_execution":       {"Cancel execution", "실행 취소"},
+	"script_unavailable":     {"Run script (not supported yet)", "스크립트 실행 (아직 지원하지 않음)"},
+	"maximize":               {"Maximize panel / restore", "창 최대화 / 복원"},
+	"maximized":              {"Maximized", "최대화"},
+	"focus_sql":              {"Focus SQL editor", "쿼리창 이동"},
+	"focus_results":          {"Focus results", "결과창 이동"},
+	"describe":               {"Describe object", "객체 상세 조회"},
+	"object_reference":       {"Object / schema.object", "객체 / 스키마.객체"},
+	"object_reference_error": {"Enter object name or schema.object.", "객체명 또는 스키마.객체명을 입력하세요."},
+	"object_not_found":       {"Object not found.", "객체를 찾을 수 없습니다."},
+	"footer_describe":        {"Enter Describe | Esc Close", "Enter 상세 조회 | Esc 닫기"},
+	"menu_hint":              {"Alt+M Menu | Left/Right Menus | Up/Down Select | Enter Run | Esc Close", "Alt+M 메뉴 | 좌우 메뉴 이동 | 위아래 선택 | Enter 실행 | Esc 닫기"},
+	"menu_file":              {"File", "파일"},
+	"menu_edit":              {"Edit", "편집"},
+	"menu_session":           {"Session", "세션"},
+	"menu_execute":           {"Execute", "실행"},
+	"menu_view":              {"View", "보기"},
+	"menu_tools":             {"Tools", "도구"},
+	"menu_help":              {"Help", "도움말"},
+
 	"source":                  {"Source", "소스"},
 	"source_button":           {"Source / Edit (Alt+S)", "소스 / 편집 (Alt+S)"},
 	"arguments":               {"Arguments", "인자"},
@@ -89,8 +118,8 @@ var messages = map[string][2]string{
 	"developer":               {"Developer", "개발자"},
 	"email":                   {"Email", "이메일"},
 	"license":                 {"License", "라이선스"},
-	"footer_sql":              {"F4 / Ctrl+Enter Run | F7 Toggle schemas | Tab Results", "F4 / Ctrl+Enter 실행 | F7 스키마 표시/숨김 | Tab 결과"},
-	"footer_results":          {"↑↓←→ Move | PgUp/PgDn Page | Home/End First/Last | Tab Schemas", "↑↓←→ 이동 | PgUp/PgDn 스크롤 | Home/End 처음/끝 | Tab 스키마"},
+	"footer_sql":              {"%s Run | %s | Tab Results", "%s 실행 | %s | Tab 결과"},
+	"footer_results":          {"%s Copy | %s Row | Shift+Arrows | PgUp/PgDn | %s", "%s 복사 | %s 행 | Shift+방향키 | PgUp/PgDn | %s"},
 	"footer_connect":          {"Tab Fields | Alt+R Profiles | Alt+A Alias | Alt+W Password", "Tab 항목 이동 | Alt+R 저장된 접속 | Alt+A 별칭 | Alt+W 비밀번호"},
 	"footer_settings":         {"Alt+L Language | Alt+M Mouse | Space Toggle | Tab Fields", "Alt+L 언어 | Alt+M 마우스 | Space 선택 | Tab 항목 이동"},
 	"footer_help":             {"↑↓ / PgUp/PgDn Scroll | F1 / Esc Close", "↑↓ / PgUp/PgDn 스크롤 | F1 / Esc 닫기"},
@@ -175,6 +204,7 @@ func (s *screen) setStatus(key string, args ...any) {
 }
 
 func (s *screen) refreshLabels() {
+	s.refreshMenuLabels()
 	s.localizeBrowser()
 	s.editor.SetTitle(s.tr("sql_title"))
 	s.table.SetTitle(s.tr("results_title"))
@@ -184,6 +214,9 @@ func (s *screen) refreshLabels() {
 	}
 	if s.demo && s.table.GetRowCount() > 1 {
 		s.table.GetCell(1, 1).SetText(s.tr("demo_cell"))
+		if len(s.resultRows) > 0 && len(s.resultRows[0]) > 1 {
+			s.resultRows[0][1] = s.tr("demo_cell")
+		}
 	}
 	if s.statusKey != "" {
 		s.setStatus(s.statusKey, s.statusArgs...)

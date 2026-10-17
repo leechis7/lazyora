@@ -39,7 +39,7 @@ func TestBrowserFocusCycleAndContext(t *testing.T) {
 	if !strings.Contains(s.footer.GetText(false), "Ctrl+R") {
 		t.Fatal("browser context shortcuts missing")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF9, 0, tcell.ModNone))
+	s.key(tcell.NewEventKey(tcell.KeyF6, 0, tcell.ModNone))
 	s.key(tcell.NewEventKey(tcell.KeyF7, 0, tcell.ModNone))
 	if !s.browserHidden || !s.editor.HasFocus() {
 		t.Fatal("F7 did not hide the browser while preserving SQL focus")

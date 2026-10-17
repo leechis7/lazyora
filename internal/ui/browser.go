@@ -40,12 +40,12 @@ func (s *screen) toggleBrowser() {
 		return
 	}
 	s.browserHidden = !s.browserHidden
-	if s.mainLayout != nil {
-		s.mainLayout.Clear()
-		if !s.browserHidden {
-			s.mainLayout.AddItem(s.browser, 0, 1, false)
-		}
-		s.mainLayout.AddItem(s.queryLayout, 0, 3, true)
+	wasMaximized := s.maximized != ""
+	s.maximized = ""
+	s.fullscreen = false
+	s.rebuildPanels()
+	if wasMaximized {
+		s.restorePanelOffsets()
 	}
 	if s.browserHidden {
 		if s.browser.HasFocus() {
@@ -242,6 +242,10 @@ func (s *screen) localizeBrowser() {
 }
 
 func (s *screen) openObject(object oracle.Object) {
+	if page, _ := s.pages.GetFrontPage(); page != "object" {
+		s.objectFocus = s.app.GetFocus()
+	}
+
 	if s.busy {
 		return
 	}
@@ -315,5 +319,9 @@ func (s *screen) renderObject(columns []oracle.Column) {
 
 func (s *screen) closeObject() {
 	s.pages.RemovePage("object")
-	s.app.SetFocus(s.browser)
+	if s.objectFocus != nil {
+		s.app.SetFocus(s.objectFocus)
+	} else {
+		s.app.SetFocus(s.browser)
+	}
 }

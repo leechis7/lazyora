@@ -21,7 +21,26 @@ type job struct {
 }
 
 type screen struct {
+	rootLayout, menuLayout                   *tview.Flex
+	chromeHidden                             bool
+	splitOffsets                             panelOffsets
+	menuButtons                              []*tview.Button
+	menuList                                 *tview.List
+	menuFocus                                tview.Primitive
+	menuIndex                                int
+	describeForm                             *tview.Form
+	describeFocus                            tview.Primitive
+	describeAction                           func()
 	app                                      *tview.Application
+	terminal                                 tcell.Screen
+	resultRows                               [][]string
+	resultHeaders                            []string
+	resultSelection                          resultSelection
+	clipboardText                            string
+	copyFocus                                tview.Primitive
+	copyText                                 *tview.TextView
+	maximized                                string
+	fullscreen                               bool
 	pages                                    *tview.Pages
 	editor                                   *tview.TextArea
 	table                                    *tview.Table
@@ -39,6 +58,7 @@ type screen struct {
 	browserOwner                             string
 	object                                   oracle.Object
 	objectInfo                               *tview.TextView
+	objectFocus                              tview.Primitive
 	objectTable                              *tview.Table
 	objectColumns                            []oracle.Column
 	pendingChanges                           bool
@@ -82,12 +102,15 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 		prefs, prefsErr = settings.Load(path)
 	}
 	s := &screen{app: tview.NewApplication(), jobs: make(chan job, 1), done: make(chan struct{}), demo: demo, prefs: prefs, prefsPath: path}
+	s.terminal = terminal
 	s.app.SetScreen(terminal)
 	s.limitedColors = terminal.Colors() > 0 && terminal.Colors() <= 16
 	s.editor = tview.NewTextArea().SetText("SELECT sysdate AS server_time FROM dual;", false)
 	s.editor.SetBorder(true)
 	s.table = tview.NewTable().SetBorders(false).SetSelectable(true, true).SetFixed(1, 0)
 	s.table.SetBorder(true)
+	s.table.SetMouseCapture(s.resultMouse)
+	s.editor.SetClipboard(s.sendClipboard, func() string { return s.clipboardText })
 	s.status = tview.NewTextView()
 	s.queryLayout = tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(s.editor, 0, 2, true).
@@ -107,14 +130,26 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 			}
 			return tview.MouseConsumed, nil
 		}
+		if s.menuList != nil {
+			x, y := event.Position()
+			if s.menuList.InRect(x, y) {
+				s.menuList.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
+			} else if action == tview.MouseLeftClick {
+				s.closeMenu()
+			}
+			return tview.MouseConsumed, nil
+		}
 		return action, event
 	})
 	s.footer = tview.NewTextView().SetWrap(false)
 	s.styleScreen()
+	s.menuLayout = s.menuBar()
 	layout := tview.NewFlex().SetDirection(tview.FlexRow).
-		AddItem(s.pages, 0, 1, true).AddItem(s.footer, 1, 0, false).AddItem(s.toolbar(), 1, 0, false)
+		AddItem(s.menuLayout, 1, 0, false).AddItem(s.pages, 0, 1, true).AddItem(s.footer, 1, 0, false).AddItem(s.toolbar(), 1, 0, false)
+	s.rootLayout = layout
 	s.app.SetRoot(layout, true).SetFocus(s.editor).SetInputCapture(s.key).EnableMouse(prefs.Mouse)
 	s.app.SetBeforeDrawFunc(func(tcell.Screen) bool {
+		s.syncChrome()
 		s.refreshFooter()
 		s.refreshBorders()
 		return false
@@ -216,6 +251,8 @@ func (s *screen) worker() {
 			objects, err = session.Objects(j.ctx, j.object.Owner)
 		case "columns":
 			columns, err = session.Columns(j.ctx, j.object)
+		case "describe":
+			object, err = session.FindObject(j.ctx, j.text)
 		case "object_info":
 			object, err = session.ObjectInfo(j.ctx, j.object)
 		case "source":
@@ -306,6 +343,8 @@ func (s *screen) worker() {
 						s.objectInfo.SetText(s.objectInfo.GetText(false) + "\n" + s.tr("columns_empty"))
 					}
 					s.setStatus("columns_loaded", len(columns))
+				case "describe":
+					s.openObject(object)
 				case "object_info":
 					s.object = object
 					s.renderObject(nil)
@@ -325,9 +364,18 @@ func (s *screen) worker() {
 }
 
 func (s *screen) render(result oracle.Result) {
+	s.resultHeaders = append([]string(nil), result.Columns...)
+	s.resultRows = make([][]string, len(result.Rows))
+	for i, row := range result.Rows {
+		s.resultRows[i] = append([]string(nil), row...)
+	}
+	s.resultSelection = resultSelection{}
 	s.table.Clear()
 	for col, name := range result.Columns {
 		s.table.SetCell(0, col, tview.NewTableCell(tview.Escape(name)).SetStyle(tcell.StyleDefault.Foreground(palette.accent).Background(palette.surface).Bold(true)).SetSelectable(false))
+	}
+	if len(result.Rows) > 0 && len(result.Columns) > 0 {
+		s.table.Select(1, 0)
 	}
 	for row, values := range result.Rows {
 		for col, value := range values {

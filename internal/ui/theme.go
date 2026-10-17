@@ -81,6 +81,15 @@ func (s *screen) refreshBorders() {
 	}
 	apply(s.editor.Box, s.editor.HasFocus(), true)
 	apply(s.table.Box, s.table.HasFocus(), false)
+	if s.menuList != nil {
+		apply(s.menuList.Box, true, false)
+	}
+	if s.describeForm != nil {
+		apply(s.describeForm.Box, s.describeForm.HasFocus(), false)
+	}
+	if s.copyText != nil {
+		apply(s.copyText.Box, s.copyText.HasFocus(), true)
+	}
 	if s.browser != nil {
 		apply(s.browser.Box, s.browser.HasFocus(), false)
 	}

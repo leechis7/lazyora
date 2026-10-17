@@ -11,7 +11,7 @@ import (
 
 func TestQuitAlwaysConfirmsAndEscapePreservesFocus(t *testing.T) {
 	for _, pending := range []bool{false, true} {
-		for _, key := range []tcell.Key{tcell.KeyCtrlQ, tcell.KeyCtrlC} {
+		for _, key := range []tcell.Key{tcell.KeyCtrlQ} {
 			s := shortcutScreen(t)
 			s.pendingChanges = pending
 			s.app.SetFocus(s.table)

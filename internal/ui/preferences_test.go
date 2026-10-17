@@ -75,6 +75,7 @@ func TestFailedSaveAndCancelKeepPreferences(t *testing.T) {
 func TestConnectionAndPaneShortcuts(t *testing.T) {
 	for _, shortcut := range []*tcell.EventKey{
 		tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModCtrl),
+		tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModAlt),
 		tcell.NewEventKey(tcell.KeyRune, 'c', tcell.ModAlt),
 	} {
 		s := shortcutScreen(t)
@@ -102,8 +103,8 @@ func TestConnectionAndPaneShortcuts(t *testing.T) {
 	if s.app.GetFocus() != s.table {
 		t.Fatal("F10 did not focus results")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF9, 0, tcell.ModNone))
+	s.key(tcell.NewEventKey(tcell.KeyF6, 0, tcell.ModNone))
 	if s.app.GetFocus() != s.editor {
-		t.Fatal("F9 did not focus editor")
+		t.Fatal("F6 did not focus editor")
 	}
 }

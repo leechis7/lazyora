@@ -13,13 +13,57 @@ func focusForm(s *screen, form *tview.Form, index int) {
 }
 
 func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
+	// tcell reports legacy ESC CR as Ctrl+Alt+m rather than KeyEnter+Alt.
+	if event.Key() == tcell.KeyRune && event.Rune() == 'm' && event.Modifiers()&(tcell.ModAlt|tcell.ModCtrl) == tcell.ModAlt|tcell.ModCtrl {
+		event = tcell.NewEventKey(tcell.KeyEnter, 0, event.Modifiers()&^tcell.ModCtrl)
+	}
+
 	page, _ := s.pages.GetFrontPage()
-	ctrlEnter := event.Key() == tcell.KeyEnter && event.Modifiers()&tcell.ModCtrl != 0
+	executeEnter := event.Key() == tcell.KeyEnter && event.Modifiers()&(tcell.ModCtrl|tcell.ModAlt) != 0
 	alt := event.Modifiers()&tcell.ModAlt != 0
 	letter := unicode.ToLower(event.Rune())
-	if event.Key() == tcell.KeyCtrlQ || event.Key() == tcell.KeyCtrlC {
+	if event.Key() == tcell.KeyCtrlQ {
 		s.action("quit")
 		return nil
+	}
+	if page == "main" || page == "menu" {
+		if alt {
+			if letter == 'm' {
+				s.showMenu(0)
+				return nil
+			}
+			for index, group := range menuGroups {
+				if letter == group.key {
+					s.showMenu(index)
+					return nil
+				}
+			}
+		}
+	}
+	if page == "menu" {
+		return s.menuKey(event)
+	}
+	if (page == "copy" || page == "describe") && event.Key() == tcell.KeyF1 {
+		s.showHelp()
+		return nil
+	}
+	if page == "copy" {
+		if event.Key() == tcell.KeyEscape {
+			s.closeCopyPreview()
+			return nil
+		}
+		return event
+	}
+	if page == "describe" {
+		if event.Key() == tcell.KeyEnter && s.describeForm.GetFormItem(0).HasFocus() {
+			s.describeAction()
+			return nil
+		}
+		if event.Key() == tcell.KeyEscape {
+			s.closeDescribe()
+			return nil
+		}
+		return event
 	}
 	if event.Key() == tcell.KeyF8 {
 		s.action("cancel")
@@ -142,7 +186,7 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 			s.closeConnection()
 			return nil
 		}
-		if ctrlEnter || (alt && letter == 'c') {
+		if executeEnter || (alt && letter == 'c') {
 			s.connectAction()
 			return nil
 		}
@@ -163,10 +207,6 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if page != "main" {
 		return event
 	}
-	if ctrlEnter {
-		s.action("execute")
-		return nil
-	}
 	if s.browser != nil && s.browser.HasFocus() {
 		switch event.Key() {
 		case tcell.KeyLeft, tcell.KeyRight:
@@ -177,44 +217,25 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 			return nil
 		}
 	}
-	switch event.Key() {
-	case tcell.KeyF2:
-		s.action("connect")
-		return nil
-	case tcell.KeyF4:
-		s.action("execute")
-		return nil
-	case tcell.KeyF5:
-		s.action("commit")
-		return nil
-	case tcell.KeyF6:
-		s.action("rollback")
-		return nil
-	case tcell.KeyF7:
-		s.toggleBrowser()
-		return nil
-	case tcell.KeyF9:
-		s.app.SetFocus(s.editor)
-		return nil
-	case tcell.KeyF10:
-		s.app.SetFocus(s.table)
-		return nil
-	case tcell.KeyTab, tcell.KeyBacktab:
-		panels := []tview.Primitive{s.editor, s.table}
-		if s.browser != nil && !s.browserHidden {
-			panels = append(panels, s.browser)
-		}
-		step := 1
-		if event.Key() == tcell.KeyBacktab {
-			step = len(panels) - 1
-		}
-		for i, panel := range panels {
-			if panel.HasFocus() {
-				s.app.SetFocus(panels[(i+step)%len(panels)])
+	if s.table.HasFocus() {
+		switch event.Key() {
+		case tcell.KeyUp, tcell.KeyDown, tcell.KeyLeft, tcell.KeyRight:
+			if event.Modifiers()&tcell.ModShift != 0 {
+				s.extendResultSelection(event.Key())
 				return nil
 			}
+			s.clearResultSelection()
+		case tcell.KeyEscape:
+			s.clearResultSelection()
+			return nil
 		}
-		s.app.SetFocus(s.editor)
+	}
+	if s.commandKey(event) {
+		return nil
+	}
+	switch event.Key() {
+	case tcell.KeyTab, tcell.KeyBacktab:
+		s.cyclePanel(event.Key() == tcell.KeyBacktab)
 		return nil
 	}
 	return event

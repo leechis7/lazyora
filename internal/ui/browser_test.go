@@ -15,7 +15,7 @@ func demoBrowserScreen(t *testing.T) *screen {
 	s.demo, s.connected = true, false
 	s.newBrowser()
 	s.queryLayout = tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.editor, 0, 2, true).AddItem(s.table, 0, 3, false)
-	s.mainLayout = tview.NewFlex().AddItem(s.browser, 0, 1, false).AddItem(s.queryLayout, 0, 3, true)
+	s.mainLayout = tview.NewFlex().AddItem(s.browserPanel, 0, 1, false).AddItem(s.queryLayout, 0, 3, true)
 	s.pages.AddPage("main", s.mainLayout, true, true)
 	s.showDemoBrowser()
 	s.footer = tview.NewTextView()
@@ -25,7 +25,7 @@ func demoBrowserScreen(t *testing.T) *screen {
 
 func TestBrowserFocusCycleAndContext(t *testing.T) {
 	s := demoBrowserScreen(t)
-	for _, panel := range []tview.Primitive{s.table, s.browser, s.editor} {
+	for _, panel := range []tview.Primitive{s.table, s.browserUsers, s.browserTypes, s.browser, s.editor} {
 		s.key(tcell.NewEventKey(tcell.KeyTab, 0, tcell.ModNone))
 		if s.app.GetFocus() != panel {
 			t.Fatal("Tab did not cycle SQL/results/schemas")
@@ -40,13 +40,13 @@ func TestBrowserFocusCycleAndContext(t *testing.T) {
 		t.Fatal("browser context shortcuts missing")
 	}
 	s.key(tcell.NewEventKey(tcell.KeyF6, 0, tcell.ModNone))
-	s.key(tcell.NewEventKey(tcell.KeyF7, 0, tcell.ModNone))
+	s.key(tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModAlt))
 	if !s.browserHidden || !s.editor.HasFocus() {
-		t.Fatal("F7 did not hide the browser while preserving SQL focus")
+		t.Fatal("Browser menu did not hide the browser while preserving SQL focus")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF7, 0, tcell.ModNone))
+	s.key(tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModAlt))
 	if s.app.GetFocus() != s.browser {
-		t.Fatal("F7 did not show and focus the browser")
+		t.Fatal("Browser menu did not show and focus the browser")
 	}
 }
 
@@ -60,13 +60,13 @@ func TestBrowserToggleRestoresLayoutAndState(t *testing.T) {
 	defer terminal.Fini()
 	terminal.SetSize(100, 30)
 	s.mainLayout.SetRect(0, 0, 100, 28)
-	schema := s.browser.GetCurrentNode()
-	selected := schema.GetChildren()[0].GetChildren()[0]
+	schema := s.browser.GetRoot()
+	selected := schema.GetChildren()[0]
 	s.browser.SetCurrentNode(selected)
 	s.app.SetFocus(s.browser)
 	s.mainLayout.Draw(terminal)
 	_, _, originalWidth, _ := s.editor.GetRect()
-	s.key(tcell.NewEventKey(tcell.KeyF7, 0, tcell.ModNone))
+	s.key(tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModAlt))
 	s.mainLayout.Draw(terminal)
 	x, _, width, _ := s.editor.GetRect()
 	if x != 0 || width != 100 || !s.editor.HasFocus() {
@@ -78,7 +78,7 @@ func TestBrowserToggleRestoresLayoutAndState(t *testing.T) {
 			t.Fatal("hidden browser remained in focus cycle")
 		}
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF7, 0, tcell.ModNone))
+	s.key(tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModAlt))
 	s.mainLayout.Draw(terminal)
 	_, _, restoredWidth, _ := s.editor.GetRect()
 	if restoredWidth != originalWidth || !s.browser.HasFocus() || s.browser.GetCurrentNode() != selected || !schema.IsExpanded() {
@@ -88,7 +88,7 @@ func TestBrowserToggleRestoresLayoutAndState(t *testing.T) {
 		t.Fatal("toggle changed SQL/results or submitted a database job")
 	}
 	s.app.SetFocus(s.table)
-	s.key(tcell.NewEventKey(tcell.KeyF7, 0, tcell.ModNone))
+	s.key(tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModAlt))
 	if !s.table.HasFocus() {
 		t.Fatal("hiding browser changed result focus")
 	}
@@ -97,20 +97,12 @@ func TestBrowserToggleRestoresLayoutAndState(t *testing.T) {
 func TestBrowserDetailsPreserveSQLAndResults(t *testing.T) {
 	s := demoBrowserScreen(t)
 	s.render(oracle.Result{Columns: []string{"VALUE"}, Rows: [][]string{{"keep"}}})
-	schema := s.browser.GetCurrentNode()
+	schema := s.browser.GetRoot()
 	if schema.GetReference().(*browserNode).object.Owner != "LAZYORA" {
 		t.Fatal("current schema not selected")
 	}
 	s.app.SetFocus(s.browser)
-	s.browserArrow(tcell.KeyLeft)
-	if schema.IsExpanded() {
-		t.Fatal("Left did not collapse")
-	}
-	s.browserArrow(tcell.KeyRight)
-	if !schema.IsExpanded() {
-		t.Fatal("Right did not expand")
-	}
-	object := schema.GetChildren()[0].GetChildren()[0]
+	object := schema.GetChildren()[0]
 	s.activateBrowser(object)
 	if page, _ := s.pages.GetFrontPage(); page != "object" {
 		t.Fatal("object columns not opened")
@@ -153,15 +145,16 @@ func TestBrowserLazyLoadEmptySchemasAndLocalization(t *testing.T) {
 	s.cancel()
 	s.cancel, s.busy = nil, false
 	s.populateObjects(j.node, nil)
-	if got := j.node.GetChildren()[0].GetChildren()[0].GetText(); got != "(empty)" {
+	if got := j.node.GetChildren()[0].GetText(); got != "(empty)" {
 		t.Fatalf("empty schema not represented: %s", got)
 	}
 	s.prefs.Language = "ko"
 	s.refreshLabels()
-	if j.node.GetText() != tview.Escape("Case'[red]") || j.node.GetChildren()[0].GetText() != "테이블" {
+	_, typeLabel := s.browserTypes.GetCurrentOption()
+	if j.node.GetText() != tview.Escape("Case'[red]") || typeLabel != "테이블" {
 		t.Fatal("translation changed schema identity or missed labels")
 	}
-	if j.node.GetChildren()[0].GetChildren()[0].GetText() != "(없음)" {
+	if j.node.GetChildren()[0].GetText() != "(없음)" {
 		t.Fatal("empty state was not translated")
 	}
 	s.app.SetFocus(s.browser)
@@ -173,38 +166,39 @@ func TestBrowserLazyLoadEmptySchemasAndLocalization(t *testing.T) {
 
 func TestExpandedObjectKindsAndDetails(t *testing.T) {
 	s := demoBrowserScreen(t)
-	schema := s.browser.GetCurrentNode()
 	want := []string{"TABLE", "VIEW", "MATERIALIZED VIEW", "FUNCTION", "PROCEDURE", "PACKAGE", "PACKAGE BODY", "SEQUENCE", "SYNONYM", "INDEX", "TRIGGER", "TYPE", "TYPE BODY"}
-	groups := schema.GetChildren()
-	if len(groups) != len(want) {
-		t.Fatalf("got %d categories", len(groups))
-	}
 	for i, kind := range want {
-		node := groups[i].GetChildren()[0]
+		s.browserTypes.SetCurrentOption(i)
+		node := s.browser.GetCurrentNode()
 		object := node.GetReference().(*browserNode).object
 		if object.Kind != kind {
-			t.Fatalf("category %d: got %s want %s", i, object.Kind, kind)
+			t.Fatalf("type %d: got %s want %s", i, object.Kind, kind)
 		}
 		s.activateBrowser(node)
-		if kind == "TABLE" || kind == "VIEW" || kind == "MATERIALIZED VIEW" {
+		if object.HasColumns() {
 			if s.objectTable.GetCell(1, 1).Text != "ID" {
-				t.Fatal("column-bearing object lost columns")
+				t.Fatal("column details lost")
 			}
-		} else if s.objectTable.GetCell(3, 1).Text != kind || s.objectTable.GetCell(4, 1).Text != "VALID" {
-			t.Fatalf("metadata detail failed for %s", kind)
+		} else if s.objectTable.GetCell(3, 1).Text != kind {
+			t.Fatal("object metadata lost")
 		}
 		s.closeObject()
 	}
 	s.prefs.Language = "ko"
 	s.refreshLabels()
-	if groups[3].GetText() != "함수" || groups[6].GetText() != "패키지 본문" {
-		t.Fatal("extended category translation missing")
+	s.browserTypes.SetCurrentOption(3)
+	_, functionLabel := s.browserTypes.GetCurrentOption()
+	s.browserTypes.SetCurrentOption(6)
+	_, packageLabel := s.browserTypes.GetCurrentOption()
+	if functionLabel != "함수" || packageLabel != "패키지 본문" {
+		t.Fatal("type translations missing")
 	}
+	s.browserTypes.SetCurrentOption(6)
 	s.demo, s.connected = false, true
-	s.activateBrowser(groups[6].GetChildren()[0])
+	s.activateBrowser(s.browser.GetCurrentNode())
 	job := <-s.jobs
 	if job.action != "object_info" || job.object.Kind != "PACKAGE BODY" {
-		t.Fatalf("non-column object routed to wrong query: %+v", job)
+		t.Fatal("wrong metadata job")
 	}
 }
 

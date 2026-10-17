@@ -10,7 +10,7 @@ import (
 // tview may report a rapid click on a different button as a double click.
 // Buttons should activate on either kind of click; text selection stays unchanged.
 func clickable(button *tview.Button) *tview.Button {
-	button.SetStyle(buttonStyle()).SetActivatedStyle(focusStyle())
+	button.SetStyle(buttonStyle()).SetActivatedStyle(buttonFocusStyle())
 	button.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if action == tview.MouseLeftDoubleClick {
 			action = tview.MouseLeftClick
@@ -35,6 +35,10 @@ func (s *screen) toolbar() *tview.Flex {
 				return
 			}
 			key := s.footerKeys[index]
+			if page, _ := s.pages.GetFrontPage(); page == "exit" && key.action == "pending_work" {
+				s.showPendingWork()
+				return
+			}
 			if page, _ := s.pages.GetFrontPage(); page == "exit" && (key.action == "exit_commit" || key.action == "exit_rollback") {
 				s.confirmExit(key.action)
 				return
@@ -76,16 +80,19 @@ func (s *screen) refreshFooter() {
 	page, _ := s.pages.GetFrontPage()
 	keys := []footerKey{
 		{"F1", "help", tcell.KeyF1, tcell.ModNone},
-		{"F2", "connect", tcell.KeyF2, tcell.ModNone},
-		{"F3", "settings", tcell.KeyF3, tcell.ModNone},
+		{"", "connect", 0, 0},
+		{"", "settings", 0, 0},
 		{"Ctrl+Q", "quit", tcell.KeyCtrlQ, tcell.ModNone},
 	}
 	hint := "footer_sql"
 	switch page {
 	case "main":
 		keys = nil
-		for _, id := range []string{"help", "connect", "settings", "commit", "rollback", "quit"} {
-			key := commandFor(id).bindings[0]
+		for _, id := range []string{"help", "connect", "commit", "rollback", "quit"} {
+			key := binding{}
+			if bindings := commandFor(id).bindings; len(bindings) > 0 {
+				key = bindings[0]
+			}
 			keys = append(keys, footerKey{key.label, id, key.key, key.mod})
 		}
 		if s.table.HasFocus() {
@@ -96,9 +103,18 @@ func (s *screen) refreshFooter() {
 		if s.resultsFocused {
 			hint = "footer_results"
 		}
-		if s.browser != nil && s.browser.HasFocus() {
+		if s.browserHasFocus() {
 			hint = "footer_browser"
 		}
+	case "search":
+		hint = "footer_search"
+		keys = []footerKey{{"Esc", "close", tcell.KeyEscape, 0}}
+	case "pending":
+		hint = "footer_pending"
+		keys = []footerKey{{"Esc", "close", tcell.KeyEscape, 0}}
+	case "history":
+		hint = "footer_history"
+		keys = []footerKey{{"Esc", "close", tcell.KeyEscape, 0}}
 	case "menu":
 		hint = "menu_hint"
 		keys = []footerKey{{"Esc", "close", tcell.KeyEscape, 0}}
@@ -117,6 +133,7 @@ func (s *screen) refreshFooter() {
 		hint = "footer_settings"
 		keys[1] = footerKey{"Ctrl+S", "save", tcell.KeyCtrlS, tcell.ModNone}
 		keys[2] = footerKey{"Esc", "cancel", tcell.KeyEscape, tcell.ModNone}
+		keys = keys[:3]
 	case "help":
 		hint = "footer_help"
 		keys[0].action = "close"
@@ -137,7 +154,7 @@ func (s *screen) refreshFooter() {
 		}
 	case "source":
 		hint = "footer_source"
-		keys = []footerKey{{"Ctrl+F9", "compile", tcell.KeyF9, tcell.ModCtrl}, {"Ctrl+R", "reload", tcell.KeyCtrlR, tcell.ModNone}, {"Esc", "close", tcell.KeyEscape, tcell.ModNone}}
+		keys = []footerKey{{"F9", "compile", tcell.KeyF9, 0}, {"Ctrl+R", "reload", tcell.KeyCtrlR, tcell.ModNone}, {"Esc", "close", tcell.KeyEscape, tcell.ModNone}}
 	case "arguments":
 		hint = "footer_arguments"
 		keys = []footerKey{{"F1", "help", tcell.KeyF1, tcell.ModNone}, {"PgUp", "previous_page", tcell.KeyPgUp, tcell.ModNone}, {"PgDn", "next_page", tcell.KeyPgDn, tcell.ModNone}, {"Esc", "close", tcell.KeyEscape, tcell.ModNone}}
@@ -148,16 +165,17 @@ func (s *screen) refreshFooter() {
 		hint = "footer_exit"
 		keys = []footerKey{{"Esc", "exit_cancel", tcell.KeyEscape, tcell.ModNone}}
 		if s.pendingChanges {
+			keys = append(keys, footerKey{"Alt+V", "pending_work", tcell.KeyRune, tcell.ModAlt})
 			keys = append(keys, footerKey{shortcut("commit"), "exit_commit", tcell.KeyRune, tcell.ModAlt}, footerKey{shortcut("rollback"), "exit_rollback", tcell.KeyRune, tcell.ModAlt})
 		}
 	}
 	text := s.tr(hint)
-	viewKeys := shortcut("maximize") + " " + s.tr("maximize_short") + " / " + shortcut("fullscreen") + " " + s.tr("fullscreen_short")
+	viewKeys := shortcut("fullscreen_sql") + " / " + shortcut("fullscreen_results") + " " + s.tr("fullscreen_short")
 	if hint == "footer_sql" {
-		text = fmt.Sprintf(text, bindingLabels("execute"), viewKeys)
+		text = fmt.Sprintf(text, bindingLabels("execute", 2), shortcut("describe"), shortcut("focus_toggle"), viewKeys)
 	}
 	if hint == "footer_results" {
-		text = fmt.Sprintf(text, shortcut("copy"), shortcut("copy_row"), viewKeys)
+		text = fmt.Sprintf(text, shortcut("copy"), shortcut("copy_row"), shortcut("focus_toggle"), viewKeys)
 	}
 	if page == "main" {
 		if s.maximized != "" {
@@ -176,7 +194,11 @@ func (s *screen) refreshFooter() {
 	s.footerKeys = keys
 	s.footerBar.Clear()
 	for i, key := range keys {
-		s.buttons[i].SetLabel(key.label + " " + s.tr(key.action))
+		label := s.tr(key.action)
+		if key.label != "" {
+			label = key.label + " " + label
+		}
+		s.buttons[i].SetLabel(label)
 		s.footerBar.AddItem(s.buttons[i], 0, 1, false)
 	}
 	s.footerBar.AddItem(s.footerVersion, len(appinfo.Version)+3, 0, false)
@@ -193,7 +215,7 @@ func (s *screen) action(action string) {
 	case "settings":
 		s.settingsForm()
 	case "execute":
-		s.submit(job{action: "execute", text: s.editor.GetText()})
+		s.executeSQL()
 	case "commit", "rollback":
 		s.submit(job{action: action})
 	case "cancel":

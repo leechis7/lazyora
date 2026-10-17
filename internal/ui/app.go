@@ -21,6 +21,13 @@ type job struct {
 }
 
 type screen struct {
+	sqlHistory                               []string
+	historyList                              *tview.List
+	historyFocus                             tview.Primitive
+	searchForm                               *tview.Form
+	searchFocus                              tview.Primitive
+	searchAction                             func(string)
+	findText, replaceText                    string
 	rootLayout, menuLayout                   *tview.Flex
 	chromeHidden                             bool
 	splitOffsets                             panelOffsets
@@ -56,12 +63,22 @@ type screen struct {
 	browserHidden                            bool
 	mainLayout, queryLayout                  *tview.Flex
 	browserOwner                             string
+	browserPanel                             *tview.Flex
+	browserForm                              *tview.Form
+	browserUsers, browserTypes               *choiceField
+	browserSchemas                           []string
+	browserObjects                           []oracle.Object
+	browserKind                              int
 	object                                   oracle.Object
 	objectInfo                               *tview.TextView
 	objectFocus                              tview.Primitive
 	objectTable                              *tview.Table
 	objectColumns                            []oracle.Column
 	pendingChanges                           bool
+	pendingWork                              oracle.PendingWork
+	pendingTable                             *tview.Table
+	pendingSQL                               *tview.TextView
+	pendingFocus                             tview.Primitive
 	exitDialog                               *tview.Modal
 	exitFocus                                tview.Primitive
 	sourceEditor                             *tview.TextArea
@@ -107,6 +124,14 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 	s.limitedColors = terminal.Colors() > 0 && terminal.Colors() <= 16
 	s.editor = tview.NewTextArea().SetText("SELECT sysdate AS server_time FROM dual;", false)
 	s.editor.SetBorder(true)
+	s.editor.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
+		if action == tview.MouseRightClick {
+			s.app.SetFocus(s.editor)
+			s.showContextMenu()
+			return tview.MouseConsumed, nil
+		}
+		return action, event
+	})
 	s.table = tview.NewTable().SetBorders(false).SetSelectable(true, true).SetFixed(1, 0)
 	s.table.SetBorder(true)
 	s.table.SetMouseCapture(s.resultMouse)
@@ -118,8 +143,12 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 	s.mainLayout = tview.NewFlex().AddItem(s.newBrowser(), 0, 1, false).AddItem(s.queryLayout, 0, 3, true)
 	s.pages = tview.NewPages().AddPage("main", s.mainLayout, true, true)
 	s.pages.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
-		modal := s.exitDialog
-		if s.programModal != nil {
+		page, _ := s.pages.GetFrontPage()
+		var modal *tview.Modal
+		if page == "exit" {
+			modal = s.exitDialog
+		}
+		if page == "program_confirm" {
 			modal = s.programModal
 		}
 		if modal != nil {
@@ -180,6 +209,9 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 	}
 	if prefsErr != nil {
 		s.setStatus("settings_load_error", prefsErr)
+	}
+	if !demo {
+		s.connectionForm()
 	}
 	if ready != nil {
 		ready(s)
@@ -268,6 +300,7 @@ func (s *screen) worker() {
 			s.busy = false
 			if session != nil {
 				s.pendingChanges = session.PendingChanges()
+				s.pendingWork = session.PendingWork()
 			}
 			if j.action == "exit_commit" || j.action == "exit_rollback" {
 				if err == nil {
@@ -296,6 +329,10 @@ func (s *screen) worker() {
 				if j.action == "columns" || j.action == "object_info" {
 					s.renderObject(nil)
 					s.objectInfo.SetText(s.objectInfo.GetText(false) + "\n" + s.tr("browser_error") + ": " + err.Error())
+				}
+				if j.action == "objects" {
+					s.browser.SetRoot(j.node).SetCurrentNode(nil)
+					j.node.ClearChildren().AddChild(s.treeMessage("browser_error"))
 				}
 				if j.action == "source" {
 					s.sourceInfo.SetText(s.tr("browser_error") + ": " + err.Error())

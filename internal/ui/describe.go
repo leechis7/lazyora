@@ -37,17 +37,23 @@ func objectAtCursor(editor *tview.TextArea) string {
 	return text[from:to]
 }
 
-func (s *screen) describeObject() {
+func (s *screen) describeObject() { s.describe(false) }
+
+func (s *screen) describe(prompt bool) {
+	reference := objectAtCursor(s.editor)
 	if s.browser != nil && s.browser.HasFocus() {
 		if node := s.browser.GetCurrentNode(); node != nil {
 			if data, ok := node.GetReference().(*browserNode); ok && data.kind == "object" {
-				s.openObject(data.object)
-				return
+				if !prompt {
+					s.openObject(data.object)
+					return
+				}
+				reference = oracle.QualifiedObject(data.object)
 			}
 		}
 	}
 	s.describeFocus = s.app.GetFocus()
-	form := tview.NewForm().AddInputField(s.tr("object_reference"), objectAtCursor(s.editor), 40, nil, nil)
+	form := tview.NewForm().AddInputField(s.tr("object_reference"), reference, 40, nil, nil)
 	s.describeForm = form
 	load := func() {
 		reference := strings.TrimSpace(form.GetFormItem(0).(*tview.InputField).GetText())
@@ -84,7 +90,7 @@ func (s *screen) describeObject() {
 	s.pages.AddPage("describe", form, true, true)
 	s.app.SetFocus(form)
 	// F4 on a selected/under-cursor object resolves immediately.
-	if reference := objectAtCursor(s.editor); reference != "" {
+	if !prompt && reference != "" {
 		if _, _, err := oracle.ParseObjectReference(reference); err == nil && !strings.EqualFold(reference, "SELECT") {
 			load()
 		}

@@ -11,7 +11,7 @@ func TestMenuCommandsRespectContextAndNeverAliasScriptToCommit(t *testing.T) {
 	s := demoBrowserScreen(t)
 	s.connected = true
 	s.key(tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModAlt))
-	if s.menuList == nil || s.menuList.GetItemCount() != 3 {
+	if s.menuList == nil || s.menuList.GetItemCount() != 5 {
 		t.Fatal("execute menu not opened")
 	}
 	text, _ := s.menuList.GetItemText(1)
@@ -28,8 +28,8 @@ func TestMenuCommandsRespectContextAndNeverAliasScriptToCommit(t *testing.T) {
 		t.Fatal("F5 committed")
 	}
 	s.key(tcell.NewEventKey(tcell.KeyF6, 0, 0))
-	if len(s.jobs) != 0 || !s.editor.HasFocus() {
-		t.Fatal("F6 rolled back instead of focusing SQL")
+	if len(s.jobs) != 0 || !s.table.HasFocus() {
+		t.Fatal("F6 rolled back instead of toggling SQL/results")
 	}
 	s.key(tcell.NewEventKey(tcell.KeyRune, 's', tcell.ModAlt))
 	s.menuList.SetCurrentItem(1)

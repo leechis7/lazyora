@@ -48,17 +48,17 @@ func (s *screen) toggleBrowser() {
 		s.restorePanelOffsets()
 	}
 	if s.browserHidden {
-		if s.browser.HasFocus() {
+		if s.browserHasFocus() {
 			s.app.SetFocus(s.editor)
 		}
-		s.browser.SetRect(0, 0, 0, 0)
+		s.hideBrowserRect()
 	} else {
 		s.app.SetFocus(s.browser)
 	}
 }
 
-func (s *screen) newBrowser() *tview.TreeView {
-	s.browser = tview.NewTreeView().SetTopLevel(1).SetGraphicsColor(palette.muted)
+func (s *screen) newBrowser() *tview.Flex {
+	s.browser = tview.NewTreeView().SetTopLevel(1).SetGraphics(false)
 	s.browser.SetBorder(true)
 	styleBox(s.browser.Box)
 	s.browser.SetSelectedFunc(s.activateBrowser)
@@ -68,8 +68,102 @@ func (s *screen) newBrowser() *tview.TreeView {
 		}
 		return action, event
 	})
+	s.browserUsers = s.newChoice(s.tr("browser_user_label"), nil, -1, func(_ string, index int) { s.selectBrowserUser(index) })
+	s.browserTypes = s.newChoice(s.tr("browser_type_label"), nil, -1, func(_ string, index int) { s.selectBrowserType(index) })
+	s.browserUsers.SetFieldWidth(0)
+	s.browserTypes.SetFieldWidth(0)
+	s.browserForm = tview.NewForm().SetItemPadding(0).AddFormItem(s.browserUsers).AddFormItem(s.browserTypes)
+	styleForm(s.browserForm)
+	s.browserForm.SetBorder(true).SetTitle(s.tr("browser_title"))
+	s.browserPanel = tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.browserForm, 6, 0, false).AddItem(s.browser, 0, 1, true)
 	s.resetBrowser()
-	return s.browser
+	return s.browserPanel
+}
+
+func (s *screen) browserHasFocus() bool {
+	return s.browser != nil && (s.browser.HasFocus() || (s.browserForm != nil && s.browserForm.HasFocus()))
+}
+
+func (s *screen) showBrowserSelector(objectType bool) {
+	if s.browserHidden || s.maximized != "" {
+		if !s.browserHidden {
+			s.browserHidden = true
+		}
+		s.toggleBrowser()
+	}
+	if objectType {
+		s.app.SetFocus(s.browserTypes)
+	} else {
+		s.app.SetFocus(s.browserUsers)
+	}
+}
+
+func (s *screen) selectBrowserType(index int) {
+	if index < 0 || index >= len(objectGroups) {
+		return
+	}
+	s.browserKind = index
+	if data, ok := s.browser.GetRoot().GetReference().(*browserNode); ok && data.loaded && s.browserOwner != "" {
+		s.renderBrowserObjects()
+	}
+}
+
+func (s *screen) selectBrowserUser(index int) {
+	if index < 0 || index >= len(s.browserSchemas) {
+		return
+	}
+	owner := s.browserSchemas[index]
+	if owner == s.browserOwner {
+		return
+	}
+	if s.busy {
+		for old, name := range s.browserSchemas {
+			if name == s.browserOwner {
+				s.browserUsers.SetSelectedFunc(nil).SetCurrentOption(old).SetSelectedFunc(func(_ string, i int) { s.selectBrowserUser(i) })
+				break
+			}
+		}
+		return
+	}
+	s.loadBrowserUser(owner)
+}
+
+func (s *screen) loadBrowserUser(owner string) {
+	s.browserOwner = owner
+	s.browserObjects = nil
+	root := s.treeNode(owner, &browserNode{kind: "schema", object: oracle.Object{Owner: owner}}).SetSelectable(false)
+	root.AddChild(s.treeMessage("browser_loading"))
+	s.browser.SetRoot(root).SetCurrentNode(nil)
+	if s.demo && !s.connected {
+		s.populateObjects(root, demoObjects(owner))
+		return
+	}
+	if !s.connected {
+		s.resetBrowser()
+		return
+	}
+	s.submit(job{action: "objects", object: oracle.Object{Owner: owner}, node: root})
+}
+
+func (s *screen) renderBrowserObjects() {
+	root := s.browser.GetRoot()
+	root.ClearChildren().SetExpanded(true)
+	var first *tview.TreeNode
+	for _, object := range s.browserObjects {
+		if object.Kind != objectGroups[s.browserKind].kind {
+			continue
+		}
+		node := s.treeNode(object.Name, &browserNode{kind: "object", object: object})
+		root.AddChild(node)
+		if first == nil {
+			first = node
+		}
+	}
+	if first == nil {
+		root.AddChild(s.treeMessage("browser_empty"))
+	}
+	s.browser.SetCurrentNode(first)
+	s.browser.SetTitle(" " + s.tr(objectGroups[s.browserKind].label) + " ")
 }
 
 func (s *screen) treeNode(text string, data *browserNode) *tview.TreeNode {
@@ -90,16 +184,16 @@ func (s *screen) resetBrowser() {
 	}
 	s.browser.SetRoot(root).SetCurrentNode(nil)
 	s.browserOwner = ""
+	s.browserSchemas = nil
+	s.browserObjects = nil
+	s.browserKind = 0
+	s.browserUsers.SetSelectedFunc(nil).SetOptions(nil, nil).SetCurrentOption(-1).SetSelectedFunc(func(_ string, i int) { s.selectBrowserUser(i) })
+	s.localizeBrowser()
 }
 
 func (s *screen) refreshBrowser() {
 	if s.busy {
 		return
-	}
-	if node := s.browser.GetCurrentNode(); node != nil {
-		if data, ok := node.GetReference().(*browserNode); ok && data.object.Owner != "" {
-			s.browserOwner = data.object.Owner
-		}
 	}
 	if s.demo && !s.connected {
 		s.showDemoBrowser()
@@ -109,115 +203,45 @@ func (s *screen) refreshBrowser() {
 }
 
 func (s *screen) populateSchemas(catalog oracle.Catalog) {
-	root := s.treeNode(s.tr("schemas"), &browserNode{kind: "root", label: "schemas"}).SetSelectable(false)
 	preferred := s.browserOwner
 	if preferred == "" {
 		preferred = catalog.Current
 	}
-	var selected *tview.TreeNode
-	for _, owner := range catalog.Schemas {
-		node := s.treeNode(owner, &browserNode{kind: "schema", object: oracle.Object{Owner: owner}}).SetExpanded(false)
-		node.AddChild(s.treeMessage("browser_expand"))
-		root.AddChild(node)
+	s.browserSchemas = append([]string(nil), catalog.Schemas...)
+	index := -1
+	var labels []string
+	for i, owner := range s.browserSchemas {
+		labels = append(labels, tview.Escape(owner))
 		if owner == preferred {
-			selected = node
+			index = i
 		}
 	}
-	if selected == nil && len(root.GetChildren()) > 0 {
-		selected = root.GetChildren()[0]
+	if index < 0 && len(labels) > 0 {
+		index = 0
 	}
-	if selected == nil {
-		root.AddChild(s.treeMessage("browser_empty"))
+	s.browserUsers.SetSelectedFunc(nil).SetOptions(labels, nil).SetCurrentOption(index).SetSelectedFunc(func(_ string, i int) { s.selectBrowserUser(i) })
+	if index >= 0 {
+		s.loadBrowserUser(s.browserSchemas[index])
+	} else {
+		s.browserOwner = ""
+		s.browserObjects = nil
+		s.browser.GetRoot().ClearChildren().AddChild(s.treeMessage("browser_empty"))
+		s.browser.SetCurrentNode(nil)
 	}
-	s.browser.SetRoot(root).SetCurrentNode(selected)
-	if selected != nil {
-		s.loadSchema(selected)
-	}
-}
-
-func (s *screen) loadSchema(node *tview.TreeNode) {
-	if s.busy {
-		return
-	}
-	data, ok := node.GetReference().(*browserNode)
-	if !ok || data.kind != "schema" {
-		return
-	}
-	s.browserOwner = data.object.Owner
-	if s.demo && !s.connected {
-		s.populateObjects(node, demoObjects(data.object.Owner))
-		return
-	}
-	if !s.connected {
-		s.setStatus("connect_first")
-		return
-	}
-	s.submit(job{action: "objects", object: data.object, node: node})
 }
 
 func (s *screen) populateObjects(node *tview.TreeNode, objects []oracle.Object) {
-	node.ClearChildren().SetExpanded(true)
-	data := node.GetReference().(*browserNode)
-	data.loaded = true
-	for _, category := range objectGroups {
-		kind, label := category.kind, category.label
-		group := s.treeNode(s.tr(label), &browserNode{kind: "group", label: label, object: data.object, loaded: true})
-		for _, object := range objects {
-			if object.Kind == kind {
-				group.AddChild(s.treeNode(object.Name, &browserNode{kind: "object", object: object}))
-			}
-		}
-		if len(group.GetChildren()) == 0 {
-			group.AddChild(s.treeMessage("browser_empty"))
-		}
-		node.AddChild(group)
+	if node.GetReference().(*browserNode).object.Owner != s.browserOwner {
+		return
 	}
+	node.GetReference().(*browserNode).loaded = true
+	s.browserObjects = objects
+	s.renderBrowserObjects()
 }
 
 func (s *screen) activateBrowser(node *tview.TreeNode) {
-	data, ok := node.GetReference().(*browserNode)
-	if !ok {
-		return
-	}
-	switch data.kind {
-	case "schema":
-		if !data.loaded {
-			s.loadSchema(node)
-			return
-		}
-		s.browserOwner = data.object.Owner
-		node.SetExpanded(!node.IsExpanded())
-	case "group":
-		node.SetExpanded(!node.IsExpanded())
-	case "object":
+	if data, ok := node.GetReference().(*browserNode); ok && data.kind == "object" {
 		s.openObject(data.object)
-	}
-}
-
-func (s *screen) browserArrow(key tcell.Key) {
-	node := s.browser.GetCurrentNode()
-	if node == nil {
-		return
-	}
-	data, ok := node.GetReference().(*browserNode)
-	if !ok {
-		return
-	}
-	if key == tcell.KeyRight {
-		if data.kind == "schema" && !data.loaded {
-			s.loadSchema(node)
-		} else {
-			node.SetExpanded(true)
-		}
-		return
-	}
-	if node.IsExpanded() && len(node.GetChildren()) > 0 {
-		node.SetExpanded(false)
-	} else {
-		path := s.browser.GetPath(node)
-		if len(path) > 2 {
-			s.browser.SetCurrentNode(path[len(path)-2])
-		}
 	}
 }
 
@@ -229,7 +253,15 @@ func (s *screen) localizeBrowser() {
 	if s.browser == nil {
 		return
 	}
-	s.browser.SetTitle(s.tr("browser_title"))
+	s.browserForm.SetTitle(s.tr("browser_title"))
+	s.browserUsers.SetLabel(s.tr("browser_user_label"))
+	s.browserTypes.SetLabel(s.tr("browser_type_label"))
+	var types []string
+	for _, group := range objectGroups {
+		types = append(types, s.tr(group.label))
+	}
+	s.browserTypes.SetSelectedFunc(nil).SetOptions(types, nil).SetCurrentOption(s.browserKind).SetSelectedFunc(func(_ string, i int) { s.selectBrowserType(i) })
+	s.browser.SetTitle(" " + s.tr(objectGroups[s.browserKind].label) + " ")
 	s.browser.GetRoot().Walk(func(node, parent *tview.TreeNode) bool {
 		if data, ok := node.GetReference().(*browserNode); ok && data.label != "" {
 			node.SetText(tview.Escape(s.tr(data.label)))

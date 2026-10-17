@@ -27,14 +27,18 @@ func (s *screen) showExitConfirmation() {
 	labels := []string{s.tr("exit_now"), s.tr("exit_cancel")}
 	if s.pendingChanges {
 		message = "exit_pending"
-		labels = []string{s.tr("exit_commit"), s.tr("exit_rollback"), s.tr("exit_cancel")}
+		labels = []string{s.tr("exit_commit"), s.tr("exit_rollback"), s.tr("pending_work"), s.tr("exit_cancel")}
 	}
-	s.exitDialog = tview.NewModal().SetText(s.tr(message)).AddButtons(labels).
+	s.exitDialog = tview.NewModal().SetText(s.exitMessage(message)).AddButtons(labels).
 		SetBackgroundColor(palette.background).SetTextColor(palette.text).
-		SetButtonStyle(buttonStyle()).SetButtonActivatedStyle(focusStyle())
+		SetButtonStyle(buttonStyle()).SetButtonActivatedStyle(buttonFocusStyle())
 	s.exitDialog.SetDoneFunc(func(index int, _ string) {
 		if index < 0 || index == len(labels)-1 {
 			s.cancelExit()
+			return
+		}
+		if s.pendingChanges && index == 2 {
+			s.showPendingWork()
 			return
 		}
 		action := "exit_now"
@@ -91,6 +95,12 @@ func (s *screen) confirmExit(action string) {
 
 func (s *screen) exitKey(event *tcell.EventKey) *tcell.EventKey {
 	if s.busy {
+		return nil
+	}
+	if event.Modifiers()&tcell.ModAlt != 0 && event.Rune() == 'v' {
+		if s.pendingChanges {
+			s.showPendingWork()
+		}
 		return nil
 	}
 	if event.Modifiers()&tcell.ModAlt != 0 && event.Rune() == 'c' {

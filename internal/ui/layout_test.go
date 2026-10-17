@@ -19,7 +19,7 @@ func TestMaximizeSwitchRestorePreservesPanelState(t *testing.T) {
 	s.render(oracle.Result{Columns: []string{"N"}, Rows: rows})
 	s.table.Select(51, 0).SetOffset(40, 0)
 	node := s.browser.GetCurrentNode()
-	s.key(tcell.NewEventKey(tcell.KeyF11, 0, 0))
+	s.invoke("maximize")
 	if s.maximized != "sql" || s.browserHidden {
 		t.Fatal("SQL maximize changed browser preference")
 	}
@@ -51,7 +51,7 @@ func TestMaximizeSwitchRestorePreservesPanelState(t *testing.T) {
 	if s.maximized != "results" || !s.table.HasFocus() {
 		t.Fatal("help lost panel focus")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF11, 0, 0))
+	s.invoke("maximize")
 	row, _ := s.table.GetSelection()
 	offset, _ := s.table.GetOffset()
 	if s.maximized != "" || s.browserHidden || row != 51 || offset != 40 || s.browser.GetCurrentNode() != node {
@@ -60,9 +60,9 @@ func TestMaximizeSwitchRestorePreservesPanelState(t *testing.T) {
 	if s.editor.GetText() != "SELECT 1 FROM dual;" || s.table.GetCell(51, 0).Text != "50" || len(s.jobs) != 0 {
 		t.Fatal("layout change altered SQL/data")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF7, 0, 0))
-	s.key(tcell.NewEventKey(tcell.KeyF11, 0, 0))
-	s.key(tcell.NewEventKey(tcell.KeyF11, 0, 0))
+	s.invoke("browser")
+	s.invoke("maximize")
+	s.invoke("maximize")
 	if !s.browserHidden {
 		t.Fatal("restore opened explicitly hidden browser")
 	}
@@ -113,8 +113,8 @@ func TestFullscreenOccupiesEntireTerminalAndRestoresChrome(t *testing.T) {
 		x, y, width, height := p.GetRect()
 		return x == 0 && y == 0 && width == w && height == h
 	}
-	// Plain F11 keeps all chrome and only expands the panel's work area.
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF11, 0, 0))
+	// The menu-only maximize command retains chrome.
+	s.app.QueueUpdateDraw(func() { s.invoke("maximize") })
 	wait(func() bool {
 		_, y, _, h := s.editor.GetRect()
 		return s.maximized == "sql" && !s.fullscreen && !s.chromeHidden && y == 1 && h == 25
@@ -130,13 +130,13 @@ func TestFullscreenOccupiesEntireTerminalAndRestoresChrome(t *testing.T) {
 		}
 	})
 	// Switching modes keeps the same panel; pressing its key again restores split.
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF11, 0, tcell.ModCtrl))
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF2, 0, 0))
 	wait(func() bool { return s.fullscreen && fills(s.editor, 100, 30) })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF11, 0, 0))
+	s.app.QueueUpdateDraw(func() { s.invoke("maximize") })
 	wait(func() bool { return !s.fullscreen && !s.chromeHidden && s.maximized == "sql" })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF11, 0, 0))
+	s.app.QueueUpdateDraw(func() { s.invoke("maximize") })
 	wait(func() bool { return s.maximized == "" })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF11, 0, tcell.ModCtrl))
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF2, 0, 0))
 	wait(func() bool { return s.chromeHidden && fills(s.editor, 100, 30) })
 	s.app.QueueUpdate(func() {
 		for _, p := range []tview.Primitive{s.menuLayout, s.footer, s.footerBar, s.status, s.table, s.browser} {
@@ -154,7 +154,7 @@ func TestFullscreenOccupiesEntireTerminalAndRestoresChrome(t *testing.T) {
 	wait(func() bool { return s.menuList != nil && !s.chromeHidden })
 	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
 	wait(func() bool { return s.chromeHidden && fills(s.editor, 100, 30) })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF10, 0, 0))
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF6, 0, 0))
 	wait(func() bool { return s.maximized == "results" && fills(s.table, 100, 30) })
 	s.app.QueueUpdateDraw(func() { terminal.SetSize(80, 24) })
 	wait(func() bool { return fills(s.table, 80, 24) })
@@ -162,7 +162,7 @@ func TestFullscreenOccupiesEntireTerminalAndRestoresChrome(t *testing.T) {
 	wait(func() bool { return s.exitDialog != nil && !s.chromeHidden })
 	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
 	wait(func() bool { return s.chromeHidden && fills(s.table, 80, 24) })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF11, 0, tcell.ModCtrl))
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF2, 0, tcell.ModShift))
 	wait(func() bool {
 		_, y, _, h := s.footerBar.GetRect()
 		return !s.chromeHidden && s.maximized == "" && y == 23 && h == 1

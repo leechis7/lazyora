@@ -3,6 +3,7 @@ package ui
 import (
 	"bytes"
 	"io"
+	"runtime"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -59,6 +60,11 @@ func (t *compatibleTTY) Stop() error {
 }
 
 func newCompatibleScreen() (tcell.Screen, error) {
+	// Windows consoles need tcell's console fallback when TERM is unset.
+	if runtime.GOOS == "windows" {
+		return tcell.NewScreen()
+	}
+
 	tty, err := tcell.NewDevTty()
 	if err != nil {
 		return nil, err

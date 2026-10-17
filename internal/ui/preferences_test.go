@@ -16,10 +16,10 @@ func TestLanguageChangePreservesSQLResultsAndConnectionInputs(t *testing.T) {
 	s := shortcutScreen(t)
 	s.render(oracle.Result{Columns: []string{"Original"}, Rows: [][]string{{"한글 SQL data"}}})
 	s.connectionForm()
-	s.connectForm.GetFormItem(2).(*tview.InputField).SetText("my_user")
-	s.connectForm.GetFormItem(3).(*tview.InputField).SetText("my_password")
+	s.connectForm.GetFormItem(connectionUser).(*tview.InputField).SetText("my_user")
+	s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).SetText("my_password")
 	s.key(tcell.NewEventKey(tcell.KeyF3, 0, tcell.ModNone))
-	s.prefsForm.GetFormItem(0).(*tview.DropDown).SetCurrentOption(1)
+	s.prefsForm.GetFormItem(0).(*choiceField).SetCurrentOption(1)
 	s.prefsForm.GetFormItem(1).(*tview.Checkbox).SetChecked(false)
 	s.key(tcell.NewEventKey(tcell.KeyCtrlS, 0, tcell.ModCtrl))
 	if s.prefs.Language != "ko" || s.prefs.Mouse {
@@ -31,7 +31,7 @@ func TestLanguageChangePreservesSQLResultsAndConnectionInputs(t *testing.T) {
 	if !strings.Contains(s.connectForm.GetButton(0).GetLabel(), "접속") {
 		t.Fatal("connection button was not translated")
 	}
-	if s.connectForm.GetFormItem(2).(*tview.InputField).GetText() != "my_user" || s.connectForm.GetFormItem(3).(*tview.InputField).GetText() != "my_password" {
+	if s.connectForm.GetFormItem(connectionUser).(*tview.InputField).GetText() != "my_user" || s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).GetText() != "my_password" {
 		t.Fatal("connection inputs were lost")
 	}
 	if s.editor.GetText() != "SELECT 1 FROM dual;" || s.table.GetCell(1, 0).Text != "한글 SQL data" {
@@ -55,7 +55,7 @@ func TestFailedSaveAndCancelKeepPreferences(t *testing.T) {
 	}
 	s.prefsPath = filepath.Join(parent, "settings.json")
 	s.settingsForm()
-	s.prefsForm.GetFormItem(0).(*tview.DropDown).SetCurrentOption(1)
+	s.prefsForm.GetFormItem(0).(*choiceField).SetCurrentOption(1)
 	s.savePrefs()
 	if s.prefs.Language != "en" {
 		t.Fatal("failed save changed active language")
@@ -75,13 +75,14 @@ func TestFailedSaveAndCancelKeepPreferences(t *testing.T) {
 func TestConnectionAndPaneShortcuts(t *testing.T) {
 	for _, shortcut := range []*tcell.EventKey{
 		tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModCtrl),
+		tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModAlt),
 		tcell.NewEventKey(tcell.KeyRune, 'c', tcell.ModAlt),
 	} {
 		s := shortcutScreen(t)
 		s.connectionForm()
-		s.connectForm.GetFormItem(2).(*tview.InputField).SetText("test_user")
-		s.connectForm.GetFormItem(5).(*tview.InputField).SetText("FREEPDB1")
-		for i, letter := range []rune{'h', 'p', 'u', 'w', 't', 'n'} {
+		s.connectForm.GetFormItem(connectionUser).(*tview.InputField).SetText("test_user")
+		s.connectForm.GetFormItem(connectionName).(*tview.InputField).SetText("FREEPDB1")
+		for i, letter := range []rune{'a', 'h', 'p', 'u', 'w', 't', 'n'} {
 			s.key(tcell.NewEventKey(tcell.KeyRune, letter, tcell.ModAlt))
 			if s.app.GetFocus() != s.connectForm.GetFormItem(i) {
 				t.Fatalf("Alt+%c did not focus its field", letter)
@@ -102,8 +103,8 @@ func TestConnectionAndPaneShortcuts(t *testing.T) {
 	if s.app.GetFocus() != s.table {
 		t.Fatal("F10 did not focus results")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF9, 0, tcell.ModNone))
+	s.key(tcell.NewEventKey(tcell.KeyF6, 0, tcell.ModNone))
 	if s.app.GetFocus() != s.editor {
-		t.Fatal("F9 did not focus editor")
+		t.Fatal("F6 did not focus editor")
 	}
 }

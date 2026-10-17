@@ -37,7 +37,8 @@ func TestSQLExecutionShortcuts(t *testing.T) {
 		mod  tcell.ModMask
 	}{
 		{"CtrlEnter", tcell.KeyEnter, tcell.ModCtrl},
-		{"F4", tcell.KeyF4, tcell.ModNone},
+		{"AltEnter", tcell.KeyEnter, tcell.ModAlt},
+		{"F9", tcell.KeyF9, tcell.ModNone},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			s := shortcutScreen(t)
@@ -109,5 +110,16 @@ func TestHelpRestoresPreviousPageAndFocus(t *testing.T) {
 	s.key(tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModCtrl))
 	if len(s.jobs) != 0 {
 		t.Fatal("Ctrl+Enter in the form executed SQL")
+	}
+}
+
+func TestLegacyAltEnterExecutesWithoutOpeningMenu(t *testing.T) {
+	s := shortcutScreen(t)
+	s.key(tcell.NewEventKey(tcell.KeyRune, 'm', tcell.ModAlt|tcell.ModCtrl))
+	if j := <-s.jobs; j.action != "execute" {
+		t.Fatal("legacy Alt+Enter did not execute")
+	}
+	if s.menuList != nil {
+		t.Fatal("legacy Alt+Enter opened Alt+M menu")
 	}
 }

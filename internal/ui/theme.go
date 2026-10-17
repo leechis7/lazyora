@@ -44,8 +44,8 @@ func styleForm(form *tview.Form) {
 		switch item := form.GetFormItem(index).(type) {
 		case *tview.InputField:
 			item.SetBackgroundColor(palette.background)
-		case *tview.DropDown:
-			item.SetFocusedStyle(focusStyle()).SetListStyles(fieldStyle(), focusStyle())
+		case *choiceField:
+			item.SetFocusedStyle(focusStyle())
 		case *tview.Checkbox:
 			item.SetActivatedStyle(focusStyle())
 		}
@@ -81,7 +81,36 @@ func (s *screen) refreshBorders() {
 	}
 	apply(s.editor.Box, s.editor.HasFocus(), true)
 	apply(s.table.Box, s.table.HasFocus(), false)
-	for _, form := range []*tview.Form{s.connectForm, s.prefsForm} {
+	if s.menuList != nil {
+		apply(s.menuList.Box, true, false)
+	}
+	if s.describeForm != nil {
+		apply(s.describeForm.Box, s.describeForm.HasFocus(), false)
+	}
+	if s.copyText != nil {
+		apply(s.copyText.Box, s.copyText.HasFocus(), true)
+	}
+	if s.browser != nil {
+		apply(s.browser.Box, s.browser.HasFocus(), false)
+	}
+	if s.objectTable != nil {
+		apply(s.objectTable.Box, s.objectTable.HasFocus(), false)
+	}
+	if s.exitDialog != nil {
+		apply(s.exitDialog.Box, s.exitDialog.HasFocus(), false)
+	}
+	if s.programModal != nil {
+		apply(s.programModal.Box, s.programModal.HasFocus(), false)
+	}
+	if s.sourceEditor != nil {
+		apply(s.sourceEditor.Box, s.sourceEditor.HasFocus(), true)
+	}
+	for _, table := range []*tview.Table{s.sourceDiagnostics, s.argumentTable} {
+		if table != nil {
+			apply(table.Box, table.HasFocus(), false)
+		}
+	}
+	for _, form := range []*tview.Form{s.connectForm, s.connectProfiles, s.prefsForm} {
 		if form != nil {
 			apply(form.Box, form.HasFocus(), false)
 		}

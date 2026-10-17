@@ -20,7 +20,7 @@ CI에서 만든 바이너리는 실행 결과의 `binaries` 아티팩트에서 7
 
 ## 릴리스
 
-1. `dev`에서 릴리스 준비용 feature 브랜치를 만들고 `internal/appinfo/info.go`와 README의 버전을 갱신합니다. CHANGELOG의 `Unreleased` 변경을 해당 버전과 날짜로 옮기고 비교 링크도 갱신합니다. 버전 태그는 `vX.Y.Z` 형식으로 사용합니다.
+1. `dev`에서 릴리스 준비용 feature 브랜치를 만들고 `internal/appinfo/info.go`와 README의 버전을 갱신합니다. CHANGELOG의 `Unreleased` 변경을 해당 버전과 날짜로 옮기고 비교 링크도 갱신합니다. `docs/releases/vX.Y.Z.md`에 기능·단축키 변경·다운로드·지원 범위를 적으면 Release Actions가 해당 문서를 릴리스 본문으로 사용합니다. 버전 태그는 `vX.Y.Z` 형식으로 사용합니다.
 2. 변경을 `dev`로 병합하고 `dev → main` PR을 생성합니다.
 3. CI 통과와 필요한 실환경 시험을 확인한 뒤 사용자 승인으로 `main`에 병합합니다. `dev → main` 병합은 merge commit을 사용하여 두 브랜치의 커밋 관계를 유지합니다.
 4. 사용자 릴리스 요청 후 아래와 같이 해당 `main` 커밋에 태그를 붙여 게시합니다. 아래 버전 번호는 예시입니다.

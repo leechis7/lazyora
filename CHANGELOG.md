@@ -4,9 +4,15 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-18
+
 ### 추가
 
 - macOS Intel(AMD64)·Apple Silicon(ARM64) 바이너리를 GitHub CI 빌드·릴리스 첨부·SHA256SUMS에 포함합니다. 로컬 기본 빌드는 Linux ARM64를 유지합니다.
+
+### 변경
+
+- README를 다운로드·빠른 시작·핵심 단축키 중심으로 줄이고, 상세 사용법과 빌드·검증 기록을 별도 문서로 분리합니다.
 
 ## [0.1.0] - 2026-10-18
 
@@ -85,6 +91,7 @@ v0.0.1의 F2 접속은 Alt+L, F4 실행은 F9, F5 커밋은 Alt+C, F6 롤백은 
 - 이 릴리스 시점에는 실제 CentOS 7.4, 구형 Oracle 및 SID 접속 검증이 완료되지 않았습니다. 이후 호환성 수정은 `Unreleased`에 기록합니다.
 - 한 번에 SQL 한 문장 또는 BEGIN/DECLARE 블록 하나를 실행합니다. 여러 문장 일괄 실행, SQL*Plus 스크립트, 바인드 입력, DBMS_OUTPUT 출력은 지원하지 않습니다.
 
-[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.1.0...dev
+[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.1.1...dev
+[0.1.1]: https://github.com/leechis7/lazyora/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/leechis7/lazyora/compare/v0.0.1...v0.1.0
 [0.0.1]: https://github.com/leechis7/lazyora/releases/tag/v0.0.1

@@ -3,7 +3,7 @@
 터미널에서 Oracle SQL을 작성·실행하고 스키마 객체를 탐색하는 TUI입니다.
 [lazysql](https://github.com/jorgerojas26/lazysql)의 화면 구성을 참고했습니다.
 
-현재 버전: **0.1.0** · **Linux / Windows · AMD64 / ARM64**
+현재 버전: **0.1.1** · **Linux / Windows / macOS · AMD64 / ARM64**
 
 - SQL 실행과 결과 조회·복사, 수동 커밋·롤백
 - 스키마 객체 탐색, 컬럼·코멘트·소스·인자 조회와 소스 편집·컴파일
@@ -19,10 +19,10 @@
 | Linux ARM64 | `lazyora-linux-arm64` |
 | Windows x86_64 | `lazyora-windows-amd64.exe` |
 | Windows ARM64 | `lazyora-windows-arm64.exe` |
+| macOS Intel | `lazyora-darwin-amd64` |
+| macOS Apple Silicon | `lazyora-darwin-arm64` |
 
-다음 릴리스부터 macOS Intel용 `lazyora-darwin-amd64`와 Apple Silicon용 `lazyora-darwin-arm64`도 제공합니다. v0.1.0에는 포함되지 않습니다.
-
-Linux ARM64 실행 예시입니다. 다른 환경에서는 해당 파일명을 사용하세요.
+Linux ARM64 실행 예시입니다. Linux의 다른 아키텍처나 macOS에서는 해당 파일명을 사용하세요.
 
 ```bash
 chmod +x lazyora-linux-arm64

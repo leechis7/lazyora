@@ -46,7 +46,7 @@ ldd bin/lazyora-linux-amd64
 
 정적 실행파일에서는 `ldd`가 동적 실행파일이 아니라는 메시지를 출력할 수 있습니다.
 
-macOS 실행파일은 다음 릴리스부터 포함합니다(v0.1.0에는 없음). Intel Mac은 `lazyora-darwin-amd64`, Apple Silicon Mac은 `lazyora-darwin-arm64`를 사용하며, `chmod +x` 후 터미널에서 실행합니다. GitHub에서 CGO 없이 교차 빌드하며, 코드 서명·공증과 실Mac TUI·DB 접속 검증은 포함하지 않습니다.
+macOS 실행파일은 v0.1.1부터 포함합니다. Intel Mac은 `lazyora-darwin-amd64`, Apple Silicon Mac은 `lazyora-darwin-arm64`를 사용하며, `chmod +x` 후 터미널에서 실행합니다. GitHub에서 CGO 없이 교차 빌드하며, 코드 서명·공증과 실Mac TUI·DB 접속 검증은 포함하지 않습니다.
 
 ## 테스트용 Oracle Free
 

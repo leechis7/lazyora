@@ -1,6 +1,7 @@
 # 사용 문의와 문제 해결
 
-- 설치·실행·접속·단축키: [README](README.md)
+- 설치·실행: [README](README.md)
+- 접속·설정·전체 단축키: [사용 안내](docs/usage.md)
 - 버전별 변경과 제한: [변경 이력](CHANGELOG.md)
 - Docker Oracle 시험: [시험 환경 안내](test/oracle/README.md)
 - 버그·기능 제안·사용 문의: [GitHub Issues](https://github.com/leechis7/lazyora/issues)

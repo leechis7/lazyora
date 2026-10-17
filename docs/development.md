@@ -12,9 +12,9 @@ git pull --ff-only origin dev
 git switch -c feature/LORA-17-schema-browser
 ```
 
-개발 및 로컬 검증 후 승인받아 한국어 메시지로 커밋하고 브랜치를 게시합니다. `dev` 대상 PR을 만들면 CI가 실행됩니다. 테스트·vet·Linux AMD64/ARM64 빌드가 통과한 뒤 PR을 병합하고, `dev` 푸시에서도 통합 검증을 수행합니다. 병합 후 끝난 feature 브랜치는 정리합니다.
+개발 및 로컬 검증 후 승인받아 한국어 메시지로 커밋하고 브랜치를 게시합니다. `dev` 대상 PR을 만들면 CI가 실행됩니다. 테스트·vet·Linux/Windows AMD64·ARM64 빌드가 통과한 뒤 PR을 병합하고, `dev` 푸시에서도 통합 검증을 수행합니다. 병합 후 끝난 feature 브랜치는 정리합니다.
 
-CI에서 만든 바이너리는 실행 결과의 `linux-binaries` 아티팩트에서 7일 동안 받을 수 있습니다. GitHub 아티팩트 다운로드 시 실행 권한이 사라졌다면 `chmod +x`를 적용합니다. CI에는 실DB·구형 커널 검증이 포함되지 않으므로 Oracle·CentOS 시험은 별도로 진행합니다.
+CI에서 만든 바이너리는 실행 결과의 `binaries` 아티팩트에서 7일 동안 받을 수 있습니다. GitHub 아티팩트 다운로드 시 실행 권한이 사라졌다면 `chmod +x`를 적용합니다. CI에는 실DB·구형 커널 검증이 포함되지 않으므로 Oracle·CentOS 시험은 별도로 진행합니다.
 
 ## 릴리스
 
@@ -30,7 +30,7 @@ git tag -a v0.0.2 -m 'v0.0.2 릴리스'
 git push origin v0.0.2
 ```
 
-Release Actions는 태그와 소스 버전의 일치 여부 및 태그 커밋의 `main` 포함 여부를 확인하고 테스트·vet·빌드를 수행합니다. 성공하면 Linux AMD64/ARM64 실행파일, LICENSE, README.md, SHA256SUMS를 첨부한 정식 GitHub Release를 발행합니다. `main` 병합만으로 릴리스를 발행하지 않습니다. 기존 태그와 릴리스는 덮어쓰지 않습니다.
+Release Actions는 태그와 소스 버전의 일치 여부 및 태그 커밋의 `main` 포함 여부를 확인하고 테스트·vet·Linux/Windows 빌드를 수행합니다. 성공하면 Linux AMD64/ARM64 실행파일과 Windows AMD64/ARM64 `.exe`, LICENSE, README.md, SHA256SUMS를 첨부한 정식 GitHub Release를 발행합니다. `main` 병합만으로 릴리스를 발행하지 않습니다. 기존 태그와 릴리스는 덮어쓰지 않습니다.
 
 릴리스 후 `main`의 merge commit 또는 긴급 수정이 `dev`에도 포함되도록 `main → dev`를 merge commit으로 동기화합니다. 정상 릴리스 시 `dev → main` PR을 squash/rebase 방식으로 병합하지 않습니다.
 
@@ -42,3 +42,5 @@ Release Actions는 태그와 소스 버전의 일치 여부 및 태그 커밋의
 - 외부 Actions는 커밋 SHA로 고정합니다. 버전 변경 시 SHA와 주석을 함께 갱신합니다.
 
 GitHub에서 CI 성공을 병합의 필수 조건으로 강제하려면 `dev`와 `main`에 브랜치 규칙을 설정하고 `Test, vet and build` 검사를 필수로 지정합니다. 워크플로 파일만으로 병합이 차단되지는 않습니다.
+
+현재 브랜치의 구현·검증·사용자 검토와 승인된 커밋·병합·정리를 마친 뒤 다음 브랜치를 시작합니다. 사용자 명시적 전환 지시가 없으면 승인 대기 중에도 다른 브랜치로 이동하지 않습니다.

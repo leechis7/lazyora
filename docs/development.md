@@ -12,6 +12,8 @@ git pull --ff-only origin dev
 git switch -c feature/LORA-17-schema-browser
 ```
 
+로컬 개발·검증의 기본 빌드는 `make build`로 Linux ARM64 하나만 생성합니다. 다른 OS/아키텍처의 로컬 바이너리는 사용자가 요청할 때만 개별 타깃으로 만듭니다. GitHub CI·Release는 `make build-all`로 전체 지원 대상을 빌드합니다.
+
 개발 및 로컬 검증 후 승인받아 한국어 메시지로 커밋하고 브랜치를 게시합니다. `dev` 대상 PR을 만들면 CI가 실행됩니다. 테스트·vet·Linux/Windows AMD64·ARM64 빌드가 통과한 뒤 PR을 병합하고, `dev` 푸시에서도 통합 검증을 수행합니다. 병합 후 끝난 feature 브랜치는 정리합니다.
 
 CI에서 만든 바이너리는 실행 결과의 `binaries` 아티팩트에서 7일 동안 받을 수 있습니다. GitHub 아티팩트 다운로드 시 실행 권한이 사라졌다면 `chmod +x`를 적용합니다. CI에는 실DB·구형 커널 검증이 포함되지 않으므로 Oracle·CentOS 시험은 별도로 진행합니다.

@@ -93,6 +93,12 @@ func (s *screen) refreshFooter() {
 		keys[1] = footerKey{"PgUp", "previous_page", tcell.KeyPgUp, tcell.ModNone}
 		keys[2] = footerKey{"PgDn", "next_page", tcell.KeyPgDn, tcell.ModNone}
 		keys[3] = footerKey{"Esc", "close", tcell.KeyEscape, tcell.ModNone}
+	case "exit":
+		hint = "footer_exit"
+		keys = []footerKey{{"Esc", "exit_cancel", tcell.KeyEscape, tcell.ModNone}}
+		if s.pendingChanges {
+			keys = append(keys, footerKey{"F5", "exit_commit", tcell.KeyF5, tcell.ModNone}, footerKey{"F6", "exit_rollback", tcell.KeyF6, tcell.ModNone})
+		}
 	}
 	text := s.tr(hint)
 	if s.busy {
@@ -127,12 +133,6 @@ func (s *screen) action(action string) {
 			s.cancel()
 		}
 	case "quit":
-		if s.busy {
-			s.quitting = true
-			s.cancel()
-			s.setStatus("cancelling")
-		} else {
-			s.app.Stop()
-		}
+		s.requestQuit()
 	}
 }

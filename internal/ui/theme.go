@@ -81,6 +81,9 @@ func (s *screen) refreshBorders() {
 	}
 	apply(s.editor.Box, s.editor.HasFocus(), true)
 	apply(s.table.Box, s.table.HasFocus(), false)
+	if s.exitDialog != nil {
+		apply(s.exitDialog.Box, s.exitDialog.HasFocus(), false)
+	}
 	for _, form := range []*tview.Form{s.connectForm, s.prefsForm} {
 		if form != nil {
 			apply(form.Box, form.HasFocus(), false)

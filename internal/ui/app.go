@@ -30,6 +30,9 @@ type screen struct {
 	footerKeys                               []footerKey
 	resultsFocused                           bool
 	limitedColors                            bool
+	pendingChanges                           bool
+	exitDialog                               *tview.Modal
+	exitFocus                                tview.Primitive
 	jobs                                     chan job
 	done                                     chan struct{}
 	busy, quitting, demo, connected          bool
@@ -70,6 +73,17 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 		AddItem(s.editor, 0, 2, true).
 		AddItem(s.table, 0, 3, false).AddItem(s.status, 2, 0, false)
 	s.pages = tview.NewPages().AddPage("main", root, true, true)
+	s.pages.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
+		if s.exitDialog != nil {
+			// Modal only covers its centered box; consume the rest of the page
+			// too, so clicks cannot edit SQL or open dialogs behind it.
+			if !s.busy {
+				s.exitDialog.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
+			}
+			return tview.MouseConsumed, nil
+		}
+		return action, event
+	})
 	s.footer = tview.NewTextView().SetWrap(false)
 	s.styleScreen()
 	layout := tview.NewFlex().SetDirection(tview.FlexRow).
@@ -155,15 +169,26 @@ func (s *screen) worker() {
 			}
 		case "execute":
 			result, err = session.Execute(j.ctx, j.text)
-		case "commit":
+		case "commit", "exit_commit":
 			err = session.Finish(true)
-		case "rollback":
+		case "rollback", "exit_rollback":
 			err = session.Finish(false)
 		}
 		s.app.QueueUpdateDraw(func() {
 			s.cancel()
 			s.cancel = nil
 			s.busy = false
+			if session != nil {
+				s.pendingChanges = session.PendingChanges()
+			}
+			if j.action == "exit_commit" || j.action == "exit_rollback" {
+				if err == nil {
+					s.app.Stop()
+				} else {
+					s.exitDialog.SetText(s.tr("exit_failed") + "\n" + tview.Escape(err.Error()))
+				}
+				return
+			}
 			if err != nil {
 				s.setStatus("error", err)
 			} else {
@@ -191,7 +216,8 @@ func (s *screen) worker() {
 				}
 			}
 			if s.quitting {
-				s.app.Stop()
+				s.quitting = false
+				s.showExitConfirmation()
 			}
 		})
 	}

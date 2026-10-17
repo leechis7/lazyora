@@ -4,6 +4,15 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"exit_clean":            {"No uncommitted changes are tracked.\nExit LazyOra?", "앱에서 추적한 미커밋 변경 내역이 없습니다.\n종료하시겠습니까?"},
+	"exit_pending":          {"Statements that may change data have not been committed or rolled back by LazyOra.\nCommit and exit, roll back and exit, or keep working?", "변경 가능한 SQL 실행 후 앱에서 커밋·롤백하지 않은 내역이 있습니다.\n커밋 후 종료, 롤백 후 종료 또는 계속 사용을 선택하세요."},
+	"exit_now":              {"Exit", "종료"},
+	"exit_commit":           {"Commit and exit", "커밋 후 종료"},
+	"exit_rollback":         {"Roll back and exit", "롤백 후 종료"},
+	"exit_cancel":           {"Keep working", "계속 사용"},
+	"exit_finishing":        {"Finishing the transaction before exit…", "종료 전 트랜잭션 처리 중…"},
+	"exit_failed":           {"Could not finish the transaction. LazyOra will stay open.\nReconnect to check the transaction outcome.", "트랜잭션 처리를 확인하지 못해 종료하지 않았습니다.\n접속을 다시 열어 DB 처리 결과를 확인하세요."},
+	"footer_exit":           {"←→ / Tab Select | Enter Confirm | Esc Keep working", "←→ / Tab 선택 | Enter 확인 | Esc 계속 사용"},
 	"developer":             {"Developer", "개발자"},
 	"email":                 {"Email", "이메일"},
 	"license":               {"License", "라이선스"},
@@ -36,7 +45,7 @@ var messages = map[string][2]string{
 	"results_title":         {" Results ", " 조회 결과 "},
 	"disconnected":          {"Disconnected. F2 opens connection settings.", "연결되지 않았습니다. F2로 접속 화면을 여세요."},
 	"connect_first":         {"Connect first with F2.", "먼저 F2로 DB에 접속하세요."},
-	"cancelling":            {"Cancelling operation before exit…", "작업을 취소하고 종료하는 중…"},
+	"cancelling":            {"Cancelling operation before exit confirmation…", "종료 확인 전에 실행 중인 작업을 취소하는 중…"},
 	"running":               {"Running %s… Oracle DDL can implicitly commit.", "%s 중… Oracle DDL은 암시적으로 커밋할 수 있습니다."},
 	"error":                 {"Error: %s", "오류: %s"},
 	"connected":             {"Connected: %s@%s:%d/%s (%s). Manual commit; DDL implicitly commits.", "접속됨: %s@%s:%d/%s (%s). 수동 커밋; DDL은 암시적 커밋."},

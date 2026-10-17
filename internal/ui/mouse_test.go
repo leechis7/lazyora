@@ -39,6 +39,8 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 	}
 	t.Cleanup(func() {
 		s.app.QueueEvent(tcell.NewEventKey(tcell.KeyCtrlQ, 0, tcell.ModNone))
+		s.app.QueueEvent(tcell.NewEventKey(tcell.KeyLeft, 0, tcell.ModNone))
+		s.app.QueueEvent(tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone))
 		select {
 		case err := <-finished:
 			if err != nil {
@@ -148,4 +150,10 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 	if err != nil || loaded.Language != "ko" || !loaded.Mouse {
 		t.Fatalf("saved settings were not restored: %+v %v", loaded, err)
 	}
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyCtrlQ, 0, tcell.ModNone))
+	wait(func() bool { return page("exit") })
+	click(func() tview.Primitive { return s.editor })
+	wait(func() bool { return s.exitDialog != nil && s.exitDialog.HasFocus() })
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyEscape, 0, tcell.ModNone))
+	wait(func() bool { return page("main") })
 }

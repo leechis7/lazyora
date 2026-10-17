@@ -53,12 +53,18 @@ func TestOracleFreeIntegration(t *testing.T) {
 	if !strings.HasPrefix(result.Rows[0][4], "2026-10-15 09:30:00.123456") {
 		t.Fatal("unexpected TIMESTAMP value")
 	}
+	if s.PendingChanges() {
+		t.Fatal("SELECT queries marked pending changes")
+	}
 	updated, err := s.Execute(ctx, "UPDATE sample_rows SET title = '롤백 확인' WHERE id = 1;")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if updated.Affected != 1 {
 		t.Fatalf("expected one updated row, got %d", updated.Affected)
+	}
+	if !s.PendingChanges() {
+		t.Fatal("DML did not mark pending changes")
 	}
 	result, err = s.Execute(ctx, "SELECT title FROM sample_rows WHERE id = 1")
 	if err != nil {
@@ -70,11 +76,21 @@ func TestOracleFreeIntegration(t *testing.T) {
 	if err = s.Finish(false); err != nil {
 		t.Fatal(err)
 	}
+	if s.PendingChanges() {
+		t.Fatal("rollback did not clear pending state")
+	}
 	result, err = s.Execute(ctx, "SELECT title FROM sample_rows WHERE id = 1")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(result.Rows) != 1 || result.Rows[0][0] != "첫 번째 테스트" {
 		t.Fatal("rollback did not restore the sample row")
+	}
+	// Exercise explicit commit without changing the fixture's values.
+	if _, err = s.Execute(ctx, "UPDATE sample_rows SET title = title WHERE id = 1"); err != nil {
+		t.Fatal(err)
+	}
+	if err = s.Finish(true); err != nil || s.PendingChanges() {
+		t.Fatalf("commit did not clear pending state: %v", err)
 	}
 }

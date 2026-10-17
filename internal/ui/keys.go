@@ -25,6 +25,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		s.action("cancel")
 		return nil
 	}
+	if page == "exit" {
+		return s.exitKey(event)
+	}
 	if event.Key() == tcell.KeyF1 {
 		if page == "help" {
 			s.closeHelp()

@@ -19,7 +19,7 @@ F8                   Request cancellation
 F9 / F10             Focus SQL editor / results
 Tab / Shift+Tab      Change focus
 Enter                Newline in the SQL editor
-Ctrl+Q / Ctrl+C      Quit and roll back pending changes
+Ctrl+Q / Ctrl+C      Confirm exit (also when no changes are pending)
 
 Connection: Ctrl+Enter or Alt+C connects; Esc or Alt+X cancels.
 Alt+H/P/U/W/T/N selects host/port/user/password/type/service name.
@@ -32,6 +32,8 @@ Mouse: click toolbar buttons, fields or result cells; wheel scrolls.
 Run executes the whole editor as one SQL statement or BEGIN/DECLARE block.
 Results are limited to 1,000 rows. DML needs manual commit; DDL can commit implicitly.
 Ctrl+Enter needs a terminal that reports modifiers; otherwise use F4.
+Exit: commit and exit / roll back and exit / keep working when changes may be pending.
+Esc or the default button keeps working. Uncertain transaction outcomes require reconnection.
 Arrow keys and PageUp/PageDown scroll this help.`,
 	`키보드 단축키
 
@@ -44,7 +46,7 @@ F8                   실행 취소 요청
 F9 / F10             SQL 편집기 / 결과 표로 이동
 Tab / Shift+Tab      포커스 전환
 Enter                SQL 편집기에서 줄바꿈
-Ctrl+Q / Ctrl+C      종료 (미완료 트랜잭션 롤백)
+Ctrl+Q / Ctrl+C      종료 확인 (변경 내역이 없어도 확인)
 
 접속 화면: Ctrl+Enter 또는 Alt+C 접속, Esc 또는 Alt+X 취소
 Alt+H/P/U/W/T/N: 호스트/포트/계정/비밀번호/접속 방식/서비스 이름 선택
@@ -57,6 +59,8 @@ Alt+L: 언어 선택, Alt+M: 마우스 항목 선택 (Space로 켜기·끄기)
 편집기 전체 내용을 SQL 한 문장 또는 BEGIN/DECLARE 블록 하나로 실행합니다.
 결과는 최대 1,000행입니다. DML은 수동 커밋, DDL은 암시적 커밋이 가능합니다.
 Ctrl+Enter를 구분하지 못하는 터미널에서는 F4를 사용하세요.
+미커밋 가능 내역이 있으면 커밋 후 종료 / 롤백 후 종료 / 계속 사용을 선택합니다.
+Esc와 기본 버튼은 계속 사용입니다. 트랜잭션 처리 실패 시 재접속해 결과를 확인하세요.
 위/아래 화살표와 PageUp/PageDown으로 도움말을 스크롤할 수 있습니다.`,
 }
 

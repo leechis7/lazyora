@@ -34,6 +34,16 @@
 
 탐색과 컬럼 상세는 작성 중인 SQL·조회 결과와 미완료 트랜잭션을 유지합니다. 메타데이터 조회도 기존 SQL 실행과 같은 백그라운드 작업으로 순서대로 처리하며 Esc로 취소를 요청할 수 있습니다. `--demo`에서는 DB 없이 샘플 객체 목록과 컬럼 상세를 살펴볼 수 있습니다. Oracle 10g에도 있는 사전 뷰의 컬럼을 사용했으며, 이번 기능의 실DB 검증은 Docker Oracle Free에서 진행했습니다.
 
+## 위험 SQL 실행 확인
+
+메인 편집기에서 DDL과 **최상위 WHERE가 없는 UPDATE·DELETE**를 실행하면 사유와 실제 실행 대상 SQL을 먼저 보여줍니다. 선택한 SQL이 있으면 그 선택 부분만 확인합니다. 기본 선택은 **취소**이며 Enter 또는 Esc로 취소합니다. 실행 버튼을 방향키·Tab으로 선택한 뒤 Enter를 누르거나 마우스로 클릭해야 제출합니다. 취소하면 SQL·조회 결과·트랜잭션·실행 이력을 바꾸지 않습니다.
+
+Tab으로 SQL 미리보기와 버튼을 순환하고 방향키·PgUp/PgDn으로 SQL을 읽습니다. F1 도움말을 닫으면 확인 화면으로 돌아옵니다. 확인창에 표시한 SQL을 그대로 제출하며 나중에 편집기 값이 바뀌더라도 다른 SQL을 실행하지 않습니다. 소스 적용·컴파일은 기존 DDL 확인창을 사용합니다.
+
+주석·문자열·따옴표 식별자·서브쿼리 안의 WHERE는 바깥 UPDATE·DELETE의 조건으로 보지 않습니다. 조건을 확실히 검사하지 못한 UPDATE·DELETE도 확인합니다. DDL·관리 명령은 CREATE·ALTER·DROP·TRUNCATE·RENAME·COMMENT·GRANT·REVOKE·PURGE·FLASHBACK·ANALYZE·AUDIT·NOAUDIT·ASSOCIATE·DISASSOCIATE·UNDROP을 대상으로 합니다.
+
+이 검사는 영향 행 수나 조건의 선택도를 판단하지 않습니다. **WHERE 1=1처럼 조건이 있어도 전체 행이 바뀔 수 있으며**, PL/SQL·동적 SQL·프로시저 내부 SQL·MERGE는 분석하지 않습니다. 경고가 없다는 뜻이 안전하다는 뜻은 아닙니다. Oracle DDL의 암시적 커밋과 ALTER SESSION/SYSTEM 등 관리 명령의 실제 동작은 명령에 따라 다릅니다. [Oracle SQL 분류 안내](https://docs.oracle.com/cd/B13789_01/server.101/b10759/statements_1001.htm)를 참고하세요.
+
 ## 조작
 
 상단 메뉴는 파일·편집·세션·실행·보기·도구·도움말입니다. Alt+F/E/S/X/V/T/H로 각각 열고, 좌우로 메뉴 전환, 위아래로 선택, Enter로 실행, Esc로 닫습니다. 마우스로도 사용할 수 있습니다. 현재 사용할 수 없는 항목은 흐리게 표시하고 실행하지 않습니다. 메인 단축키·메뉴·F1 기본 명령 목록은 공통 정의를 사용합니다.

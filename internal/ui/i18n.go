@@ -4,6 +4,13 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"sql_confirm_title":       {"Review SQL before execution", "실행 전 SQL 확인"},
+	"sql_risk_ddl":            {"DDL / administrative SQL may change or remove objects, permissions or settings. DDL can implicitly commit prior changes; rollback may not undo it.", "객체·권한·설정을 변경하거나 삭제할 수 있는 명령입니다. DDL은 이전 변경을 암시적으로 커밋할 수 있고 롤백으로 되돌리지 못할 수 있습니다."},
+	"sql_risk_unfiltered_dml": {"UPDATE / DELETE has no outer WHERE clause. All target rows may be changed or deleted. Review the SQL before executing.", "UPDATE / DELETE에 최상위 WHERE 조건이 없습니다. 대상 전체 행이 변경·삭제될 수 있으니 SQL을 확인하세요."},
+	"sql_risk_uncertain_dml":  {"The UPDATE / DELETE condition could not be checked reliably. Review the complete SQL before executing.", "UPDATE / DELETE 조건을 확실하게 판별할 수 없습니다. 전체 SQL을 확인한 후 실행하세요."},
+	"sql_risk_limits":         {"This check does not predict affected rows or prove other SQL safe. Execute runs exactly the SQL below; Cancel is selected by default.", "이 검사는 영향 행 수를 예측하거나 다른 SQL의 안전성을 보장하지 않습니다. 실행하면 아래 SQL을 제출합니다. 기본 선택은 취소입니다."},
+	"footer_sql_confirm":      {"Tab SQL / buttons | Arrows Scroll / select | Enter Confirm | Esc Cancel", "Tab SQL / 버튼 | 방향키 스크롤 / 선택 | Enter 확인 | Esc 취소"},
+
 	"vault_password_required": {"Enter a DB password before saving it encrypted.", "암호화 저장할 DB 비밀번호를 먼저 입력하세요."},
 	"passwords":               {"Passwords", "암호 관리"},
 	"save_password":           {"Save password (encrypted)", "비밀번호 저장 (암호화)"},

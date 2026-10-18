@@ -22,6 +22,9 @@ type job struct {
 }
 
 type screen struct {
+	sqlConfirmText  *tview.TextView
+	sqlConfirmFocus tview.Primitive
+
 	vault                                                         *credentials.Store
 	reloadConnectionProfiles                                      func() error
 	vaultWorkDone                                                 chan struct{}
@@ -152,7 +155,11 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 	s.mainLayout = tview.NewFlex().AddItem(s.newBrowser(), 0, 1, false).AddItem(s.queryLayout, 0, 3, true)
 	s.pages = tview.NewPages().AddPage("main", s.mainLayout, true, true)
 	s.pages.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
-		page, _ := s.pages.GetFrontPage()
+		page, pageRoot := s.pages.GetFrontPage()
+		if page == "sql_confirm" {
+			pageRoot.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
+			return tview.MouseConsumed, nil
+		}
 		var modal *tview.Modal
 		if page == "master" || page == "vault" {
 			var form *tview.Form

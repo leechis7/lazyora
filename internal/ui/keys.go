@@ -32,6 +32,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if s.buttonArrow(event) {
 		return nil
 	}
+	if page == "sql_confirm" {
+		return s.sqlConfirmationKey(event)
+	}
 	if page == "master" || page == "vault" {
 		return s.vaultKey(event, page)
 	}

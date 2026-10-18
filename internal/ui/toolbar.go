@@ -35,6 +35,10 @@ func (s *screen) toolbar() *tview.Flex {
 				return
 			}
 			key := s.footerKeys[index]
+			if key.action == "passwords" {
+				s.passwordManager()
+				return
+			}
 			if page, _ := s.pages.GetFrontPage(); page == "exit" && key.action == "pending_work" {
 				s.showPendingWork()
 				return
@@ -124,11 +128,21 @@ func (s *screen) refreshFooter() {
 	case "describe":
 		hint = "footer_describe"
 		keys = []footerKey{{"Esc", "close", tcell.KeyEscape, 0}}
+	case "sql_confirm":
+		hint = "footer_sql_confirm"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
+	case "master":
+		hint = "footer_master"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
+	case "vault":
+		hint = "footer_vault"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
 	case "connect":
 		hint = "footer_connect"
 		keys[1] = footerKey{"Ctrl+Enter", "connect", tcell.KeyEnter, tcell.ModCtrl}
 		keys[2] = footerKey{"Ctrl+S", "save", tcell.KeyCtrlS, tcell.ModNone}
 		keys[3] = footerKey{"Esc", "cancel", tcell.KeyEscape, tcell.ModNone}
+		keys = append(keys, footerKey{"Alt+K", "passwords", tcell.KeyRune, tcell.ModAlt})
 	case "settings":
 		hint = "footer_settings"
 		keys[1] = footerKey{"Ctrl+S", "save", tcell.KeyCtrlS, tcell.ModNone}

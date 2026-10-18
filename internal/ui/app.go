@@ -7,6 +7,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"lazyora/internal/credentials"
 	"lazyora/internal/oracle"
 	"lazyora/internal/settings"
 )
@@ -21,6 +22,17 @@ type job struct {
 }
 
 type screen struct {
+	sqlConfirmText  *tview.TextView
+	sqlConfirmFocus tview.Primitive
+
+	vault                                                         *credentials.Store
+	reloadConnectionProfiles                                      func() error
+	vaultWorkDone                                                 chan struct{}
+	vaultBusy                                                     bool
+	masterForm, vaultForm                                         *tview.Form
+	masterSubmit, masterCancel, closeVault, clearConnectionSecret func()
+	vaultFocus                                                    tview.Primitive
+
 	sqlHistory                               []string
 	historyList                              *tview.List
 	historyFocus                             tview.Primitive
@@ -143,8 +155,24 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 	s.mainLayout = tview.NewFlex().AddItem(s.newBrowser(), 0, 1, false).AddItem(s.queryLayout, 0, 3, true)
 	s.pages = tview.NewPages().AddPage("main", s.mainLayout, true, true)
 	s.pages.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
-		page, _ := s.pages.GetFrontPage()
+		page, pageRoot := s.pages.GetFrontPage()
+		if page == "sql_confirm" {
+			pageRoot.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
+			return tview.MouseConsumed, nil
+		}
 		var modal *tview.Modal
+		if page == "master" || page == "vault" {
+			var form *tview.Form
+			if page == "master" {
+				form = s.masterForm
+			} else {
+				form = s.vaultForm
+			}
+			if !s.vaultBusy && form != nil {
+				form.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
+			}
+			return tview.MouseConsumed, nil
+		}
 		if page == "exit" {
 			modal = s.exitDialog
 		}
@@ -185,6 +213,9 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 	})
 	lastClickX, lastClickY := -1, -1
 	s.app.SetMouseCapture(func(event *tcell.EventMouse, action tview.MouseAction) (*tcell.EventMouse, tview.MouseAction) {
+		if s.vaultBusy {
+			return nil, action
+		}
 		if !s.prefs.Mouse {
 			return nil, action
 		}
@@ -217,6 +248,10 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 		ready(s)
 	}
 	err := s.app.Run()
+	if s.vaultWorkDone != nil {
+		<-s.vaultWorkDone
+	}
+	s.lockPasswords()
 	if s.cancel != nil {
 		s.cancel()
 	}

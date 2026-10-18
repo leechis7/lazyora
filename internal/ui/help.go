@@ -17,8 +17,8 @@ type helpSection struct {
 
 var helpSections = []helpSection{
 	{"sql", [2]string{"SQL editor", "SQL 편집"}, []string{"execute", "find", "find_next", "find_previous", "replace", "clear_sql", "history"}, [2]string{
-		"Enter inserts a newline. Alt+Enter / Shift+F9 also execute.\nExecute selected text; without a selection, execute the whole editor as one SQL statement or BEGIN/DECLARE block.\nFind is literal and case sensitive; next/previous wraps.\nHistory: this run only, up to 100 entries in memory. Loading does not execute SQL.",
-		"Enter는 줄바꿈입니다. Alt+Enter / Shift+F9로도 실행합니다.\n선택한 SQL을 실행하며, 선택이 없으면 편집기 전체를 한 문장 또는 BEGIN/DECLARE 블록으로 실행합니다.\n찾기는 대소문자를 구분하는 일반 문자열 검색이며 끝에서 순환합니다.\n이력은 이번 실행의 SQL 최대 100개를 메모리에만 보관하며, 불러와도 자동 실행하지 않습니다."}},
+		"Enter inserts a newline. Alt+Enter / Shift+F9 also execute.\nExecute selected text; without a selection, execute the whole editor as one SQL statement or BEGIN/DECLARE block.\nFind is literal and case sensitive; next/previous wraps.\nHistory: this run only, up to 100 entries in memory. Loading does not execute SQL.\nDDL and UPDATE/DELETE without an outer WHERE ask before execution. The default is Cancel; Esc also cancels.",
+		"Enter는 줄바꿈입니다. Alt+Enter / Shift+F9로도 실행합니다.\n선택한 SQL을 실행하며, 선택이 없으면 편집기 전체를 한 문장 또는 BEGIN/DECLARE 블록으로 실행합니다.\n찾기는 대소문자를 구분하는 일반 문자열 검색이며 끝에서 순환합니다.\n이력은 이번 실행의 SQL 최대 100개를 메모리에만 보관하며, 불러와도 자동 실행하지 않습니다.\nDDL과 최상위 WHERE 없는 UPDATE/DELETE는 실행 전 확인합니다. 기본 선택과 Esc는 취소입니다."}},
 	{"results", [2]string{"Results and copying", "조회 결과 · 복사"}, []string{"copy", "copy_row"}, [2]string{
 		"Click a cell. Drag or Shift+arrows selects a rectangle; arrows / PgUp / PgDn scroll.\nCopy format: TSV, with quoted tabs/newlines inside values; NULL stays NULL.\nIf clipboard transfer is blocked: Edit > Copy preview, then select and copy using your terminal.",
 		"셀을 클릭하거나 드래그·Shift+방향키로 범위를 선택합니다. 방향키·PgUp·PgDn으로 이동합니다.\n복사 형식은 TSV이며, 값 안의 탭·줄바꿈은 인용 처리하고 NULL은 그대로 복사합니다.\n클립보드 전송이 막히면 편집 > 복사 내용 보기에서 터미널의 선택·복사를 사용하세요."}},
@@ -26,8 +26,8 @@ var helpSections = []helpSection{
 		"Tab / Shift+Tab cycles visible panels. Repeat the fullscreen key to restore split.\nView > Maximize retains menus/status/footer; Alt+B / View > Schemas shows/hides the browser.\nAlt+M opens menus; Alt+F/E/S/X/V/T/H opens File/Edit/Session/Execute/View/Tools/Help.\nMenus: arrows select, Enter runs, Esc closes. F10 / right-click opens a context menu.\nButtons: Tab reaches the row, Left/Right selects, Enter runs. Focus is white bold underlined text on dark blue.",
 		"Tab / Shift+Tab으로 표시 중인 창을 순환합니다. 전체화면 키를 다시 누르면 분할 화면으로 복원합니다.\n보기 > 창 최대화는 메뉴·상태·푸터를 유지합니다. Alt+B 또는 보기 > 스키마로 탐색기를 표시·숨깁니다.\nAlt+M 메뉴 열기. Alt+F/E/S/X/V/T/H는 파일/편집/세션/실행/보기/도구/도움말입니다.\n메뉴는 방향키 선택, Enter 실행, Esc 닫기입니다. F10 / 우클릭은 문맥 메뉴입니다.\n버튼은 Tab으로 접근, 좌우로 선택, Enter로 실행합니다. 선택은 진한 파랑 배경·흰색 굵은 밑줄 글자입니다."}},
 	{"connection", [2]string{"Connection and settings", "접속 · 환경설정"}, []string{"connect"}, [2]string{
-		"Startup opens login; Alt+L reopens it. Session > Connect (Alt+S, Enter)   |   Tools > Settings (Alt+T, Enter)\nConnection: profiles above; editable fields below, starting with Alias.\n  Alt+R profiles, Alt+A alias, Alt+H/P/U/W/T/N host/port/user/password/type/name\n  Ctrl+Enter / Alt+Enter / Alt+C connect, Ctrl+S / Alt+S save, Esc cancel\nSettings: Alt+L language, Alt+M mouse, Space toggle, Ctrl+S save.\nWhite fields accept text; dark fields with v select options. Passwords are never saved.",
-		"시작하면 접속 창이 열립니다. Alt+L로 다시 열거나 세션 > 접속(Alt+S, Enter)   |   도구 > 설정(Alt+T, Enter)\n접속 화면 위쪽은 저장된 접속 선택, 아래쪽은 별칭부터 시작하는 정보 편집입니다.\n  Alt+R 저장된 접속, Alt+A 별칭, Alt+H/P/U/W/T/N 호스트/포트/계정/암호/방식/이름\n  Ctrl+Enter / Alt+Enter / Alt+C 접속, Ctrl+S / Alt+S 저장, Esc 취소\n환경설정: Alt+L 언어, Alt+M 마우스, Space 선택, Ctrl+S 저장.\n흰 배경은 텍스트 입력, 어두운 배경과 v는 선택박스입니다. 비밀번호는 저장하지 않습니다."}},
+		"Startup opens login; Alt+L reopens it. Session > Connect (Alt+S, Enter)   |   Tools > Settings (Alt+T, Enter)\nConnection: profiles above; editable fields below, starting with Alias.\n  Alt+R profiles, Alt+A alias, Alt+H/P/U/W/T/N host/port/user/password/type/name\n  Ctrl+Enter / Alt+Enter / Alt+C connect, Ctrl+S / Alt+S save, Esc cancel\nSettings: Alt+L language, Alt+M mouse, Space toggle, Ctrl+S save.\nWhite fields accept text; dark fields with v select options. Passwords are not saved by default. Enable encrypted saving and press Save to opt in.\nAlt+K / Tools > Passwords: unlock, lock, change master, reset. Unlock needs the master password; it cannot be recovered.",
+		"시작하면 접속 창이 열립니다. Alt+L로 다시 열거나 세션 > 접속(Alt+S, Enter)   |   도구 > 설정(Alt+T, Enter)\n접속 화면 위쪽은 저장된 접속 선택, 아래쪽은 별칭부터 시작하는 정보 편집입니다.\n  Alt+R 저장된 접속, Alt+A 별칭, Alt+H/P/U/W/T/N 호스트/포트/계정/암호/방식/이름\n  Ctrl+Enter / Alt+Enter / Alt+C 접속, Ctrl+S / Alt+S 저장, Esc 취소\n환경설정: Alt+L 언어, Alt+M 마우스, Space 선택, Ctrl+S 저장.\n흰 배경은 텍스트 입력, 어두운 배경과 v는 선택박스입니다. 비밀번호는 기본 미저장이며, 암호화 저장을 선택하고 저장해야 보관합니다.\nAlt+K / 도구 > 암호 관리: 잠금 해제·잠금·마스터 변경·초기화. 마스터 암호는 복구할 수 없습니다."}},
 	{"schema", [2]string{"Schema, object details and source", "스키마 · 객체 상세 · 소스"}, []string{"browser_user", "browser_type", "describe", "quick_describe"}, [2]string{
 		"Browser: choose User and Type above the object list. The login user and Tables are selected initially.\nAlt+U selects User; Alt+O selects Type. Tab cycles the selectors and list.\nArrows move, Enter/click opens, Ctrl+R refreshes. Selecting a browser user does not change the SQL session.\nObject: Alt+S source/edit, Alt+A arguments, Ctrl+R refresh, Esc back.\nSource: F9 apply/compile, Ctrl+R reload, Tab cycles source/errors/buttons.\nCompilation is DDL and may commit prior DML, even when compilation fails.\nDiscarding unapplied source edits requires confirmation.",
 		"탐색기 위쪽에서 사용자와 객체 종류를 선택합니다. 기본값은 접속 계정과 테이블입니다.\nAlt+U 사용자, Alt+O 객체 종류로 이동하고 Tab으로 선택칸과 목록을 순환합니다.\n방향키 이동, Enter/클릭 상세 조회, Ctrl+R 새로고침. 사용자 선택은 SQL 세션을 변경하지 않습니다.\n객체 상세: Alt+S 소스·편집, Alt+A 인자, Ctrl+R 새로고침, Esc 돌아가기.\n소스: F9 적용·컴파일, Ctrl+R 다시 조회, Tab 소스/오류/버튼 이동.\n컴파일은 DDL이므로 실패하더라도 이전 DML이 커밋될 수 있습니다.\nDB에 적용하지 않은 소스 편집을 버릴 때는 확인합니다."}},
@@ -72,6 +72,12 @@ func (s *screen) mainHelp() string {
 
 func (s *screen) helpContext(page string) string {
 	switch page {
+	case "sql_confirm":
+		return s.tr("footer_sql_confirm") + "\n" + s.tr("sql_risk_limits")
+	case "master":
+		return s.tr("footer_master") + "\n" + s.tr("vault_master_hint")
+	case "vault":
+		return s.tr("footer_vault") + "\n" + s.tr("vault_hint")
 	case "connect":
 		return s.tr("footer_connect") + "\nCtrl+Enter / Alt+C: " + s.tr("connect") + " | Ctrl+S: " + s.tr("save")
 	case "settings":

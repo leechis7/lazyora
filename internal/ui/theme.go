@@ -85,6 +85,9 @@ func (s *screen) refreshBorders() {
 		}
 		box.SetBorderStyle(tcell.StyleDefault.Foreground(color).Background(background).Bold(focused))
 	}
+	if s.sqlConfirmText != nil {
+		apply(s.sqlConfirmText.Box, s.sqlConfirmText.HasFocus(), false)
+	}
 	apply(s.editor.Box, s.editor.HasFocus(), true)
 	apply(s.table.Box, s.table.HasFocus(), false)
 	if s.pendingTable != nil {
@@ -131,7 +134,7 @@ func (s *screen) refreshBorders() {
 			apply(table.Box, table.HasFocus(), false)
 		}
 	}
-	for _, form := range []*tview.Form{s.connectForm, s.connectProfiles, s.prefsForm} {
+	for _, form := range []*tview.Form{s.connectForm, s.connectProfiles, s.prefsForm, s.masterForm, s.vaultForm} {
 		if form != nil {
 			apply(form.Box, form.HasFocus(), false)
 		}

@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-18
+
+### 추가
+
+- DDL·관리 명령과 최상위 WHERE 없는 UPDATE·DELETE를 실행하기 전 사유·대상 SQL을 보여주고 확인합니다. 기본 선택과 Esc는 취소이며, 명시적으로 확인한 SQL만 제출합니다. 주석·문자열·서브쿼리 속 WHERE는 바깥 조건으로 오인하지 않습니다.
+- 선택적 DB 비밀번호 암호화 저장. 최초 마스터 비밀번호 설정·실행 중 잠금 해제, Alt+K/도구 > 암호 관리의 잠금·마스터 변경·전체 초기화와 접속별 저장 해제를 지원합니다. 마스터 자체는 저장하지 않으며 Argon2id·AES-256-GCM을 사용합니다. 기존 비밀번호 미저장 프로필은 그대로 사용할 수 있습니다.
+
+### 수정
+
+- 저장된 언어가 빈 값이면 시스템 로캘을 따릅니다. 한국어(ko) 로캘만 한국어로 표시하며 그 외는 영어를 사용합니다. 명시적으로 저장한 언어는 유지합니다.
+
 ## [0.1.1] - 2026-10-18
 
 ### 추가
@@ -91,7 +102,8 @@ v0.0.1의 F2 접속은 Alt+L, F4 실행은 F9, F5 커밋은 Alt+C, F6 롤백은 
 - 이 릴리스 시점에는 실제 CentOS 7.4, 구형 Oracle 및 SID 접속 검증이 완료되지 않았습니다. 이후 호환성 수정은 `Unreleased`에 기록합니다.
 - 한 번에 SQL 한 문장 또는 BEGIN/DECLARE 블록 하나를 실행합니다. 여러 문장 일괄 실행, SQL*Plus 스크립트, 바인드 입력, DBMS_OUTPUT 출력은 지원하지 않습니다.
 
-[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.1.1...dev
+[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.1.2...dev
+[0.1.2]: https://github.com/leechis7/lazyora/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/leechis7/lazyora/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/leechis7/lazyora/compare/v0.0.1...v0.1.0
 [0.0.1]: https://github.com/leechis7/lazyora/releases/tag/v0.0.1

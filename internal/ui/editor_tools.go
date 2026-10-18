@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/rivo/tview"
+	"lazyora/internal/oracle"
 )
 
 func (s *screen) clearSQL() {
@@ -21,6 +22,19 @@ func (s *screen) executeSQL() {
 	if selected, _, _ := s.editor.GetSelection(); selected != "" {
 		text = selected
 	}
+	if s.sqlConfirmText != nil || s.busy {
+		return
+	}
+	if s.connected {
+		if risk := oracle.ExecutionRisk(text); risk != oracle.RiskNone {
+			s.confirmSQL(text, risk)
+			return
+		}
+	}
+	s.submitSQL(text)
+}
+
+func (s *screen) submitSQL(text string) {
 	if !s.busy && s.connected && strings.TrimSpace(text) != "" {
 		if len(s.sqlHistory) == 0 || s.sqlHistory[len(s.sqlHistory)-1] != text {
 			s.sqlHistory = append(s.sqlHistory, text)

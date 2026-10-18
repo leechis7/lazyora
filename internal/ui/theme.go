@@ -131,7 +131,7 @@ func (s *screen) refreshBorders() {
 			apply(table.Box, table.HasFocus(), false)
 		}
 	}
-	for _, form := range []*tview.Form{s.connectForm, s.connectProfiles, s.prefsForm} {
+	for _, form := range []*tview.Form{s.connectForm, s.connectProfiles, s.prefsForm, s.masterForm, s.vaultForm} {
 		if form != nil {
 			apply(form.Box, form.HasFocus(), false)
 		}

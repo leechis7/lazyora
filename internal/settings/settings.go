@@ -17,8 +17,9 @@ type Config struct {
 func Default() Config {
 	language := "en"
 	for _, key := range []string{"LC_ALL", "LC_MESSAGES", "LANG"} {
-		if locale := os.Getenv(key); locale != "" {
-			if strings.HasPrefix(strings.ToLower(locale), "ko") {
+		if locale := strings.TrimSpace(os.Getenv(key)); locale != "" {
+			base := strings.FieldsFunc(strings.ToLower(locale), func(r rune) bool { return r == '_' || r == '-' || r == '.' || r == '@' })
+			if len(base) > 0 && base[0] == "ko" {
 				language = "ko"
 			}
 			break
@@ -57,6 +58,9 @@ func Load(path string) (Config, error) {
 	c := defaults
 	if err = json.Unmarshal(data, &c); err != nil {
 		return defaults, fmt.Errorf("read settings: %w", err)
+	}
+	if c.Language == "" {
+		c.Language = defaults.Language
 	}
 	if err = c.Validate(); err != nil {
 		return defaults, err

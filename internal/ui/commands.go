@@ -49,6 +49,7 @@ var commands = []command{
 	{"describe", "describe", 4, []binding{{"F4", tcell.KeyF4, 0, 0}}},
 	{"quick_describe", "quick_describe", 4, []binding{{"Ctrl+D", tcell.KeyCtrlD, 0, 0}}},
 	{"settings", "settings", 5, nil},
+	{"passwords", "passwords", 5, []binding{{"Alt+K", tcell.KeyRune, tcell.ModAlt, 'k'}}},
 	{"help", "help", 6, []binding{{"F1", tcell.KeyF1, 0, 0}}},
 }
 
@@ -85,7 +86,7 @@ func (s *screen) commandEnabled(id string) bool {
 		return false
 	}
 	switch id {
-	case "quit", "help", "settings", "focus_toggle", "context_menu":
+	case "quit", "help", "settings", "focus_toggle", "context_menu", "passwords":
 		return true
 	case "fullscreen_sql", "fullscreen_results":
 		return true
@@ -130,6 +131,8 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "passwords":
+		s.passwordManager()
 	case "maximize":
 		s.toggleMaximize()
 	case "fullscreen_sql":

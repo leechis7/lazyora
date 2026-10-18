@@ -31,7 +31,7 @@ chmod +x lazyora-linux-arm64
 
 Windows에서는 PowerShell에서 `.\lazyora-windows-amd64.exe`처럼 실행합니다. DB 없이 화면만 둘러보려면 `--demo`, 버전을 확인하려면 `--version`을 붙입니다.
 
-실행하면 접속 화면이 열립니다. Host·Port·계정·암호를 입력하고 **Service Name 또는 SID**를 선택한 뒤 접속 버튼을 누르세요. 별칭을 지정해 접속 정보를 저장할 수 있으며 **비밀번호는 저장하지 않습니다.**
+실행하면 접속 화면이 열립니다. Host·Port·계정·암호를 입력하고 **Service Name 또는 SID**를 선택한 뒤 접속 버튼을 누르세요. 별칭을 지정해 접속 정보를 저장할 수 있습니다. 비밀번호는 기본적으로 저장하지 않으며, **암호화 저장을 선택하면 마스터 비밀번호로 보호**합니다. [암호 관리 안내](docs/credentials.md)를 참고하세요.
 
 ## 자주 쓰는 키
 

@@ -172,7 +172,7 @@ func TestConnectionSectionsAndTabCycle(t *testing.T) {
 	if s.connectForm.GetFormItem(0).GetLabel() != s.tr("alias") {
 		t.Fatal("alias must be first")
 	}
-	if s.connectProfiles.GetFormItemCount() != 1 || s.connectForm.GetFormItemCount() != 7 {
+	if s.connectProfiles.GetFormItemCount() != 1 || s.connectForm.GetFormItemCount() != 8 {
 		t.Fatal("profile picker not separate from editable fields")
 	}
 	connectionKey(s, tcell.KeyBacktab)

@@ -27,6 +27,7 @@ const (
 	connectionPassword
 	connectionMode
 	connectionName
+	connectionSavePassword
 )
 
 var connectionLabels = []string{"alias", "host", "port", "username", "password", "connection_type", "service_name"}
@@ -40,6 +41,7 @@ func (s *screen) localizeConnection() {
 			form.GetFormItem(i).(*tview.InputField).SetLabel(s.tr(key))
 		}
 	}
+	form.GetFormItem(connectionSavePassword).(*tview.Checkbox).SetLabel(s.tr("save_password"))
 	form.GetButton(0).SetLabel(s.tr("connect") + " (Alt+C)")
 	form.GetButton(1).SetLabel(s.tr("cancel") + " (Esc)")
 	form.GetButton(2).SetLabel(s.tr("save") + " (Alt+S)")
@@ -52,6 +54,11 @@ func (s *screen) localizeConnection() {
 }
 
 func (s *screen) closeConnection() {
+	if s.connectForm != nil {
+		s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).SetText("")
+	}
+	s.clearConnectionSecret = nil
+	s.reloadConnectionProfiles = nil
 	s.pages.RemovePage("connect")
 	s.connectForm, s.connectAction, s.saveConnection = nil, nil, nil
 	s.connectionOptions = nil
@@ -69,17 +76,35 @@ func (s *screen) connectionForm() {
 	form := tview.NewForm().SetItemPadding(0)
 	s.connectForm = form
 	mode := "service"
+	autofilled := false
+	var invalidateSecret func()
 	form.AddInputField("", "", 40, nil, nil).
 		AddInputField("", env("LAZYORA_HOST", "localhost"), 40, nil, nil).
 		AddInputField("", env("LAZYORA_PORT", "1521"), 8, nil, nil).
 		AddInputField("", os.Getenv("LAZYORA_USER"), 40, nil, nil).
 		AddPasswordField("", os.Getenv("LAZYORA_PASSWORD"), 40, '*', nil).
 		AddFormItem(s.newChoice("", []string{"Service Name", "SID"}, 0, func(_ string, index int) {
+			if invalidateSecret != nil {
+				invalidateSecret()
+			}
 			mode = "service"
 			if index == 1 {
 				mode = "sid"
 			}
 		})).AddInputField("", os.Getenv("LAZYORA_NAME"), 40, nil, nil)
+	form.AddCheckbox(s.tr("save_password"), false, nil)
+	password := form.GetFormItem(connectionPassword).(*tview.InputField)
+	invalidateSecret = func() {
+		if autofilled {
+			password.SetText("")
+			autofilled = false
+		}
+	}
+	for _, index := range []int{connectionHost, connectionPort, connectionUser, connectionName} {
+		form.GetFormItem(index).(*tview.InputField).SetChangedFunc(func(string) { invalidateSecret() })
+	}
+	password.SetChangedFunc(func(string) { autofilled = false })
+	s.clearConnectionSecret = func() { password.SetText(""); autofilled = false }
 	path := settings.ConnectionsPath(s.prefsPath)
 	profiles, loadErr := settings.LoadConnections(path)
 	options := []string{s.tr("new_connection")}
@@ -92,6 +117,7 @@ func (s *screen) connectionForm() {
 	styleForm(selector)
 	selectProfile := func(_ string, index int) {
 		// Always discard the previous password, including environment defaults.
+		form.GetFormItem(connectionSavePassword).(*tview.Checkbox).SetChecked(false)
 		form.GetFormItem(connectionPassword).(*tview.InputField).SetText("")
 		if index <= 0 {
 			for i, value := range map[int]string{connectionAlias: "", connectionHost: env("LAZYORA_HOST", "localhost"), connectionPort: env("LAZYORA_PORT", "1521"), connectionUser: os.Getenv("LAZYORA_USER"), connectionName: os.Getenv("LAZYORA_NAME")} {
@@ -109,6 +135,22 @@ func (s *screen) connectionForm() {
 			modeIndex = 1
 		}
 		form.GetFormItem(connectionMode).(*choiceField).SetCurrentOption(modeIndex)
+		if p.SavedPassword {
+			form.GetFormItem(connectionSavePassword).(*tview.Checkbox).SetChecked(true)
+			s.ensurePasswords(func() {
+				value, found, err := s.vault.Get(p.ID, p.Binding())
+				if err != nil {
+					s.showVaultError(err)
+					return
+				}
+				if !found {
+					form.SetTitle(s.tr("vault_missing"))
+					return
+				}
+				password.SetText(value)
+				autofilled = true
+			})
+		}
 	}
 	selector.GetFormItem(0).(*choiceField).SetSelectedFunc(selectProfile)
 	s.connectionOptions = func() {
@@ -118,7 +160,17 @@ func (s *screen) connectionForm() {
 		for _, p := range profiles {
 			options = append(options, p.Alias)
 		}
-		dropdown.SetOptions(options, nil).SetCurrentOption(index).SetSelectedFunc(selectProfile)
+		dropdown.SetSelectedFunc(nil).SetOptions(options, nil).SetCurrentOption(index).SetSelectedFunc(selectProfile)
+	}
+	s.reloadConnectionProfiles = func() error {
+		next, err := settings.LoadConnections(path)
+		if err != nil {
+			return err
+		}
+		profiles = next
+		s.connectionOptions()
+		form.GetFormItem(connectionSavePassword).(*tview.Checkbox).SetChecked(false)
+		return nil
 	}
 	readConfig := func() (oracle.Config, bool) {
 		port, err := oracle.ParsePort(form.GetFormItem(connectionPort).(*tview.InputField).GetText())
@@ -143,7 +195,7 @@ func (s *screen) connectionForm() {
 		s.closeConnection()
 		s.submit(job{action: "connect", config: config})
 	}
-	s.saveConnection = func() {
+	saveProfile := func() {
 		if loadErr != nil {
 			form.SetTitle(" " + fmt.Sprintf(s.tr("connection_save_error"), loadErr) + " ")
 			return
@@ -166,6 +218,21 @@ func (s *screen) connectionForm() {
 				break
 			}
 		}
+		if index < len(next) {
+			profile.ID = next[index].ID
+		}
+		if profile.ID == "" {
+			var err error
+			profile.ID, err = settings.NewConnectionID()
+			if err != nil {
+				s.showVaultError(err)
+				return
+			}
+		}
+		savePassword := form.GetFormItem(connectionSavePassword).(*tview.Checkbox).IsChecked()
+		// Keep the public profile marked as not saved until encrypted persistence
+		// succeeds. A failure can leave updated public metadata, never plaintext.
+		profile.SavedPassword = false
 		if index == len(next) {
 			next = append(next, profile)
 		} else {
@@ -175,13 +242,74 @@ func (s *screen) connectionForm() {
 			form.SetTitle(" " + fmt.Sprintf(s.tr("connection_save_error"), err) + " ")
 			return
 		}
+		if savePassword {
+			if err := s.vault.Put(profile.ID, profile.Binding(), config.Password); err != nil {
+				if restoreErr := settings.SaveConnections(path, profiles); restoreErr != nil {
+					form.SetTitle(s.tr("vault_profile_error"))
+				} else {
+					s.showVaultError(err)
+				}
+				return
+			}
+			next[index].SavedPassword = true
+			if err := settings.SaveConnections(path, next); err != nil {
+				profiles = next
+				form.SetTitle(s.tr("vault_profile_error"))
+				return
+			}
+		} else if index < len(profiles) && profiles[index].SavedPassword {
+			if s.vault != nil && s.vault.Unlocked() {
+				if err := s.vault.Delete(profile.ID); err != nil {
+					if restoreErr := settings.SaveConnections(path, profiles); restoreErr != nil {
+						form.SetTitle(s.tr("vault_profile_error"))
+					} else {
+						s.showVaultError(err)
+					}
+					return
+				}
+			}
+		}
 		profiles = next
 		// Updating the selection after save must keep the typed password in memory.
 		dropdown := selector.GetFormItem(0).(*choiceField)
 		s.connectionOptions()
 		dropdown.SetSelectedFunc(nil).SetCurrentOption(index + 1).SetSelectedFunc(selectProfile)
 		form.GetFormItem(connectionAlias).(*tview.InputField).SetText(alias)
-		form.SetTitle(" " + s.tr("connection_saved") + " ")
+		message := "connection_saved"
+		if savePassword {
+			message = "connection_secret_saved"
+		}
+		form.SetTitle(" " + s.tr(message) + " ")
+	}
+	s.saveConnection = func() {
+		if loadErr != nil {
+			saveProfile()
+			return
+		}
+		if form.GetFormItem(connectionSavePassword).(*tview.Checkbox).IsChecked() {
+			config, ok := readConfig()
+			if !ok {
+				return
+			}
+			if config.Password == "" {
+				form.SetTitle(s.tr("vault_password_required"))
+				return
+			}
+			if strings.TrimSpace(form.GetFormItem(connectionAlias).(*tview.InputField).GetText()) == "" {
+				form.SetTitle(s.tr("alias_required"))
+				return
+			}
+			s.ensurePasswords(saveProfile)
+		} else {
+			alias := strings.TrimSpace(form.GetFormItem(connectionAlias).(*tview.InputField).GetText())
+			for _, p := range profiles {
+				if p.Alias == alias && p.SavedPassword {
+					s.ensurePasswords(saveProfile)
+					return
+				}
+			}
+			saveProfile()
+		}
 	}
 	form.AddButton("", s.connectAction).AddButton("", s.closeConnection).AddButton("", s.saveConnection)
 	clickable(form.GetButton(0))

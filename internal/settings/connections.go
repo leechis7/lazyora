@@ -1,6 +1,9 @@
 package settings
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,15 +12,17 @@ import (
 	"strings"
 )
 
-// Connection intentionally has no password or DSN field. Secret storage must
-// use a separate design with explicit key management before being introduced.
+// Connection stores only public connection metadata. Passwords live exclusively
+// in the separate encrypted credentials store, associated by stable IDs.
 type Connection struct {
-	Alias string `json:"alias"`
-	Host  string `json:"host"`
-	Port  int    `json:"port"`
-	User  string `json:"user"`
-	Mode  string `json:"mode"`
-	Name  string `json:"name"`
+	ID            string `json:"id,omitempty"`
+	SavedPassword bool   `json:"saved_password,omitempty"`
+	Alias         string `json:"alias"`
+	Host          string `json:"host"`
+	Port          int    `json:"port"`
+	User          string `json:"user"`
+	Mode          string `json:"mode"`
+	Name          string `json:"name"`
 }
 
 func ConnectionsPath(settingsPath string) string {
@@ -31,7 +36,31 @@ func ConnectionsPath(settingsPath string) string {
 	return path
 }
 
+func NewConnectionID() (string, error) {
+	id := make([]byte, 16)
+	if _, err := rand.Read(id); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(id), nil
+}
+
+// Binding prevents using an encrypted password for an edited host or account.
+func (c Connection) Binding() string {
+	data, _ := json.Marshal([]any{c.Host, c.Port, c.User, c.Mode, c.Name})
+	digest := sha256.Sum256(data)
+	return hex.EncodeToString(digest[:])
+}
+
 func (c Connection) Validate() error {
+	if c.ID != "" {
+		id, err := hex.DecodeString(c.ID)
+		if err != nil || len(id) != 16 {
+			return errors.New("invalid connection ID")
+		}
+	}
+	if c.SavedPassword && c.ID == "" {
+		return errors.New("saved credentials require a connection ID")
+	}
 	if strings.TrimSpace(c.Alias) == "" || strings.TrimSpace(c.Host) == "" || strings.TrimSpace(c.User) == "" || strings.TrimSpace(c.Name) == "" {
 		return errors.New("alias, host, username and service name/SID are required")
 	}
@@ -43,6 +72,7 @@ func (c Connection) Validate() error {
 
 func validateConnections(profiles []Connection) error {
 	seen := make(map[string]bool)
+	ids := make(map[string]bool)
 	for _, c := range profiles {
 		if err := c.Validate(); err != nil {
 			return err
@@ -51,6 +81,12 @@ func validateConnections(profiles []Connection) error {
 			return errors.New("connection aliases must be unique and have no surrounding spaces")
 		}
 		seen[c.Alias] = true
+		if c.ID != "" {
+			if ids[c.ID] {
+				return errors.New("connection IDs must be unique")
+			}
+			ids[c.ID] = true
+		}
 	}
 	return nil
 }

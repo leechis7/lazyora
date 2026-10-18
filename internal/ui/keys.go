@@ -13,6 +13,9 @@ func focusForm(s *screen, form *tview.Form, index int) {
 }
 
 func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
+	if s.vaultBusy {
+		return nil
+	}
 	// tcell reports legacy ESC CR as Ctrl+Alt+m rather than KeyEnter+Alt.
 	if event.Key() == tcell.KeyRune && event.Rune() == 'm' && event.Modifiers()&(tcell.ModAlt|tcell.ModCtrl) == tcell.ModAlt|tcell.ModCtrl {
 		event = tcell.NewEventKey(tcell.KeyEnter, 0, event.Modifiers()&^tcell.ModCtrl)
@@ -28,6 +31,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	}
 	if s.buttonArrow(event) {
 		return nil
+	}
+	if page == "master" || page == "vault" {
+		return s.vaultKey(event, page)
 	}
 	if event.Key() == tcell.KeyTab || event.Key() == tcell.KeyBacktab {
 		switch page {
@@ -229,6 +235,10 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return event
 	}
 	if page == "connect" {
+		if alt && letter == 'k' {
+			s.passwordManager()
+			return nil
+		}
 		if s.connectionTab(event) {
 			return nil
 		}

@@ -54,3 +54,70 @@ func TestDefaultLocaleAndBrokenSettings(t *testing.T) {
 		t.Fatal("config path override was ignored")
 	}
 }
+
+func TestLocaleLanguageSelectionAndPriority(t *testing.T) {
+	for _, tc := range []struct{ name, all, messages, lang, want string }{
+		{"unset", "", "", "", "en"},
+		{"korean lang", "", "", "ko_KR.UTF-8", "ko"},
+		{"plain ko", "", "", "ko", "ko"},
+		{"hyphen", "", "", "ko-KR", "ko"},
+		{"case and spaces", "", "", " KO_kr.UTF-8 ", "ko"},
+		{"messages priority", "", "ko_KR.UTF-8", "en_US.UTF-8", "ko"},
+		{"all priority", "C", "ko_KR.UTF-8", "ko_KR.UTF-8", "en"},
+		{"whitespace unset", " ", "", "ko_KR.UTF-8", "ko"},
+		{"other language", "", "", "ja_JP.UTF-8", "en"},
+		{"not ko prefix", "", "", "kok_IN.UTF-8", "en"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("LC_ALL", tc.all)
+			t.Setenv("LC_MESSAGES", tc.messages)
+			t.Setenv("LANG", tc.lang)
+			if got := Default().Language; got != tc.want {
+				t.Fatalf("got %s want %s", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestUnsetSavedLanguageUsesLocaleWithoutError(t *testing.T) {
+	t.Setenv("LC_ALL", "")
+	t.Setenv("LC_MESSAGES", "")
+	path := filepath.Join(t.TempDir(), "settings.json")
+	for _, lang := range []string{"ko_KR.UTF-8", "en_US.UTF-8"} {
+		t.Setenv("LANG", lang)
+		want := Default().Language
+		for _, data := range []string{`{}`, `{"mouse":false}`, `{"language":"","mouse":false}`, `{"language":null,"mouse":false}`} {
+			if err := os.WriteFile(path, []byte(data), 0600); err != nil {
+				t.Fatal(err)
+			}
+			got, err := Load(path)
+			if err != nil || got.Language != want {
+				t.Fatalf("unset language fallback failed: %+v %v", got, err)
+			}
+			if data != `{}` && got.Mouse {
+				t.Fatal("locale fallback discarded saved mouse preference")
+			}
+		}
+	}
+	// Explicit preferences take precedence over the locale in either direction.
+	for _, saved := range []string{"en", "ko"} {
+		locale := "ko_KR.UTF-8"
+		if saved == "ko" {
+			locale = "en_US.UTF-8"
+		}
+		t.Setenv("LANG", locale)
+		if err := Save(path, Config{Language: saved, Mouse: false}); err != nil {
+			t.Fatal(err)
+		}
+		got, err := Load(path)
+		if err != nil || got.Language != saved {
+			t.Fatal("locale replaced explicit preference")
+		}
+	}
+	if err := os.WriteFile(path, []byte(`{"language":"invalid"}`), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(path); err == nil {
+		t.Fatal("invalid explicit language silently accepted")
+	}
+}

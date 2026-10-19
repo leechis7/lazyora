@@ -29,6 +29,7 @@ var commands = []command{
 	{"quit", "quit", 0, []binding{{"Ctrl+Q", tcell.KeyCtrlQ, 0, 0}}},
 	{"copy", "copy_selection", 1, []binding{{"Ctrl+C", tcell.KeyCtrlC, 0, 0}}},
 	{"copy_row", "copy_row", 1, []binding{{"Alt+Y", tcell.KeyRune, tcell.ModAlt, 'y'}}},
+	{"export", "export", 1, []binding{{"Ctrl+Shift+E", tcell.KeyCtrlE, tcell.ModShift, 0}, {"Alt+W", tcell.KeyRune, tcell.ModAlt, 'w'}}},
 	{"copy_preview", "copy_preview", 1, nil},
 	{"find", "find", 1, []binding{{"Ctrl+F", tcell.KeyCtrlF, 0, 0}}},
 	{"find_next", "find_next", 1, []binding{{"F3", tcell.KeyF3, 0, 0}}},
@@ -125,6 +126,8 @@ func (s *screen) commandEnabled(id string) bool {
 		return (s.table.HasFocus() && len(s.resultRows) > 0) || (s.editor.HasFocus() && s.editor.HasSelection())
 	case "copy_row":
 		return s.table.HasFocus() && len(s.resultRows) > 0
+	case "export":
+		return !s.busy && len(s.resultHeaders) > 0
 	case "copy_preview":
 		return s.clipboardText != ""
 	}
@@ -144,6 +147,8 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "export":
+		s.showExport()
 	case "plan":
 		s.explainSQL()
 	case "script":

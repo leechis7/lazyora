@@ -11,11 +11,18 @@ import (
 const MaxRows = 1000
 
 type Result struct {
+	Values    [][]Cell
 	Columns   []string
 	Rows      [][]string
 	Affected  int64
 	Truncated bool
 	Elapsed   time.Duration
+}
+
+// Cell retains NULL and database type separately from the display text.
+type Cell struct {
+	Text, Type string
+	Null       bool
 }
 
 // Session is used only by the UI's single worker. A pinned connection preserves
@@ -107,6 +114,10 @@ func (s *Session) Execute(ctx context.Context, text string, bindings ...map[stri
 	if err != nil {
 		return result, err
 	}
+	columnTypes, err := rows.ColumnTypes()
+	if err != nil {
+		return result, err
+	}
 	for rows.Next() {
 		if len(result.Rows) == MaxRows {
 			result.Truncated = true
@@ -121,10 +132,26 @@ func (s *Session) Execute(ctx context.Context, text string, bindings ...map[stri
 			return result, err
 		}
 		row := make([]string, len(values))
+		cells := make([]Cell, len(values))
 		for i, value := range values {
 			row[i] = formatValue(value)
+			kind := columnTypes[i].DatabaseTypeName()
+			if kind == "" {
+				switch value.(type) {
+				case int64, int32, int, float64, float32:
+					kind = "NUMBER"
+				case time.Time:
+					kind = "TIMESTAMP"
+				case []byte:
+					kind = "RAW"
+				default:
+					kind = "VARCHAR2"
+				}
+			}
+			cells[i] = Cell{Text: row[i], Type: kind, Null: value == nil}
 		}
 		result.Rows = append(result.Rows, row)
+		result.Values = append(result.Values, cells)
 	}
 	err = rows.Err()
 	result.Elapsed = time.Since(start)

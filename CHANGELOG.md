@@ -6,6 +6,7 @@
 
 ### 추가
 
+- 조회된 결과 전체·선택 범위·현재 행의 CSV·TSV·실제 Excel(.xlsx)·Oracle INSERT 내보내기. 원본 NULL/타입을 보존하고 Excel은 텍스트 셀로 정밀도·수식 모양 값을 유지합니다. INSERT의 대상 테이블·컬럼 매핑, 날짜·숫자·문자열 인용, 덮어쓰기·취소·오류 시 기존 파일 보존을 포함합니다.
 - Ctrl+E 예상 실행 계획과 Operation·객체·Cost·Rows 트리·조건식 상세. 원 SQL을 실행하거나 기존 DML을 커밋·롤백하지 않으며 PLAN_TABLE 권한 오류를 안내합니다.
 - SQL·PL/SQL·F5의 IN 바인드 변수 입력. 반복 이름·숫자 변수, 문자열·NUMBER·DATE·TIMESTAMP·NULL과 탭별 최근 값 재사용을 지원하며 값을 드라이버 인자로 전달하고 파일·이력에는 저장하지 않습니다.
 - F5 SQL·PL/SQL 스크립트 순차 실행, 전체 원문 확인, 첫 오류·취소 중단과 문장별 실행 내역·다중 SELECT 결과 전환. 명시적 COMMIT/ROLLBACK을 지원하며 미지원 SQL*Plus 명령은 사전 차단합니다.

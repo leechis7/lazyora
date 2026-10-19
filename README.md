@@ -3,7 +3,7 @@
 터미널에서 Oracle SQL을 작성·실행하고 스키마 객체를 탐색하는 TUI입니다.
 [lazysql](https://github.com/jorgerojas26/lazysql)의 화면 구성을 참고했습니다.
 
-현재 버전: **0.1.3** · **Linux / Windows / macOS · AMD64 / ARM64**
+현재 버전: **0.5.0** · **Linux / Windows / macOS · AMD64 / ARM64**
 
 - SQL 파일·여러 편집 탭, 커서 문장·F5 스크립트 실행과 IN 바인드 입력
 - 예상 실행 계획, 결과 조회·복사와 CSV·TSV·Excel·INSERT 내보내기, 수동 커밋·롤백

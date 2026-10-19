@@ -71,13 +71,13 @@ go vet ./...
 
 실DB에서는 Service Name/SID 각각의 연결, `SELECT sysdate FROM dual`, 한글·NULL·NUMBER·DATE 결과, DML 후 COMMIT/ROLLBACK, PL/SQL, 실행 취소와 재연결을 확인해야 합니다. 트랜잭션 검증은 테스트 스키마에서 수행합니다.
 
-### v0.1.3 검증 (2026-10-20)
+### v0.5.0 검증 (2026-10-20)
 
 Linux ARM64·Go 1.26.9에서 전체 `go test -race ./...`, `go vet ./...`, 기본 ARM64 빌드를 검증했습니다. SQL UTF-8/BOM/줄바꿈·저장 오류, 다중 탭·미저장 종료, 커서 문장 구분, 스크립트 오류/취소 중단, 바인드 타입/NULL, 예상 계획, CSV/TSV/XLSX/INSERT와 원본 파일 보존을 자동 검사합니다.
 
 Docker Oracle Free에서 SQL/PLSQL 순차 실행·명시적 COMMIT/ROLLBACK·다중 SELECT, 38자리 NUMBER·한글·날짜/소수초/NULL 바인드, 예상 계획의 DELETE 미실행·기존 DML 롤백 보존, INSERT 내보내기→재입력의 원본 결과 비교를 확인했습니다. 실제 ARM64 실행파일의 Linux PTY 시험도 접속·키/마우스·복사·전체화면·F5·Ctrl+E·바인드·XLSX 저장·미저장 확인→커밋/롤백/종료까지 통과했습니다.
 
-이번 기능의 실제 CentOS 7.4·Oracle 10g·SID 접속·Windows/macOS TUI는 재시험하지 않았습니다. GitHub CI에서는 6종 교차 빌드와 Windows AMD64 버전 명령을 검사합니다. 자세한 지원 한계는 [v0.1.3 안내](releases/v0.1.3.md)를 참고하세요.
+이번 기능의 실제 CentOS 7.4·Oracle 10g·SID 접속·Windows/macOS TUI는 재시험하지 않았습니다. GitHub CI에서는 6종 교차 빌드와 Windows AMD64 버전 명령을 검사합니다. 자세한 지원 한계는 [v0.5.0 안내](releases/v0.5.0.md)를 참고하세요.
 
 ## 개발 정보
 

@@ -16,9 +16,9 @@ type helpSection struct {
 }
 
 var helpSections = []helpSection{
-	{"sql", [2]string{"SQL editor", "SQL 편집"}, []string{"execute", "find", "find_next", "find_previous", "replace", "clear_sql", "history"}, [2]string{
-		"Enter inserts a newline. Alt+Enter / Shift+F9 also execute.\nExecute selected text; without a selection, execute the whole editor as one SQL statement or BEGIN/DECLARE block.\nFind is literal and case sensitive; next/previous wraps.\nHistory: this run only, up to 100 entries in memory. Loading does not execute SQL.\nDDL and UPDATE/DELETE without an outer WHERE ask before execution. The default is Cancel; Esc also cancels.",
-		"Enter는 줄바꿈입니다. Alt+Enter / Shift+F9로도 실행합니다.\n선택한 SQL을 실행하며, 선택이 없으면 편집기 전체를 한 문장 또는 BEGIN/DECLARE 블록으로 실행합니다.\n찾기는 대소문자를 구분하는 일반 문자열 검색이며 끝에서 순환합니다.\n이력은 이번 실행의 SQL 최대 100개를 메모리에만 보관하며, 불러와도 자동 실행하지 않습니다.\nDDL과 최상위 WHERE 없는 UPDATE/DELETE는 실행 전 확인합니다. 기본 선택과 Esc는 취소입니다."}},
+	{"sql", [2]string{"SQL editor", "SQL 편집"}, []string{"file_new", "file_open", "file_save", "file_save_as", "file_close", "execute", "find", "find_next", "find_previous", "replace", "clear_sql", "history"}, [2]string{
+		"UTF-8 SQL files: Open/Save/Save As in File; the title shows the file name and * for unsaved edits.\nNew/Close/Open/Exit ask Save, Discard or Cancel for unsaved SQL. File saving does not commit the database.\nIf Ctrl+Shift+S is indistinguishable from Ctrl+S, use File > Save SQL as.\nEnter inserts a newline. Alt+Enter / Shift+F9 also execute.\nExecute selected text; without a selection, execute the whole editor as one SQL statement or BEGIN/DECLARE block.\nFind is literal and case sensitive; next/previous wraps.\nHistory: this run only, up to 100 entries in memory. Loading does not execute SQL.\nDDL and UPDATE/DELETE without an outer WHERE ask before execution. The default is Cancel; Esc also cancels.",
+		"파일 메뉴에서 UTF-8 SQL 열기/저장/다른 이름 저장. 제목에 파일명과 미저장 표시(*)가 나타납니다.\n새 문서/닫기/열기/종료 전 미저장 SQL은 저장·버리기·취소를 확인합니다. 파일 저장은 DB 커밋과 별개입니다.\nCtrl+Shift+S를 구분하지 못하는 터미널은 파일 > SQL 다른 이름으로 저장을 사용하세요.\nEnter는 줄바꿈입니다. Alt+Enter / Shift+F9로도 실행합니다.\n선택한 SQL을 실행하며, 선택이 없으면 편집기 전체를 한 문장 또는 BEGIN/DECLARE 블록으로 실행합니다.\n찾기는 대소문자를 구분하는 일반 문자열 검색이며 끝에서 순환합니다.\n이력은 이번 실행의 SQL 최대 100개를 메모리에만 보관하며, 불러와도 자동 실행하지 않습니다.\nDDL과 최상위 WHERE 없는 UPDATE/DELETE는 실행 전 확인합니다. 기본 선택과 Esc는 취소입니다."}},
 	{"results", [2]string{"Results and copying", "조회 결과 · 복사"}, []string{"copy", "copy_row"}, [2]string{
 		"Click a cell. Drag or Shift+arrows selects a rectangle; arrows / PgUp / PgDn scroll.\nCopy format: TSV, with quoted tabs/newlines inside values; NULL stays NULL.\nIf clipboard transfer is blocked: Edit > Copy preview, then select and copy using your terminal.",
 		"셀을 클릭하거나 드래그·Shift+방향키로 범위를 선택합니다. 방향키·PgUp·PgDn으로 이동합니다.\n복사 형식은 TSV이며, 값 안의 탭·줄바꿈은 인용 처리하고 NULL은 그대로 복사합니다.\n클립보드 전송이 막히면 편집 > 복사 내용 보기에서 터미널의 선택·복사를 사용하세요."}},
@@ -72,6 +72,10 @@ func (s *screen) mainHelp() string {
 
 func (s *screen) helpContext(page string) string {
 	switch page {
+	case "file":
+		return s.tr("footer_file") + "\n" + s.tr("file_picker_hint")
+	case "file_unsaved":
+		return s.tr("footer_file_unsaved") + "\n" + s.tr("file_unsaved")
 	case "sql_confirm":
 		return s.tr("footer_sql_confirm") + "\n" + s.tr("sql_risk_limits")
 	case "master":

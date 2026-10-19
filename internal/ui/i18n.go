@@ -4,6 +4,24 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"file_new":               {"New SQL", "새 SQL"},
+	"file_open":              {"Open SQL file", "SQL 파일 열기"},
+	"file_save":              {"Save SQL file", "SQL 파일 저장"},
+	"file_save_as":           {"Save SQL as", "SQL 다른 이름으로 저장"},
+	"file_close":             {"Close SQL file", "SQL 파일 닫기"},
+	"file_untitled":          {"Untitled", "제목 없음"},
+	"file_path":              {"Path", "파일 경로"},
+	"file_unsaved":           {"SQL editor changes have not been saved to a file.\nSave, discard for this action, or cancel?\nThis does not commit or roll back the database.", "SQL 편집 내용을 파일에 저장하지 않았습니다.\n저장하거나 이번 작업에서 버리시겠습니까?\n이 선택은 DB를 커밋하거나 롤백하지 않습니다."},
+	"file_discard":           {"Discard", "버리기"},
+	"file_error":             {"File operation failed: %v", "파일 작업 실패: %v"},
+	"file_saved":             {"SQL file saved: %s", "SQL 파일 저장: %s"},
+	"file_opened":            {"SQL file opened: %s", "SQL 파일 열기: %s"},
+	"file_picker_hint":       {"Enter a path or select a file. Directories open with Enter/click. Ctrl+Enter applies; Esc cancels. UTF-8, max 16 MiB.", "경로를 입력하거나 파일을 선택하세요. Enter/클릭으로 폴더 이동, Ctrl+Enter 적용, Esc 취소. UTF-8, 최대 16 MiB."},
+	"file_overwrite_confirm": {"Overwrite this existing SQL file?\n%s", "기존 SQL 파일을 덮어쓰시겠습니까?\n%s"},
+	"file_external_confirm":  {"The file changed outside LazyOra.\nOverwrite it with the current editor text?\n%s", "외부에서 파일이 변경되었습니다.\n현재 편집 내용으로 덮어쓰시겠습니까?\n%s"},
+	"footer_file":            {"Tab Path / list / buttons | Enter Select | Ctrl+Enter Apply | Esc Cancel", "Tab 경로 / 목록 / 버튼 | Enter 선택 | Ctrl+Enter 적용 | Esc 취소"},
+	"footer_file_unsaved":    {"Left/Right Choose | Enter Confirm | Esc Cancel (DB unchanged)", "좌우 선택 | Enter 확인 | Esc 취소 (DB 상태 유지)"},
+
 	"sql_confirm_title":       {"Review SQL before execution", "실행 전 SQL 확인"},
 	"sql_risk_ddl":            {"DDL / administrative SQL may change or remove objects, permissions or settings. DDL can implicitly commit prior changes; rollback may not undo it.", "객체·권한·설정을 변경하거나 삭제할 수 있는 명령입니다. DDL은 이전 변경을 암시적으로 커밋할 수 있고 롤백으로 되돌리지 못할 수 있습니다."},
 	"sql_risk_unfiltered_dml": {"UPDATE / DELETE has no outer WHERE clause. All target rows may be changed or deleted. Review the SQL before executing.", "UPDATE / DELETE에 최상위 WHERE 조건이 없습니다. 대상 전체 행이 변경·삭제될 수 있으니 SQL을 확인하세요."},
@@ -293,7 +311,7 @@ func (s *screen) setStatus(key string, args ...any) {
 func (s *screen) refreshLabels() {
 	s.refreshMenuLabels()
 	s.localizeBrowser()
-	s.editor.SetTitle(s.tr("sql_title"))
+	s.refreshDocumentTitle()
 	s.table.SetTitle(s.tr("results_title"))
 	s.refreshFooter()
 	if s.connectForm != nil {

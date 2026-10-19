@@ -19,6 +19,11 @@ type command struct {
 }
 
 var commands = []command{
+	{"file_new", "file_new", 0, []binding{{"Ctrl+N", tcell.KeyCtrlN, 0, 0}}},
+	{"file_open", "file_open", 0, []binding{{"Ctrl+O", tcell.KeyCtrlO, 0, 0}}},
+	{"file_save", "file_save", 0, []binding{{"Ctrl+S", tcell.KeyCtrlS, 0, 0}}},
+	{"file_save_as", "file_save_as", 0, []binding{{"Ctrl+Shift+S", tcell.KeyCtrlS, tcell.ModShift, 0}}},
+	{"file_close", "file_close", 0, []binding{{"Ctrl+W", tcell.KeyCtrlW, 0, 0}}},
 	{"quit", "quit", 0, []binding{{"Ctrl+Q", tcell.KeyCtrlQ, 0, 0}}},
 	{"copy", "copy_selection", 1, []binding{{"Ctrl+C", tcell.KeyCtrlC, 0, 0}}},
 	{"copy_row", "copy_row", 1, []binding{{"Alt+Y", tcell.KeyRune, tcell.ModAlt, 'y'}}},
@@ -92,6 +97,8 @@ func (s *screen) commandEnabled(id string) bool {
 		return true
 	case "maximize":
 		return s.editor.HasFocus() || s.table.HasFocus()
+	case "file_new", "file_open", "file_save", "file_save_as", "file_close":
+		return !s.busy
 	case "find", "find_next", "find_previous", "replace", "clear_sql":
 		return !s.busy && s.editor.HasFocus()
 	case "history":
@@ -131,6 +138,14 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "file_new", "file_close":
+		s.newDocument()
+	case "file_open":
+		s.showFileDialog("open", nil)
+	case "file_save":
+		s.saveDocument(false, nil)
+	case "file_save_as":
+		s.saveDocument(true, nil)
 	case "passwords":
 		s.passwordManager()
 	case "maximize":

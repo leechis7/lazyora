@@ -10,6 +10,7 @@ import (
 	"lazyora/internal/credentials"
 	"lazyora/internal/oracle"
 	"lazyora/internal/settings"
+	"lazyora/internal/sqlfile"
 )
 
 type job struct {
@@ -22,6 +23,10 @@ type job struct {
 }
 
 type screen struct {
+	document      *sqlfile.Document
+	fileDialog    *fileDialog
+	documentModal *tview.Modal
+
 	sqlConfirmText  *tview.TextView
 	sqlConfirmFocus tview.Primitive
 
@@ -136,6 +141,7 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 	s.limitedColors = terminal.Colors() > 0 && terminal.Colors() <= 16
 	s.editor = tview.NewTextArea().SetText("SELECT sysdate AS server_time FROM dual;", false)
 	s.editor.SetBorder(true)
+	s.initDocument()
 	s.editor.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if action == tview.MouseRightClick {
 			s.app.SetFocus(s.editor)
@@ -172,6 +178,13 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 				form.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
 			}
 			return tview.MouseConsumed, nil
+		}
+		if page == "file" {
+			pageRoot.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
+			return tview.MouseConsumed, nil
+		}
+		if page == "file_unsaved" {
+			modal = s.documentModal
 		}
 		if page == "exit" {
 			modal = s.exitDialog

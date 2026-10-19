@@ -128,6 +128,12 @@ func (s *screen) refreshFooter() {
 	case "describe":
 		hint = "footer_describe"
 		keys = []footerKey{{"Esc", "close", tcell.KeyEscape, 0}}
+	case "file":
+		hint = "footer_file"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
+	case "file_unsaved":
+		hint = "footer_file_unsaved"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
 	case "sql_confirm":
 		hint = "footer_sql_confirm"
 		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}

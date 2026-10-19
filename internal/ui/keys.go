@@ -13,6 +13,12 @@ func focusForm(s *screen, form *tview.Form, index int) {
 }
 
 func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
+	// tview treats an unchanged Ctrl+C event as an immediate application stop.
+	// Forward a copy for text widgets so dialogs cannot bypass the SQL-file
+	// and DB exit confirmations; explicit exit continues to use Ctrl+Q.
+	if event.Key() == tcell.KeyCtrlC {
+		event = tcell.NewEventKey(event.Key(), event.Rune(), event.Modifiers())
+	}
 	if s.vaultBusy {
 		return nil
 	}
@@ -31,6 +37,19 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	}
 	if s.buttonArrow(event) {
 		return nil
+	}
+	if page == "file" {
+		return s.fileKey(event)
+	}
+	if page == "file_unsaved" {
+		if event.Key() == tcell.KeyCtrlC {
+			return nil
+		}
+		if event.Key() == tcell.KeyF1 {
+			s.showHelp()
+			return nil
+		}
+		return event
 	}
 	if page == "sql_confirm" {
 		return s.sqlConfirmationKey(event)
@@ -144,6 +163,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return s.exitKey(event)
 	}
 	if page == "program_confirm" {
+		if event.Key() == tcell.KeyCtrlC {
+			return nil
+		}
 		return event
 	}
 	if event.Key() == tcell.KeyF1 {

@@ -44,6 +44,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if page == "bind" {
 		return s.bindKey(event)
 	}
+	if page == "plan" {
+		return s.planKey(event)
+	}
 	if page == "file" {
 		return s.fileKey(event)
 	}

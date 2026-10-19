@@ -4,6 +4,11 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"plan":                   {"Explain plan", "실행 계획"},
+	"plan_title":             {"Estimated execution plan", "예상 실행 계획"},
+	"plan_loaded":            {"Loaded %d execution plan steps", "실행 계획 %d단계 조회"},
+	"plan_hint":              {"Estimated plan only; the original SQL is not executed. Bind estimates may differ from actual execution. PLAN_TABLE and INSERT/SELECT/DELETE privileges are required; no auto-create or transaction resolution.", "예상 계획이며 원래 SQL은 실행하지 않습니다. 바인드 예상 계획은 실제 실행과 다를 수 있습니다. PLAN_TABLE·INSERT/SELECT/DELETE 권한이 필요하며 자동 생성·커밋·롤백하지 않습니다."},
+	"footer_plan":            {"Arrows Navigate / scroll | Enter Expand | Tab Tree / detail / close | Ctrl+C Copy detail | Esc Close", "방향키 이동 / 스크롤 | Enter 펼치기 | Tab 트리 / 상세 / 닫기 | Ctrl+C 상세 복사 | Esc 닫기"},
 	"bind_title":             {"IN bind values", "IN 바인드 값 입력"},
 	"bind_type":              {"Type", "타입"},
 	"bind_value":             {"Value", "값"},

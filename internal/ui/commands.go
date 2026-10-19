@@ -41,6 +41,7 @@ var commands = []command{
 	{"pending_work", "pending_work", 2, nil},
 	{"execute", "execute", 3, []binding{{"F9", tcell.KeyF9, 0, 0}, {"Ctrl+Enter", tcell.KeyEnter, tcell.ModCtrl, 0}, {"Alt+Enter", tcell.KeyEnter, tcell.ModAlt, 0}, {"Shift+F9", tcell.KeyF9, tcell.ModShift, 0}}},
 	{"script", "script", 3, []binding{{"F5", tcell.KeyF5, 0, 0}}},
+	{"plan", "plan", 3, []binding{{"Ctrl+E", tcell.KeyCtrlE, 0, 0}}},
 	{"script_report", "script_report", 4, nil},
 	{"parse", "parse_unavailable", 3, []binding{{"Ctrl+F9", tcell.KeyF9, tcell.ModCtrl, 0}}},
 	{"debug_continue", "debug_unavailable", 3, []binding{{"F11", tcell.KeyF11, 0, 0}}},
@@ -112,7 +113,7 @@ func (s *screen) commandEnabled(id string) bool {
 		return s.browser != nil
 	case "connect":
 		return !s.busy
-	case "execute", "script", "commit", "rollback":
+	case "execute", "script", "plan", "commit", "rollback":
 		return s.connected && !s.busy
 	case "script_report":
 		return !s.busy && len(s.scriptReport.Steps) > 0
@@ -135,7 +136,7 @@ func (s *screen) invoke(id string) {
 		if id == "parse" || id == "debug_continue" {
 			s.setStatus(commandFor(id).label)
 		}
-		if id == "execute" || id == "script" || id == "commit" || id == "rollback" {
+		if id == "execute" || id == "script" || id == "plan" || id == "commit" || id == "rollback" {
 			if !s.connected {
 				s.setStatus("connect_first")
 			}
@@ -143,6 +144,8 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "plan":
+		s.explainSQL()
 	case "script":
 		s.executeScript()
 	case "script_report":

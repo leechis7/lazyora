@@ -64,6 +64,14 @@ F5 또는 실행 메뉴의 **스크립트 실행**으로 선택 영역(없으면
 
 완료·오류 후 문장별 원래 시작 행·성공/오류·조회/변경 행 수와 SQL 원문을 보여줍니다. 방향키로 문장을 선택하고 Tab으로 원문·조회 결과·버튼을 이동합니다. 여러 SELECT 결과는 각각 최대 1,000행을 보관하며 잘림은 `+`로 표시합니다. 마지막 SELECT 결과를 메인 결과창에 표시하고, 다른 결과는 **선택 결과를 결과창으로** 버튼으로 가져올 수 있습니다. **보기 → 스크립트 실행 내역**에서 해당 탭의 최근 실행 내역을 다시 엽니다. Ctrl+C는 실행 요약을 복사합니다. 출력·결과·제출 이력은 현재 실행 중인 앱의 메모리에만 보관합니다.
 
+## 예상 실행 계획
+
+**Ctrl+E / 실행 → 실행 계획**은 선택 SQL(없으면 커서 문장)의 예상 계획을 조회합니다. [Toad의 Ctrl+E 배정](https://support.quest.com/toad-for-oracle/kb/4297441/explain-plan-with-ctrl-e-gives-error-ora-00933-sql-command-not-properly-ended)을 따릅니다. SELECT/WITH/INSERT/UPDATE/DELETE/MERGE 한 문장을 지원하며 원 SQL을 실행하지 않습니다. 바인드가 있으면 기존 입력창을 사용합니다. 실제 실행 통계·캐시 커서 계획은 제공하지 않으며, 바인드가 든 예상 계획은 실제 실행 계획과 다를 수 있습니다.
+
+트리에서 방향키·클릭으로 Operation/Options·객체·Cost·Rows를 선택하고 Enter로 펼치거나 접습니다. Tab으로 상세 조건식(Access/Filter)·원문 영역과 닫기 버튼으로 이동합니다. Ctrl+C는 상세를 복사하고 Esc는 닫습니다. 편집기와 기존 조회 결과를 유지합니다.
+
+접속 계정에 **PLAN_TABLE 및 INSERT/SELECT/DELETE 권한**이 필요합니다. 없는 경우 오류를 표시하며 테이블을 자동 생성하지 않습니다. 같은 세션·트랜잭션에서 임의의 statement_id로 계획을 만들고 해당 행만 지웁니다. 기존 DML을 커밋·롤백하지 않고 앱의 미커밋 실행 기록에도 계획용 작업은 추가하지 않습니다. Oracle의 EXPLAIN PLAN은 DML이며 병렬 DML 사용 조건 등에 영향을 줄 수 있습니다. [Oracle SQL Reference](https://docs.oracle.com/en/database/oracle/oracle-database/18/sqlrf/EXPLAIN-PLAN.html)와 [Oracle 10g 계획 안내](https://docs.oracle.com/cd/B12037_01/server.101/b10752/ex_plan.htm)를 참고하세요. Oracle 10g에 있는 컬럼을 사용하고 Oracle Free에서 미커밋 DML 보존을 검증했습니다.
+
 ## 위험 SQL 실행 확인
 
 메인 편집기에서 DDL과 **최상위 WHERE가 없는 UPDATE·DELETE**를 실행하면 사유와 실제 실행 대상 SQL을 먼저 보여줍니다. 선택한 SQL이 있으면 그 선택 부분만 확인합니다. 기본 선택은 **취소**이며 Enter 또는 Esc로 취소합니다. 실행 버튼을 방향키·Tab으로 선택한 뒤 Enter를 누르거나 마우스로 클릭해야 제출합니다. 취소하면 SQL·조회 결과·트랜잭션·실행 이력을 바꾸지 않습니다.
@@ -107,6 +115,7 @@ Tab으로 SQL 미리보기와 버튼을 순환하고 방향키·PgUp/PgDn으로 
 | F3 / Shift+F3 | SQL 다음 / 이전 찾기 |
 | Ctrl+Enter / Alt+Enter / F9 / Shift+F9 | 선택 SQL 또는 커서 문장 실행 |
 | Alt+C / Alt+R | COMMIT / ROLLBACK |
+| Ctrl+E | 선택 SQL 또는 커서 문장의 예상 실행 계획 |
 | F7 | 확인 후 SQL 전체 지우기 |
 | F8 | SQL 실행 이력 |
 | Esc | 실행 중 취소 요청 |

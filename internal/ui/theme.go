@@ -91,6 +91,10 @@ func (s *screen) refreshBorders() {
 	if s.bindForm != nil {
 		apply(s.bindForm.Box, s.bindForm.HasFocus(), false)
 	}
+	if s.planTree != nil {
+		apply(s.planTree.Box, s.planTree.HasFocus(), false)
+		apply(s.planText.Box, s.planText.HasFocus(), false)
+	}
 	if s.scriptList != nil {
 		apply(s.scriptList.Box, s.scriptList.HasFocus(), false)
 		apply(s.scriptText.Box, s.scriptText.HasFocus(), false)

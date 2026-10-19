@@ -83,7 +83,7 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 		_, editorY, _, _ := s.editor.GetRect()
 		_, buttonsY, _, _ := s.buttons[0].GetRect()
 		_, height := terminal.Size()
-		if editorY != 1 || buttonsY != height-1 {
+		if editorY != 2 || buttonsY != height-1 {
 			t.Errorf("footer was not at bottom: editor=%d footer=%d", editorY, buttonsY)
 		}
 	})

@@ -7,6 +7,10 @@ import (
 )
 
 func (s *screen) confirmSQL(text string, risk oracle.SQLRisk) {
+	s.confirmExecution(text, string(risk), s.submitSQL)
+}
+
+func (s *screen) confirmExecution(text, risk string, submit func(string)) {
 	if s.sqlConfirmText != nil || s.programModal != nil || s.busy {
 		return
 	}
@@ -24,7 +28,7 @@ func (s *screen) confirmSQL(text string, risk oracle.SQLRisk) {
 			return
 		}
 		s.closeSQLConfirmation()
-		s.submitSQL(text) // Execute the reviewed snapshot, never a later editor value.
+		submit(text) // Execute the reviewed snapshot, never a later editor value.
 	}))
 	cancel := clickable(tview.NewButton(s.tr("cancel")).SetSelectedFunc(s.closeSQLConfirmation))
 	buttons := tview.NewFlex().AddItem(execute, 0, 1, false).AddItem(cancel, 0, 1, true)

@@ -20,6 +20,11 @@ func (s *screen) rebuildPanels() {
 	if s.browser != nil {
 		s.hideBrowserRect()
 	}
+	if s.tabBar != nil && !s.fullscreen {
+		s.queryLayout.AddItem(s.tabBar, 1, 0, false)
+	} else if s.tabBar != nil {
+		s.tabBar.SetRect(0, 0, 0, 0)
+	}
 	switch s.maximized {
 	case "sql":
 		s.queryLayout.AddItem(s.editor, 0, 1, true)

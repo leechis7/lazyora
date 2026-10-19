@@ -11,11 +11,18 @@ import (
 const MaxRows = 1000
 
 type Result struct {
+	Values    [][]Cell
 	Columns   []string
 	Rows      [][]string
 	Affected  int64
 	Truncated bool
 	Elapsed   time.Duration
+}
+
+// Cell retains NULL and database type separately from the display text.
+type Cell struct {
+	Text, Type string
+	Null       bool
 }
 
 // Session is used only by the UI's single worker. A pinned connection preserves
@@ -52,7 +59,7 @@ func Open(ctx context.Context, config Config) (*Session, error) {
 	return &Session{db: db, conn: conn}, nil
 }
 
-func (s *Session) Execute(ctx context.Context, text string) (Result, error) {
+func (s *Session) Execute(ctx context.Context, text string, bindings ...map[string]BindValue) (Result, error) {
 	start := time.Now()
 	result := Result{Affected: -1}
 	if s.finishErr != nil {
@@ -65,6 +72,15 @@ func (s *Session) Execute(ctx context.Context, text string) (Result, error) {
 	word, _ := leadingWord(statement)
 	if word == "COMMIT" || word == "ROLLBACK" {
 		return result, errors.New("use the session Commit or Rollback actions")
+	}
+	originalStatement := statement
+	var values map[string]BindValue
+	if len(bindings) > 0 {
+		values = bindings[0]
+	}
+	statement, args, err := BindArguments(statement, values)
+	if err != nil {
+		return result, err
 	}
 	if s.tx == nil {
 		// Do not use the per-query context here: database/sql would roll the
@@ -79,22 +95,26 @@ func (s *Session) Execute(ctx context.Context, text string) (Result, error) {
 		// of its work. Keep a conservative warning until explicit resolution.
 		s.pending = true
 		var exec sql.Result
-		exec, err = s.tx.ExecContext(ctx, statement)
+		exec, err = s.tx.ExecContext(ctx, statement, args...)
 		if err == nil {
 			if affected, rowsErr := exec.RowsAffected(); rowsErr == nil {
 				result.Affected = affected
 			}
 		}
 		result.Elapsed = time.Since(start)
-		s.recordStatement(start, statement, result.Affected, err)
+		s.recordStatement(start, originalStatement, result.Affected, err)
 		return result, err
 	}
-	rows, err := s.tx.QueryContext(ctx, statement)
+	rows, err := s.tx.QueryContext(ctx, statement, args...)
 	if err != nil {
 		return result, err
 	}
 	defer rows.Close()
 	result.Columns, err = rows.Columns()
+	if err != nil {
+		return result, err
+	}
+	columnTypes, err := rows.ColumnTypes()
 	if err != nil {
 		return result, err
 	}
@@ -112,10 +132,26 @@ func (s *Session) Execute(ctx context.Context, text string) (Result, error) {
 			return result, err
 		}
 		row := make([]string, len(values))
+		cells := make([]Cell, len(values))
 		for i, value := range values {
 			row[i] = formatValue(value)
+			kind := columnTypes[i].DatabaseTypeName()
+			if kind == "" {
+				switch value.(type) {
+				case int64, int32, int, float64, float32:
+					kind = "NUMBER"
+				case time.Time:
+					kind = "TIMESTAMP"
+				case []byte:
+					kind = "RAW"
+				default:
+					kind = "VARCHAR2"
+				}
+			}
+			cells[i] = Cell{Text: row[i], Type: kind, Null: value == nil}
 		}
 		result.Rows = append(result.Rows, row)
+		result.Values = append(result.Values, cells)
 	}
 	err = rows.Err()
 	result.Elapsed = time.Since(start)

@@ -90,6 +90,18 @@ func (s *screen) refreshFooter() {
 	}
 	hint := "footer_sql"
 	switch page {
+	case "export":
+		hint = "footer_export"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+S", "export", tcell.KeyCtrlS, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
+	case "plan":
+		hint = "footer_plan"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+	case "bind":
+		hint = "footer_bind"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+Enter", "execute", tcell.KeyEnter, tcell.ModCtrl}, {"Esc", "cancel", tcell.KeyEscape, 0}}
+	case "script":
+		hint = "footer_script"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
 	case "main":
 		keys = nil
 		for _, id := range []string{"help", "connect", "commit", "rollback", "quit"} {
@@ -128,6 +140,12 @@ func (s *screen) refreshFooter() {
 	case "describe":
 		hint = "footer_describe"
 		keys = []footerKey{{"Esc", "close", tcell.KeyEscape, 0}}
+	case "file":
+		hint = "footer_file"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
+	case "file_unsaved":
+		hint = "footer_file_unsaved"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
 	case "sql_confirm":
 		hint = "footer_sql_confirm"
 		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}

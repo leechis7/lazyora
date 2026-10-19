@@ -117,7 +117,7 @@ func TestFullscreenOccupiesEntireTerminalAndRestoresChrome(t *testing.T) {
 	s.app.QueueUpdateDraw(func() { s.invoke("maximize") })
 	wait(func() bool {
 		_, y, _, h := s.editor.GetRect()
-		return s.maximized == "sql" && !s.fullscreen && !s.chromeHidden && y == 1 && h == 25
+		return s.maximized == "sql" && !s.fullscreen && !s.chromeHidden && y == 2 && h == 24
 	})
 	s.app.QueueUpdate(func() {
 		_, _, _, h := s.status.GetRect()
@@ -139,7 +139,7 @@ func TestFullscreenOccupiesEntireTerminalAndRestoresChrome(t *testing.T) {
 	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF2, 0, 0))
 	wait(func() bool { return s.chromeHidden && fills(s.editor, 100, 30) })
 	s.app.QueueUpdate(func() {
-		for _, p := range []tview.Primitive{s.menuLayout, s.footer, s.footerBar, s.status, s.table, s.browser} {
+		for _, p := range []tview.Primitive{s.menuLayout, s.tabBar, s.footer, s.footerBar, s.status, s.table, s.browser} {
 			_, _, w, h := p.GetRect()
 			if w != 0 || h != 0 {
 				t.Error("unrelated UI still occupies fullscreen")
@@ -169,7 +169,7 @@ func TestFullscreenOccupiesEntireTerminalAndRestoresChrome(t *testing.T) {
 	})
 	s.app.QueueUpdate(func() {
 		x, y, w, h := s.editor.GetRect()
-		if x <= 0 || y != 1 || w == 0 || h == 0 {
+		if x <= 0 || y != 2 || w == 0 || h == 0 {
 			t.Error("split SQL/browser layout not restored")
 		}
 		_, _, _, h = s.status.GetRect()

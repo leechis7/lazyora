@@ -7,7 +7,6 @@ import (
 )
 
 // Prepare accepts one statement. It preserves semicolons within PL/SQL blocks.
-// Script splitting is deliberately left to a future Oracle-aware lexer.
 func Prepare(text string) (string, bool, error) {
 	text = strings.TrimSpace(text)
 	if strings.HasSuffix(text, "\n/") {
@@ -17,7 +16,11 @@ func Prepare(text string) (string, bool, error) {
 	if err != nil {
 		return "", false, err
 	}
-	plsql := first == "BEGIN" || first == "DECLARE"
+	tokens, tokenErr := sqlTokens(text)
+	if tokenErr != nil {
+		return "", false, tokenErr
+	}
+	plsql := plsqlStatement(tokens)
 	if !plsql {
 		text = strings.TrimSpace(strings.TrimSuffix(text, ";"))
 	}

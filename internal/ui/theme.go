@@ -88,6 +88,28 @@ func (s *screen) refreshBorders() {
 	if s.sqlConfirmText != nil {
 		apply(s.sqlConfirmText.Box, s.sqlConfirmText.HasFocus(), false)
 	}
+	if s.bindForm != nil {
+		apply(s.bindForm.Box, s.bindForm.HasFocus(), false)
+	}
+	if s.exportForm != nil {
+		apply(s.exportForm.Box, s.exportForm.HasFocus(), false)
+	}
+	if s.planTree != nil {
+		apply(s.planTree.Box, s.planTree.HasFocus(), false)
+		apply(s.planText.Box, s.planText.HasFocus(), false)
+	}
+	if s.scriptList != nil {
+		apply(s.scriptList.Box, s.scriptList.HasFocus(), false)
+		apply(s.scriptText.Box, s.scriptText.HasFocus(), false)
+		apply(s.scriptResult.Box, s.scriptResult.HasFocus(), false)
+	}
+	if s.fileDialog != nil {
+		apply(s.fileDialog.form.Box, s.fileDialog.form.HasFocus(), false)
+		apply(s.fileDialog.list.Box, s.fileDialog.list.HasFocus(), false)
+	}
+	if s.documentModal != nil {
+		apply(s.documentModal.Box, s.documentModal.HasFocus(), false)
+	}
 	apply(s.editor.Box, s.editor.HasFocus(), true)
 	apply(s.table.Box, s.table.HasFocus(), false)
 	if s.pendingTable != nil {

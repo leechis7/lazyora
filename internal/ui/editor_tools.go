@@ -21,6 +21,14 @@ func (s *screen) executeSQL() {
 	text := s.editor.GetText()
 	if selected, _, _ := s.editor.GetSelection(); selected != "" {
 		text = selected
+	} else {
+		_, offset, _ := s.editor.GetSelection()
+		var err error
+		text, err = oracle.AtStatement(text, offset)
+		if err != nil {
+			s.setStatus("error", err)
+			return
+		}
 	}
 	if s.sqlConfirmText != nil || s.busy {
 		return
@@ -35,6 +43,13 @@ func (s *screen) executeSQL() {
 }
 
 func (s *screen) submitSQL(text string) {
+	s.withBinds(text, func(values map[string]oracle.BindValue) {
+		s.recordSQLHistory(text)
+		s.submit(job{action: "execute", text: text, bindings: values})
+	})
+}
+
+func (s *screen) recordSQLHistory(text string) {
 	if !s.busy && s.connected && strings.TrimSpace(text) != "" {
 		if len(s.sqlHistory) == 0 || s.sqlHistory[len(s.sqlHistory)-1] != text {
 			s.sqlHistory = append(s.sqlHistory, text)
@@ -43,7 +58,6 @@ func (s *screen) submitSQL(text string) {
 			s.sqlHistory = s.sqlHistory[len(s.sqlHistory)-100:]
 		}
 	}
-	s.submit(job{action: "execute", text: text})
 }
 
 func (s *screen) showHistory() {

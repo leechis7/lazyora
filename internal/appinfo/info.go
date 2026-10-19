@@ -3,7 +3,7 @@ package appinfo
 
 const (
 	Name       = "LazyOra"
-	Version    = "0.1.2"
+	Version    = "0.1.3"
 	Developer  = "이채강 (Chaekang Lee)"
 	Email      = "leechis7@gmail.com"
 	License    = "AGPL-3.0-only"

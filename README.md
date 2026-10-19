@@ -39,7 +39,7 @@ Windows에서는 PowerShell에서 `.\lazyora-windows-amd64.exe`처럼 실행합�
 | --- | --- |
 | F1 | 현재 화면의 도움말 |
 | Alt+L | 접속 화면 |
-| F9 / Ctrl+Enter | 선택한 SQL 실행 (선택이 없으면 편집기 전체) |
+| F9 / Ctrl+Enter | 선택한 SQL 실행 (선택이 없으면 커서 문장) |
 | Alt+C / Alt+R | 커밋 / 롤백 |
 | Alt+B | 스키마 브라우저 표시·숨김 |
 | Alt+U / Alt+O | 브라우저 사용자 / 객체 종류 선택 |

@@ -24,6 +24,9 @@ type job struct {
 }
 
 type screen struct {
+	planTree               *tview.TreeView
+	planText               *tview.TextView
+	planFocus              tview.Primitive
 	bindForm               *tview.Form
 	bindSQL                string
 	bindValues             map[string]oracle.BindValue
@@ -192,7 +195,7 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 			}
 			return tview.MouseConsumed, nil
 		}
-		if page == "file" || page == "script" || page == "bind" {
+		if page == "file" || page == "script" || page == "bind" || page == "plan" {
 			pageRoot.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
 			return tview.MouseConsumed, nil
 		}
@@ -323,6 +326,7 @@ func (s *screen) worker() {
 		var arguments []oracle.Argument
 		var compilation oracle.Compilation
 		var script oracle.ScriptReport
+		var plan []oracle.PlanStep
 		var err error
 		switch j.action {
 		case "connect":
@@ -338,6 +342,8 @@ func (s *screen) worker() {
 			result, err = session.Execute(j.ctx, j.text, j.bindings)
 		case "script":
 			script, err = session.Script(j.ctx, j.text, j.bindings)
+		case "plan":
+			plan, err = session.Explain(j.ctx, j.text, j.bindings)
 		case "commit", "exit_commit":
 			err = session.Finish(true)
 		case "rollback", "exit_rollback":
@@ -417,6 +423,9 @@ func (s *screen) worker() {
 				}
 			} else {
 				switch j.action {
+				case "plan":
+					s.showPlan(j.text, plan)
+					s.setStatus("plan_loaded", len(plan))
 				case "connect":
 					s.clearBindValues()
 					s.connected = true

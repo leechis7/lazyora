@@ -72,3 +72,34 @@ func TestOracleWorkflowIntegration(t *testing.T) {
 		t.Fatalf("stop on error: %+v %v", report, err)
 	}
 }
+
+func TestOraclePlanIntegration(t *testing.T) {
+	s := workflowSession(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	before, err := s.Execute(ctx, "SELECT amount FROM sample_rows WHERE id=1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.Execute(ctx, "UPDATE sample_rows SET amount=amount+100000 WHERE id=1"); err != nil {
+		t.Fatal(err)
+	}
+	steps, err := s.Explain(ctx, "SELECT * FROM sample_rows WHERE id=:id", map[string]oracle.BindValue{"ID": {Kind: "number", Text: "1"}})
+	if err != nil || len(steps) == 0 || !s.PendingChanges() || len(s.PendingWork().Statements) != 1 {
+		t.Fatalf("bound plan: %+v %v", steps, err)
+	}
+	if _, err = s.Explain(ctx, "DELETE FROM sample_rows WHERE id=1", nil); err != nil {
+		t.Fatal(err)
+	}
+	count, err := s.Execute(ctx, "SELECT COUNT(*) FROM sample_rows WHERE id=1")
+	if err != nil || count.Rows[0][0] != "1" {
+		t.Fatal("explained DELETE was executed")
+	}
+	if err = s.Finish(false); err != nil {
+		t.Fatal(err)
+	}
+	after, err := s.Execute(ctx, "SELECT amount FROM sample_rows WHERE id=1")
+	if err != nil || after.Rows[0][0] != before.Rows[0][0] {
+		t.Fatal("explain committed pending DML")
+	}
+}

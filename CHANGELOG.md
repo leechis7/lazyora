@@ -6,6 +6,7 @@
 
 ### 추가
 
+- Ctrl+E 예상 실행 계획과 Operation·객체·Cost·Rows 트리·조건식 상세. 원 SQL을 실행하거나 기존 DML을 커밋·롤백하지 않으며 PLAN_TABLE 권한 오류를 안내합니다.
 - SQL·PL/SQL·F5의 IN 바인드 변수 입력. 반복 이름·숫자 변수, 문자열·NUMBER·DATE·TIMESTAMP·NULL과 탭별 최근 값 재사용을 지원하며 값을 드라이버 인자로 전달하고 파일·이력에는 저장하지 않습니다.
 - F5 SQL·PL/SQL 스크립트 순차 실행, 전체 원문 확인, 첫 오류·취소 중단과 문장별 실행 내역·다중 SELECT 결과 전환. 명시적 COMMIT/ROLLBACK을 지원하며 미지원 SQL*Plus 명령은 사전 차단합니다.
 - 여러 SQL 편집 탭과 탭별 커서·선택·스크롤·조회 결과 보존. Ctrl+N/W로 추가·닫기, Ctrl+Tab/Alt+PgDn 및 역방향 키로 전환하며 모든 미저장 탭을 종료 전에 확인합니다. DB 트랜잭션은 공유하고 실행 중 탭 전환·닫기는 잠깁니다.

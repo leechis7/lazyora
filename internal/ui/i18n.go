@@ -250,7 +250,7 @@ var messages = map[string][2]string{
 	"quit":                    {"Quit", "종료"},
 	"save":                    {"Save", "저장"},
 	"close":                   {"Close", "닫기"},
-	"sql_title":               {" SQL — one statement or PL/SQL block ", " SQL — 한 문장 또는 PL/SQL 블록 "},
+	"sql_title":               {" SQL — cursor statement / selection ", " SQL — 커서 문장 / 선택 영역 "},
 	"results_title":           {" Results ", " 조회 결과 "},
 	"disconnected":            {"Disconnected. Alt+L opens connection settings.", "연결되지 않았습니다. Alt+L로 접속 화면을 여세요."},
 	"connect_first":           {"Connect first with Alt+L.", "먼저 Alt+L로 DB에 접속하세요."},

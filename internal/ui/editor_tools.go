@@ -21,6 +21,14 @@ func (s *screen) executeSQL() {
 	text := s.editor.GetText()
 	if selected, _, _ := s.editor.GetSelection(); selected != "" {
 		text = selected
+	} else {
+		_, offset, _ := s.editor.GetSelection()
+		var err error
+		text, err = oracle.AtStatement(text, offset)
+		if err != nil {
+			s.setStatus("error", err)
+			return
+		}
 	}
 	if s.sqlConfirmText != nil || s.busy {
 		return

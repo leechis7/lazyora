@@ -6,7 +6,7 @@ import (
 )
 
 func (s *screen) requestQuit() {
-	if s.exitDialog != nil || s.programModal != nil || s.quitting || s.documentModal != nil || s.fileDialog != nil {
+	if s.exitDialog != nil || s.programModal != nil || s.quitting || s.documentModal != nil || s.fileDialog != nil || s.bindForm != nil {
 		return
 	}
 	if s.busy {

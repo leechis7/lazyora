@@ -63,10 +63,18 @@ func ScriptStatements(text string) ([]Statement, error) {
 
 // Script runs on the same session and transaction. Stop on first error/cancel;
 // successful preceding DML stays pending unless the script explicitly resolves it.
-func (s *Session) Script(ctx context.Context, text string) (ScriptReport, error) {
+func (s *Session) Script(ctx context.Context, text string, bindings ...map[string]BindValue) (ScriptReport, error) {
 	statements, err := ScriptStatements(text)
 	report := ScriptReport{Total: len(statements)}
 	if err != nil {
+		return report, err
+	}
+	var values map[string]BindValue
+	if len(bindings) > 0 {
+		values = bindings[0]
+	}
+	// Validate all values before executing the first statement.
+	if _, _, err = BindArguments(text, values); err != nil {
 		return report, err
 	}
 	for index, stmt := range statements {
@@ -77,7 +85,7 @@ func (s *Session) Script(ctx context.Context, text string) (ScriptReport, error)
 			if word == "COMMIT" || word == "ROLLBACK" {
 				err = s.Finish(word == "COMMIT")
 			} else {
-				step.Result, err = s.Execute(ctx, stmt.Text)
+				step.Result, err = s.Execute(ctx, stmt.Text, values)
 			}
 		}
 		if err != nil {

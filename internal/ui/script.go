@@ -25,8 +25,10 @@ func (s *screen) executeScript() {
 }
 
 func (s *screen) submitScript(text string) {
-	s.recordSQLHistory(text)
-	s.submit(job{action: "script", text: text})
+	s.withBinds(text, func(values map[string]oracle.BindValue) {
+		s.recordSQLHistory(text)
+		s.submit(job{action: "script", text: text, bindings: values})
+	})
 }
 
 func (s *screen) showScriptReport() {

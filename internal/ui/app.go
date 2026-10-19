@@ -14,26 +14,31 @@ import (
 )
 
 type job struct {
-	ctx    context.Context
-	action string
-	config oracle.Config
-	text   string
-	object oracle.Object
-	node   *tview.TreeNode
+	bindings map[string]oracle.BindValue
+	ctx      context.Context
+	action   string
+	config   oracle.Config
+	text     string
+	object   oracle.Object
+	node     *tview.TreeNode
 }
 
 type screen struct {
-	scriptReport  oracle.ScriptReport
-	scriptList    *tview.List
-	scriptResult  *tview.Table
-	scriptText    *tview.TextView
-	scriptFocus   tview.Primitive
-	tabs          []*sqlTab
-	activeTab     int
-	tabBar        *tview.Flex
-	document      *sqlfile.Document
-	fileDialog    *fileDialog
-	documentModal *tview.Modal
+	bindForm               *tview.Form
+	bindSQL                string
+	bindValues             map[string]oracle.BindValue
+	bindSubmit, bindCancel func()
+	scriptReport           oracle.ScriptReport
+	scriptList             *tview.List
+	scriptResult           *tview.Table
+	scriptText             *tview.TextView
+	scriptFocus            tview.Primitive
+	tabs                   []*sqlTab
+	activeTab              int
+	tabBar                 *tview.Flex
+	document               *sqlfile.Document
+	fileDialog             *fileDialog
+	documentModal          *tview.Modal
 
 	sqlConfirmText  *tview.TextView
 	sqlConfirmFocus tview.Primitive
@@ -187,7 +192,7 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 			}
 			return tview.MouseConsumed, nil
 		}
-		if page == "file" || page == "script" {
+		if page == "file" || page == "script" || page == "bind" {
 			pageRoot.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
 			return tview.MouseConsumed, nil
 		}
@@ -330,9 +335,9 @@ func (s *screen) worker() {
 				session = next
 			}
 		case "execute":
-			result, err = session.Execute(j.ctx, j.text)
+			result, err = session.Execute(j.ctx, j.text, j.bindings)
 		case "script":
-			script, err = session.Script(j.ctx, j.text)
+			script, err = session.Script(j.ctx, j.text, j.bindings)
 		case "commit", "exit_commit":
 			err = session.Finish(true)
 		case "rollback", "exit_rollback":
@@ -413,6 +418,7 @@ func (s *screen) worker() {
 			} else {
 				switch j.action {
 				case "connect":
+					s.clearBindValues()
 					s.connected = true
 					s.demo = false
 					s.table.Clear()

@@ -88,6 +88,9 @@ func (s *screen) refreshBorders() {
 	if s.sqlConfirmText != nil {
 		apply(s.sqlConfirmText.Box, s.sqlConfirmText.HasFocus(), false)
 	}
+	if s.bindForm != nil {
+		apply(s.bindForm.Box, s.bindForm.HasFocus(), false)
+	}
 	if s.scriptList != nil {
 		apply(s.scriptList.Box, s.scriptList.HasFocus(), false)
 		apply(s.scriptText.Box, s.scriptText.HasFocus(), false)

@@ -90,6 +90,9 @@ func (s *screen) refreshFooter() {
 	}
 	hint := "footer_sql"
 	switch page {
+	case "bind":
+		hint = "footer_bind"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+Enter", "execute", tcell.KeyEnter, tcell.ModCtrl}, {"Esc", "cancel", tcell.KeyEscape, 0}}
 	case "script":
 		hint = "footer_script"
 		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}

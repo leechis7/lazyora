@@ -36,6 +36,26 @@ func TestOracleWorkflowIntegration(t *testing.T) {
 	s := workflowSession(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
+	values := map[string]oracle.BindValue{
+		"N":    {Kind: "number", Text: "123456789012345678901234567890.12345678"},
+		"TEXT": {Kind: "text", Text: "한글 ' ; : secret"},
+		"D":    {Kind: "date", Text: "2026-10-19"},
+		"TS":   {Kind: "timestamp", Text: "2026-10-19 12:34:56.123456"},
+		"1":    {Null: true},
+	}
+	bound, bindErr := s.Execute(ctx, "SELECT :n, :text, :TEXT, TO_CHAR(:d,'YYYY-MM-DD'), TO_CHAR(:ts,'YYYY-MM-DD HH24:MI:SS.FF6'), :1 FROM dual", values)
+	if bindErr != nil {
+		t.Fatal(bindErr)
+	}
+	if bound.Rows[0][0] != values["N"].Text || bound.Rows[0][1] != values["TEXT"].Text || bound.Rows[0][2] != values["TEXT"].Text || bound.Rows[0][3] != "2026-10-19" || bound.Rows[0][4] != "2026-10-19 12:34:56.123456" || bound.Rows[0][5] != "NULL" {
+		t.Fatalf("bind roundtrip: %+v", bound.Rows)
+	}
+	if _, bindErr = s.Script(ctx, "SELECT :text FROM dual; BEGIN IF :n > 0 THEN NULL; END IF; END;\n/", values); bindErr != nil {
+		t.Fatal(bindErr)
+	}
+	if bindErr = s.Finish(false); bindErr != nil {
+		t.Fatal(bindErr)
+	}
 	report, err := s.Script(ctx, "SELECT 1 AS n FROM dual;\nBEGIN NULL; END;\n/\nUPDATE sample_rows SET amount=amount WHERE id=1;\nSELECT 2 AS n FROM dual;")
 	if err != nil || len(report.Steps) != 4 || report.Steps[3].Result.Rows[0][0] != "2" || !s.PendingChanges() {
 		t.Fatalf("script: %+v %v", report, err)

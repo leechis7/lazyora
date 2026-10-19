@@ -4,6 +4,12 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"bind_title":             {"IN bind values", "IN 바인드 값 입력"},
+	"bind_type":              {"Type", "타입"},
+	"bind_value":             {"Value", "값"},
+	"bind_clear":             {"Clear remembered values", "기억한 값 지우기"},
+	"bind_hint":              {"IN only: Text, NUMBER, DATE (YYYY-MM-DD), TIMESTAMP (YYYY-MM-DD HH:MM:SS[.fraction]), NULL. Up to 32 names. Values stay in memory for this tab's last SQL, never in history/files. Reconnect/clear removes them.", "IN 전용: 문자열·NUMBER·DATE(YYYY-MM-DD)·TIMESTAMP(YYYY-MM-DD HH:MM:SS[.소수초])·NULL, 최대 32개. 값은 탭의 최근 SQL에 대해 메모리에만 기억하며 이력·파일에는 저장하지 않습니다. 재접속·값 지우기로 제거합니다."},
+	"footer_bind":            {"Tab Fields / buttons | Ctrl+Enter / Alt+Enter Run | F1 Help | Esc Cancel", "Tab 입력 / 버튼 | Ctrl+Enter / Alt+Enter 실행 | F1 도움말 | Esc 취소"},
 	"script":                 {"Run script", "스크립트 실행"},
 	"script_report":          {"Script results", "스크립트 실행 내역"},
 	"script_ok":              {"OK", "성공"},

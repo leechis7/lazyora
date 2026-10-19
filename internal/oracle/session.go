@@ -52,7 +52,7 @@ func Open(ctx context.Context, config Config) (*Session, error) {
 	return &Session{db: db, conn: conn}, nil
 }
 
-func (s *Session) Execute(ctx context.Context, text string) (Result, error) {
+func (s *Session) Execute(ctx context.Context, text string, bindings ...map[string]BindValue) (Result, error) {
 	start := time.Now()
 	result := Result{Affected: -1}
 	if s.finishErr != nil {
@@ -65,6 +65,15 @@ func (s *Session) Execute(ctx context.Context, text string) (Result, error) {
 	word, _ := leadingWord(statement)
 	if word == "COMMIT" || word == "ROLLBACK" {
 		return result, errors.New("use the session Commit or Rollback actions")
+	}
+	originalStatement := statement
+	var values map[string]BindValue
+	if len(bindings) > 0 {
+		values = bindings[0]
+	}
+	statement, args, err := BindArguments(statement, values)
+	if err != nil {
+		return result, err
 	}
 	if s.tx == nil {
 		// Do not use the per-query context here: database/sql would roll the
@@ -79,17 +88,17 @@ func (s *Session) Execute(ctx context.Context, text string) (Result, error) {
 		// of its work. Keep a conservative warning until explicit resolution.
 		s.pending = true
 		var exec sql.Result
-		exec, err = s.tx.ExecContext(ctx, statement)
+		exec, err = s.tx.ExecContext(ctx, statement, args...)
 		if err == nil {
 			if affected, rowsErr := exec.RowsAffected(); rowsErr == nil {
 				result.Affected = affected
 			}
 		}
 		result.Elapsed = time.Since(start)
-		s.recordStatement(start, statement, result.Affected, err)
+		s.recordStatement(start, originalStatement, result.Affected, err)
 		return result, err
 	}
-	rows, err := s.tx.QueryContext(ctx, statement)
+	rows, err := s.tx.QueryContext(ctx, statement, args...)
 	if err != nil {
 		return result, err
 	}

@@ -23,6 +23,9 @@ type job struct {
 }
 
 type screen struct {
+	tabs          []*sqlTab
+	activeTab     int
+	tabBar        *tview.Flex
 	document      *sqlfile.Document
 	fileDialog    *fileDialog
 	documentModal *tview.Modal
@@ -244,6 +247,7 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 		return event, action
 	})
 	s.refreshLabels()
+	s.initTabs()
 	s.setStatus("disconnected")
 	go s.worker()
 	if demo {

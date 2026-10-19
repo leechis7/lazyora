@@ -15,7 +15,7 @@ func (s *screen) requestQuit() {
 		s.setStatus("cancelling")
 		return
 	}
-	s.guardDocument(func() { s.guardSourceDiscard(s.showExitConfirmation) })
+	s.guardDocuments(func() { s.guardSourceDiscard(s.showExitConfirmation) })
 }
 
 func (s *screen) showExitConfirmation() {

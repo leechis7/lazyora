@@ -24,6 +24,8 @@ var commands = []command{
 	{"file_save", "file_save", 0, []binding{{"Ctrl+S", tcell.KeyCtrlS, 0, 0}}},
 	{"file_save_as", "file_save_as", 0, []binding{{"Ctrl+Shift+S", tcell.KeyCtrlS, tcell.ModShift, 0}}},
 	{"file_close", "file_close", 0, []binding{{"Ctrl+W", tcell.KeyCtrlW, 0, 0}}},
+	{"tab_next", "tab_next", 0, []binding{{"Ctrl+Tab", tcell.KeyTab, tcell.ModCtrl, 0}, {"Alt+PgDn", tcell.KeyPgDn, tcell.ModAlt, 0}}},
+	{"tab_previous", "tab_previous", 0, []binding{{"Ctrl+Shift+Tab", tcell.KeyBacktab, tcell.ModCtrl, 0}, {"Alt+PgUp", tcell.KeyPgUp, tcell.ModAlt, 0}}},
 	{"quit", "quit", 0, []binding{{"Ctrl+Q", tcell.KeyCtrlQ, 0, 0}}},
 	{"copy", "copy_selection", 1, []binding{{"Ctrl+C", tcell.KeyCtrlC, 0, 0}}},
 	{"copy_row", "copy_row", 1, []binding{{"Alt+Y", tcell.KeyRune, tcell.ModAlt, 'y'}}},
@@ -97,7 +99,7 @@ func (s *screen) commandEnabled(id string) bool {
 		return true
 	case "maximize":
 		return s.editor.HasFocus() || s.table.HasFocus()
-	case "file_new", "file_open", "file_save", "file_save_as", "file_close":
+	case "file_new", "file_open", "file_save", "file_save_as", "file_close", "tab_next", "tab_previous":
 		return !s.busy
 	case "find", "find_next", "find_previous", "replace", "clear_sql":
 		return !s.busy && s.editor.HasFocus()
@@ -138,8 +140,14 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
-	case "file_new", "file_close":
+	case "file_new":
 		s.newDocument()
+	case "file_close":
+		s.closeDocument()
+	case "tab_next":
+		s.cycleTab(1)
+	case "tab_previous":
+		s.cycleTab(-1)
 	case "file_open":
 		s.showFileDialog("open", nil)
 	case "file_save":

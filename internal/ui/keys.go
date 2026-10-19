@@ -296,6 +296,14 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if page != "main" {
 		return event
 	}
+	if event.Modifiers()&tcell.ModCtrl != 0 && (event.Key() == tcell.KeyTab || event.Key() == tcell.KeyBacktab) {
+		step := 1
+		if event.Key() == tcell.KeyBacktab || event.Modifiers()&tcell.ModShift != 0 {
+			step = -1
+		}
+		s.cycleTab(step)
+		return nil
+	}
 	if s.browserHasFocus() {
 		if (s.browserUsers.IsOpen() || s.browserTypes.IsOpen()) && event.Modifiers()&(tcell.ModCtrl|tcell.ModAlt) == 0 {
 			return event

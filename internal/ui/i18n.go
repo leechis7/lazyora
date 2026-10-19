@@ -4,6 +4,10 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"tab_session":            {"Shared DB", "공유 DB"},
+	"tab_next":               {"Next SQL tab", "다음 SQL 탭"},
+	"tab_previous":           {"Previous SQL tab", "이전 SQL 탭"},
+	"tab_shared":             {"SQL tabs share one DB session and transaction. Switching/closing is disabled while running.", "SQL 탭은 하나의 DB 세션·트랜잭션을 공유합니다. 실행 중에는 탭 전환·닫기가 잠깁니다."},
 	"file_new":               {"New SQL", "새 SQL"},
 	"file_open":              {"Open SQL file", "SQL 파일 열기"},
 	"file_save":              {"Save SQL file", "SQL 파일 저장"},

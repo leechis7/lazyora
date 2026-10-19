@@ -1,11 +1,15 @@
 package oracle_test
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 
+	"lazyora/internal/exportdata"
 	"lazyora/internal/oracle"
 )
 
@@ -101,5 +105,39 @@ func TestOraclePlanIntegration(t *testing.T) {
 	after, err := s.Execute(ctx, "SELECT amount FROM sample_rows WHERE id=1")
 	if err != nil || after.Rows[0][0] != before.Rows[0][0] {
 		t.Fatal("explain committed pending DML")
+	}
+}
+
+func TestOracleExportIntegration(t *testing.T) {
+	s := workflowSession(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	table := fmt.Sprintf("LORA_EXP_%d", time.Now().UnixNano()%1000000000000)
+	if _, err := s.Execute(ctx, "CREATE TABLE "+table+" AS SELECT * FROM sample_rows WHERE 1=0"); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if _, err := s.Execute(context.Background(), "DROP TABLE "+table+" PURGE"); err != nil {
+			t.Error(err)
+		}
+	}()
+	result, err := s.Execute(ctx, "SELECT * FROM sample_rows ORDER BY id")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err = exportdata.Write(ctx, &out, exportdata.Dataset{Columns: result.Columns, Rows: result.Values}, exportdata.Options{Format: "sql", Table: table, Columns: result.Columns}); err != nil {
+		t.Fatal(err)
+	}
+	report, err := s.Script(ctx, out.String())
+	if err != nil || len(report.Steps) != len(result.Rows) {
+		t.Fatalf("INSERT export import: %v", err)
+	}
+	restored, err := s.Execute(ctx, "SELECT * FROM "+table+" ORDER BY id")
+	if err != nil || !reflect.DeepEqual(restored.Rows, result.Rows) {
+		t.Fatalf("roundtrip mismatch:\n%v\n%v\n%v", result.Rows, restored.Rows, err)
+	}
+	if err = s.Finish(false); err != nil {
+		t.Fatal(err)
 	}
 }

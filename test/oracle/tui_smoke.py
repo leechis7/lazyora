@@ -65,6 +65,12 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
     def copied(text):
         wait_for(b"\x1b]52;c;" + base64.b64encode(text.encode()))
 
+    def request_exit():
+        output.clear()
+        send(b"\x11")
+        wait_for("SQL editor changes have not been saved")
+        send(b"\x1b[D\r")  # Cancel -> Discard for exit only, then DB confirmation.
+
     try:
         wait_for("Load saved connection")  # Startup opens the login dialog.
         send(b"\x1b")
@@ -130,7 +136,7 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         copied("11\t22\n33\t44")
         send(b"\x1be")  # Edit menu.
         wait_for("Copy preview")
-        send(b"\x1b[B\x1b[B\r")
+        send(b"\x1b[B\x1b[B\x1b[B\r")
         wait_for("Mouse reporting is off")
         send(b"\x1b")
         send(b"\x1b[1;2Q")  # Shift+F2 restores split.
@@ -142,16 +148,42 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         wait_for("NUMBER(10,0)")
         wait_for("Comment")
         send(b"\x1b")
+        sql("SELECT 21 AS script_value FROM dual")
         send(b"\x1bx")
-        send(b"\x1b[B\r")  # Script is disabled.
-        wait_for("not supported yet")
+        send(b"\x1b[B\r")  # F5 via Execute menu, review first.
+        wait_for("Run these statements in order?")
+        send(b"\t\t\r")  # Cancel -> SQL preview -> Execute.
+        wait_for("Script results")
+        send(b"\x1b")
+        output.clear()
+        send(b"\x05")  # Ctrl+E expected plan; never executes source SQL.
+        wait_for("Estimated execution plan")
+        send(b"\x1b")
+        send(b"\x1bOQ\x1bOQ\x01\x0b")
+        send(b"SELECT :n AS bound_value FROM dual")
+        output.clear()
+        send(b"\x1b[20~")
+        wait_for("IN bind values")
+        send(b"\t42\x1b[13;5u")
+        wait_for("1 rows")
+        output.clear()
+        send(b"\x1bw")  # Export loaded results without submitting SQL.
+        wait_for("Export loaded results")
+        send(b"\r\x1b[B\x1b[B\r\t\x01\x0b")  # XLSX, then Path.
+        export_path = folder + "/result.xlsx"
+        send(export_path.encode())
+        send(b"\x13")
+        wait_for("Exported 1 loaded rows")
+        with open(export_path, "rb") as exported:
+            assert exported.read(2) == b"PK", "XLSX export was not a ZIP workbook"
+        print("F5 review/results, Ctrl+E plan, IN bind input and XLSX export: passed")
         send(b"\x1bOQ\x1bOQ\x01\x0b")
         send(b"UPDATE sample_rows SET title=title WHERE id=1")
         output.clear()
         send(b"\x1b[20~")
         wait_for("affected rows: 1")
         output.clear()
-        send(b"\x11")
+        request_exit()
         wait_for("Tracked statements: 1")
         send(b"\x1bv")  # Exit > View pending work.
         wait_for("Client execution log")
@@ -164,8 +196,10 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         send(b"\x1br")
         wait_for("Rollback completed")
         output.clear()
-        send(b"\x11")
-        wait_for("No uncommitted changes are tracked")
+        request_exit()
+        # tcell sends screen differences; the unchanged suffix may not be sent
+        # again after the intermediate unsaved-file modal.
+        wait_for("No uncommitted")
         send(b"\x1b")
         send(b"\x1b[20~")
         wait_for("affected rows: 1")
@@ -173,11 +207,11 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         send(b"\x1bc")
         wait_for("Commit completed")
         output.clear()
-        send(b"\x11")
+        request_exit()
         wait_for("Exit LazyOra?")
         send(b"\r")  # Default keeps working.
         output.clear()
-        send(b"\x11")
+        request_exit()
         wait_for("Exit LazyOra?")
         send(b"\x1b[D\r")
         deadline = time.monotonic() + 5

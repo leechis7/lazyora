@@ -8,22 +8,33 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"lazyora/internal/credentials"
+	"lazyora/internal/exportdata"
 	"lazyora/internal/oracle"
 	"lazyora/internal/settings"
 	"lazyora/internal/sqlfile"
 )
 
 type job struct {
-	bindings map[string]oracle.BindValue
-	ctx      context.Context
-	action   string
-	config   oracle.Config
-	text     string
-	object   oracle.Object
-	node     *tview.TreeNode
+	path          string
+	dataset       exportdata.Dataset
+	exportOptions exportdata.Options
+	revision      exportdata.Revision
+	bindings      map[string]oracle.BindValue
+	ctx           context.Context
+	action        string
+	config        oracle.Config
+	text          string
+	object        oracle.Object
+	node          *tview.TreeNode
 }
 
 type screen struct {
+	exportForm             *tview.Form
+	exportInfo             *tview.TextView
+	exportFocus            tview.Primitive
+	exportSubmit           func()
+	resultValues           [][]oracle.Cell
+	resultTruncated        bool
 	planTree               *tview.TreeView
 	planText               *tview.TextView
 	planFocus              tview.Primitive
@@ -195,7 +206,7 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 			}
 			return tview.MouseConsumed, nil
 		}
-		if page == "file" || page == "script" || page == "bind" || page == "plan" {
+		if page == "file" || page == "script" || page == "bind" || page == "plan" || page == "export" {
 			pageRoot.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
 			return tview.MouseConsumed, nil
 		}
@@ -294,7 +305,7 @@ func (s *screen) submit(j job) {
 	if s.busy {
 		return
 	}
-	if j.action != "connect" && !s.connected {
+	if j.action != "connect" && j.action != "export" && !s.connected {
 		s.setStatus("connect_first")
 		return
 	}
@@ -327,8 +338,11 @@ func (s *screen) worker() {
 		var compilation oracle.Compilation
 		var script oracle.ScriptReport
 		var plan []oracle.PlanStep
+		var exported int
 		var err error
 		switch j.action {
+		case "export":
+			exported, err = exportdata.Save(j.ctx, j.path, j.revision, j.dataset, j.exportOptions)
 		case "connect":
 			var next *oracle.Session
 			next, err = oracle.Open(j.ctx, j.config)
@@ -407,6 +421,9 @@ func (s *screen) worker() {
 			}
 			if err != nil {
 				s.setStatus("error", err)
+				if j.action == "export" && s.exportInfo != nil {
+					s.exportInfo.SetText(s.tr("export_error") + "\n" + err.Error())
+				}
 				if j.action == "columns" || j.action == "object_info" {
 					s.renderObject(nil)
 					s.objectInfo.SetText(s.objectInfo.GetText(false) + "\n" + s.tr("browser_error") + ": " + err.Error())
@@ -423,6 +440,9 @@ func (s *screen) worker() {
 				}
 			} else {
 				switch j.action {
+				case "export":
+					s.closeExport()
+					s.setStatus("export_saved", exported, j.path)
 				case "plan":
 					s.showPlan(j.text, plan)
 					s.setStatus("plan_loaded", len(plan))
@@ -431,6 +451,11 @@ func (s *screen) worker() {
 					s.connected = true
 					s.demo = false
 					s.table.Clear()
+					s.resultRows = nil
+					s.resultHeaders = nil
+					s.resultValues = nil
+					s.resultTruncated = false
+					s.resultSelection = resultSelection{}
 					s.resetBrowser()
 					s.setStatus("connected", j.config.User, j.config.Host, j.config.Port, j.config.Name, j.config.Mode)
 					if !s.quitting {
@@ -486,6 +511,18 @@ func (s *screen) worker() {
 }
 
 func (s *screen) render(result oracle.Result) {
+	s.resultTruncated = result.Truncated
+	s.resultValues = make([][]oracle.Cell, len(result.Rows))
+	for i, row := range result.Rows {
+		s.resultValues[i] = make([]oracle.Cell, len(row))
+		for j, value := range row {
+			cell := oracle.Cell{Text: value, Type: "VARCHAR2"}
+			if i < len(result.Values) && j < len(result.Values[i]) {
+				cell = result.Values[i][j]
+			}
+			s.resultValues[i][j] = cell
+		}
+	}
 	s.resultHeaders = append([]string(nil), result.Columns...)
 	s.resultRows = make([][]string, len(result.Rows))
 	for i, row := range result.Rows {

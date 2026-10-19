@@ -54,7 +54,7 @@ Docker Compose와 환경 파일, 샘플 SQL, 실행 스크립트, 실DB 테스�
 
 ## 검증 기록과 범위
 
-다음은 기존 검증 기록이며, 이 문서 정리 작업에서 테스트를 다시 실행한 것은 아닙니다. v0.1.0 릴리스의 검증 요약은 [릴리스 안내](releases/v0.1.0.md#다운로드와-검증)를 참고하세요.
+검증 기록은 아래의 각 시점과 환경을 기준으로 합니다. v0.1.0 릴리스의 검증 요약은 [릴리스 안내](releases/v0.1.0.md#다운로드와-검증)를 참고하세요.
 
 검증 환경: Go 1.26.9, Linux ARM64. 접속 문자열·트랜잭션·결과 행 제한 테스트와 tcell 모의 터미널에서 데모 화면·키 입력 테스트가 통과했습니다. 설정 저장·재읽기·저장 실패 처리, 언어 변경 시 입력 보존, 접속·설정 단축키, 마우스 버튼·입력칸·도움말 스크롤과 마우스 끄기·다시 켜기도 자동 검사합니다. `go vet`과 CGO 없는 Linux AMD64/ARM64 빌드도 통과했습니다. AMD64 파일은 `file`과 `readelf`로 정적 링크를 확인했고, ARM64 파일은 실제 터미널에서 데모 시작·종료를 확인했습니다.
 
@@ -70,6 +70,14 @@ go vet ./...
 ```
 
 실DB에서는 Service Name/SID 각각의 연결, `SELECT sysdate FROM dual`, 한글·NULL·NUMBER·DATE 결과, DML 후 COMMIT/ROLLBACK, PL/SQL, 실행 취소와 재연결을 확인해야 합니다. 트랜잭션 검증은 테스트 스키마에서 수행합니다.
+
+### v0.5.0 검증 (2026-10-20)
+
+Linux ARM64·Go 1.26.9에서 전체 `go test -race ./...`, `go vet ./...`, 기본 ARM64 빌드를 검증했습니다. SQL UTF-8/BOM/줄바꿈·저장 오류, 다중 탭·미저장 종료, 커서 문장 구분, 스크립트 오류/취소 중단, 바인드 타입/NULL, 예상 계획, CSV/TSV/XLSX/INSERT와 원본 파일 보존을 자동 검사합니다.
+
+Docker Oracle Free에서 SQL/PLSQL 순차 실행·명시적 COMMIT/ROLLBACK·다중 SELECT, 38자리 NUMBER·한글·날짜/소수초/NULL 바인드, 예상 계획의 DELETE 미실행·기존 DML 롤백 보존, INSERT 내보내기→재입력의 원본 결과 비교를 확인했습니다. 실제 ARM64 실행파일의 Linux PTY 시험도 접속·키/마우스·복사·전체화면·F5·Ctrl+E·바인드·XLSX 저장·미저장 확인→커밋/롤백/종료까지 통과했습니다.
+
+이번 기능의 실제 CentOS 7.4·Oracle 10g·SID 접속·Windows/macOS TUI는 재시험하지 않았습니다. GitHub CI에서는 6종 교차 빌드와 Windows AMD64 버전 명령을 검사합니다. 자세한 지원 한계는 [v0.5.0 안내](releases/v0.5.0.md)를 참고하세요.
 
 ## 개발 정보
 

@@ -91,6 +91,9 @@ func (s *screen) refreshBorders() {
 	if s.bindForm != nil {
 		apply(s.bindForm.Box, s.bindForm.HasFocus(), false)
 	}
+	if s.exportForm != nil {
+		apply(s.exportForm.Box, s.exportForm.HasFocus(), false)
+	}
 	if s.planTree != nil {
 		apply(s.planTree.Box, s.planTree.HasFocus(), false)
 		apply(s.planText.Box, s.planText.HasFocus(), false)

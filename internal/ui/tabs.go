@@ -13,6 +13,8 @@ import (
 // Tabs share one DB connection/transaction. Executions lock tab switching and
 // closing, so a result always belongs to the editor which submitted the job.
 type sqlTab struct {
+	values     [][]oracle.Cell
+	truncated  bool
 	bindSQL    string
 	bindValues map[string]oracle.BindValue
 	script     oracle.ScriptReport
@@ -42,6 +44,7 @@ func (s *screen) stashTab() {
 		return
 	}
 	tab := s.tabs[s.activeTab]
+	tab.values, tab.truncated = s.resultValues, s.resultTruncated
 	tab.script = s.scriptReport
 	tab.bindSQL, tab.bindValues = s.bindSQL, s.bindValues
 	tab.editor, tab.table, tab.document = s.editor, s.table, s.document
@@ -56,6 +59,7 @@ func (s *screen) switchTab(index int) {
 	s.stashTab()
 	s.activeTab = index
 	tab := s.tabs[index]
+	s.resultValues, s.resultTruncated = tab.values, tab.truncated
 	s.scriptReport = tab.script
 	s.bindSQL, s.bindValues = tab.bindSQL, tab.bindValues
 	s.editor, s.table, s.document = tab.editor, tab.table, tab.document
@@ -119,6 +123,8 @@ func (s *screen) closeTab() {
 			s.resultRows = nil
 			s.resultHeaders = nil
 			s.resultSelection = resultSelection{}
+			s.resultValues = nil
+			s.resultTruncated = false
 			s.scriptReport = oracle.ScriptReport{}
 			s.bindSQL = ""
 			s.bindValues = nil
@@ -131,6 +137,7 @@ func (s *screen) closeTab() {
 		// Avoid overwriting the destination with the removed tab's state.
 		s.activeTab = min(index, len(s.tabs)-1)
 		tab := s.tabs[s.activeTab]
+		s.resultValues, s.resultTruncated = tab.values, tab.truncated
 		s.scriptReport = tab.script
 		s.bindSQL, s.bindValues = tab.bindSQL, tab.bindValues
 		s.editor, s.table, s.document = tab.editor, tab.table, tab.document

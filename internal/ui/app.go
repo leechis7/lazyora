@@ -23,6 +23,11 @@ type job struct {
 }
 
 type screen struct {
+	scriptReport  oracle.ScriptReport
+	scriptList    *tview.List
+	scriptResult  *tview.Table
+	scriptText    *tview.TextView
+	scriptFocus   tview.Primitive
 	tabs          []*sqlTab
 	activeTab     int
 	tabBar        *tview.Flex
@@ -182,7 +187,7 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 			}
 			return tview.MouseConsumed, nil
 		}
-		if page == "file" {
+		if page == "file" || page == "script" {
 			pageRoot.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
 			return tview.MouseConsumed, nil
 		}
@@ -312,6 +317,7 @@ func (s *screen) worker() {
 		var source string
 		var arguments []oracle.Argument
 		var compilation oracle.Compilation
+		var script oracle.ScriptReport
 		var err error
 		switch j.action {
 		case "connect":
@@ -325,6 +331,8 @@ func (s *screen) worker() {
 			}
 		case "execute":
 			result, err = session.Execute(j.ctx, j.text)
+		case "script":
+			script, err = session.Script(j.ctx, j.text)
 		case "commit", "exit_commit":
 			err = session.Finish(true)
 		case "rollback", "exit_rollback":
@@ -375,6 +383,16 @@ func (s *screen) worker() {
 					message += "\n" + err.Error()
 				}
 				s.sourceInfo.SetText(message)
+			}
+			if j.action == "script" {
+				s.scriptReport = script
+				for _, step := range script.Steps {
+					if len(step.Result.Columns) > 0 {
+						s.render(step.Result)
+					}
+				}
+				s.showScriptReport()
+				s.setStatus("script_done", len(script.Steps), script.Total)
 			}
 			if err != nil {
 				s.setStatus("error", err)

@@ -16,7 +16,7 @@ type helpSection struct {
 }
 
 var helpSections = []helpSection{
-	{"sql", [2]string{"SQL editor", "SQL 편집"}, []string{"file_new", "file_open", "file_save", "file_save_as", "file_close", "tab_next", "tab_previous", "execute", "find", "find_next", "find_previous", "replace", "clear_sql", "history"}, [2]string{
+	{"sql", [2]string{"SQL editor", "SQL 편집"}, []string{"file_new", "file_open", "file_save", "file_save_as", "file_close", "tab_next", "tab_previous", "execute", "script", "script_report", "find", "find_next", "find_previous", "replace", "clear_sql", "history"}, [2]string{
 		"UTF-8 SQL files: Open/Save/Save As in File; the title shows the file name and * for unsaved edits.\nCtrl+N opens a new tab. Ctrl+Tab / Alt+PgDn next, Ctrl+Shift+Tab / Alt+PgUp previous. Tabs share one DB transaction; switching/closing is locked while running.\nClose/Open/Exit ask Save, Discard or Cancel for unsaved SQL. File saving does not commit the database.\nIf Ctrl+Shift+S is indistinguishable from Ctrl+S, use File > Save SQL as.\nEnter inserts a newline. Alt+Enter / Shift+F9 also execute.\nExecute selected text; without a selection, execute the statement at the cursor. SQL uses semicolons; separate PL/SQL units with a standalone /.\nFind is literal and case sensitive; next/previous wraps.\nHistory: this run only, up to 100 entries in memory. Loading does not execute SQL.\nDDL and UPDATE/DELETE without an outer WHERE ask before execution. The default is Cancel; Esc also cancels.",
 		"파일 메뉴에서 UTF-8 SQL 열기/저장/다른 이름 저장. 제목에 파일명과 미저장 표시(*)가 나타납니다.\nCtrl+N 새 탭, Ctrl+Tab / Alt+PgDn 다음, Ctrl+Shift+Tab / Alt+PgUp 이전 탭. DB 트랜잭션은 공유하며 실행 중 탭 전환·닫기가 잠깁니다.\n닫기/열기/종료 전 미저장 SQL은 저장·버리기·취소를 확인합니다. 파일 저장은 DB 커밋과 별개입니다.\nCtrl+Shift+S를 구분하지 못하는 터미널은 파일 > SQL 다른 이름으로 저장을 사용하세요.\nEnter는 줄바꿈입니다. Alt+Enter / Shift+F9로도 실행합니다.\n선택한 SQL을 실행하며, 선택이 없으면 커서 위치 문장을 실행합니다. SQL은 세미콜론, PL/SQL 단위는 별도 줄 /로 구분합니다.\n찾기는 대소문자를 구분하는 일반 문자열 검색이며 끝에서 순환합니다.\n이력은 이번 실행의 SQL 최대 100개를 메모리에만 보관하며, 불러와도 자동 실행하지 않습니다.\nDDL과 최상위 WHERE 없는 UPDATE/DELETE는 실행 전 확인합니다. 기본 선택과 Esc는 취소입니다."}},
 	{"results", [2]string{"Results and copying", "조회 결과 · 복사"}, []string{"copy", "copy_row"}, [2]string{
@@ -34,9 +34,9 @@ var helpSections = []helpSection{
 	{"transactions", [2]string{"Commit, rollback and exit", "커밋 · 롤백 · 종료"}, []string{"commit", "rollback", "pending_work", "cancel", "quit"}, [2]string{
 		"DML uses manual commit. DDL / PL/SQL may commit implicitly.\nSession > View pending work lists SQL, time, outcome and affected rows since the last successful commit/rollback.\nExit > View pending work (Alt+V) opens the same details; Esc returns without resolving anything.\nThis is a memory-only execution journal (latest 100 statements, up to 64 KiB SQL each), not a row-level diff.\nExit always asks. Pending changes: commit and exit / rollback and exit / keep working.\nThe default is keep working; Esc cancels exit. Forced termination cannot show confirmation.",
 		"DML은 수동 커밋입니다. DDL·PL/SQL은 암시적 커밋을 수행할 수 있습니다.\n세션 > 미커밋 내역 보기에서 마지막 커밋·롤백 이후 SQL·시각·결과·처리 행 수를 확인합니다.\n종료창의 내역 보기(Alt+V)도 같은 상세를 열며 Esc로 돌아가도 DB 상태는 바뀌지 않습니다.\n메모리 실행 기록(최근 100개, SQL당 64 KiB)이며 행별 변경 비교는 아닙니다.\n종료는 항상 확인합니다. 미커밋 가능 내역이 있으면 커밋 후 종료 / 롤백 후 종료 / 계속 사용을 선택합니다.\n기본 선택은 계속 사용이며 Esc는 종료를 취소합니다. 강제 종료에는 확인창을 보장하지 않습니다."}},
-	{"terminal", [2]string{"Terminal compatibility and limits", "터미널 호환성 · 지원 범위"}, []string{"script", "parse", "debug_continue"}, [2]string{
-		"If Ctrl+Enter arrives as plain Enter, use F9 or Alt+Enter.\nSecureCRT: Session Options > Terminal > Emulation > Mapped Keys > Send String: \\e[13;5u\nClipboard transfer uses OSC 52 and depends on terminal permissions. See docs/terminal.md.\nUp to 1,000 result rows. Scripts and debugging are not implemented.",
-		"Ctrl+Enter가 일반 Enter로 전달되면 F9 또는 Alt+Enter를 사용하세요.\nSecureCRT: Session Options > Terminal > Emulation > Mapped Keys > Send String: \\e[13;5u\n클립보드 전송은 OSC 52와 터미널 권한에 따라 동작합니다. docs/terminal.md를 참고하세요.\n결과는 최대 1,000행입니다. 스크립트 실행·디버거는 아직 지원하지 않습니다."}},
+	{"terminal", [2]string{"Terminal compatibility and limits", "터미널 호환성 · 지원 범위"}, []string{"parse", "debug_continue"}, [2]string{
+		"If Ctrl+Enter arrives as plain Enter, use F9 or Alt+Enter.\nSecureCRT: Session Options > Terminal > Emulation > Mapped Keys > Send String: \\e[13;5u\nClipboard transfer uses OSC 52 and depends on terminal permissions. See docs/terminal.md.\nUp to 1,000 result rows. F5 runs scripts (max 100 statements, 60 seconds total), stopping on first error/cancel. SQL*Plus directives and debugging are unsupported.",
+		"Ctrl+Enter가 일반 Enter로 전달되면 F9 또는 Alt+Enter를 사용하세요.\nSecureCRT: Session Options > Terminal > Emulation > Mapped Keys > Send String: \\e[13;5u\n클립보드 전송은 OSC 52와 터미널 권한에 따라 동작합니다. docs/terminal.md를 참고하세요.\n결과는 최대 1,000행입니다. F5는 최대 100문장·전체 60초로 스크립트를 실행하고 첫 오류·취소에서 중단합니다. SQL*Plus 명령·디버거는 지원하지 않습니다."}},
 }
 
 func (s *screen) helpLanguage() int {
@@ -72,6 +72,8 @@ func (s *screen) mainHelp() string {
 
 func (s *screen) helpContext(page string) string {
 	switch page {
+	case "script":
+		return s.tr("footer_script")
 	case "file":
 		return s.tr("footer_file") + "\n" + s.tr("file_picker_hint")
 	case "file_unsaved":

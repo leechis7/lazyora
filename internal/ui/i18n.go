@@ -4,6 +4,15 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"script":                 {"Run script", "스크립트 실행"},
+	"script_report":          {"Script results", "스크립트 실행 내역"},
+	"script_ok":              {"OK", "성공"},
+	"script_error":           {"Error / cancelled", "오류 / 취소"},
+	"script_step":            {"%d · L%d · %s · %s rows / %d affected", "%d · %d행 · %s · 결과 %s행 / 변경 %d행"},
+	"script_use_result":      {"Use selected result", "선택 결과를 결과창으로"},
+	"script_done":            {"Script processed %d/%d statements", "스크립트 %d/%d문장 처리"},
+	"sql_risk_script":        {"Run these statements in order? Stops on first error or cancellation. Prior successful DML stays pending. COMMIT/ROLLBACK in this script affect all tabs; DDL/PLSQL can commit implicitly. SQL*Plus commands are unsupported.", "아래 문장을 순서대로 실행하시겠습니까? 첫 오류·취소에서 중단하고 앞서 성공한 DML은 미커밋으로 남깁니다. 스크립트의 COMMIT/ROLLBACK은 모든 탭에 적용되며 DDL/PLSQL은 암시적으로 커밋할 수 있습니다. SQL*Plus 명령은 지원하지 않습니다."},
+	"footer_script":          {"Arrows Select / scroll | Tab List / SQL / results / buttons | Ctrl+C Summary | Esc Close", "방향키 선택 / 스크롤 | Tab 목록 / SQL / 결과 / 버튼 | Ctrl+C 요약 복사 | Esc 닫기"},
 	"tab_session":            {"Shared DB", "공유 DB"},
 	"tab_next":               {"Next SQL tab", "다음 SQL 탭"},
 	"tab_previous":           {"Previous SQL tab", "이전 SQL 탭"},

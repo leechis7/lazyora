@@ -20,13 +20,15 @@ func TestMenuCommandsRespectContextAndNeverAliasScriptToCommit(t *testing.T) {
 	}
 	s.menuList.SetCurrentItem(1)
 	s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
-	if len(s.jobs) != 0 || s.statusKey != "script_unavailable" {
-		t.Fatal("disabled script executed SQL or commit")
+	if len(s.jobs) != 0 || s.sqlConfirmText == nil {
+		t.Fatal("script bypassed confirmation or executed SQL/commit")
 	}
+	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
 	s.key(tcell.NewEventKey(tcell.KeyF5, 0, 0))
 	if len(s.jobs) != 0 {
 		t.Fatal("F5 committed")
 	}
+	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
 	s.key(tcell.NewEventKey(tcell.KeyF6, 0, 0))
 	if len(s.jobs) != 0 || !s.table.HasFocus() {
 		t.Fatal("F6 rolled back instead of toggling SQL/results")

@@ -43,6 +43,11 @@ func (s *screen) executeSQL() {
 }
 
 func (s *screen) submitSQL(text string) {
+	s.recordSQLHistory(text)
+	s.submit(job{action: "execute", text: text})
+}
+
+func (s *screen) recordSQLHistory(text string) {
 	if !s.busy && s.connected && strings.TrimSpace(text) != "" {
 		if len(s.sqlHistory) == 0 || s.sqlHistory[len(s.sqlHistory)-1] != text {
 			s.sqlHistory = append(s.sqlHistory, text)
@@ -51,7 +56,6 @@ func (s *screen) submitSQL(text string) {
 			s.sqlHistory = s.sqlHistory[len(s.sqlHistory)-100:]
 		}
 	}
-	s.submit(job{action: "execute", text: text})
 }
 
 func (s *screen) showHistory() {

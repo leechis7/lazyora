@@ -40,7 +40,8 @@ var commands = []command{
 	{"rollback", "rollback", 2, []binding{{"Alt+R", tcell.KeyRune, tcell.ModAlt, 'r'}}},
 	{"pending_work", "pending_work", 2, nil},
 	{"execute", "execute", 3, []binding{{"F9", tcell.KeyF9, 0, 0}, {"Ctrl+Enter", tcell.KeyEnter, tcell.ModCtrl, 0}, {"Alt+Enter", tcell.KeyEnter, tcell.ModAlt, 0}, {"Shift+F9", tcell.KeyF9, tcell.ModShift, 0}}},
-	{"script", "script_unavailable", 3, []binding{{"F5", tcell.KeyF5, 0, 0}}},
+	{"script", "script", 3, []binding{{"F5", tcell.KeyF5, 0, 0}}},
+	{"script_report", "script_report", 4, nil},
 	{"parse", "parse_unavailable", 3, []binding{{"Ctrl+F9", tcell.KeyF9, tcell.ModCtrl, 0}}},
 	{"debug_continue", "debug_unavailable", 3, []binding{{"F11", tcell.KeyF11, 0, 0}}},
 	{"cancel", "cancel_execution", 3, []binding{{"Esc", tcell.KeyEscape, 0, 0}}},
@@ -111,8 +112,10 @@ func (s *screen) commandEnabled(id string) bool {
 		return s.browser != nil
 	case "connect":
 		return !s.busy
-	case "execute", "commit", "rollback":
+	case "execute", "script", "commit", "rollback":
 		return s.connected && !s.busy
+	case "script_report":
+		return !s.busy && len(s.scriptReport.Steps) > 0
 	case "cancel":
 		return s.busy
 	case "describe", "quick_describe":
@@ -129,10 +132,10 @@ func (s *screen) commandEnabled(id string) bool {
 
 func (s *screen) invoke(id string) {
 	if !s.commandEnabled(id) {
-		if id == "script" || id == "parse" || id == "debug_continue" {
+		if id == "parse" || id == "debug_continue" {
 			s.setStatus(commandFor(id).label)
 		}
-		if id == "execute" || id == "commit" || id == "rollback" {
+		if id == "execute" || id == "script" || id == "commit" || id == "rollback" {
 			if !s.connected {
 				s.setStatus("connect_first")
 			}
@@ -140,6 +143,10 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "script":
+		s.executeScript()
+	case "script_report":
+		s.showScriptReport()
 	case "file_new":
 		s.newDocument()
 	case "file_close":

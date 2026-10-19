@@ -6,12 +6,14 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"lazyora/internal/oracle"
 	"lazyora/internal/sqlfile"
 )
 
 // Tabs share one DB connection/transaction. Executions lock tab switching and
 // closing, so a result always belongs to the editor which submitted the job.
 type sqlTab struct {
+	script     oracle.ScriptReport
 	editor     *tview.TextArea
 	table      *tview.Table
 	document   *sqlfile.Document
@@ -38,6 +40,7 @@ func (s *screen) stashTab() {
 		return
 	}
 	tab := s.tabs[s.activeTab]
+	tab.script = s.scriptReport
 	tab.editor, tab.table, tab.document = s.editor, s.table, s.document
 	tab.rows, tab.headers, tab.selection = s.resultRows, s.resultHeaders, s.resultSelection
 	tab.status, tab.statusArgs = s.statusKey, append([]any(nil), s.statusArgs...)
@@ -50,6 +53,7 @@ func (s *screen) switchTab(index int) {
 	s.stashTab()
 	s.activeTab = index
 	tab := s.tabs[index]
+	s.scriptReport = tab.script
 	s.editor, s.table, s.document = tab.editor, tab.table, tab.document
 	s.resultRows, s.resultHeaders, s.resultSelection = tab.rows, tab.headers, tab.selection
 	s.setStatus(tab.status, tab.statusArgs...)
@@ -111,6 +115,7 @@ func (s *screen) closeTab() {
 			s.resultRows = nil
 			s.resultHeaders = nil
 			s.resultSelection = resultSelection{}
+			s.scriptReport = oracle.ScriptReport{}
 			s.setStatus("tab_shared")
 			s.stashTab()
 			s.refreshDocumentTitle()
@@ -120,6 +125,7 @@ func (s *screen) closeTab() {
 		// Avoid overwriting the destination with the removed tab's state.
 		s.activeTab = min(index, len(s.tabs)-1)
 		tab := s.tabs[s.activeTab]
+		s.scriptReport = tab.script
 		s.editor, s.table, s.document = tab.editor, tab.table, tab.document
 		s.resultRows, s.resultHeaders, s.resultSelection = tab.rows, tab.headers, tab.selection
 		s.setStatus(tab.status, tab.statusArgs...)

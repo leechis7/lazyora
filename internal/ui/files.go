@@ -42,8 +42,13 @@ func (s *screen) refreshDocumentTitle() {
 		title += "[" + tview.Escape(name) + mark + "] "
 	}
 	s.editor.SetTitle(title)
+	s.refreshTabs()
 }
 func (s *screen) newDocument() {
+	if len(s.tabs) > 0 {
+		s.newTab()
+		return
+	}
 	s.initDocument()
 	s.guardDocument(func() {
 		s.document = &sqlfile.Document{}
@@ -51,6 +56,14 @@ func (s *screen) newDocument() {
 		s.refreshDocumentTitle()
 		s.app.SetFocus(s.editor)
 	})
+}
+
+func (s *screen) closeDocument() {
+	if len(s.tabs) == 0 {
+		s.newDocument()
+		return
+	}
+	s.closeTab()
 }
 func (s *screen) guardDocument(next func()) {
 	if s.document == nil || !s.document.Dirty(s.editor.GetText()) {

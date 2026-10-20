@@ -16,6 +16,8 @@ import (
 )
 
 type job struct {
+	routine       oracle.Routine
+	routineInputs map[int]oracle.RoutineInput
 	query         *oracle.QuerySpec
 	path          string
 	dataset       exportdata.Dataset
@@ -32,6 +34,14 @@ type job struct {
 }
 
 type screen struct {
+	routineResultsFocus            tview.Primitive
+	routines                       []oracle.Routine
+	routineList, routineResultList *tview.List
+	routineInfo                    *tview.TextView
+	routineForm                    *tview.Form
+	routineSubmit                  func()
+	routineFocus                   tview.Primitive
+	routineResults                 oracle.RoutineResult
 	outputEnabled, outputTruncated bool
 	outputLines                    []string
 	outputSize                     int
@@ -364,6 +374,8 @@ func (s *screen) worker() {
 		var object oracle.Object
 		var source string
 		var arguments []oracle.Argument
+		var routines []oracle.Routine
+		var routineResult oracle.RoutineResult
 		var compilation oracle.Compilation
 		var script oracle.ScriptReport
 		var plan []oracle.PlanStep
@@ -430,6 +442,16 @@ func (s *screen) worker() {
 			object, err = session.ObjectInfo(j.ctx, j.object)
 		case "source":
 			source, err = session.Source(j.ctx, j.object)
+		case "routines":
+			object = j.object
+			if object.Name == "" {
+				object, err = session.FindObject(j.ctx, j.text)
+			}
+			if err == nil {
+				routines, err = session.Routines(j.ctx, object)
+			}
+		case "routine_run":
+			routineResult, err = session.RunRoutine(j.ctx, j.routine, j.routineInputs)
 		case "arguments":
 			arguments, err = session.Arguments(j.ctx, j.object)
 		case "compile_source":
@@ -494,6 +516,9 @@ func (s *screen) worker() {
 				if j.action == "source" {
 					s.sourceInfo.SetText(s.tr("browser_error") + ": " + err.Error())
 				}
+				if j.action == "routines" {
+					s.routineInfo.SetText(err.Error())
+				}
 				if j.action == "arguments" {
 					s.argumentInfo.SetText(s.tr("browser_error") + ": " + err.Error())
 				}
@@ -511,6 +536,7 @@ func (s *screen) worker() {
 					s.setStatus("plan_loaded", len(plan))
 				case "connect":
 					s.clearOutput()
+					s.routineResults = oracle.RoutineResult{}
 					s.clearBindValues()
 					s.connected = true
 					s.demo = false
@@ -562,8 +588,19 @@ func (s *screen) worker() {
 					s.setStatus("object_info_loaded", object.Name)
 				case "source":
 					s.acceptSource(source)
+				case "routines":
+					s.acceptRoutines(routines)
+				case "routine_run":
+					s.showRoutineResults(routineResult)
+					s.setStatus("routine_done")
 				case "arguments":
 					s.renderArguments(arguments)
+				}
+			}
+			if j.action == "routine_run" {
+				s.addOutput(routineResult.Output)
+				if err == nil && routineResult.Output.Error != "" {
+					s.setStatus("output_warning", routineResult.Output.Error)
 				}
 			}
 			if j.action == "execute" {

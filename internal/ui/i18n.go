@@ -4,6 +4,18 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"routine_no_outputs":     {"Completed without OUT / return values. DBMS_OUTPUT is available separately if enabled.", "OUT·반환값 없이 실행을 완료했습니다. DBMS_OUTPUT을 켰다면 별도 출력 창에서 확인하세요."},
+	"routine_execute":        {"Execute procedure / function", "프로시저·함수 실행"},
+	"routine_button":         {"Execute (Alt+E)", "실행 (Alt+E)"},
+	"routine_results":        {"Routine results", "루틴 실행 결과"},
+	"routine_scalars":        {"OUT / IN OUT / return values", "OUT · IN OUT · 반환값"},
+	"routine_default":        {"Use default", "기본값 사용"},
+	"routine_select":         {"Select a routine in the schema browser, or place the cursor on its object name.", "스키마 브라우저에서 루틴을 선택하거나 편집기에서 객체명에 커서를 놓으세요."},
+	"routine_hint":           {"Enter: choose signature. IN / IN OUT: value, NULL or known IN default. DATE: YYYY-MM-DD; TIMESTAMP: YYYY-MM-DD HH:MM:SS[.fraction]; BOOLEAN: true/false; RAW: hex. Cursor inputs must be NULL. Unsupported record/collection/LOB types are rejected. Older dictionaries may require explicit default values; overloaded routines always require explicit values.", "Enter: 실행할 인자 조합 선택. IN / IN OUT은 값·NULL·확인된 IN 기본값을 입력합니다. DATE: YYYY-MM-DD, TIMESTAMP: YYYY-MM-DD HH:MM:SS[.소수초], BOOLEAN: true/false, RAW: 16진수. 커서 입력은 NULL만 지원합니다. 레코드·컬렉션·LOB 인자는 제한합니다. 구버전 사전 및 오버로드에서는 기본값을 직접 입력하세요."},
+	"routine_confirm":        {"Execute this routine on the current connection? Its body may change data, commit or execute DDL. LazyOra does not commit or roll back automatically. IN values are not stored in files or history.", "현재 접속에서 루틴을 실행하시겠습니까? 본문에서 데이터 변경·커밋·DDL을 실행할 수 있습니다. LazyOra는 자동 커밋·롤백하지 않습니다. 입력값은 파일·이력에 저장하지 않습니다."},
+	"routine_done":           {"Routine completed · View > Routine results", "루틴 실행 완료 · 보기 > 루틴 실행 결과"},
+	"routine_result_hint":    {"Enter: open selected output in the result grid for copying/export. Cursor display is capped at 1,000 rows; export includes loaded rows only and never calls the routine again. Ctrl+C copies selection, Alt+Y copies a row, Alt+W exports. Esc returns to choose another output. View > Routine results reopens outputs.", "Enter: 선택한 출력을 결과창에서 복사·내보내기. 커서는 최대 1,000행이며 가져온 행만 저장하고 루틴을 재실행하지 않습니다. Ctrl+C 선택 복사, Alt+Y 행 복사, Alt+W 내보내기. Esc로 다른 출력을 선택합니다. 보기 > 루틴 실행 결과에서도 다시 열 수 있습니다."},
+	"footer_routine":         {"Enter Choose | F9 Run input form | Tab Fields / buttons | F1 Help | Esc Back / cancel execution", "Enter 선택 | F9 입력 화면 실행 | Tab 입력 / 버튼 | F1 도움말 | Esc 뒤로 / 실행 취소"},
 	"output_copy":            {"Copy output", "출력 복사"},
 	"output_view":            {"DBMS_OUTPUT", "DBMS_OUTPUT 출력"},
 	"output_toggle":          {"Enable / disable DBMS_OUTPUT", "DBMS_OUTPUT 켜기 / 끄기"},

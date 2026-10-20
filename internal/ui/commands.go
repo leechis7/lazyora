@@ -68,6 +68,8 @@ var commands = []command{
 	{"quick_describe", "quick_describe", menuView, []binding{{"Ctrl+D", tcell.KeyCtrlD, 0, 0}}},
 	{"settings", "settings", menuTools, nil},
 	{"passwords", "passwords", menuTools, []binding{{"Alt+K", tcell.KeyRune, tcell.ModAlt, 'k'}}},
+	{"routine_execute", "routine_execute", menuExecute, nil},
+	{"routine_results", "routine_results", menuView, nil},
 	{"help", "help", menuHelp, []binding{{"F1", tcell.KeyF1, 0, 0}}},
 }
 
@@ -104,6 +106,10 @@ func (s *screen) commandEnabled(id string) bool {
 		return false
 	}
 	switch id {
+	case "routine_execute":
+		return s.connected && !s.busy && !s.transactionUncertain
+	case "routine_results":
+		return !s.busy && (len(s.routineResults.Scalars.Rows) > 0 || len(s.routineResults.Cursors) > 0)
 	case "output_view":
 		return true
 	case "output_toggle":
@@ -165,6 +171,10 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "routine_execute":
+		s.requestRoutine()
+	case "routine_results":
+		s.showRoutineResults(s.routineResults)
 	case "output_view":
 		s.showOutput()
 	case "output_toggle":

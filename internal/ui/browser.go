@@ -297,6 +297,7 @@ func (s *screen) openObject(object oracle.Object) {
 	}
 	if object.HasArguments() {
 		buttons.AddItem(clickable(tview.NewButton(s.tr("arguments_button")).SetSelectedFunc(s.showArguments)), 0, 1, false)
+		buttons.AddItem(clickable(tview.NewButton(s.tr("routine_button")).SetSelectedFunc(func() { s.showRoutine(s.object, "") })), 0, 1, false)
 	}
 	buttons.AddItem(close, 0, 1, false)
 	root := tview.NewFlex().SetDirection(tview.FlexRow).

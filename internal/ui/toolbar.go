@@ -100,6 +100,9 @@ func (s *screen) refreshFooter() {
 	case "plan":
 		hint = "footer_plan"
 		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+	case "routines", "routine_input", "routine_results", "routine_grid":
+		hint = "footer_routine"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
 	case "bind":
 		hint = "footer_bind"
 		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+Enter", "execute", tcell.KeyEnter, tcell.ModCtrl}, {"Esc", "cancel", tcell.KeyEscape, 0}}

@@ -58,6 +58,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if page == "script" {
 		return s.scriptKey(event)
 	}
+	if page == "routines" || page == "routine_input" || page == "routine_results" || page == "routine_grid" {
+		return s.routineKey(event, page)
+	}
 	if page == "bind" {
 		return s.bindKey(event)
 	}
@@ -215,6 +218,10 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 	}
 	if page == "object" {
+		if alt && letter == 'e' {
+			s.showRoutine(s.object, "")
+			return nil
+		}
 		if alt && letter == 's' {
 			s.showSource()
 			return nil
@@ -259,6 +266,10 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return event
 	}
 	if page == "arguments" {
+		if alt && letter == 'e' {
+			s.showRoutine(s.object, "")
+			return nil
+		}
 		if event.Key() == tcell.KeyEscape {
 			s.closeArguments()
 			return nil

@@ -2,6 +2,8 @@ module lazyora
 
 go 1.24.0
 
+replace github.com/rivo/tview => ./third_party/tview
+
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/gdamore/tcell/v2 v2.13.10

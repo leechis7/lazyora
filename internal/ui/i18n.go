@@ -4,6 +4,7 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"syntax_colors":          {"SQL colors: blue keywords, teal functions, purple types/numbers, red strings, green comments, ochre binds. Selection overrides syntax colors.", "SQL 색상: 파랑 키워드 · 청록 함수 · 보라 타입/숫자 · 빨강 문자열 · 초록 주석 · 갈색 바인드. 선택 영역은 기존 강조색이 우선합니다."},
 	"export":                 {"Export results", "조회 결과 내보내기"},
 	"export_format":          {"Format", "파일 형식"},
 	"export_scope":           {"Scope", "저장 범위"},

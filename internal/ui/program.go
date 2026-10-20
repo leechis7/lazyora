@@ -62,7 +62,7 @@ func (s *screen) showSource() {
 	styleBox(s.sourceEditor.Box)
 	s.sourceEditor.SetBackgroundColor(palette.field).SetTitleColor(palette.background)
 	s.sourceEditor.SetTextStyle(fieldStyle()).SetSelectedStyle(focusStyle())
-	s.sourceEditor.SetChangedFunc(s.refreshSourceTitle)
+	s.colorEditor(s.sourceEditor, s.refreshSourceTitle)
 	s.sourceEditor.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if !s.sourceLoaded || s.busy {
 			return nil

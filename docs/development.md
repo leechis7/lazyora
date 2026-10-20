@@ -42,6 +42,8 @@ Release Actions는 태그와 소스 버전의 일치 여부 및 태그 커밋의
 
 ## 자동화 설정
 
+SQL 구문 색상은 tview v0.42.0의 로컬 렌더링 확장을 사용합니다. [원본과 변경 범위](../third_party/tview/README.lazyora.md)를 확인하세요. 의존성 갱신 시 원본과 다른 Go 파일은 textarea.go 하나여야 하며, 렌더링 회귀 검사를 함께 수행합니다. 릴리스에는 MIT 라이선스 고지를 TVIEW-LICENSE.txt로 첨부합니다.
+
 - `.github/workflows/ci.yml`: `dev`·`main` 대상 PR 및 두 브랜치 푸시 검증
 - `.github/workflows/release.yml`: 버전 태그 푸시 시 정식 릴리스 발행
 - CI·Release의 Go 버전은 `mise.toml`과 함께 갱신합니다.

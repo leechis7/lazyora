@@ -45,9 +45,10 @@ jobs:
           set -euo pipefail
           mkdir -p dist
           cp bin/lazyora-linux-amd64 bin/lazyora-linux-arm64 bin/lazyora-windows-amd64.exe bin/lazyora-windows-arm64.exe bin/lazyora-darwin-amd64 bin/lazyora-darwin-arm64 LICENSE README.md dist/
+          cp third_party/tview/LICENSE.txt dist/TVIEW-LICENSE.txt
           ./dist/lazyora-linux-amd64 --version
           cd dist
-          sha256sum lazyora-linux-amd64 lazyora-linux-arm64 lazyora-windows-amd64.exe lazyora-windows-arm64.exe lazyora-darwin-amd64 lazyora-darwin-arm64 LICENSE README.md > SHA256SUMS
+          sha256sum lazyora-linux-amd64 lazyora-linux-arm64 lazyora-windows-amd64.exe lazyora-windows-arm64.exe lazyora-darwin-amd64 lazyora-darwin-arm64 LICENSE README.md TVIEW-LICENSE.txt > SHA256SUMS
           sha256sum --check SHA256SUMS
       - name: Publish GitHub Release
         env:

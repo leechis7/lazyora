@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -15,6 +16,7 @@ import (
 )
 
 type job struct {
+	query         *oracle.QuerySpec
 	path          string
 	dataset       exportdata.Dataset
 	exportOptions exportdata.Options
@@ -29,6 +31,7 @@ type job struct {
 }
 
 type screen struct {
+	resultQuery            *oracle.QuerySpec
 	exportForm             *tview.Form
 	exportInfo             *tview.TextView
 	exportFocus            tview.Primitive
@@ -206,6 +209,14 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 			}
 			return tview.MouseConsumed, nil
 		}
+		if page == "export" && s.busy {
+			button := s.exportForm.GetButton(1)
+			x, y := event.Position()
+			if button.InRect(x, y) {
+				button.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
+			}
+			return tview.MouseConsumed, nil
+		}
 		if page == "file" || page == "script" || page == "bind" || page == "plan" || page == "export" {
 			pageRoot.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
 			return tview.MouseConsumed, nil
@@ -310,7 +321,11 @@ func (s *screen) submit(j job) {
 		return
 	}
 	s.busy = true
-	j.ctx, s.cancel = context.WithTimeout(context.Background(), 60*time.Second)
+	if j.action == "export" && j.query != nil {
+		j.ctx, s.cancel = context.WithCancel(context.Background())
+	} else {
+		j.ctx, s.cancel = context.WithTimeout(context.Background(), 60*time.Second)
+	}
 	if j.action == "schemas" || j.action == "objects" || j.action == "columns" || j.action == "object_info" || j.action == "source" || j.action == "arguments" {
 		s.setStatus("browser_loading")
 	} else {
@@ -338,11 +353,43 @@ func (s *screen) worker() {
 		var compilation oracle.Compilation
 		var script oracle.ScriptReport
 		var plan []oracle.PlanStep
-		var exported int
+		var exported int64
 		var err error
 		switch j.action {
 		case "export":
-			exported, err = exportdata.Save(j.ctx, j.path, j.revision, j.dataset, j.exportOptions)
+			progressAt := time.Time{}
+			options := j.exportOptions
+			options.Progress = func(count int64) {
+				if count != 1 && time.Since(progressAt) < 250*time.Millisecond {
+					return
+				}
+				progressAt = time.Now()
+				s.app.QueueUpdateDraw(func() {
+					if s.exportInfo != nil {
+						s.exportInfo.SetText(fmt.Sprintf(s.tr("export_progress"), count))
+					}
+				})
+			}
+			if j.query != nil {
+				options.Unlimited = true
+				if session == nil {
+					err = fmt.Errorf("connect before exporting the full result")
+					break
+				}
+				exported, err = exportdata.SaveStream(j.ctx, j.path, j.revision, func() (exportdata.Source, error) {
+					rows, openErr := session.OpenQuery(j.ctx, j.query)
+					if openErr != nil {
+						return exportdata.Source{}, openErr
+					}
+					if !slices.Equal(rows.Columns, j.dataset.Columns) {
+						rows.Close()
+						return exportdata.Source{}, fmt.Errorf("result columns changed; run the query again before exporting")
+					}
+					return exportdata.Source{Columns: rows.Columns, Next: rows.Next, Close: rows.Close}, nil
+				}, options)
+			} else {
+				exported, err = exportdata.SaveStream(j.ctx, j.path, j.revision, func() (exportdata.Source, error) { return exportdata.FromDataset(j.dataset), nil }, options)
+			}
 		case "connect":
 			var next *oracle.Session
 			next, err = oracle.Open(j.ctx, j.config)
@@ -442,7 +489,11 @@ func (s *screen) worker() {
 				switch j.action {
 				case "export":
 					s.closeExport()
-					s.setStatus("export_saved", exported, j.path)
+					if j.query != nil {
+						s.setStatus("export_full_saved", exported, j.path)
+					} else {
+						s.setStatus("export_saved", exported, j.path)
+					}
 				case "plan":
 					s.showPlan(j.text, plan)
 					s.setStatus("plan_loaded", len(plan))
@@ -511,6 +562,7 @@ func (s *screen) worker() {
 }
 
 func (s *screen) render(result oracle.Result) {
+	s.resultQuery = result.Query
 	s.resultTruncated = result.Truncated
 	s.resultValues = make([][]oracle.Cell, len(result.Rows))
 	for i, row := range result.Rows {

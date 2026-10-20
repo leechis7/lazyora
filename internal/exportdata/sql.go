@@ -95,7 +95,7 @@ func SQLLiteral(cell oracle.Cell) (string, error) {
 	}
 }
 
-func writeSQL(ctx context.Context, w io.Writer, data Dataset, options Options) error {
+func writeSQL(ctx context.Context, w io.Writer, r *rowReader, options Options) error {
 	table, err := targetIdentifier(options.Table)
 	if err != nil {
 		return err
@@ -109,9 +109,9 @@ func writeSQL(ctx context.Context, w io.Writer, data Dataset, options Options) e
 	}
 	columns := options.Columns
 	if len(columns) == 0 {
-		columns = data.Columns
+		columns = r.source.Columns
 	}
-	if len(columns) != len(data.Columns) {
+	if len(columns) != len(r.source.Columns) {
 		return fmt.Errorf("target column count must match exported columns")
 	}
 	quoted := make([]string, len(columns))
@@ -126,20 +126,25 @@ func writeSQL(ctx context.Context, w io.Writer, data Dataset, options Options) e
 	if _, err = io.WriteString(w, "-- Generated INSERT statements only; no COMMIT. Review target names before executing.\n"); err != nil {
 		return err
 	}
-	for row, values := range data.Rows {
-		if err = ctx.Err(); err != nil {
-			return err
+	for {
+		values, nextErr := r.next()
+		if nextErr == io.EOF {
+			break
+		}
+		if nextErr != nil {
+			return nextErr
 		}
 		literals := make([]string, len(values))
 		for col, value := range values {
 			literals[col], err = SQLLiteral(value)
 			if err != nil {
-				return fmt.Errorf("row %d column %d: %w", row+1, col+1, err)
+				return fmt.Errorf("row %d column %d: %w", r.count+1, col+1, err)
 			}
 		}
 		if _, err = fmt.Fprintf(w, "INSERT INTO %s (%s) VALUES (%s);\n", table, strings.Join(quoted, ", "), strings.Join(literals, ", ")); err != nil {
 			return err
 		}
+		r.written()
 	}
 	return nil
 }

@@ -3,8 +3,11 @@ package oracle_test
 import (
 	"bytes"
 	"context"
+	"encoding/csv"
+	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
@@ -139,5 +142,81 @@ func TestOracleExportIntegration(t *testing.T) {
 	}
 	if err = s.Finish(false); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestOracleFullExportIntegration(t *testing.T) {
+	s := workflowSession(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	before, err := s.Execute(ctx, "SELECT amount FROM sample_rows WHERE id=1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.Execute(ctx, "UPDATE sample_rows SET amount=amount+123 WHERE id=1"); err != nil {
+		t.Fatal(err)
+	}
+	values := map[string]oracle.BindValue{"N": {Kind: "number", Text: "2507"}, "TEXT": {Kind: "text", Text: "한글 '\n탭\t값"}}
+	query := "SELECT level AS n, :text AS txt, CASE WHEN mod(level,2)=0 THEN NULL ELSE 'NULL' END AS optional FROM dual CONNECT BY level <= :n ORDER BY level"
+	result, err := s.Execute(ctx, query, values)
+	if err != nil || len(result.Rows) != 1000 || !result.Truncated || result.Query == nil {
+		t.Fatalf("preview: %d %v", len(result.Rows), err)
+	}
+	values["N"] = oracle.BindValue{Kind: "number", Text: "1"}
+	path := filepath.Join(t.TempDir(), "all.csv")
+	revision, _ := exportdata.Inspect(path)
+	count, err := exportdata.SaveStream(ctx, path, revision, func() (exportdata.Source, error) {
+		rows, err := s.OpenQuery(ctx, result.Query)
+		if err != nil {
+			return exportdata.Source{}, err
+		}
+		return exportdata.Source{Columns: rows.Columns, Next: rows.Next, Close: rows.Close}, nil
+	}, exportdata.Options{Format: "csv", Headers: true, Unlimited: true, NullText: `\N`})
+	if err != nil || count != 2507 {
+		t.Fatalf("full export: %d %v", count, err)
+	}
+	file, err := os.Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	records, err := csv.NewReader(file).ReadAll()
+	file.Close()
+	if err != nil || len(records) != 2508 || records[2507][0] != "2507" || records[1][1] != "한글 '\n탭\t값" || records[1][2] != "NULL" || records[2][2] != `\N` {
+		t.Fatal("full export values truncated/corrupted", err)
+	}
+	// Cancellation after crossing the display cap must preserve the destination
+	// and leave this session's uncommitted DML available for explicit rollback.
+	revision, _ = exportdata.Inspect(path)
+	exportCtx, stop := context.WithCancel(ctx)
+	defer stop()
+	processed := int64(0)
+	_, err = exportdata.SaveStream(exportCtx, path, revision, func() (exportdata.Source, error) {
+		rows, err := s.OpenQuery(exportCtx, result.Query)
+		if err != nil {
+			return exportdata.Source{}, err
+		}
+		return exportdata.Source{Columns: rows.Columns, Next: rows.Next, Close: rows.Close}, nil
+	}, exportdata.Options{Format: "csv", Unlimited: true, Progress: func(n int64) {
+		processed = n
+		if n == 1500 {
+			stop()
+		}
+	}})
+	if !errors.Is(err, context.Canceled) || processed != 1500 {
+		t.Fatalf("cancel: %d %v", processed, err)
+	}
+	latest, _ := exportdata.Inspect(path)
+	if latest != revision {
+		t.Fatal("cancellation changed destination")
+	}
+	if !s.PendingChanges() || len(s.PendingWork().Statements) != 1 {
+		t.Fatal("export changed pending work")
+	}
+	if err = s.Finish(false); err != nil {
+		t.Fatal(err)
+	}
+	after, err := s.Execute(ctx, "SELECT amount FROM sample_rows WHERE id=1")
+	if err != nil || after.Rows[0][0] != before.Rows[0][0] {
+		t.Fatal("export resolved shared transaction", err)
 	}
 }

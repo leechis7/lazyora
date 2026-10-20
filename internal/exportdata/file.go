@@ -36,6 +36,13 @@ func Inspect(path string) (Revision, error) {
 // complete success. Revision checks detect observed external changes; the lock
 // cooperates with both SQL saves and other exports from LazyOra.
 func Save(ctx context.Context, path string, expected Revision, data Dataset, options Options) (int, error) {
+	count, err := SaveStream(ctx, path, expected, func() (Source, error) { return FromDataset(data), nil }, options)
+	return int(count), err
+}
+
+// SaveStream opens the source only after validating the destination and
+// acquiring its lock. The live DB cursor closes before replacing any file.
+func SaveStream(ctx context.Context, path string, expected Revision, open func() (Source, error), options Options) (int64, error) {
 	if err := ctx.Err(); err != nil {
 		return 0, err
 	}
@@ -71,8 +78,19 @@ func Save(ctx context.Context, path string, expected Revision, data Dataset, opt
 		return 0, err
 	}
 	defer os.Remove(file.Name())
+	var count int64
 	if err = file.Chmod(mode); err == nil {
-		err = Write(ctx, file, data, options)
+		var source Source
+		source, err = open()
+		if err == nil {
+			count, err = WriteStream(ctx, file, source, options)
+			if source.Close != nil {
+				closeErr := source.Close()
+				if err == nil {
+					err = closeErr
+				}
+			}
+		}
 	}
 	if err == nil {
 		err = file.Sync()
@@ -97,5 +115,5 @@ func Save(ctx context.Context, path string, expected Revision, data Dataset, opt
 	if err = os.Rename(file.Name(), path); err != nil {
 		return 0, err
 	}
-	return len(data.Rows), nil
+	return count, nil
 }

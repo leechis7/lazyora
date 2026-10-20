@@ -11,24 +11,28 @@ func (s *screen) confirmSQL(text string, risk oracle.SQLRisk) {
 }
 
 func (s *screen) confirmExecution(text, risk string, submit func(string)) {
+	s.confirmActionPreview(text, s.tr("sql_risk_"+risk)+"\n\n"+s.tr("sql_risk_limits"), s.tr("sql_confirm_title"), s.tr("execute"), func() { submit(text) })
+}
+
+func (s *screen) confirmActionPreview(text, message, title, button string, submit func()) {
 	if s.sqlConfirmText != nil || s.programModal != nil || s.busy {
 		return
 	}
 	s.sqlConfirmFocus = s.app.GetFocus()
-	reason := tview.NewTextView().SetWrap(true).SetText(s.tr("sql_risk_"+string(risk)) + "\n\n" + s.tr("sql_risk_limits"))
+	reason := tview.NewTextView().SetWrap(true).SetText(message)
 	reason.SetBackgroundColor(palette.background)
 	reason.SetTextColor(tcell.ColorYellow)
 	preview := tview.NewTextView().SetText(text).SetDynamicColors(false).SetWrap(false).SetScrollable(true)
-	preview.SetBorder(true).SetTitle(s.tr("sql_confirm_title"))
+	preview.SetBorder(true).SetTitle(title)
 	styleBox(preview.Box)
 	preview.SetTextColor(palette.text)
 	s.sqlConfirmText = preview
-	execute := clickable(tview.NewButton(s.tr("execute")).SetSelectedFunc(func() {
+	execute := clickable(tview.NewButton(button).SetSelectedFunc(func() {
 		if s.busy {
 			return
 		}
 		s.closeSQLConfirmation()
-		submit(text) // Execute the reviewed snapshot, never a later editor value.
+		submit() // Submit the reviewed snapshot, never a later editor value.
 	}))
 	cancel := clickable(tview.NewButton(s.tr("cancel")).SetSelectedFunc(s.closeSQLConfirmation))
 	buttons := tview.NewFlex().AddItem(execute, 0, 1, false).AddItem(cancel, 0, 1, true)

@@ -56,6 +56,8 @@ func (s *screen) exportDataset(scope int) (exportdata.Dataset, error) {
 	return data, nil
 }
 
+const exportFullScope = 3
+
 func (s *screen) showExport() {
 	if s.busy || s.exportForm != nil || len(s.resultHeaders) == 0 {
 		return
@@ -82,9 +84,12 @@ func (s *screen) showExport() {
 		}
 	})
 	form.AddFormItem(format).AddInputField(s.tr("file_path"), filepath.Join(directory, "results.csv"), 0, nil, nil)
-	form.AddFormItem(s.newChoice(s.tr("export_scope"), []string{s.tr("export_all"), s.tr("export_selection"), s.tr("export_row")}, 0, func(_ string, index int) {
+	form.AddFormItem(s.newChoice(s.tr("export_scope"), []string{s.tr("export_all"), s.tr("export_selection"), s.tr("export_row"), s.tr("export_full")}, 0, func(_ string, index int) {
 		if form.GetFormItemCount() < 9 {
 			return
+		}
+		if index == exportFullScope {
+			index = 0
 		}
 		if data, err := s.exportDataset(index); err == nil {
 			form.GetFormItem(8).(*tview.InputField).SetText(csvColumns(data.Columns))
@@ -108,6 +113,19 @@ func (s *screen) showExport() {
 		}
 		index, _ := format.GetCurrentOption()
 		scope, _ := form.GetFormItem(2).(*choiceField).GetCurrentOption()
+		var query *oracle.QuerySpec
+		if scope == exportFullScope {
+			if !s.connected || s.resultQuery == nil {
+				info.SetText(s.tr("export_no_query"))
+				return
+			}
+			query, err = oracle.NewQuerySpec(s.resultQuery.Text, s.resultQuery.Bindings)
+			if err != nil {
+				info.SetText(err.Error())
+				return
+			}
+			scope = 0
+		}
 		data, err := s.exportDataset(scope)
 		if err != nil {
 			info.SetText(err.Error())
@@ -141,15 +159,25 @@ func (s *screen) showExport() {
 			return
 		}
 		write := func() {
-			s.submit(job{action: "export", path: path, dataset: data, exportOptions: options, revision: revision})
+			focusForm(s, form, form.GetFormItemCount()+1)
+			s.submit(job{action: "export", path: path, dataset: data, exportOptions: options, revision: revision, query: query})
 		}
-		if revision.Exists {
+		if query != nil {
+			// Replaying is always explicit, even for a new destination. Bind values
+			// never enter the confirmation text, history, logs or saved settings.
+			data.Rows = nil
+			message := s.tr("export_requery_confirm")
+			if revision.Exists {
+				message += "\n" + s.tr("export_full_overwrite")
+			}
+			s.confirmActionPreview(query.Text+"\n\n"+s.tr("file_path")+": "+path, message, s.tr("export_full"), s.tr("export"), write)
+		} else if revision.Exists {
 			s.showProgramConfirm(fmt.Sprintf(s.tr("export_overwrite"), len(data.Rows), tview.Escape(path)), write)
 		} else {
 			write()
 		}
 	}
-	form.AddButton(s.tr("export"), s.exportSubmit).AddButton(s.tr("cancel"), s.closeExport)
+	form.AddButton(s.tr("export"), s.exportSubmit).AddButton(s.tr("cancel"), s.cancelExport)
 	form.SetBorder(true).SetTitle(s.tr("export"))
 	styleForm(form)
 	for i := 0; i < form.GetButtonCount(); i++ {
@@ -158,6 +186,16 @@ func (s *screen) showExport() {
 	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(info, 5, 0, false).AddItem(form, 0, 1, true)
 	s.pages.AddPage("export", root, true, true)
 	s.app.SetFocus(form)
+}
+
+func (s *screen) cancelExport() {
+	if s.busy {
+		if s.cancel != nil {
+			s.cancel()
+		}
+		return
+	}
+	s.closeExport()
 }
 
 func (s *screen) closeExport() {
@@ -177,15 +215,21 @@ func (s *screen) closeExport() {
 }
 
 func (s *screen) exportKey(event *tcell.EventKey) *tcell.EventKey {
+	if s.busy {
+		if event.Key() == tcell.KeyEscape || (event.Key() == tcell.KeyEnter && s.exportForm.GetButton(1).HasFocus()) {
+			s.cancelExport()
+		}
+		if event.Key() == tcell.KeyTab || event.Key() == tcell.KeyBacktab {
+			focusForm(s, s.exportForm, s.exportForm.GetFormItemCount()+1)
+		}
+		if event.Key() == tcell.KeyF1 {
+			s.showHelp()
+		}
+		return nil
+	}
 	switch event.Key() {
 	case tcell.KeyEscape:
-		if s.busy {
-			if s.cancel != nil {
-				s.cancel()
-			}
-		} else {
-			s.closeExport()
-		}
+		s.closeExport()
 		return nil
 	case tcell.KeyF1:
 		s.showHelp()

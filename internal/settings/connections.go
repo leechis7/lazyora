@@ -108,10 +108,3 @@ func LoadConnections(path string) ([]Connection, error) {
 	}
 	return profiles, nil
 }
-
-func SaveConnections(path string, profiles []Connection) error {
-	if err := validateConnections(profiles); err != nil {
-		return err
-	}
-	return saveJSON(path, profiles)
-}

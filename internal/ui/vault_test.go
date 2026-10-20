@@ -267,7 +267,7 @@ func TestForgottenMasterAllowsManualDatabaseLogin(t *testing.T) {
 		t.Fatal(err)
 	}
 	store.Lock()
-	if err = settings.SaveConnections(settings.ConnectionsPath(s.prefsPath), []settings.Connection{profile}); err != nil {
+	if err = settings.SaveConnections(settings.ConnectionsPath(s.prefsPath), nil, []settings.Connection{profile}); err != nil {
 		t.Fatal(err)
 	}
 	before, err := os.ReadFile(path)

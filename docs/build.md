@@ -79,6 +79,27 @@ Docker Oracle Free에서 SQL/PLSQL 순차 실행·명시적 COMMIT/ROLLBACK·다
 
 이번 기능의 실제 CentOS 7.4·Oracle 10g·SID 접속·Windows/macOS TUI는 재시험하지 않았습니다. GitHub CI에서는 6종 교차 빌드와 Windows AMD64 버전 명령을 검사합니다. 자세한 지원 한계는 [v0.5.0 안내](releases/v0.5.0.md)를 참고하세요.
 
+## SQL 분석 성능 개선 (LORA-39, 2026-10-21)
+
+문장 시작 행을 계산할 때 원문 앞부분을 반복해서 세던 작업을 줄별 순차 탐색으로 변경했습니다. 긴 한 줄의 여러 나눗셈 `/`도 해당 줄이 PL/SQL 구분 줄인지 한 번만 판정합니다. UTF-8 바이트 범위와 행 번호, CRLF·주석·인용 문자열·PL/SQL 구분 규칙은 유지합니다.
+
+Linux ARM64·Go 1.26.9에서 다음 벤치마크를 변경 전후 같은 조건으로 3회씩 실행한 중앙값입니다. 다른 머신의 성능을 보장하는 수치는 아닙니다.
+
+```bash
+go test ./internal/oracle -run '^$' -bench 'Benchmark(Statements|AtStatement)$' -benchtime=1x -count=3
+```
+
+| 입력 | 변경 전 | 변경 후 |
+| --- | ---: | ---: |
+| SELECT 2만 문장, 0.4MB | 213.225ms | 19.964ms |
+| SELECT 4만 문장, 0.8MB | 806.815ms | 37.458ms |
+| SELECT 8만 문장, 1.6MB | 3157.930ms | 83.045ms |
+| 한 줄의 나눗셈 2만 개 | 628.853ms | 4.587ms |
+| 한 줄의 나눗셈 4만 개 | 2506.816ms | 11.315ms |
+| 8만 문장에서 커서 위치 선택 | 3164.235ms | 85.455ms |
+
+행 인덱스용 별도 배열은 추가하지 않습니다. 8만 문장의 누적 메모리 할당은 변경 전후 약 88.9MB로 비슷하며 이는 최대 RSS가 아닙니다. 커서 SQL 선택은 여전히 UI 입력 처리 중 파일 전체를 분석하므로 더 큰 파일·느린 CPU의 지연이나 토큰화 메모리까지 없애는 변경은 아닙니다.
+
 ## 개발 정보
 
 앱 버전과 개발자·라이선스 정보의 원본은 `internal/appinfo/info.go`입니다. 일반 `go build`·`go run`과 Makefile 빌드가 동일한 버전을 사용합니다. 버전 변경 시 이 파일과 README의 현재 버전을 함께 갱신합니다.

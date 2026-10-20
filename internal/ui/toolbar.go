@@ -165,6 +165,9 @@ func (s *screen) refreshFooter() {
 		keys[2] = footerKey{"Ctrl+S", "save", tcell.KeyCtrlS, tcell.ModNone}
 		keys[3] = footerKey{"Esc", "cancel", tcell.KeyEscape, tcell.ModNone}
 		keys = append(keys, footerKey{"Alt+K", "passwords", tcell.KeyRune, tcell.ModAlt})
+	case "reconnect":
+		hint = "footer_reconnect"
+		keys = []footerKey{{"Esc", "cancel", tcell.KeyEscape, 0}}
 	case "settings":
 		hint = "footer_settings"
 		keys[1] = footerKey{"Ctrl+S", "save", tcell.KeyCtrlS, tcell.ModNone}
@@ -223,7 +226,7 @@ func (s *screen) refreshFooter() {
 		}
 
 	}
-	if s.busy {
+	if s.busy && page != "help" {
 		text = s.tr("footer_busy") + " | " + text
 	}
 	s.footer.SetText(text)

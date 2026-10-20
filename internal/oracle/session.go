@@ -185,6 +185,10 @@ func (s *Session) Finish(commit bool) error {
 // conservative client-side warning, not a database transaction inventory.
 func (s *Session) PendingChanges() bool { return s.pending }
 
+// TransactionUncertain reports a failed transaction resolution. Repeating
+// Commit/Rollback cannot establish its outcome; recovery needs explicit consent.
+func (s *Session) TransactionUncertain() bool { return s.finishErr != nil }
+
 func (s *Session) Close() {
 	_ = s.Finish(false)
 	_ = s.conn.Close()

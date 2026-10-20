@@ -205,6 +205,46 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         print("Full DB result selection, default Cancel, explicit requery and 2507-row CSV: passed")
 
         send(b"\x1bOQ\x1bOQ\x01\x0b")
+        send(b"BEGIN DBMS_SESSION.SLEEP(3); END;")
+        output.clear()
+        send(b"\x1b[20~")
+        wait_for("Running Run")
+        send(b"\x1bOP")  # F1 while the real Oracle call is still running.
+        wait_for("Help — F1 / Esc closes")
+        output.clear()
+        send(b"\x1b")  # Close help, leaving the Oracle call running.
+        wait_for("Statement completed")
+        assert b"Error:" not in output, "closing help cancelled the Oracle call"
+        print("Running Oracle SQL survives F1 help and Escape close: passed")
+
+        send(b"\x1bOQ\x1bOQ\x01\x0b")
+        send(b"UPDATE sample_rows SET title=title WHERE id=1")
+        output.clear()
+        send(b"\x1b[20~")
+        wait_for("affected rows: 1")
+        output.clear()
+        send(b"\x1bl\x1b[13;5u")
+        wait_for("Uncommitted changes remain")
+        send(b"\r")  # Default cancels and restores the connection form.
+        output.clear()
+        send(b"\x1b[13;5u")
+        wait_for("Uncommitted changes remain")
+        send(b"\x1b")  # Give a standalone Esc time to cancel the modal.
+        send(b"\x1bw\x01\x0b")  # Then edit the target password.
+        send(b"invalid-test-password")
+        output.clear()
+        send(b"\x1b[13;5u")
+        wait_for("Uncommitted changes remain")
+        send(b"\x1b[D\x1b[D\r")  # Commit choice; failed target must not commit.
+        wait_for("Error:")  # go-ora may report a protocol/auth error instead of ORA-01017.
+        output.clear()
+        send(b"\x1bl\x1b[13;5u")  # Reopen with the valid environment password.
+        wait_for("Uncommitted changes remain")  # Existing work survived failure.
+        send(b"\x1b[D\r")  # Explicit rollback and connect.
+        wait_for("SAMPLE_ROWS")
+        print("Reconnect default Cancel, failed target preserves pending work, explicit rollback: passed")
+
+        send(b"\x1bOQ\x1bOQ\x01\x0b")
         send(b"UPDATE sample_rows SET title=title WHERE id=1")
         output.clear()
         send(b"\x1b[20~")

@@ -20,7 +20,15 @@ git switch -c feature/LORA-17-schema-browser
 
 CI에서 만든 바이너리는 실행 결과의 `binaries` 아티팩트에서 7일 동안 받을 수 있습니다. GitHub 아티팩트 다운로드 시 실행 권한이 사라졌다면 `chmod +x`를 적용합니다. CI에는 실DB·구형 커널 검증이 포함되지 않으므로 Oracle·CentOS 시험은 별도로 진행합니다.
 
+Windows·macOS 실행기에서는 대소문자가 다른 사용자 지정 설정명으로 설정·프로필·암호 파일을 실제 생성·갱신하여 서로 덮어쓰지 않는지도 검사합니다. 이 검사는 실제 TUI·Oracle 접속 검증을 대신하지 않습니다.
+
+macOS 설정 경로 검사는 `macos-15-intel`에서 실행합니다. CPU와 무관한 파일명 충돌 검사이며, ARM 실행기의 용량 부족 대기 지연을 줄이기 위해 실행기 풀을 고정합니다. macOS AMD64·ARM64 실행파일은 별도 전체 빌드 단계에서 모두 검증합니다.
+
 ## 릴리스
+
+신규 기능이 포함된 릴리스는 **minor**를 올리고 patch를 0으로 초기화합니다(예: `0.6.0 → 0.7.0`). 버그 수정만 포함하면 **patch**를 올립니다(예: `0.6.0 → 0.6.1`). `0.x` 버전에도 같은 원칙을 적용합니다. 사용자가 릴리스 버전을 명시하면 그 지정을 따릅니다.
+
+**major는 제품 버전으로 사용자만 결정합니다.** 에이전트는 기능 개수·제품 완성도·호환성 변경을 이유로 major를 임의로 올리지 않습니다. 사용자의 명시적인 major 변경 지시 전까지 현재 major를 유지하며, `0.9.0` 다음 기능 릴리스는 `0.10.0`입니다.
 
 1. `dev`에서 릴리스 준비용 feature 브랜치를 만들고 `internal/appinfo/info.go`와 README의 버전을 갱신합니다. CHANGELOG의 `Unreleased` 변경을 해당 버전과 날짜로 옮기고 비교 링크도 갱신합니다. `docs/releases/vX.Y.Z.md`에 기능·단축키 변경·다운로드·지원 범위를 적으면 Release Actions가 해당 문서를 릴리스 본문으로 사용합니다. 버전 태그는 `vX.Y.Z` 형식으로 사용합니다.
 2. 변경을 `dev`로 병합하고 `dev → main` PR을 생성합니다.
@@ -39,6 +47,8 @@ Release Actions는 태그와 소스 버전의 일치 여부 및 태그 커밋의
 릴리스 후 `main`의 merge commit 또는 긴급 수정이 `dev`에도 포함되도록 `main → dev`를 merge commit으로 동기화합니다. 정상 릴리스 시 `dev → main` PR을 squash/rebase 방식으로 병합하지 않습니다.
 
 ## 자동화 설정
+
+SQL 구문 색상은 tview v0.42.0의 로컬 렌더링 확장을 사용합니다. [원본과 변경 범위](../third_party/tview/README.lazyora.md)를 확인하세요. 의존성 갱신 시 원본과 다른 Go 파일은 textarea.go 하나여야 하며, 렌더링 회귀 검사를 함께 수행합니다. 릴리스에는 MIT 라이선스 고지를 TVIEW-LICENSE.txt로 첨부합니다.
 
 - `.github/workflows/ci.yml`: `dev`·`main` 대상 PR 및 두 브랜치 푸시 검증
 - `.github/workflows/release.yml`: 버전 태그 푸시 시 정식 릴리스 발행

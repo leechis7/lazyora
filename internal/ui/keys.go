@@ -35,6 +35,17 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		s.action("quit")
 		return nil
 	}
+	if page == "reconnect" {
+		if event.Key() == tcell.KeyEscape {
+			s.cancelReconnect()
+			return nil
+		}
+		// Modified Enter is the connection shortcut, never implicit approval.
+		if executeEnter || event.Key() == tcell.KeyCtrlC || event.Key() == tcell.KeyF1 {
+			return nil
+		}
+		return event
+	}
 	if page == "export" && s.busy {
 		return s.exportKey(event)
 	}
@@ -170,6 +181,19 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if page == "main" && s.browserHasFocus() && (s.browserUsers.IsOpen() || s.browserTypes.IsOpen()) && event.Key() == tcell.KeyEscape {
 		return event
 	}
+	// Help owns its close keys even while a background operation is running.
+	// Closing the overlay must never be mistaken for cancelling that operation.
+	if page == "help" {
+		if event.Key() == tcell.KeyRune && event.Modifiers() == 0 && event.Rune() >= '0' && event.Rune() <= '8' {
+			s.helpJump(int(event.Rune() - '0'))
+			return nil
+		}
+		if event.Key() == tcell.KeyEscape || event.Key() == tcell.KeyF1 || (alt && letter == 'x') {
+			s.closeHelp()
+			return nil
+		}
+		return event
+	}
 	if s.busy && event.Key() == tcell.KeyEscape && page != "exit" && page != "program_confirm" {
 		s.action("cancel")
 		return nil
@@ -184,23 +208,8 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return event
 	}
 	if event.Key() == tcell.KeyF1 {
-		if page == "help" {
-			s.closeHelp()
-		} else {
-			s.showHelp()
-		}
+		s.showHelp()
 		return nil
-	}
-	if page == "help" {
-		if event.Key() == tcell.KeyRune && event.Modifiers() == 0 && event.Rune() >= '0' && event.Rune() <= '8' {
-			s.helpJump(int(event.Rune() - '0'))
-			return nil
-		}
-		if event.Key() == tcell.KeyEscape || (alt && letter == 'x') {
-			s.closeHelp()
-			return nil
-		}
-		return event
 	}
 	if page == "object" {
 		if alt && letter == 's' {

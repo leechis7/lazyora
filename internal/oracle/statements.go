@@ -135,16 +135,7 @@ func plsqlStatement(tokens []sqlToken) bool {
 	return false
 }
 
-func slashLine(text string, token sqlToken) bool {
-	if token.word != "/" {
-		return false
-	}
-	start := strings.LastIndexByte(text[:token.start], '\n') + 1
-	end := len(text)
-	if n := strings.IndexByte(text[token.end:], '\n'); n >= 0 {
-		end = token.end + n
-	}
-	line := text[start:end]
+func slashLine(line string) bool {
 	if n := strings.Index(line, "--"); n >= 0 {
 		line = line[:n]
 	}
@@ -160,16 +151,42 @@ func Statements(text string) ([]Statement, error) {
 	}
 	var statements []Statement
 	start, first, depth := 0, 0, 0
+	line, lineStart, lineEnd, firstLine := 1, 0, 0, 1
+	slashChecked, standaloneSlash := false, false
+	nextLineEnd := func(start int) int {
+		if n := strings.IndexByte(text[start:], '\n'); n >= 0 {
+			return start + n
+		}
+		return len(text)
+	}
+	lineEnd = nextLineEnd(0)
 	appendStatement := func(end int, part []sqlToken) {
 		if len(part) == 0 || (len(part) == 1 && part[0].word == ";") {
 			return
 		}
-		statements = append(statements, Statement{strings.TrimSpace(text[start:end]), start, end, 1 + strings.Count(text[:part[0].start], "\n")})
+		statements = append(statements, Statement{strings.TrimSpace(text[start:end]), start, end, firstLine})
 	}
 	for i, t := range tokens {
-		if slashLine(text, t) {
+		// Token positions increase. Visit each line only once, including lines
+		// inside comments and quoted values, instead of rescanning every prefix.
+		for t.start > lineEnd {
+			lineStart = lineEnd + 1
+			lineEnd = nextLineEnd(lineStart)
+			line++
+			slashChecked = false
+		}
+		if i == first {
+			firstLine = line
+		}
+		if t.word == "/" && !slashChecked {
+			// A long division expression may contain thousands of slash tokens
+			// on one line. Classify that line at most once.
+			standaloneSlash = slashLine(text[lineStart:lineEnd])
+			slashChecked = true
+		}
+		if t.word == "/" && standaloneSlash {
 			if depth != 0 {
-				return nil, fmt.Errorf("unbalanced parentheses before line %d", 1+strings.Count(text[:t.start], "\n"))
+				return nil, fmt.Errorf("unbalanced parentheses before line %d", line)
 			}
 			appendStatement(t.start, tokens[first:i])
 			start = t.end

@@ -37,6 +37,10 @@ func (s *screen) lockPasswords() {
 }
 func (s *screen) vaultError(err error) string {
 	switch {
+	case errors.Is(err, settings.ErrConnectionsChanged):
+		return s.tr("connections_changed")
+	case errors.Is(err, settings.ErrConnectionsBusy):
+		return s.tr("connections_busy")
 	case errors.Is(err, credentials.ErrUnlock):
 		return s.tr("vault_wrong")
 	case errors.Is(err, credentials.ErrWeak):
@@ -193,22 +197,30 @@ func (s *screen) passwordManager() {
 					s.showVaultError(err)
 					return
 				}
-				if err = store.Reset(); err != nil {
-					s.showVaultError(err)
-					return
-				}
-				s.lockPasswords()
 				path := settings.ConnectionsPath(s.prefsPath)
 				profiles, err := settings.LoadConnections(path)
 				if err != nil {
 					s.showVaultError(err)
 					return
 				}
+				// Use the same lock order as profile saving: profiles, then vault.
+				// No other instance can save a password during reset/flag clearing.
+				writer, err := settings.BeginConnectionsUpdate(path, profiles)
+				if err != nil {
+					s.showVaultError(err)
+					return
+				}
+				defer writer.Close()
+				if err = store.Reset(); err != nil {
+					s.showVaultError(err)
+					return
+				}
+				s.lockPasswords()
 				if len(profiles) > 0 {
 					for i := range profiles {
 						profiles[i].SavedPassword = false
 					}
-					if err = settings.SaveConnections(path, profiles); err != nil {
+					if err = writer.Save(profiles); err != nil {
 						s.showVaultError(err)
 						return
 					}

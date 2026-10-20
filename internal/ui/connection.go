@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -188,12 +189,14 @@ func (s *screen) connectionForm() {
 		return config, true
 	}
 	s.connectAction = func() {
+		if s.busy || s.reconnectDialog != nil {
+			return
+		}
 		config, ok := readConfig()
 		if !ok {
 			return
 		}
-		s.closeConnection()
-		s.submit(job{action: "connect", config: config})
+		s.requestReconnect(config)
 	}
 	saveProfile := func() {
 		if loadErr != nil {
@@ -238,13 +241,19 @@ func (s *screen) connectionForm() {
 		} else {
 			next[index] = profile
 		}
-		if err := settings.SaveConnections(path, next); err != nil {
+		writer, err := settings.BeginConnectionsUpdate(path, profiles)
+		if err != nil {
+			s.showConnectionSaveError(err)
+			return
+		}
+		defer writer.Close()
+		if err := writer.Save(next); err != nil {
 			form.SetTitle(" " + fmt.Sprintf(s.tr("connection_save_error"), err) + " ")
 			return
 		}
 		if savePassword {
 			if err := s.vault.Put(profile.ID, profile.Binding(), config.Password); err != nil {
-				if restoreErr := settings.SaveConnections(path, profiles); restoreErr != nil {
+				if restoreErr := writer.Save(profiles); restoreErr != nil {
 					form.SetTitle(s.tr("vault_profile_error"))
 				} else {
 					s.showVaultError(err)
@@ -252,7 +261,7 @@ func (s *screen) connectionForm() {
 				return
 			}
 			next[index].SavedPassword = true
-			if err := settings.SaveConnections(path, next); err != nil {
+			if err := writer.Save(next); err != nil {
 				profiles = next
 				form.SetTitle(s.tr("vault_profile_error"))
 				return
@@ -260,7 +269,7 @@ func (s *screen) connectionForm() {
 		} else if index < len(profiles) && profiles[index].SavedPassword {
 			if s.vault != nil && s.vault.Unlocked() {
 				if err := s.vault.Delete(profile.ID); err != nil {
-					if restoreErr := settings.SaveConnections(path, profiles); restoreErr != nil {
+					if restoreErr := writer.Save(profiles); restoreErr != nil {
 						form.SetTitle(s.tr("vault_profile_error"))
 					} else {
 						s.showVaultError(err)
@@ -324,6 +333,16 @@ func (s *screen) connectionForm() {
 	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(selector, 5, 0, false).AddItem(form, 0, 1, true)
 	s.pages.AddPage("connect", root, true, true)
 	s.app.SetFocus(form)
+}
+
+func (s *screen) showConnectionSaveError(err error) {
+	message := fmt.Sprintf(s.tr("connection_save_error"), err)
+	if errors.Is(err, settings.ErrConnectionsChanged) {
+		message = s.tr("connections_changed")
+	} else if errors.Is(err, settings.ErrConnectionsBusy) {
+		message = s.tr("connections_busy")
+	}
+	s.connectForm.SetTitle(" " + message + " ")
 }
 
 // Keep the profile picker separate while retaining a single Tab cycle.

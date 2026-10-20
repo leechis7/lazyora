@@ -1,7 +1,10 @@
 # LazyOra
 
-터미널에서 Oracle SQL을 작성·실행하고 스키마 객체를 탐색하는 TUI입니다.
-[lazysql](https://github.com/jorgerojas26/lazysql)의 화면 구성을 참고했습니다.
+**Toad처럼 Oracle을 다루는 터미널 도구**를 만듭니다.
+
+Toad를 설치하고 상용 라이선스를 구매하는 부담 없이, 터미널에서도 Oracle 개발·조회·관리 작업을 충분히 할 수 있다는 생각에서 출발했습니다. 익숙한 Toad의 작업 흐름과 단축키를 TUI에 맞게 구현하는 것이 목표입니다.
+
+SQL·PL/SQL 편집부터 스키마 탐색, 실행 결과 확인과 내보내기까지 하나의 화면에서 이어가고, SSH로 접속한 서버에서도 실행파일 하나로 사용할 수 있도록 개발합니다. Toad의 모든 기능을 갖춘 단계는 아니며, 실제 Oracle 작업에 필요한 기능을 차근차근 확장하고 있습니다.
 
 현재 버전: **0.5.1** · **Linux / Windows / macOS · AMD64 / ARM64**
 
@@ -62,6 +65,10 @@ F9는 커서 문장을, F5는 스크립트를 실행합니다. 화면 조회는 
 - [시험용 Oracle Free](test/oracle/README.md) — Docker Compose로 테스트 DB 실행
 - [개발과 릴리스](docs/development.md) · [변경 이력](CHANGELOG.md) · [기여 안내](CONTRIBUTING.md)
 - [사용 문의](SUPPORT.md) · [보안 제보](SECURITY.md) · [참여 규칙](CODE_OF_CONDUCT.md)
+
+## 참고 프로젝트
+
+초기 화면 구성은 [lazySQL](https://github.com/jorgerojas26/lazysql)을 참고했습니다. 현재 LazyOra는 Oracle에 집중하며, Toad와 같은 작업 흐름을 터미널에서 제공하는 독립 프로젝트로 개발하고 있습니다.
 
 ## 개발자·라이선스
 

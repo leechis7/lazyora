@@ -3,6 +3,7 @@ package oracle
 import (
 	"strings"
 	"testing"
+	"unicode"
 )
 
 func TestStatementBoundaries(t *testing.T) {
@@ -31,6 +32,83 @@ func TestStatementBoundaries(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestStatementLineNumbersAndByteOffsets(t *testing.T) {
+	text := "-- 한글\r\n\r\nSELECT q'[여러\n줄; /]' FROM dual;\r\n" +
+		"/* 주석\n여러 줄 */\r\nSELECT nq'{다음;}' FROM dual;\r\n" +
+		"BEGIN\r\n NULL;\r\nEND;\r\n/ -- 끝\r\n\r\nSELECT 4 FROM dual;"
+	got, err := Statements(text)
+	if err != nil || len(got) != 4 {
+		t.Fatalf("statements=%v err=%v", got, err)
+	}
+	for i, wantLine := range []int{3, 7, 8, 13} {
+		if got[i].Line != wantLine || got[i].Text != strings.TrimSpace(text[got[i].Start:got[i].End]) {
+			t.Fatalf("statement %d: %+v, want line %d", i, got[i], wantLine)
+		}
+	}
+	if _, err := Statements("-- 한글\nSELECT (1\n/ -- delimiter\n"); err == nil || !strings.Contains(err.Error(), "line 3") {
+		t.Fatalf("wrong error line: %v", err)
+	}
+}
+
+func TestLargeStatementFilesKeepBoundaries(t *testing.T) {
+	const count = 80000
+	const statement = "SELECT 1 FROM dual;\n"
+	text := strings.Repeat(statement, count)
+	got, err := Statements(text)
+	if err != nil || len(got) != count {
+		t.Fatalf("count=%d err=%v", len(got), err)
+	}
+	for i, stmt := range got {
+		start := 0
+		if i > 0 {
+			start = i*len(statement) - 1 // preserve whitespace after the prior semicolon
+		}
+		if stmt.Line != i+1 || stmt.Start != start || stmt.End != (i+1)*len(statement)-1 {
+			t.Fatalf("statement %d lost position: %+v", i, stmt)
+		}
+	}
+	division := "SELECT 1" + strings.Repeat(" / 2", 40000) + " FROM dual;\n/ -- end\nSELECT 2 FROM dual;"
+	got, err = Statements(division)
+	if err != nil || len(got) != 2 || got[1].Line != 3 {
+		t.Fatalf("division split incorrectly: count=%d err=%v", len(got), err)
+	}
+}
+
+func FuzzStatementOffsets(f *testing.F) {
+	for _, text := range []string{
+		"SELECT 1 FROM dual;\nSELECT 2 FROM dual;",
+		"-- 주석\r\nSELECT nq'[줄\n; /]' FROM dual;\n/ -- 끝\nBEGIN NULL; END;\n/",
+		"SELECT 10/2/1 FROM dual\n/\n/* 주석 */ SELECT q'{a;/}' FROM dual;",
+	} {
+		f.Add(text)
+	}
+	f.Fuzz(func(t *testing.T, text string) {
+		got, err := Statements(text)
+		if err != nil {
+			return
+		}
+		previous := 0
+		for _, stmt := range got {
+			if stmt.Start < previous || stmt.End > len(text) || stmt.End <= stmt.Start {
+				t.Fatal("invalid byte offsets")
+			}
+			raw := text[stmt.Start:stmt.End]
+			if stmt.Text != strings.TrimFunc(raw, unicode.IsSpace) {
+				t.Fatal("statement text does not match source range")
+			}
+			tokens, err := sqlTokens(raw)
+			if err != nil || len(tokens) == 0 {
+				t.Fatal("invalid statement emitted")
+			}
+			// Independent, deliberately simple reference for the original line rule.
+			if want := 1 + strings.Count(text[:stmt.Start+tokens[0].start], "\n"); stmt.Line != want {
+				t.Fatalf("line=%d want=%d", stmt.Line, want)
+			}
+			previous = stmt.End
+		}
+	})
 }
 
 func TestStatementCursorAndInvalidInput(t *testing.T) {

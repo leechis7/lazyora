@@ -116,3 +116,6 @@ Ctrl+Enter는 CSI-u와 modifyOtherKeys 두 형식, Alt+Enter를 검사합니다.
 `make -C test/oracle export-bench`로 CSV·TSV·INSERT·XLSX의 10만·100만 행을 측정합니다. DB 없는 파일 저장과 Oracle Free 조회 포함 저장을 별도 프로세스로 실행하고, 처리 시간·파일 크기·최대 RSS·Go 힙을 기록한 뒤 실제 파일의 전체 행 수를 검사합니다. 매번 수백 MiB의 임시 파일을 기록하며 종료 후 제거합니다. 일반 `make test`에서는 이 시험을 실행하지 않습니다.
 
 측정 조건·실측 결과·부분 실행 방법은 [대용량 내보내기 측정](benchmarks/export-2026-10-20.md)을 참고하세요.
+
+
+DBMS_OUTPUT 검사는 출력 켜기·끄기, 한글·빈 줄·30KB 행, 문장별 F5 출력, 최대 행 수와 초과분 정리, SQL 오류 전 출력 보존 및 제어·수집 전후 미커밋 DML의 격리를 검사합니다. 실제 TUI 검사에도 Alt+P 출력 창·켜기·복사·지우기·끄기를 포함합니다. 시험 후 메모리를 반환하려면 `make -C test/oracle down`을 실행하세요.

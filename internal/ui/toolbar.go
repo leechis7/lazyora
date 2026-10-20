@@ -132,6 +132,9 @@ func (s *screen) refreshFooter() {
 	case "pending":
 		hint = "footer_pending"
 		keys = []footerKey{{"Esc", "close", tcell.KeyEscape, 0}}
+	case "output":
+		hint = "footer_output"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
 	case "history":
 		hint = "footer_history"
 		keys = []footerKey{{"Esc", "close", tcell.KeyEscape, 0}}
@@ -226,7 +229,7 @@ func (s *screen) refreshFooter() {
 		}
 
 	}
-	if s.busy && page != "help" {
+	if s.busy && page != "help" && page != "output" {
 		text = s.tr("footer_busy") + " | " + text
 	}
 	s.footer.SetText(text)

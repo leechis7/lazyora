@@ -4,6 +4,20 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"output_copy":            {"Copy output", "출력 복사"},
+	"output_view":            {"DBMS_OUTPUT", "DBMS_OUTPUT 출력"},
+	"output_toggle":          {"Enable / disable DBMS_OUTPUT", "DBMS_OUTPUT 켜기 / 끄기"},
+	"output_enable":          {"Enable output", "출력 켜기"},
+	"output_disable":         {"Disable output", "출력 끄기"},
+	"output_enabled":         {"DBMS_OUTPUT enabled", "DBMS_OUTPUT 켜짐"},
+	"output_disabled":        {"DBMS_OUTPUT disabled", "DBMS_OUTPUT 꺼짐"},
+	"output_count":           {"%d retained lines", "보관 중인 출력 %d행"},
+	"output_clear":           {"Clear display", "표시 지우기"},
+	"output_note":            {"This connection only. Enable before running SQL. Captured after F9/F5 finishes, separately from query results. Copy/clear affects the retained output display; no commit or rollback.", "현재 접속에만 적용합니다. SQL 실행 전에 켜세요. F9/F5 완료 후 조회 결과와 별도로 수집합니다. 복사·표시 지우기는 보관한 출력에만 적용하며 커밋·롤백하지 않습니다."},
+	"output_truncated":       {"Some output was omitted: up to 2,000 lines / 256 KiB per statement; recent 8,000 lines / 1 MiB retained. Server buffer is 1,000,000 bytes; overflow can fail the SQL.", "일부 출력이 생략됐습니다. 문장당 최대 2,000행 / 256 KiB, 최근 보관량 8,000행 / 1 MiB입니다. 서버 버퍼는 1,000,000바이트이며 초과하면 SQL 오류가 날 수 있습니다."},
+	"output_error":           {"Output collection warning (SQL outcome unchanged)", "출력 수집 경고(SQL 처리 결과와 별개)"},
+	"output_warning":         {"SQL completed; DBMS_OUTPUT collection failed: %s · Alt+P details", "SQL 완료; DBMS_OUTPUT 수집 실패: %s · Alt+P 상세"},
+	"footer_output":          {"Arrows / PgUp/PgDn Scroll | Tab Output / buttons | Alt+E Enable/disable | Ctrl+C Copy | Alt+D Clear display | Esc Close", "방향키 / PgUp/PgDn 스크롤 | Tab 출력 / 버튼 | Alt+E 켜기·끄기 | Ctrl+C 복사 | Alt+D 표시 지우기 | Esc 닫기"},
 	"syntax_colors":          {"SQL colors: blue keywords, teal functions, purple types/numbers, red strings, green comments, ochre binds. Selection overrides syntax colors.", "SQL 색상: 파랑 키워드 · 청록 함수 · 보라 타입/숫자 · 빨강 문자열 · 초록 주석 · 갈색 바인드. 선택 영역은 기존 강조색이 우선합니다."},
 	"export":                 {"Export results", "조회 결과 내보내기"},
 	"export_format":          {"Format", "파일 형식"},

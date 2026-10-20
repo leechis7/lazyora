@@ -11,6 +11,7 @@ import (
 const MaxRows = 1000
 
 type Result struct {
+	Output    Output
 	Query     *QuerySpec
 	Values    [][]Cell
 	Columns   []string
@@ -29,6 +30,8 @@ type Cell struct {
 // Session is used only by the UI's single worker. A pinned connection preserves
 // ALTER SESSION state, and the explicit transaction prevents DML auto-commit.
 type Session struct {
+	outputEnabled, outputReset bool
+
 	db        *sql.DB
 	conn      *sql.Conn
 	tx        *sql.Tx
@@ -60,9 +63,9 @@ func Open(ctx context.Context, config Config) (*Session, error) {
 	return &Session{db: db, conn: conn}, nil
 }
 
-func (s *Session) Execute(ctx context.Context, text string, bindings ...map[string]BindValue) (Result, error) {
+func (s *Session) Execute(ctx context.Context, text string, bindings ...map[string]BindValue) (result Result, err error) {
 	start := time.Now()
-	result := Result{Affected: -1}
+	result = Result{Affected: -1}
 	if s.finishErr != nil {
 		return result, s.finishErr
 	}
@@ -83,6 +86,9 @@ func (s *Session) Execute(ctx context.Context, text string, bindings ...map[stri
 	if err != nil {
 		return result, err
 	}
+	if err = s.resetOutput(ctx); err != nil {
+		return result, err
+	}
 	if s.tx == nil {
 		// Do not use the per-query context here: database/sql would roll the
 		// entire transaction back when that context's deadline expires.
@@ -90,6 +96,9 @@ func (s *Session) Execute(ctx context.Context, text string, bindings ...map[stri
 		if err != nil {
 			return result, err
 		}
+	}
+	if s.outputEnabled {
+		defer func() { result.Output = s.collectOutput() }()
 	}
 	if !query {
 		// A failed/cancelled statement or PL/SQL block may have executed part

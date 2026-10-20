@@ -32,6 +32,14 @@ type job struct {
 }
 
 type screen struct {
+	outputEnabled, outputTruncated bool
+	outputLines                    []string
+	outputSize                     int
+	outputError                    string
+	outputText, outputInfo         *tview.TextView
+	outputToggle                   *tview.Button
+	outputFocus                    tview.Primitive
+
 	resultQuery            *oracle.QuerySpec
 	exportForm             *tview.Form
 	exportInfo             *tview.TextView
@@ -400,6 +408,8 @@ func (s *screen) worker() {
 			session, err = oracle.Reconnect(j.ctx, session, j.config, j.resolution)
 		case "execute":
 			result, err = session.Execute(j.ctx, j.text, j.bindings)
+		case "output_toggle":
+			err = session.SetOutput(j.ctx, !session.OutputEnabled())
 		case "script":
 			script, err = session.Script(j.ctx, j.text, j.bindings)
 		case "plan":
@@ -430,6 +440,7 @@ func (s *screen) worker() {
 			s.cancel = nil
 			s.busy = false
 			if session != nil {
+				s.outputEnabled = session.OutputEnabled()
 				s.pendingChanges = session.PendingChanges()
 				s.transactionUncertain = session.TransactionUncertain()
 				s.pendingWork = session.PendingWork()
@@ -459,6 +470,7 @@ func (s *screen) worker() {
 			if j.action == "script" {
 				s.scriptReport = script
 				for _, step := range script.Steps {
+					s.addOutput(step.Result.Output)
 					if len(step.Result.Columns) > 0 {
 						s.render(step.Result)
 					}
@@ -498,6 +510,7 @@ func (s *screen) worker() {
 					s.showPlan(j.text, plan)
 					s.setStatus("plan_loaded", len(plan))
 				case "connect":
+					s.clearOutput()
 					s.clearBindValues()
 					s.connected = true
 					s.demo = false
@@ -553,6 +566,20 @@ func (s *screen) worker() {
 					s.renderArguments(arguments)
 				}
 			}
+			if j.action == "execute" {
+				s.addOutput(result.Output)
+				if err == nil && result.Output.Error != "" {
+					s.setStatus("output_warning", result.Output.Error)
+				}
+			}
+			if j.action == "output_toggle" && err == nil {
+				key := "output_disabled"
+				if s.outputEnabled {
+					key = "output_enabled"
+				}
+				s.setStatus(key)
+			}
+			s.refreshOutput()
 			if s.quitting {
 				s.quitting = false
 				s.requestQuit()

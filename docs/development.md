@@ -53,6 +53,7 @@ SQL 구문 색상은 tview v0.42.0의 로컬 렌더링 확장을 사용합니다
 - `.github/workflows/ci.yml`: `dev`·`main` 대상 PR 및 두 브랜치 푸시 검증
 - `.github/workflows/release.yml`: 버전 태그 푸시 시 정식 릴리스 발행
 - CI·Release의 Go 버전은 `mise.toml`과 함께 갱신합니다.
+- CI·Release의 Go 모듈 다운로드는 일시적인 네트워크 오류에 대비해 최대 3회 재시도합니다. 실제 테스트·vet·빌드는 실패를 그대로 보고합니다.
 - 외부 Actions는 커밋 SHA로 고정합니다. 버전 변경 시 SHA와 주석을 함께 갱신합니다.
 
 GitHub에서 CI 성공을 병합의 필수 조건으로 강제하려면 `dev`와 `main`에 브랜치 규칙을 설정하고 `Test, vet and build` 검사를 필수로 지정합니다. 워크플로 파일만으로 병합이 차단되지는 않습니다.

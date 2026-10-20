@@ -1,0 +1,204 @@
+{
+  "before_buffer_generated_insert": [
+    {
+      "file_bytes": 20588981,
+      "format": "sql",
+      "max_rss_mib": 23.63671875,
+      "peak_heap_mib": 3.9050369262695312,
+      "rows": 100000,
+      "rows_per_second": 264902.9990118853,
+      "seconds": 0.37749667,
+      "source": "generated",
+      "total_alloc_mib": 64.10587310791016
+    },
+    {
+      "file_bytes": 206888982,
+      "format": "sql",
+      "max_rss_mib": 24.05859375,
+      "peak_heap_mib": 4.314704895019531,
+      "rows": 1000000,
+      "rows_per_second": 253832.35312560358,
+      "seconds": 3.939608122,
+      "source": "generated",
+      "total_alloc_mib": 651.3333206176758
+    }
+  ],
+  "after_buffer": [
+    {
+      "file_bytes": 12488927,
+      "format": "csv",
+      "max_rss_mib": 23.49609375,
+      "peak_heap_mib": 3.8568954467773438,
+      "rows": 100000,
+      "rows_per_second": 776605.2031539024,
+      "seconds": 0.128765555,
+      "source": "generated",
+      "total_alloc_mib": 17.54364776611328
+    },
+    {
+      "file_bytes": 12488927,
+      "format": "tsv",
+      "max_rss_mib": 23.86328125,
+      "peak_heap_mib": 3.7283554077148438,
+      "rows": 100000,
+      "rows_per_second": 767262.5107120397,
+      "seconds": 0.130333489,
+      "source": "generated",
+      "total_alloc_mib": 17.543540954589844
+    },
+    {
+      "file_bytes": 20588981,
+      "format": "sql",
+      "max_rss_mib": 23.58984375,
+      "peak_heap_mib": 3.7172317504882812,
+      "rows": 100000,
+      "rows_per_second": 362805.1730270839,
+      "seconds": 0.275630028,
+      "source": "generated",
+      "total_alloc_mib": 64.35330200195312
+    },
+    {
+      "file_bytes": 1597687,
+      "format": "xlsx",
+      "max_rss_mib": 22.0703125,
+      "peak_heap_mib": 3.9196929931640625,
+      "rows": 100000,
+      "rows_per_second": 177760.42456811754,
+      "seconds": 0.562554912,
+      "source": "generated",
+      "total_alloc_mib": 65.13792419433594
+    },
+    {
+      "file_bytes": 125888928,
+      "format": "csv",
+      "max_rss_mib": 24.71484375,
+      "peak_heap_mib": 4.14959716796875,
+      "rows": 1000000,
+      "rows_per_second": 742975.7786396748,
+      "seconds": 1.345938897,
+      "source": "generated",
+      "total_alloc_mib": 175.4735336303711
+    },
+    {
+      "file_bytes": 125888928,
+      "format": "tsv",
+      "max_rss_mib": 23.890625,
+      "peak_heap_mib": 3.742645263671875,
+      "rows": 1000000,
+      "rows_per_second": 791947.2666833802,
+      "seconds": 1.2627103370000001,
+      "source": "generated",
+      "total_alloc_mib": 175.47339630126953
+    },
+    {
+      "file_bytes": 206888982,
+      "format": "sql",
+      "max_rss_mib": 26.4375,
+      "peak_heap_mib": 4.938163757324219,
+      "rows": 1000000,
+      "rows_per_second": 335167.8677305539,
+      "seconds": 2.983579562,
+      "source": "generated",
+      "total_alloc_mib": 651.5917510986328
+    },
+    {
+      "file_bytes": 15926819,
+      "format": "xlsx",
+      "max_rss_mib": 25.17578125,
+      "peak_heap_mib": 5.201713562011719,
+      "rows": 1000000,
+      "rows_per_second": 170440.20319228582,
+      "seconds": 5.867160337,
+      "source": "generated",
+      "total_alloc_mib": 642.0545959472656
+    },
+    {
+      "file_bytes": 12488927,
+      "format": "csv",
+      "max_rss_mib": 25.109375,
+      "peak_heap_mib": 3.7824325561523438,
+      "rows": 100000,
+      "rows_per_second": 219027.21144793904,
+      "seconds": 0.456564275,
+      "source": "oracle",
+      "total_alloc_mib": 106.50190734863281
+    },
+    {
+      "file_bytes": 12488927,
+      "format": "tsv",
+      "max_rss_mib": 25.3125,
+      "peak_heap_mib": 3.8870925903320312,
+      "rows": 100000,
+      "rows_per_second": 192939.6107179798,
+      "seconds": 0.518296889,
+      "source": "oracle",
+      "total_alloc_mib": 106.50225830078125
+    },
+    {
+      "file_bytes": 20788981,
+      "format": "sql",
+      "max_rss_mib": 25.27734375,
+      "peak_heap_mib": 3.8302688598632812,
+      "rows": 100000,
+      "rows_per_second": 153694.19143357882,
+      "seconds": 0.650642676,
+      "source": "oracle",
+      "total_alloc_mib": 155.30593872070312
+    },
+    {
+      "file_bytes": 1597687,
+      "format": "xlsx",
+      "max_rss_mib": 25.59765625,
+      "peak_heap_mib": 3.8657684326171875,
+      "rows": 100000,
+      "rows_per_second": 100851.9621791547,
+      "seconds": 0.991552349,
+      "source": "oracle",
+      "total_alloc_mib": 154.19193267822266
+    },
+    {
+      "file_bytes": 125888928,
+      "format": "csv",
+      "max_rss_mib": 27.76953125,
+      "peak_heap_mib": 3.8751602172851562,
+      "rows": 1000000,
+      "rows_per_second": 206013.2260301579,
+      "seconds": 4.854057282,
+      "source": "oracle",
+      "total_alloc_mib": 1061.8993682861328
+    },
+    {
+      "file_bytes": 125888928,
+      "format": "tsv",
+      "max_rss_mib": 25.43359375,
+      "peak_heap_mib": 3.8926467895507812,
+      "rows": 1000000,
+      "rows_per_second": 217692.6938722809,
+      "seconds": 4.593631427,
+      "source": "oracle",
+      "total_alloc_mib": 1061.856101989746
+    },
+    {
+      "file_bytes": 208888982,
+      "format": "sql",
+      "max_rss_mib": 25.76171875,
+      "peak_heap_mib": 4.319679260253906,
+      "rows": 1000000,
+      "rows_per_second": 165335.80746509114,
+      "seconds": 6.048296587,
+      "source": "oracle",
+      "total_alloc_mib": 1550.164207458496
+    },
+    {
+      "file_bytes": 15926819,
+      "format": "xlsx",
+      "max_rss_mib": 27.58984375,
+      "peak_heap_mib": 3.9326705932617188,
+      "rows": 1000000,
+      "rows_per_second": 104665.85177037254,
+      "seconds": 9.554214513,
+      "source": "oracle",
+      "total_alloc_mib": 1531.994270324707
+    }
+  ]
+}

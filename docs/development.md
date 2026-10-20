@@ -20,6 +20,8 @@ git switch -c feature/LORA-17-schema-browser
 
 CI에서 만든 바이너리는 실행 결과의 `binaries` 아티팩트에서 7일 동안 받을 수 있습니다. GitHub 아티팩트 다운로드 시 실행 권한이 사라졌다면 `chmod +x`를 적용합니다. CI에는 실DB·구형 커널 검증이 포함되지 않으므로 Oracle·CentOS 시험은 별도로 진행합니다.
 
+Windows·macOS 실행기에서는 대소문자가 다른 사용자 지정 설정명으로 설정·프로필·암호 파일을 실제 생성·갱신하여 서로 덮어쓰지 않는지도 검사합니다. 이 검사는 실제 TUI·Oracle 접속 검증을 대신하지 않습니다.
+
 ## 릴리스
 
 1. `dev`에서 릴리스 준비용 feature 브랜치를 만들고 `internal/appinfo/info.go`와 README의 버전을 갱신합니다. CHANGELOG의 `Unreleased` 변경을 해당 버전과 날짜로 옮기고 비교 링크도 갱신합니다. `docs/releases/vX.Y.Z.md`에 기능·단축키 변경·다운로드·지원 범위를 적으면 Release Actions가 해당 문서를 릴리스 본문으로 사용합니다. 버전 태그는 `vX.Y.Z` 형식으로 사용합니다.

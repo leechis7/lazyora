@@ -22,7 +22,9 @@
 
 저장된 언어 설정이 없으면 `LC_ALL`, `LC_MESSAGES`, `LANG` 순서로 처음 발견한 비어 있지 않은 값을 확인합니다. `ko` 로캘이면 한국어, 나머지는 영어입니다. 설정 파일 없음·언어 항목 누락·빈 값·null을 미설정으로 처리하며, 명시적으로 저장한 한국어·영어 설정은 로캘보다 우선합니다. 마우스는 기본으로 켜져 있습니다. 버튼·입력칸·결과 셀을 클릭하고 휠로 스크롤할 수 있습니다. 마우스를 껐을 때도 도구 → 설정에서 다시 켤 수 있습니다.
 
-설정은 OS 사용자 설정 폴더의 `lazyora/settings.json`에 저장합니다. Linux 기본 경로는 `~/.config/lazyora/settings.json`이며 `XDG_CONFIG_HOME`을 따릅니다. `LAZYORA_CONFIG`로 파일 경로를 지정할 수도 있습니다. 언어와 마우스 설정만 저장하며 접속 정보는 같은 폴더의 별도 파일로 관리합니다. `LAZYORA_CONFIG`의 파일 이름을 `connections.json`으로 지정했다면 접속 파일 이름은 충돌을 피하도록 `connection-profiles.json`을 사용합니다. DB 비밀번호는 설정·접속 프로필 JSON에는 저장하지 않으며, 선택한 경우 별도 `credentials.enc`에 암호화하여 저장합니다. 저장에 실패하면 기존 설정을 유지하고 오류를 표시합니다.
+설정은 OS 사용자 설정 폴더의 `lazyora/settings.json`에 저장합니다. Linux 기본 경로는 `~/.config/lazyora/settings.json`이며 `XDG_CONFIG_HOME`을 따릅니다. `LAZYORA_CONFIG`로 파일 경로를 지정할 수도 있습니다. 언어와 마우스 설정만 저장하며 접속 정보는 같은 폴더의 별도 파일로 관리합니다. `LAZYORA_CONFIG`의 파일 이름을 `connections.json`으로 지정했다면 접속 파일 이름은 충돌을 피하도록 `connection-profiles.json`을 사용합니다. `Connections.json`·`CONNECTIONS.JSON`처럼 대소문자만 다른 경우도 모든 OS에서 같은 규칙을 적용하며 파일 생성 전후 경로가 바뀌지 않습니다. DB 비밀번호는 설정·접속 프로필 JSON에는 저장하지 않으며, 선택한 경우 별도 `credentials.enc`에 암호화하여 저장합니다. 저장에 실패하면 기존 설정을 유지하고 오류를 표시합니다.
+
+이전 버전의 대소문자 구분 Linux 파일시스템에서 `Connections.json` 같은 설정명과 별도 `connections.json` 프로필을 함께 사용했다면 이제 `connection-profiles.json`을 읽습니다. 기존 파일을 자동 이동하거나 합치지 않습니다. 같은 폴더를 사용하는 앱을 모두 종료하고 백업한 뒤 기존 **프로필 JSON**을 새 경로로 옮기세요. 대상 파일이 이미 있으면 덮어쓰지 말고 두 목록을 검토해야 합니다. 기본 `settings.json`을 쓰는 경우에는 파일명 변경이 없습니다.
 
 ## 스키마·객체 탐색
 

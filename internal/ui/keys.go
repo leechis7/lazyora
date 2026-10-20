@@ -35,6 +35,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		s.action("quit")
 		return nil
 	}
+	if page == "export" && s.busy {
+		return s.exportKey(event)
+	}
 	if s.buttonArrow(event) {
 		return nil
 	}

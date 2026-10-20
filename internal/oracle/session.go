@@ -11,6 +11,7 @@ import (
 const MaxRows = 1000
 
 type Result struct {
+	Query     *QuerySpec
 	Values    [][]Cell
 	Columns   []string
 	Rows      [][]string
@@ -118,37 +119,19 @@ func (s *Session) Execute(ctx context.Context, text string, bindings ...map[stri
 	if err != nil {
 		return result, err
 	}
+	result.Query, _ = NewQuerySpec(originalStatement, values)
 	for rows.Next() {
 		if len(result.Rows) == MaxRows {
 			result.Truncated = true
 			break
 		}
-		values := make([]any, len(result.Columns))
-		pointers := make([]any, len(values))
-		for i := range values {
-			pointers[i] = &values[i]
+		cells, scanErr := scanCells(rows, columnTypes)
+		if scanErr != nil {
+			return result, scanErr
 		}
-		if err = rows.Scan(pointers...); err != nil {
-			return result, err
-		}
-		row := make([]string, len(values))
-		cells := make([]Cell, len(values))
-		for i, value := range values {
-			row[i] = formatValue(value)
-			kind := columnTypes[i].DatabaseTypeName()
-			if kind == "" {
-				switch value.(type) {
-				case int64, int32, int, float64, float32:
-					kind = "NUMBER"
-				case time.Time:
-					kind = "TIMESTAMP"
-				case []byte:
-					kind = "RAW"
-				default:
-					kind = "VARCHAR2"
-				}
-			}
-			cells[i] = Cell{Text: row[i], Type: kind, Null: value == nil}
+		row := make([]string, len(cells))
+		for i, cell := range cells {
+			row[i] = cell.Text
 		}
 		result.Rows = append(result.Rows, row)
 		result.Values = append(result.Values, cells)

@@ -1,5 +1,6 @@
 """Opt-in Linux PTY test against the local Oracle fixture; never prints passwords."""
 import base64
+import csv
 import fcntl
 import os
 import platform
@@ -168,7 +169,7 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         wait_for("1 rows")
         output.clear()
         send(b"\x1bw")  # Export loaded results without submitting SQL.
-        wait_for("Export loaded results")
+        wait_for("Export results")
         send(b"\r\x1b[B\x1b[B\r\t\x01\x0b")  # XLSX, then Path.
         export_path = folder + "/result.xlsx"
         send(export_path.encode())
@@ -177,6 +178,32 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         with open(export_path, "rb") as exported:
             assert exported.read(2) == b"PK", "XLSX export was not a ZIP workbook"
         print("F5 review/results, Ctrl+E plan, IN bind input and XLSX export: passed")
+        send(b"\x1bOQ\x1bOQ\x01\x0b")
+        send(b"SELECT level AS n FROM dual CONNECT BY level <= 2507 ORDER BY level")
+        output.clear()
+        send(b"\x1b[20~")
+        wait_for("limited to 1000 rows")
+        output.clear()
+        send(b"\x1bw")
+        wait_for("Export results")
+        send(b"\t\x01\x0b")  # CSV remains the default; edit Path.
+        full_path = folder + "/full.csv"
+        send(full_path.encode())
+        send(b"\t\r\x1b[F\r")  # Scope -> last entry: Full DB result.
+        send(b"\x13")
+        wait_for("Run this original SELECT again")
+        send(b"\r")  # The default must be Cancel.
+        assert not os.path.exists(full_path), "default requery action wrote a file"
+        output.clear()
+        send(b"\x13")
+        wait_for("Run this original SELECT again")
+        send(b"\x1b[D\r")  # Explicitly accept the reviewed SQL.
+        wait_for("Exported 2507 rows from the full DB query")
+        with open(full_path, encoding="utf-8-sig", newline="") as exported:
+            rows = list(csv.reader(exported))
+        assert len(rows) == 2508 and rows[-1] == ["2507"], "full export was truncated"
+        print("Full DB result selection, default Cancel, explicit requery and 2507-row CSV: passed")
+
         send(b"\x1bOQ\x1bOQ\x01\x0b")
         send(b"UPDATE sample_rows SET title=title WHERE id=1")
         output.clear()

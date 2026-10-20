@@ -1,4 +1,4 @@
-.PHONY: env up down status logs shell test tui-test run grant-admin browser-fixture
+.PHONY: env up down status logs shell test tui-test run grant-admin browser-fixture export-bench
 
 env:
 	sh env.sh
@@ -25,3 +25,6 @@ run: up
 tui-test:
 	$(MAKE) -C ../.. build-native
 	sh tui-test.sh
+
+export-bench:
+	sh export-bench.sh

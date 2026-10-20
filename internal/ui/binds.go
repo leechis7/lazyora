@@ -9,9 +9,17 @@ import (
 var bindKinds = []string{"text", "number", "date", "timestamp"}
 
 func (s *screen) clearBindValues() {
+	s.resultQuery = nil
+	for i := range s.scriptReport.Steps {
+		s.scriptReport.Steps[i].Result.Query = nil
+	}
 	s.bindSQL = ""
 	s.bindValues = nil
 	for _, tab := range s.tabs {
+		tab.query = nil
+		for i := range tab.script.Steps {
+			tab.script.Steps[i].Result.Query = nil
+		}
 		tab.bindSQL = ""
 		tab.bindValues = nil
 	}

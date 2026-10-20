@@ -45,6 +45,7 @@ var commands = []command{
 	{"commit", "commit", menuSession, []binding{{"Alt+C", tcell.KeyRune, tcell.ModAlt, 'c'}}},
 	{"rollback", "rollback", menuSession, []binding{{"Alt+R", tcell.KeyRune, tcell.ModAlt, 'r'}}},
 	{"pending_work", "pending_work", menuSession, nil},
+	{"output_toggle", "output_toggle", menuSession, nil},
 	{"execute", "execute", menuExecute, []binding{{"F9", tcell.KeyF9, 0, 0}, {"Ctrl+Enter", tcell.KeyEnter, tcell.ModCtrl, 0}, {"Alt+Enter", tcell.KeyEnter, tcell.ModAlt, 0}, {"Shift+F9", tcell.KeyF9, tcell.ModShift, 0}}},
 	{"script", "script", menuExecute, []binding{{"F5", tcell.KeyF5, 0, 0}}},
 	{"plan", "plan", menuExecute, []binding{{"Ctrl+E", tcell.KeyCtrlE, 0, 0}}},
@@ -53,6 +54,7 @@ var commands = []command{
 	{"debug_continue", "debug_unavailable", menuExecute, []binding{{"F11", tcell.KeyF11, 0, 0}}},
 	{"cancel", "cancel_execution", menuExecute, []binding{{"Esc", tcell.KeyEscape, 0, 0}}},
 	{"history", "history", menuView, []binding{{"F8", tcell.KeyF8, 0, 0}}},
+	{"output_view", "output_view", menuView, []binding{{"Alt+P", tcell.KeyRune, tcell.ModAlt, 'p'}}},
 	{"fullscreen_sql", "fullscreen_sql", menuView, []binding{{"F2", tcell.KeyF2, 0, 0}}},
 	{"fullscreen_results", "fullscreen_results", menuView, []binding{{"Shift+F2", tcell.KeyF2, tcell.ModShift, 0}}},
 	{"focus_toggle", "focus_toggle", menuView, []binding{{"F6", tcell.KeyF6, 0, 0}}},
@@ -102,6 +104,10 @@ func (s *screen) commandEnabled(id string) bool {
 		return false
 	}
 	switch id {
+	case "output_view":
+		return true
+	case "output_toggle":
+		return s.connected && !s.busy && !s.transactionUncertain
 	case "quit", "help", "settings", "focus_toggle", "context_menu", "passwords":
 		return true
 	case "fullscreen_sql", "fullscreen_results":
@@ -159,6 +165,10 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "output_view":
+		s.showOutput()
+	case "output_toggle":
+		s.requestOutputToggle()
 	case "undo", "redo", "cut", "paste", "select_all":
 		// Dispatch directly to the editor to retain its selection and undo history.
 		// Going through the global key handler would invoke this command again.

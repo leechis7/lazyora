@@ -52,6 +52,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if s.buttonArrow(event) {
 		return nil
 	}
+	if page == "output" {
+		return s.outputKey(event)
+	}
 	if page == "script" {
 		return s.scriptKey(event)
 	}

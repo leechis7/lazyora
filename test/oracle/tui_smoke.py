@@ -113,6 +113,31 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         send(b"\x1br")
         wait_for("Rollback completed.")
         print("DBMS_OUTPUT enable, F9 capture, raw Unicode copy, clear, disable and rollback: passed")
+        # Routine execution through the menu uses metadata, explicit input,
+        # a default-cancel confirmation, and the normal raw-value grid copy.
+        send(b"\x1bOQ\x1bOQ\x01\x0bBROWSER_FUNCTION")
+        output.clear()
+        send(b"\x1bx\x1b[F\r")  # Execute menu -> last item: routine execution.
+        wait_for("P_VALUE IN NUMBER")
+        send(b"\r")  # Select standalone function signature.
+        send(b"\r\x1b[H\r\t42")  # Default selector -> Value, input 42.
+        output.clear()
+        send(b"\x1b[20~")
+        wait_for("Execute this routine")
+        send(b"\r")  # Default is Cancel, no execution.
+        output.clear()
+        send(b"\x1b[20~\x1b[D\r")
+        wait_for("Routine results")
+        send(b"\r")  # Scalar outputs -> result grid.
+        output.clear()
+        send(b"\x1b[C\x1b[C\x1b[C\x03")
+        copied("42")
+        # Separate Escape events: adjacent ESC bytes may decode as Alt+Esc.
+        for _ in range(4):
+            send(b"\x1b")  # Grid -> outputs -> inputs -> routines -> main.
+        send(b"\x1br")
+        wait_for("Rollback completed.")
+        print("Routine metadata, value input, default-cancel, F9 run, output grid and raw copy: passed")
         sql("SELECT 11 AS ELEVEN FROM dual", b"\x1b[13;5u", newline=True)
         sql("SELECT 12 AS TWELVE FROM dual", b"\x1b[27;5;13~")
         sql("SELECT 13 AS THIRTEEN FROM dual", b"\x1b\r")

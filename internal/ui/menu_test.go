@@ -151,7 +151,7 @@ func TestMenuCommandsRespectContextAndNeverAliasScriptToCommit(t *testing.T) {
 	s := demoBrowserScreen(t)
 	s.connected = true
 	s.key(tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModAlt))
-	if s.menuList == nil || s.menuList.GetItemCount() != 6 {
+	if s.menuList == nil || s.menuList.GetItemCount() != 7 {
 		t.Fatal("execute menu not opened")
 	}
 	text, _ := s.menuList.GetItemText(1)

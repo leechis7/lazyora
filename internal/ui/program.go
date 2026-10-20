@@ -181,7 +181,7 @@ func (s *screen) showArguments() {
 	s.argumentTable.SetTitle(s.tr("arguments"))
 	close := clickable(tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeArguments))
 	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.argumentInfo, 2, 0, false).
-		AddItem(s.argumentTable, 0, 1, true).AddItem(close, 1, 0, false)
+		AddItem(s.argumentTable, 0, 1, true).AddItem(tview.NewFlex().AddItem(clickable(tview.NewButton(s.tr("routine_button")).SetSelectedFunc(func() { s.showRoutine(s.object, "") })), 0, 1, false).AddItem(close, 0, 1, false), 1, 0, false)
 	s.pages.AddPage("arguments", root, true, true)
 	s.app.SetFocus(s.argumentTable)
 	if s.demo && !s.connected {

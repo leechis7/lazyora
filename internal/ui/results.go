@@ -41,7 +41,7 @@ func (s *screen) resultMouse(action tview.MouseAction, event *tcell.EventMouse) 
 		return action, nil
 	}
 	page, _ := s.pages.GetFrontPage()
-	if page != "main" {
+	if page != "main" && page != "routine_grid" {
 		return action, event
 	}
 	x, y := event.Position()
@@ -49,6 +49,9 @@ func (s *screen) resultMouse(action tview.MouseAction, event *tcell.EventMouse) 
 	valid := s.table.InRect(x, y) && row > 0 && row < s.table.GetRowCount() && col >= 0 && col < s.table.GetColumnCount()
 	switch action {
 	case tview.MouseRightClick:
+		if page == "routine_grid" {
+			return action, event
+		}
 		s.app.SetFocus(s.table)
 		s.showContextMenu()
 		return tview.MouseConsumed, nil

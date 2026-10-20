@@ -295,6 +295,8 @@ var messages = map[string][2]string{
 	"alias_required":          {"Enter an alias to save this connection.", "저장할 접속의 별칭을 입력하세요."},
 	"connection_saved":        {"Connection saved without password. Ctrl+Enter connects.", "비밀번호를 제외한 접속 정보를 저장했습니다. Ctrl+Enter로 접속하세요."},
 	"connection_save_error":   {"Could not save connection: %s", "접속 정보를 저장하지 못했습니다: %s"},
+	"connections_changed":     {"Connections changed in another instance. Reopen this window, review the latest list, then save.", "다른 인스턴스가 접속 목록을 변경했습니다. 창을 다시 열어 최신 목록을 확인한 뒤 저장하세요."},
+	"connections_busy":        {"Another instance is saving connections. Try again after it finishes.", "다른 인스턴스가 접속 정보를 저장 중입니다. 잠시 후 다시 시도하세요."},
 	"connection_load_error":   {"Could not load connections (saving disabled): %s", "접속 정보를 읽지 못했습니다 (저장 불가): %s"},
 	"help":                    {"Help", "도움말"},
 	"connect":                 {"Connect", "접속"},

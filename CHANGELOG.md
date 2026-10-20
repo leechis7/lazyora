@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-21
+
 ### 추가
 
 - SQL 탭 전용 메뉴와 명확한 새 탭·현재 탭 닫기 이름. 편집 메뉴에 실행 취소·다시 실행·잘라내기·붙여넣기·전체 선택을, 보기와 스키마 문맥 메뉴에 새로고침을 추가했습니다. 긴 메뉴는 터미널 높이에 맞춰 스크롤합니다.
@@ -143,7 +145,8 @@ v0.0.1의 F2 접속은 Alt+L, F4 실행은 F9, F5 커밋은 Alt+C, F6 롤백은 
 - 이 릴리스 시점에는 실제 CentOS 7.4, 구형 Oracle 및 SID 접속 검증이 완료되지 않았습니다. 이후 호환성 수정은 `Unreleased`에 기록합니다.
 - 한 번에 SQL 한 문장 또는 BEGIN/DECLARE 블록 하나를 실행합니다. 여러 문장 일괄 실행, SQL*Plus 스크립트, 바인드 입력, DBMS_OUTPUT 출력은 지원하지 않습니다.
 
-[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.5.1...dev
+[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.6.0...dev
+[0.6.0]: https://github.com/leechis7/lazyora/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/leechis7/lazyora/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/leechis7/lazyora/compare/v0.1.2...v0.5.0
 [0.1.2]: https://github.com/leechis7/lazyora/compare/v0.1.1...v0.1.2

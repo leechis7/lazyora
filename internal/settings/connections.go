@@ -30,7 +30,9 @@ func ConnectionsPath(settingsPath string) string {
 		return ""
 	}
 	path := filepath.Join(filepath.Dir(settingsPath), "connections.json")
-	if path == filepath.Clean(settingsPath) {
+	// Be conservative on every OS: filesystem case sensitivity can differ even
+	// on the same OS, and the decision must stay stable before files are created.
+	if strings.EqualFold(path, filepath.Clean(settingsPath)) {
 		return filepath.Join(filepath.Dir(settingsPath), "connection-profiles.json")
 	}
 	return path

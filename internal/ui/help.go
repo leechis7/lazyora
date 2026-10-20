@@ -97,7 +97,7 @@ func (s *screen) helpContext(page string) string {
 	case "object":
 		return s.tr("footer_object") + "\nAlt+S: " + s.tr("source") + " | Alt+A: " + s.tr("arguments")
 	case "source":
-		return s.tr("footer_source")
+		return s.tr("footer_source") + "\n" + s.tr("syntax_colors")
 	case "arguments":
 		return s.tr("footer_arguments")
 	case "search":
@@ -115,7 +115,7 @@ func (s *screen) helpContext(page string) string {
 	if s.table.HasFocus() {
 		return fmt.Sprintf(s.tr("footer_results"), shortcut("copy"), shortcut("copy_row"), shortcut("focus_toggle"), "F2 / Shift+F2")
 	}
-	return fmt.Sprintf(s.tr("footer_sql"), bindingLabels("execute", 2), shortcut("describe"), shortcut("focus_toggle"), "F2 / Shift+F2")
+	return fmt.Sprintf(s.tr("footer_sql"), bindingLabels("execute", 2), shortcut("describe"), shortcut("focus_toggle"), "F2 / Shift+F2") + "\n" + s.tr("syntax_colors")
 }
 
 func (s *screen) showHelp() {

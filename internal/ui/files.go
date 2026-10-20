@@ -25,7 +25,7 @@ func (s *screen) initDocument() {
 	if s.document == nil {
 		s.document = &sqlfile.Document{Text: s.editor.GetText()}
 	}
-	s.editor.SetChangedFunc(s.refreshDocumentTitle)
+	s.colorEditor(s.editor, s.refreshDocumentTitle)
 	s.refreshDocumentTitle()
 }
 func (s *screen) refreshDocumentTitle() {

@@ -1,13 +1,87 @@
 package ui
 
 import (
+	"context"
 	"strings"
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"lazyora/internal/appinfo"
+	"lazyora/internal/oracle"
 )
+
+func TestClosingHelpPreservesRunningOperation(t *testing.T) {
+	for _, language := range []string{"en", "ko"} {
+		for _, key := range []struct {
+			name  string
+			event *tcell.EventKey
+		}{
+			{"Escape", tcell.NewEventKey(tcell.KeyEscape, 0, 0)},
+			{"F1", tcell.NewEventKey(tcell.KeyF1, 0, 0)},
+			{"AltX", tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModAlt)},
+		} {
+			t.Run(language+"/"+key.name, func(t *testing.T) {
+				s := shortcutScreen(t)
+				s.prefs.Language = language
+				s.footer = tview.NewTextView()
+				s.toolbar()
+				s.app.SetFocus(s.table)
+				ctx, cancel := context.WithCancel(context.Background())
+				s.cancel, s.busy, s.pendingChanges = cancel, true, true
+				s.key(tcell.NewEventKey(tcell.KeyF1, 0, 0))
+				if page, _ := s.pages.GetFrontPage(); page != "help" {
+					t.Fatal("help did not open during running SQL")
+				}
+				s.refreshFooter()
+				if strings.Contains(s.footer.GetText(false), s.tr("footer_busy")) {
+					t.Fatal("help footer advertises Escape as operation cancellation")
+				}
+				s.key(key.event)
+				if ctx.Err() != nil {
+					t.Fatal("closing help cancelled the running operation")
+				}
+				if page, _ := s.pages.GetFrontPage(); page != "main" || !s.table.HasFocus() {
+					t.Fatal("help did not close and restore focus")
+				}
+				if !s.busy || !s.pendingChanges || len(s.jobs) != 0 || s.editor.GetText() != "SELECT 1 FROM dual;" {
+					t.Fatal("closing help changed SQL, transaction or worker state")
+				}
+				// Esc on the main screen must still explicitly cancel the operation.
+				s.refreshFooter()
+				if !strings.Contains(s.footer.GetText(false), s.tr("footer_busy")) {
+					t.Fatal("main footer lost its operation cancellation hint")
+				}
+				s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+				if ctx.Err() != context.Canceled || !s.busy {
+					t.Fatal("main Escape did not request worker cancellation")
+				}
+			})
+		}
+	}
+}
+
+func TestHelpEscapeRestoresBusyExportBeforeExplicitCancellation(t *testing.T) {
+	s := shortcutScreen(t)
+	s.render(oracle.Result{Columns: []string{"N"}, Rows: [][]string{{"1"}}})
+	s.showExport()
+	if s.exportForm == nil {
+		t.Fatal("export form did not open")
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	s.cancel, s.busy = cancel, true
+	previous := s.app.GetFocus()
+	s.key(tcell.NewEventKey(tcell.KeyF1, 0, 0))
+	s.key(tcell.NewEventKey(tcell.KeyTab, 0, 0))
+	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	if page, _ := s.pages.GetFrontPage(); page != "export" || s.app.GetFocus() != previous || ctx.Err() != nil {
+		t.Fatal("help Escape cancelled export or lost its form/focus")
+	}
+	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	if ctx.Err() != context.Canceled || !s.busy || s.exportForm == nil {
+		t.Fatal("export Escape did not request cancellation while keeping progress")
+	}
+}
 
 func TestHelpJumpsToSectionsAndBackInBothLanguages(t *testing.T) {
 	for _, language := range []string{"en", "ko"} {

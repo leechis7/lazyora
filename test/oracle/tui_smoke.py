@@ -205,6 +205,19 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         print("Full DB result selection, default Cancel, explicit requery and 2507-row CSV: passed")
 
         send(b"\x1bOQ\x1bOQ\x01\x0b")
+        send(b"BEGIN DBMS_SESSION.SLEEP(3); END;")
+        output.clear()
+        send(b"\x1b[20~")
+        wait_for("Running Run")
+        send(b"\x1bOP")  # F1 while the real Oracle call is still running.
+        wait_for("Help — F1 / Esc closes")
+        output.clear()
+        send(b"\x1b")  # Close help, leaving the Oracle call running.
+        wait_for("Statement completed")
+        assert b"Error:" not in output, "closing help cancelled the Oracle call"
+        print("Running Oracle SQL survives F1 help and Escape close: passed")
+
+        send(b"\x1bOQ\x1bOQ\x01\x0b")
         send(b"UPDATE sample_rows SET title=title WHERE id=1")
         output.clear()
         send(b"\x1b[20~")

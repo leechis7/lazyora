@@ -226,7 +226,7 @@ func (s *screen) refreshFooter() {
 		}
 
 	}
-	if s.busy {
+	if s.busy && page != "help" {
 		text = s.tr("footer_busy") + " | " + text
 	}
 	s.footer.SetText(text)

@@ -101,6 +101,8 @@ make -C test/oracle up
 
 실행파일의 실제 키 바이트·메뉴·범위 복사·전체화면·객체 조회·F5 스크립트·실행 계획·바인드 입력·XLSX 저장·2,507행 전체 CSV 재조회 저장·기본 취소·재접속 실패 시 미커밋 내역 보존·명시적 롤백 후 접속·미저장 확인과 트랜잭션 종료를 Linux PTY로 시험하려면 Python 3가 있는 환경에서 실행합니다. DB가 실행 중이고 browser-fixture가 적용돼 있어야 합니다. 비밀번호는 .env에서 읽으며 출력하지 않습니다.
 
+PTY 시험은 Oracle Free의 `DBMS_SESSION.SLEEP(3)` 실행 중 F1 도움말을 열고 Esc로 닫아도 SQL이 취소되지 않고 완료되는지 확인합니다. 이 시험용 호출은 Oracle Free에서 검증하며 구형 Oracle 지원 여부를 의미하지 않습니다.
+
 ```bash
 make -C test/oracle tui-test
 ```

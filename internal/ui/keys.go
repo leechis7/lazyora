@@ -35,6 +35,17 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		s.action("quit")
 		return nil
 	}
+	if page == "reconnect" {
+		if event.Key() == tcell.KeyEscape {
+			s.cancelReconnect()
+			return nil
+		}
+		// Modified Enter is the connection shortcut, never implicit approval.
+		if executeEnter || event.Key() == tcell.KeyCtrlC || event.Key() == tcell.KeyF1 {
+			return nil
+		}
+		return event
+	}
 	if page == "export" && s.busy {
 		return s.exportKey(event)
 	}

@@ -25,6 +25,7 @@ type job struct {
 	ctx           context.Context
 	action        string
 	config        oracle.Config
+	resolution    oracle.ReconnectResolution
 	text          string
 	object        oracle.Object
 	node          *tview.TreeNode
@@ -122,11 +123,13 @@ type screen struct {
 	objectTable                              *tview.Table
 	objectColumns                            []oracle.Column
 	pendingChanges                           bool
+	transactionUncertain                     bool
 	pendingWork                              oracle.PendingWork
 	pendingTable                             *tview.Table
 	pendingSQL                               *tview.TextView
 	pendingFocus                             tview.Primitive
 	exitDialog                               *tview.Modal
+	reconnectDialog                          *tview.Modal
 	exitFocus                                tview.Primitive
 	sourceEditor                             *tview.TextArea
 	sourceInfo                               *tview.TextView
@@ -226,6 +229,9 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 		}
 		if page == "exit" {
 			modal = s.exitDialog
+		}
+		if page == "reconnect" {
+			modal = s.reconnectDialog
 		}
 		if page == "program_confirm" {
 			modal = s.programModal
@@ -391,14 +397,7 @@ func (s *screen) worker() {
 				exported, err = exportdata.SaveStream(j.ctx, j.path, j.revision, func() (exportdata.Source, error) { return exportdata.FromDataset(j.dataset), nil }, options)
 			}
 		case "connect":
-			var next *oracle.Session
-			next, err = oracle.Open(j.ctx, j.config)
-			if err == nil {
-				if session != nil {
-					session.Close()
-				}
-				session = next
-			}
+			session, err = oracle.Reconnect(j.ctx, session, j.config, j.resolution)
 		case "execute":
 			result, err = session.Execute(j.ctx, j.text, j.bindings)
 		case "script":
@@ -432,6 +431,7 @@ func (s *screen) worker() {
 			s.busy = false
 			if session != nil {
 				s.pendingChanges = session.PendingChanges()
+				s.transactionUncertain = session.TransactionUncertain()
 				s.pendingWork = session.PendingWork()
 			}
 			if j.action == "exit_commit" || j.action == "exit_rollback" {

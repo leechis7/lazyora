@@ -145,6 +145,9 @@ func (s *screen) refreshBorders() {
 	if s.exitDialog != nil {
 		apply(s.exitDialog.Box, s.exitDialog.HasFocus(), false)
 	}
+	if s.reconnectDialog != nil {
+		apply(s.reconnectDialog.Box, s.reconnectDialog.HasFocus(), false)
+	}
 	if s.programModal != nil {
 		apply(s.programModal.Box, s.programModal.HasFocus(), false)
 	}

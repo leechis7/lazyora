@@ -188,12 +188,14 @@ func (s *screen) connectionForm() {
 		return config, true
 	}
 	s.connectAction = func() {
+		if s.busy || s.reconnectDialog != nil {
+			return
+		}
 		config, ok := readConfig()
 		if !ok {
 			return
 		}
-		s.closeConnection()
-		s.submit(job{action: "connect", config: config})
+		s.requestReconnect(config)
 	}
 	saveProfile := func() {
 		if loadErr != nil {

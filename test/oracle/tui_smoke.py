@@ -210,6 +210,33 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         send(b"\x1b[20~")
         wait_for("affected rows: 1")
         output.clear()
+        send(b"\x1bl\x1b[13;5u")
+        wait_for("Uncommitted changes remain")
+        send(b"\r")  # Default cancels and restores the connection form.
+        output.clear()
+        send(b"\x1b[13;5u")
+        wait_for("Uncommitted changes remain")
+        send(b"\x1b")  # Give a standalone Esc time to cancel the modal.
+        send(b"\x1bw\x01\x0b")  # Then edit the target password.
+        send(b"invalid-test-password")
+        output.clear()
+        send(b"\x1b[13;5u")
+        wait_for("Uncommitted changes remain")
+        send(b"\x1b[D\x1b[D\r")  # Commit choice; failed target must not commit.
+        wait_for("Error:")  # go-ora may report a protocol/auth error instead of ORA-01017.
+        output.clear()
+        send(b"\x1bl\x1b[13;5u")  # Reopen with the valid environment password.
+        wait_for("Uncommitted changes remain")  # Existing work survived failure.
+        send(b"\x1b[D\r")  # Explicit rollback and connect.
+        wait_for("SAMPLE_ROWS")
+        print("Reconnect default Cancel, failed target preserves pending work, explicit rollback: passed")
+
+        send(b"\x1bOQ\x1bOQ\x01\x0b")
+        send(b"UPDATE sample_rows SET title=title WHERE id=1")
+        output.clear()
+        send(b"\x1b[20~")
+        wait_for("affected rows: 1")
+        output.clear()
         request_exit()
         wait_for("Tracked statements: 1")
         send(b"\x1bv")  # Exit > View pending work.

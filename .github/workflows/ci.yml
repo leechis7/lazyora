@@ -19,7 +19,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest]
+        # File-name case isolation is independent of CPU architecture. Use the
+        # Intel macOS pool to avoid the recurring ARM runner capacity queue.
+        os: [windows-latest, macos-15-intel]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:

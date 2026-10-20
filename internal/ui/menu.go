@@ -7,11 +7,22 @@ import (
 	"unicode"
 )
 
+const (
+	menuFile = iota
+	menuTabs
+	menuEdit
+	menuSession
+	menuExecute
+	menuView
+	menuTools
+	menuHelp
+)
+
 var menuGroups = []struct {
 	label string
 	key   rune
 }{
-	{"menu_file", 'f'}, {"menu_edit", 'e'}, {"menu_session", 's'}, {"menu_execute", 'x'}, {"menu_view", 'v'}, {"menu_tools", 't'}, {"menu_help", 'h'},
+	{"menu_file", 'f'}, {"menu_tabs", 'g'}, {"menu_edit", 'e'}, {"menu_session", 's'}, {"menu_execute", 'x'}, {"menu_view", 'v'}, {"menu_tools", 't'}, {"menu_help", 'h'},
 }
 
 func (s *screen) refreshMenuLabels() {
@@ -42,12 +53,12 @@ func (s *screen) showContextMenu() {
 	if page != "main" {
 		return
 	}
-	ids := []string{"execute", "script", "plan", "find", "replace", "clear_sql", "history", "describe", "copy", "fullscreen_sql", "maximize"}
+	ids := []string{"file_new", "file_close", "execute", "script", "plan", "undo", "redo", "cut", "copy", "paste", "select_all", "find", "replace", "clear_sql", "history", "describe", "fullscreen_sql", "maximize"}
 	if s.table.HasFocus() {
 		ids = []string{"copy", "copy_row", "export", "copy_preview", "fullscreen_results", "maximize", "focus_toggle"}
 	}
 	if s.browserHasFocus() {
-		ids = []string{"describe", "browser", "focus_toggle"}
+		ids = []string{"describe", "browser_refresh", "browser_user", "browser_type", "browser", "focus_toggle"}
 	}
 	var entries []command
 	for _, id := range ids {
@@ -81,9 +92,9 @@ func (s *screen) openCommandMenu(title string, entries []command, index int) {
 		list.AddItem(label, "", 0, func() { s.closeMenu(); s.invoke(id) })
 		count++
 	}
-	width := 80
+	width, height := 80, count+2
 	if s.terminal != nil {
-		width, _ = s.terminal.Size()
+		width, height = s.terminal.Size()
 	}
 	left := max(0, index) * width / len(menuGroups)
 	popupWidth := min(48, width)
@@ -93,7 +104,8 @@ func (s *screen) openCommandMenu(title string, entries []command, index int) {
 		row.AddItem(tview.NewBox(), left, 0, false)
 	}
 	row.AddItem(list, popupWidth, 0, true).AddItem(tview.NewBox(), 0, 1, false)
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(row, count+2, 0, true).AddItem(tview.NewBox(), 0, 1, false)
+	// Long menus scroll inside the terminal instead of clipping their last items.
+	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(row, min(count+2, max(1, height)), 0, true).AddItem(tview.NewBox(), 0, 1, false)
 	s.pages.AddPage("menu", root, true, true)
 	s.app.SetFocus(list)
 }

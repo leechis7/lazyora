@@ -19,48 +19,54 @@ type command struct {
 }
 
 var commands = []command{
-	{"file_new", "file_new", 0, []binding{{"Ctrl+N", tcell.KeyCtrlN, 0, 0}}},
-	{"file_open", "file_open", 0, []binding{{"Ctrl+O", tcell.KeyCtrlO, 0, 0}}},
-	{"file_save", "file_save", 0, []binding{{"Ctrl+S", tcell.KeyCtrlS, 0, 0}}},
-	{"file_save_as", "file_save_as", 0, []binding{{"Ctrl+Shift+S", tcell.KeyCtrlS, tcell.ModShift, 0}}},
-	{"file_close", "file_close", 0, []binding{{"Ctrl+W", tcell.KeyCtrlW, 0, 0}}},
-	{"tab_next", "tab_next", 0, []binding{{"Ctrl+Tab", tcell.KeyTab, tcell.ModCtrl, 0}, {"Alt+PgDn", tcell.KeyPgDn, tcell.ModAlt, 0}}},
-	{"tab_previous", "tab_previous", 0, []binding{{"Ctrl+Shift+Tab", tcell.KeyBacktab, tcell.ModCtrl, 0}, {"Alt+PgUp", tcell.KeyPgUp, tcell.ModAlt, 0}}},
-	{"quit", "quit", 0, []binding{{"Ctrl+Q", tcell.KeyCtrlQ, 0, 0}}},
-	{"copy", "copy_selection", 1, []binding{{"Ctrl+C", tcell.KeyCtrlC, 0, 0}}},
-	{"copy_row", "copy_row", 1, []binding{{"Alt+Y", tcell.KeyRune, tcell.ModAlt, 'y'}}},
-	{"export", "export", 1, []binding{{"Ctrl+Shift+E", tcell.KeyCtrlE, tcell.ModShift, 0}, {"Alt+W", tcell.KeyRune, tcell.ModAlt, 'w'}}},
-	{"copy_preview", "copy_preview", 1, nil},
-	{"find", "find", 1, []binding{{"Ctrl+F", tcell.KeyCtrlF, 0, 0}}},
-	{"find_next", "find_next", 1, []binding{{"F3", tcell.KeyF3, 0, 0}}},
-	{"find_previous", "find_previous", 1, []binding{{"Shift+F3", tcell.KeyF3, tcell.ModShift, 0}}},
-	{"replace", "replace", 1, []binding{{"Ctrl+R", tcell.KeyCtrlR, 0, 0}}},
-	{"clear_sql", "clear_sql", 1, []binding{{"F7", tcell.KeyF7, 0, 0}}},
-	{"connect", "connect", 2, []binding{{"Alt+L", tcell.KeyRune, tcell.ModAlt, 'l'}}},
-	{"commit", "commit", 2, []binding{{"Alt+C", tcell.KeyRune, tcell.ModAlt, 'c'}}},
-	{"rollback", "rollback", 2, []binding{{"Alt+R", tcell.KeyRune, tcell.ModAlt, 'r'}}},
-	{"pending_work", "pending_work", 2, nil},
-	{"execute", "execute", 3, []binding{{"F9", tcell.KeyF9, 0, 0}, {"Ctrl+Enter", tcell.KeyEnter, tcell.ModCtrl, 0}, {"Alt+Enter", tcell.KeyEnter, tcell.ModAlt, 0}, {"Shift+F9", tcell.KeyF9, tcell.ModShift, 0}}},
-	{"script", "script", 3, []binding{{"F5", tcell.KeyF5, 0, 0}}},
-	{"plan", "plan", 3, []binding{{"Ctrl+E", tcell.KeyCtrlE, 0, 0}}},
-	{"script_report", "script_report", 4, nil},
-	{"parse", "parse_unavailable", 3, []binding{{"Ctrl+F9", tcell.KeyF9, tcell.ModCtrl, 0}}},
-	{"debug_continue", "debug_unavailable", 3, []binding{{"F11", tcell.KeyF11, 0, 0}}},
-	{"cancel", "cancel_execution", 3, []binding{{"Esc", tcell.KeyEscape, 0, 0}}},
-	{"history", "history", 4, []binding{{"F8", tcell.KeyF8, 0, 0}}},
-	{"fullscreen_sql", "fullscreen_sql", 4, []binding{{"F2", tcell.KeyF2, 0, 0}}},
-	{"fullscreen_results", "fullscreen_results", 4, []binding{{"Shift+F2", tcell.KeyF2, tcell.ModShift, 0}}},
-	{"focus_toggle", "focus_toggle", 4, []binding{{"F6", tcell.KeyF6, 0, 0}}},
-	{"context_menu", "context_menu", 4, []binding{{"F10", tcell.KeyF10, 0, 0}}},
-	{"maximize", "maximize", 4, nil},
-	{"browser", "schemas", 4, []binding{{"Alt+B", tcell.KeyRune, tcell.ModAlt, 'b'}}},
-	{"browser_user", "browser_user", 4, []binding{{"Alt+U", tcell.KeyRune, tcell.ModAlt, 'u'}}},
-	{"browser_type", "browser_type", 4, []binding{{"Alt+O", tcell.KeyRune, tcell.ModAlt, 'o'}}},
-	{"describe", "describe", 4, []binding{{"F4", tcell.KeyF4, 0, 0}}},
-	{"quick_describe", "quick_describe", 4, []binding{{"Ctrl+D", tcell.KeyCtrlD, 0, 0}}},
-	{"settings", "settings", 5, nil},
-	{"passwords", "passwords", 5, []binding{{"Alt+K", tcell.KeyRune, tcell.ModAlt, 'k'}}},
-	{"help", "help", 6, []binding{{"F1", tcell.KeyF1, 0, 0}}},
+	{"file_new", "file_new", menuTabs, []binding{{"Ctrl+N", tcell.KeyCtrlN, 0, 0}}},
+	{"file_open", "file_open", menuFile, []binding{{"Ctrl+O", tcell.KeyCtrlO, 0, 0}}},
+	{"file_save", "file_save", menuFile, []binding{{"Ctrl+S", tcell.KeyCtrlS, 0, 0}}},
+	{"file_save_as", "file_save_as", menuFile, []binding{{"Ctrl+Shift+S", tcell.KeyCtrlS, tcell.ModShift, 0}}},
+	{"file_close", "file_close", menuTabs, []binding{{"Ctrl+W", tcell.KeyCtrlW, 0, 0}}},
+	{"tab_next", "tab_next", menuTabs, []binding{{"Ctrl+Tab", tcell.KeyTab, tcell.ModCtrl, 0}, {"Alt+PgDn", tcell.KeyPgDn, tcell.ModAlt, 0}}},
+	{"tab_previous", "tab_previous", menuTabs, []binding{{"Ctrl+Shift+Tab", tcell.KeyBacktab, tcell.ModCtrl, 0}, {"Alt+PgUp", tcell.KeyPgUp, tcell.ModAlt, 0}}},
+	{"quit", "quit", menuFile, []binding{{"Ctrl+Q", tcell.KeyCtrlQ, 0, 0}}},
+	{"undo", "undo", menuEdit, []binding{{"Ctrl+Z", tcell.KeyCtrlZ, 0, 0}}},
+	{"redo", "redo", menuEdit, []binding{{"Ctrl+Y", tcell.KeyCtrlY, 0, 0}}},
+	{"cut", "cut", menuEdit, []binding{{"Ctrl+X", tcell.KeyCtrlX, 0, 0}}},
+	{"paste", "paste", menuEdit, []binding{{"Ctrl+V", tcell.KeyCtrlV, 0, 0}}},
+	{"select_all", "select_all", menuEdit, []binding{{"Ctrl+L", tcell.KeyCtrlL, 0, 0}}},
+	{"copy", "copy_selection", menuEdit, []binding{{"Ctrl+C", tcell.KeyCtrlC, 0, 0}}},
+	{"copy_row", "copy_row", menuEdit, []binding{{"Alt+Y", tcell.KeyRune, tcell.ModAlt, 'y'}}},
+	{"export", "export", menuEdit, []binding{{"Ctrl+Shift+E", tcell.KeyCtrlE, tcell.ModShift, 0}, {"Alt+W", tcell.KeyRune, tcell.ModAlt, 'w'}}},
+	{"copy_preview", "copy_preview", menuEdit, nil},
+	{"find", "find", menuEdit, []binding{{"Ctrl+F", tcell.KeyCtrlF, 0, 0}}},
+	{"find_next", "find_next", menuEdit, []binding{{"F3", tcell.KeyF3, 0, 0}}},
+	{"find_previous", "find_previous", menuEdit, []binding{{"Shift+F3", tcell.KeyF3, tcell.ModShift, 0}}},
+	{"replace", "replace", menuEdit, []binding{{"Ctrl+R", tcell.KeyCtrlR, 0, 0}}},
+	{"clear_sql", "clear_sql", menuEdit, []binding{{"F7", tcell.KeyF7, 0, 0}}},
+	{"connect", "connect", menuSession, []binding{{"Alt+L", tcell.KeyRune, tcell.ModAlt, 'l'}}},
+	{"commit", "commit", menuSession, []binding{{"Alt+C", tcell.KeyRune, tcell.ModAlt, 'c'}}},
+	{"rollback", "rollback", menuSession, []binding{{"Alt+R", tcell.KeyRune, tcell.ModAlt, 'r'}}},
+	{"pending_work", "pending_work", menuSession, nil},
+	{"execute", "execute", menuExecute, []binding{{"F9", tcell.KeyF9, 0, 0}, {"Ctrl+Enter", tcell.KeyEnter, tcell.ModCtrl, 0}, {"Alt+Enter", tcell.KeyEnter, tcell.ModAlt, 0}, {"Shift+F9", tcell.KeyF9, tcell.ModShift, 0}}},
+	{"script", "script", menuExecute, []binding{{"F5", tcell.KeyF5, 0, 0}}},
+	{"plan", "plan", menuExecute, []binding{{"Ctrl+E", tcell.KeyCtrlE, 0, 0}}},
+	{"script_report", "script_report", menuView, nil},
+	{"parse", "parse_unavailable", menuExecute, []binding{{"Ctrl+F9", tcell.KeyF9, tcell.ModCtrl, 0}}},
+	{"debug_continue", "debug_unavailable", menuExecute, []binding{{"F11", tcell.KeyF11, 0, 0}}},
+	{"cancel", "cancel_execution", menuExecute, []binding{{"Esc", tcell.KeyEscape, 0, 0}}},
+	{"history", "history", menuView, []binding{{"F8", tcell.KeyF8, 0, 0}}},
+	{"fullscreen_sql", "fullscreen_sql", menuView, []binding{{"F2", tcell.KeyF2, 0, 0}}},
+	{"fullscreen_results", "fullscreen_results", menuView, []binding{{"Shift+F2", tcell.KeyF2, tcell.ModShift, 0}}},
+	{"focus_toggle", "focus_toggle", menuView, []binding{{"F6", tcell.KeyF6, 0, 0}}},
+	{"context_menu", "context_menu", menuView, []binding{{"F10", tcell.KeyF10, 0, 0}}},
+	{"maximize", "maximize", menuView, nil},
+	{"browser", "schemas", menuView, []binding{{"Alt+B", tcell.KeyRune, tcell.ModAlt, 'b'}}},
+	{"browser_user", "browser_user", menuView, []binding{{"Alt+U", tcell.KeyRune, tcell.ModAlt, 'u'}}},
+	{"browser_type", "browser_type", menuView, []binding{{"Alt+O", tcell.KeyRune, tcell.ModAlt, 'o'}}},
+	{"browser_refresh", "browser_refresh", menuView, nil},
+	{"describe", "describe", menuView, []binding{{"F4", tcell.KeyF4, 0, 0}}},
+	{"quick_describe", "quick_describe", menuView, []binding{{"Ctrl+D", tcell.KeyCtrlD, 0, 0}}},
+	{"settings", "settings", menuTools, nil},
+	{"passwords", "passwords", menuTools, []binding{{"Alt+K", tcell.KeyRune, tcell.ModAlt, 'k'}}},
+	{"help", "help", menuHelp, []binding{{"F1", tcell.KeyF1, 0, 0}}},
 }
 
 func commandFor(id string) command {
@@ -106,6 +112,12 @@ func (s *screen) commandEnabled(id string) bool {
 		return !s.busy
 	case "find", "find_next", "find_previous", "replace", "clear_sql":
 		return !s.busy && s.editor.HasFocus()
+	case "undo", "redo", "paste", "select_all":
+		return !s.busy && s.editor.HasFocus()
+	case "cut":
+		return !s.busy && s.editor.HasFocus() && s.editor.HasSelection()
+	case "browser_refresh":
+		return !s.busy && s.browser != nil && (s.connected || s.demo)
 	case "history":
 		return !s.busy
 	case "pending_work":
@@ -147,6 +159,12 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "undo", "redo", "cut", "paste", "select_all":
+		// Dispatch directly to the editor to retain its selection and undo history.
+		// Going through the global key handler would invoke this command again.
+		s.editor.InputHandler()(tcell.NewEventKey(commandFor(id).bindings[0].key, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	case "browser_refresh":
+		s.refreshBrowser()
 	case "export":
 		s.showExport()
 	case "plan":

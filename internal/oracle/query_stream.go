@@ -68,6 +68,7 @@ type QueryRows struct {
 }
 
 func (s *Session) OpenQuery(ctx context.Context, spec *QuerySpec) (*QueryRows, error) {
+	s.edit = nil
 	s.ClosePage()
 	s.clearLOBs()
 	if s.finishErr != nil {

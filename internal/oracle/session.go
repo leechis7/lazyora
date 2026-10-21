@@ -11,6 +11,8 @@ import (
 const MaxRows = 1000
 
 type Result struct {
+	EditID      uint64
+	EditObject  Object
 	PageID      uint64
 	PageLimited bool
 	Output      Output
@@ -35,6 +37,8 @@ type Cell struct {
 // Session is used only by the UI's single worker. A pinned connection preserves
 // ALTER SESSION state, and the explicit transaction prevents DML auto-commit.
 type Session struct {
+	edit                       *editSnapshot
+	editSequence               uint64
 	lobs                       map[uint64]lobReference
 	lobSequence                uint64
 	page                       *queryPage
@@ -104,6 +108,7 @@ func (s *Session) execute(ctx context.Context, text string, keepPage bool, bindi
 	if err != nil {
 		return result, err
 	}
+	s.edit = nil
 	s.ClosePage()
 	s.clearLOBs()
 	if err = s.resetOutput(ctx); err != nil {
@@ -215,6 +220,7 @@ func formatValue(value any) string {
 }
 
 func (s *Session) Finish(commit bool) error {
+	s.edit = nil
 	s.ClosePage()
 	s.clearLOBs()
 	if s.tx == nil {

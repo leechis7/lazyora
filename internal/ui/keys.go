@@ -28,6 +28,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	}
 
 	page, _ := s.pages.GetFrontPage()
+	if page == "grid_edit" {
+		return s.gridEditKey(event)
+	}
 	if page == "cell" {
 		return s.cellKey(event)
 	}

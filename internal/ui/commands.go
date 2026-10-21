@@ -36,6 +36,8 @@ var commands = []command{
 	{"copy_row", "copy_row", menuEdit, []binding{{"Alt+Y", tcell.KeyRune, tcell.ModAlt, 'y'}}},
 	{"export", "export", menuEdit, []binding{{"Ctrl+Shift+E", tcell.KeyCtrlE, tcell.ModShift, 0}, {"Alt+W", tcell.KeyRune, tcell.ModAlt, 'w'}}},
 	{"copy_preview", "copy_preview", menuEdit, nil},
+	{"table_edit_load", "table_edit_load", menuEdit, nil},
+	{"grid_edit", "grid_edit", menuEdit, nil},
 	{"find", "find", menuEdit, []binding{{"Ctrl+F", tcell.KeyCtrlF, 0, 0}}},
 	{"find_next", "find_next", menuEdit, []binding{{"F3", tcell.KeyF3, 0, 0}}},
 	{"find_previous", "find_previous", menuEdit, []binding{{"Shift+F3", tcell.KeyF3, tcell.ModShift, 0}}},
@@ -125,6 +127,11 @@ func (s *screen) commandEnabled(id string) bool {
 		return false
 	}
 	switch id {
+	case "table_edit_load":
+		return !s.busy && s.connected && !s.transactionUncertain && s.editTableTarget().Kind == "TABLE"
+	case "grid_edit":
+		return !s.busy && s.connected && !s.transactionUncertain && s.table.HasFocus() && s.resultBrowser.source.EditID != 0 && len(s.resultRows) > 0
+
 	case "cell_detail":
 		return !s.busy && s.table.HasFocus() && len(s.resultRows) > 0
 	case "fetch_more":
@@ -204,6 +211,10 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "table_edit_load":
+		s.loadEditTable()
+	case "grid_edit":
+		s.showGridEdit()
 	case "cell_detail":
 		s.showCellDetail()
 	case "fetch_more":

@@ -18,6 +18,7 @@ import (
 )
 
 type job struct {
+	edit          oracle.EditChange
 	cell          oracle.Cell
 	pageID        uint64
 	completion    oracle.CompletionContext
@@ -40,6 +41,9 @@ type job struct {
 }
 
 type screen struct {
+	editChange                       oracle.EditChange
+	editForm                         *tview.Form
+	editInfo                         *tview.TextView
 	cellValue                        oracle.Cell
 	cellInfo, cellText               *tview.TextView
 	cellForm                         *tview.Form
@@ -428,6 +432,16 @@ func (s *screen) worker() {
 			session.ClosePage()
 		}
 		switch j.action {
+		case "edit_load":
+			result, err = session.EditableTable(j.ctx, j.object)
+		case "edit_apply":
+			err = session.ApplyEdit(j.ctx, j.edit)
+			if err == nil {
+				result, err = session.EditableTable(j.ctx, j.object)
+				if err != nil {
+					err = fmt.Errorf("%s: %w", s.tr("edit_applied_reload_error"), err)
+				}
+			}
 		case "cell_preview":
 			cell, err = session.PreviewCell(j.ctx, j.cell)
 		case "cell_save":
@@ -538,6 +552,27 @@ func (s *screen) worker() {
 				s.transactionUncertain = session.TransactionUncertain()
 				s.pendingWork = session.PendingWork()
 				s.invalidateResultCursors(session.PageID())
+				s.invalidateEditResults(session.EditID())
+			}
+			if j.action == "edit_load" || j.action == "edit_apply" {
+				if err != nil {
+					s.setStatus("error", err)
+					if s.editInfo != nil {
+						s.editInfo.SetText(err.Error() + "\n" + s.tr("edit_hint"))
+					}
+				} else {
+					if s.editForm != nil {
+						s.closeGridEdit()
+					}
+					s.render(result)
+					s.app.SetFocus(s.table)
+					if j.action == "edit_apply" {
+						s.setStatus("edit_applied")
+					} else {
+						s.setStatus("edit_loaded")
+					}
+				}
+				return
 			}
 			if j.action == "fetch_more" {
 				s.acceptResultPage(result, err)

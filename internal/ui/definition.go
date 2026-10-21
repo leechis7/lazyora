@@ -46,6 +46,7 @@ func (s *screen) showDefinition(section string) {
 	}
 	s.renderDefinition(oracle.ObjectDefinition{}, nil)
 	s.definitionInfo.SetText(oracle.QualifiedObject(s.definitionObject) + " · " + s.tr(section) + "\n" + s.tr("browser_loading"))
+	s.definitionText.SetText(s.tr("browser_loading"))
 	if s.demo && !s.connected {
 		data := oracle.ObjectDefinition{}
 		if section == "ddl" {

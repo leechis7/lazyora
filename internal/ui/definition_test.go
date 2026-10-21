@@ -77,6 +77,9 @@ func TestDefinitionLazyRefreshAndHelpKeepFocus(t *testing.T) {
 	s.connected = true
 	s.showDefinition("constraints")
 	j := <-s.jobs
+	if s.definitionText.GetText(false) != s.tr("browser_loading") {
+		t.Fatal("pending metadata was presented as a final empty result")
+	}
 	if j.action != "definition" || j.text != "constraints" || j.object != s.object {
 		t.Fatal("wrong metadata request")
 	}

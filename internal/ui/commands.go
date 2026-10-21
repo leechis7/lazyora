@@ -72,6 +72,7 @@ var commands = []command{
 	{"routine_results", "routine_results", menuView, nil},
 	{"complete", "completion", menuEdit, []binding{{"Ctrl+T", tcell.KeyCtrlT, 0, 0}}},
 	{"complete_refresh", "completion_refresh", menuEdit, nil},
+	{"format_code", "format_code", menuEdit, []binding{{"Ctrl+Shift+F", tcell.KeyCtrlF, tcell.ModShift, 0}}},
 	{"help", "help", menuHelp, []binding{{"F1", tcell.KeyF1, 0, 0}}},
 }
 
@@ -108,6 +109,8 @@ func (s *screen) commandEnabled(id string) bool {
 		return false
 	}
 	switch id {
+	case "format_code":
+		return !s.busy && s.editor.HasFocus()
 	case "complete", "complete_refresh":
 		return !s.busy && s.editor.HasFocus() && !s.editor.HasSelection()
 	case "routine_execute":
@@ -175,6 +178,8 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "format_code":
+		s.formatCode()
 	case "complete":
 		s.showCompletion(false)
 	case "complete_refresh":

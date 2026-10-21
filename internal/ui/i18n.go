@@ -4,6 +4,11 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"format_code":            {"Format SQL / PL/SQL", "SQL·PLSQL 정렬"},
+	"format_done":            {"Code formatted · Ctrl+Z undoes this edit", "코드를 정렬했습니다 · Ctrl+Z로 되돌릴 수 있습니다"},
+	"format_unchanged":       {"Code is already formatted", "이미 정렬된 코드입니다"},
+	"format_failed":          {"Could not format code: %v", "코드를 정렬할 수 없습니다: %v"},
+	"format_hint":            {"Ctrl+Shift+F formats the selection, or all text without a selection. Edit menu / source Format button works when the terminal cannot distinguish Shift. Whitespace only, original case and opaque text preserved. No DB execution or compilation. Maximum 4 MiB selection, 16 MiB output, 64 nesting levels; incomplete quotes/comments or cut tokens are rejected.", "Ctrl+Shift+F는 선택 영역, 선택이 없으면 전체를 정렬합니다. 터미널이 Shift를 구분하지 못하면 편집 메뉴 / 소스 정렬 버튼을 사용하세요. 공백만 정리하고 대소문자·문자열·주석을 보존합니다. DB 실행·컴파일하지 않습니다. 선택 최대 4 MiB·결과 16 MiB·중첩 64단계이며 미완성 인용·주석 또는 토큰 중간 선택은 거부합니다."},
 	"completion_connect":     {"Connect for database objects/columns; SQL keywords work offline.", "DB 객체·컬럼은 접속 후 조회합니다. SQL 키워드는 접속 없이도 사용할 수 있습니다."},
 	"completion_loaded":      {"%d completion candidates", "자동완성 후보 %d개"},
 	"completion":             {"Code Insight", "객체·컬럼 자동완성"},

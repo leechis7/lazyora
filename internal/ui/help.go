@@ -16,7 +16,7 @@ type helpSection struct {
 }
 
 var helpSections = []helpSection{
-	{"sql", [2]string{"SQL editor", "SQL 편집"}, []string{"file_new", "file_open", "file_save", "file_save_as", "file_close", "tab_next", "tab_previous", "execute", "script", "script_report", "plan", "output_view", "output_toggle", "complete", "complete_refresh", "routine_execute", "routine_results", "undo", "redo", "cut", "copy", "paste", "select_all", "find", "find_next", "find_previous", "replace", "clear_sql", "history"}, [2]string{
+	{"sql", [2]string{"SQL editor", "SQL 편집"}, []string{"file_new", "file_open", "file_save", "file_save_as", "file_close", "tab_next", "tab_previous", "execute", "script", "script_report", "plan", "output_view", "output_toggle", "complete", "complete_refresh", "format_code", "routine_execute", "routine_results", "undo", "redo", "cut", "copy", "paste", "select_all", "find", "find_next", "find_previous", "replace", "clear_sql", "history"}, [2]string{
 		"UTF-8 SQL files: Open/Save/Save As in File; the title shows the file name and * for unsaved edits.\nSQL tabs (Alt+G): New/Close/Next/Previous tab. Ctrl+N opens a new tab. Ctrl+Tab / Alt+PgDn next, Ctrl+Shift+Tab / Alt+PgUp previous. Tabs share one DB transaction; switching/closing is locked while running.\nClose/Open/Exit ask Save, Discard or Cancel for unsaved SQL. File saving does not commit the database.\nIf Ctrl+Shift+S is indistinguishable from Ctrl+S, use File > Save SQL as.\nIN binds prompt for Text/NUMBER/DATE/TIMESTAMP/NULL; up to 32 names. Values stay in memory for the tab's last SQL; reconnect/clear removes them. General SQL binds are IN-only. Object details / Arguments > Execute (Alt+E) supports routine OUT, IN OUT and REF CURSOR.\nDBMS_OUTPUT: Alt+P opens output. Enable (Alt+E) before SQL; F9/F5 capture after execution. Ctrl+C copies, Alt+D clears the retained display. Session-specific, no commit/rollback, bounded output and collection warning shown separately.\nEnter inserts a newline. Alt+Enter / Shift+F9 also execute.\nExecute selected text; without a selection, execute the statement at the cursor. SQL uses semicolons; separate PL/SQL units with a standalone /.\nFind is literal and case sensitive; next/previous wraps.\nHistory: this run only, up to 100 entries in memory. Loading does not execute SQL.\nDDL and UPDATE/DELETE without an outer WHERE ask before execution. The default is Cancel; Esc also cancels.",
 		"파일 메뉴에서 UTF-8 SQL 열기/저장/다른 이름 저장. 제목에 파일명과 미저장 표시(*)가 나타납니다.\nSQL 탭(Alt+G) 메뉴에서 새 탭/닫기/다음/이전 선택. Ctrl+N 새 탭, Ctrl+Tab / Alt+PgDn 다음, Ctrl+Shift+Tab / Alt+PgUp 이전 탭. DB 트랜잭션은 공유하며 실행 중 탭 전환·닫기가 잠깁니다.\n닫기/열기/종료 전 미저장 SQL은 저장·버리기·취소를 확인합니다. 파일 저장은 DB 커밋과 별개입니다.\nCtrl+Shift+S를 구분하지 못하는 터미널은 파일 > SQL 다른 이름으로 저장을 사용하세요.\nIN 바인드는 문자열/NUMBER/DATE/TIMESTAMP/NULL을 입력합니다(최대 32개). 값은 탭 최근 SQL의 메모리에만 유지하며 재접속/지우기로 제거합니다. 일반 SQL 바인드는 IN 전용입니다. 객체 상세 / 인자 > 실행(Alt+E)에서 루틴 OUT·IN OUT·REF CURSOR를 지원합니다.\nDBMS_OUTPUT: Alt+P로 출력 창을 열고 실행 전에 Alt+E로 켭니다. F9/F5 실행 후 수집하며 Ctrl+C 복사·Alt+D 표시 지우기를 제공합니다. 접속별로 적용하고 커밋·롤백하지 않습니다. 출력 제한과 수집 경고는 별도로 안내합니다.\nEnter는 줄바꿈입니다. Alt+Enter / Shift+F9로도 실행합니다.\n선택한 SQL을 실행하며, 선택이 없으면 커서 위치 문장을 실행합니다. SQL은 세미콜론, PL/SQL 단위는 별도 줄 /로 구분합니다.\n찾기는 대소문자를 구분하는 일반 문자열 검색이며 끝에서 순환합니다.\n이력은 이번 실행의 SQL 최대 100개를 메모리에만 보관하며, 불러와도 자동 실행하지 않습니다.\nDDL과 최상위 WHERE 없는 UPDATE/DELETE는 실행 전 확인합니다. 기본 선택과 Esc는 취소입니다."}},
 	{"results", [2]string{"Results and copying", "조회 결과 · 복사"}, []string{"copy", "copy_row", "export"}, [2]string{
@@ -63,6 +63,9 @@ func (s *screen) mainHelp() string {
 			out.WriteByte('\n')
 		}
 		notes := section.notes[language]
+		if section.id == "sql" {
+			notes += "\n" + s.tr("format_hint")
+		}
 		out.WriteString(tview.Escape(notes) + "\n\n\n")
 	}
 	out.WriteString(helpHeading("about", s.tr("help_about")))
@@ -103,7 +106,7 @@ func (s *screen) helpContext(page string) string {
 	case "object":
 		return s.tr("footer_object") + "\nAlt+S: " + s.tr("source") + " | Alt+A: " + s.tr("arguments")
 	case "source":
-		return s.tr("footer_source") + "\n" + s.tr("syntax_colors")
+		return s.tr("footer_source") + "\n" + s.tr("syntax_colors") + "\n" + s.tr("format_hint")
 	case "arguments":
 		return s.tr("footer_arguments")
 	case "search":

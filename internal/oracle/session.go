@@ -30,6 +30,7 @@ type Cell struct {
 // Session is used only by the UI's single worker. A pinned connection preserves
 // ALTER SESSION state, and the explicit transaction prevents DML auto-commit.
 type Session struct {
+	completionCache            map[completionKey]completionEntry
 	outputEnabled, outputReset bool
 
 	db        *sql.DB

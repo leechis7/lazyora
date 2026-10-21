@@ -168,6 +168,9 @@ func (s *screen) refreshBorders() {
 		apply(s.helpText.Box, s.helpText.HasFocus(), false)
 		apply(s.helpTopics.Box, s.helpTopics.HasFocus(), false)
 	}
+	if s.aboutText != nil {
+		apply(s.aboutText.Box, s.aboutText.HasFocus(), false)
+	}
 	if s.editForm != nil {
 		apply(s.editForm.Box, s.editForm.HasFocus(), false)
 		apply(s.editInfo.Box, s.editInfo.HasFocus(), false)

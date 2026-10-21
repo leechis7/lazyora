@@ -31,7 +31,7 @@ func (s *screen) requestReconnect(config oracle.Config) {
 	s.reconnectDialog = tview.NewModal().SetText(message).AddButtons(labels).
 		SetBackgroundColor(palette.background).SetTextColor(palette.text).
 		SetButtonStyle(buttonStyle()).SetButtonActivatedStyle(buttonFocusStyle())
-	styleBox(s.reconnectDialog.Box)
+	styleModal(s.reconnectDialog)
 	s.reconnectDialog.SetDoneFunc(func(index int, _ string) {
 		if index < 0 || index >= len(labels)-1 {
 			s.cancelReconnect()

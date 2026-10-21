@@ -77,7 +77,7 @@ func (s *screen) guardDocument(next func()) {
 	modal := tview.NewModal().SetText(s.tr("file_unsaved")).AddButtons([]string{s.tr("save"), s.tr("file_discard"), s.tr("cancel")}).SetFocus(2)
 	modal.SetBackgroundColor(palette.background)
 	modal.SetTextColor(palette.text).SetButtonStyle(buttonStyle()).SetButtonActivatedStyle(buttonFocusStyle())
-	styleBox(modal.Box)
+	styleModal(modal)
 	modal.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if action == tview.MouseLeftDoubleClick {
 			action = tview.MouseLeftClick
@@ -269,7 +269,9 @@ func (s *screen) showFileDialog(mode string, next func()) {
 	apply := clickable(tview.NewButton(s.tr("file_" + mode)).SetSelectedFunc(dialog.apply))
 	cancel := clickable(tview.NewButton(s.tr("cancel")).SetSelectedFunc(dialog.close))
 	row := tview.NewFlex().AddItem(apply, 0, 1, false).AddItem(cancel, 0, 1, false)
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(dialog.form, 3, 0, true).AddItem(dialog.list, 0, 1, false).AddItem(dialog.info, 3, 0, false).AddItem(row, 1, 0, false)
+	dialog.form.SetBorder(true)
+	content := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(dialog.form, 5, 0, true).AddItem(dialog.list, 0, 1, false).AddItem(dialog.info, 3, 0, false).AddItem(row, 1, 0, false)
+	root := s.formPopup(content, 96, 30, nil)
 	browse(directory)
 	pathField.SetText(path)
 	s.pages.AddPage("file", root, true, true)

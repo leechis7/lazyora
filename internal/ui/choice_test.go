@@ -56,7 +56,7 @@ func TestRenderedChoicesStayDistinctFromTextInputs(t *testing.T) {
 				marker := false
 				for col := x; col < x+40 && col < 80; col++ {
 					r, _, _, _ := terminal.GetContent(col, y)
-					marker = marker || r == 'v'
+					marker = marker || r == '▾'
 				}
 				if !marker {
 					t.Fatal("choice indicator missing")

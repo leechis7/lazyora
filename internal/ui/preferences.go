@@ -62,6 +62,25 @@ func (s *screen) settingsForm() {
 	clickable(form.GetButton(1))
 	form.SetBorder(true).SetTitle(s.tr("settings_title"))
 	styleForm(form)
-	s.pages.AddPage("settings", form, true, true)
+	root := s.formPopup(form, 74, 17, func(width, height int) {
+		spacing := 2
+		if height < 16 {
+			spacing = 1
+		}
+		if height < 12 {
+			spacing = 0
+		}
+		form.SetItemPadding(spacing)
+		if width < 60 {
+			form.GetFormItem(1).(*tview.Checkbox).SetLabel(s.tr("mouse"))
+			form.GetButton(0).SetLabel(s.tr("save"))
+			form.GetButton(1).SetLabel(s.tr("cancel"))
+		} else {
+			form.GetFormItem(1).(*tview.Checkbox).SetLabel(s.tr("mouse") + " — " + s.tr("mouse_label"))
+			form.GetButton(0).SetLabel(s.tr("save") + " (Ctrl+S)")
+			form.GetButton(1).SetLabel(s.tr("cancel") + " (Esc)")
+		}
+	})
+	s.pages.AddPage("settings", root, true, true)
 	s.app.SetFocus(form)
 }

@@ -183,7 +183,7 @@ func (s *screen) showExport() {
 	for i := 0; i < form.GetButtonCount(); i++ {
 		clickable(form.GetButton(i))
 	}
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(info, 5, 0, false).AddItem(form, 0, 1, true)
+	root := s.formDialog(form, info, 96)
 	s.pages.AddPage("export", root, true, true)
 	s.app.SetFocus(form)
 }

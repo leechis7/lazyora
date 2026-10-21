@@ -158,7 +158,7 @@ func (s *screen) masterDialog(mode string, done func()) {
 	}
 	form.SetBorder(true).SetTitle(s.tr("vault_" + mode))
 	styleForm(form)
-	s.pages.AddPage("master", form, true, true)
+	s.pages.AddPage("master", s.formDialog(form, nil, 84), true, true)
 	focusForm(s, form, 1)
 }
 
@@ -240,7 +240,7 @@ func (s *screen) passwordManager() {
 	form.SetBorder(true)
 	styleForm(form)
 	refresh()
-	s.pages.AddPage("vault", form, true, true)
+	s.pages.AddPage("vault", s.formDialog(form, nil, 96), true, true)
 	focusForm(s, form, 1)
 }
 

@@ -87,7 +87,7 @@ func (s *screen) describe(prompt bool) {
 			load()
 		}
 	})
-	s.pages.AddPage("describe", form, true, true)
+	s.pages.AddPage("describe", s.formDialog(form, nil, 80), true, true)
 	s.app.SetFocus(form)
 	// F4 on a selected/under-cursor object resolves immediately.
 	if !prompt && reference != "" {

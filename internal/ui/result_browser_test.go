@@ -84,7 +84,7 @@ func TestResultFilterCancelAndHelpKeepPendingWork(t *testing.T) {
 	s.pendingChanges = true
 	s.showResultFilter()
 	_, root := s.pages.GetFrontPage()
-	form := root.(*tview.Form)
+	form := root.(*formPopupLayer).content.(*tview.Flex).GetItem(0).(*tview.Form)
 	previous := s.app.GetFocus()
 	form.GetFormItem(0).(*tview.InputField).SetText("not applied")
 	s.key(tcell.NewEventKey(tcell.KeyF1, 0, 0))

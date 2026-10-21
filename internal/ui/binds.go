@@ -96,7 +96,7 @@ func (s *screen) withBinds(text string, next func(map[string]oracle.BindValue)) 
 	}
 	info := tview.NewTextView().SetWrap(true).SetText(s.tr("bind_hint"))
 	info.SetTextColor(palette.muted).SetBackgroundColor(palette.background)
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(info, 3, 0, false).AddItem(form, 0, 1, true)
+	root := s.formDialog(form, info, 88)
 	s.bindForm = form
 	s.pages.AddPage("bind", root, true, true)
 	s.app.SetFocus(form)

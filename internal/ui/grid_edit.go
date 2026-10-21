@@ -60,7 +60,7 @@ func (s *screen) showGridEdit() {
 	for i := 0; i < form.GetButtonCount(); i++ {
 		clickable(form.GetButton(i))
 	}
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.editInfo, 0, 1, false).AddItem(form, 9, 0, true)
+	root := s.formDialog(form, s.editInfo, 92)
 	s.pages.AddPage("grid_edit", root, true, true)
 	focusForm(s, form, 0)
 }

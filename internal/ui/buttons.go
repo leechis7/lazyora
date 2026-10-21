@@ -9,6 +9,8 @@ import (
 // Looking up the actual focused button leaves text cursors and lists untouched.
 func buttonRow(root tview.Primitive, focused *tview.Button) ([]*tview.Button, *tview.Form) {
 	switch container := root.(type) {
+	case *formPopupLayer:
+		return buttonRow(container.Flex, focused)
 	case *tview.Form:
 		var row []*tview.Button
 		found := false
@@ -79,6 +81,9 @@ func (s *screen) buttonArrow(event *tcell.EventKey) bool {
 // Standalone detail pages include their action buttons in Tab navigation.
 func (s *screen) dialogTab(event *tcell.EventKey, content ...tview.Primitive) {
 	_, root := s.pages.GetFrontPage()
+	if popup, ok := root.(*formPopupLayer); ok {
+		root = popup.content
+	}
 	if flex, ok := root.(*tview.Flex); ok {
 		last := flex.GetItem(flex.GetItemCount() - 1)
 		if button, ok := last.(*tview.Button); ok {

@@ -154,7 +154,7 @@ func (s *screen) showRoutineInputs(r oracle.Routine) {
 	}
 	info := tview.NewTextView().SetWrap(true).SetText(strings.Join(signatures, "\n") + "\n\n" + s.tr("routine_hint"))
 	info.SetTextColor(palette.text).SetBackgroundColor(palette.background)
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(info, 0, 1, false).AddItem(form, 0, 2, true)
+	root := s.formDialog(form, info, 96)
 	s.routineForm = form
 	s.pages.AddPage("routine_input", root, true, true)
 	s.app.SetFocus(form)

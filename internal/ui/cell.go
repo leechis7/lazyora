@@ -45,7 +45,15 @@ func (s *screen) showCellDetail() {
 		clickable(form.GetButton(i))
 	}
 	s.renderCellDetail()
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.cellInfo, 3, 0, false).AddItem(s.cellText, 0, 1, true).AddItem(form, 5, 0, false)
+	form.SetBorder(true)
+	fit := formLayout(form)
+	content := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.cellInfo, 3, 0, false).AddItem(s.cellText, 0, 1, true).AddItem(form, 8, 0, false)
+	root := s.formPopup(content, 104, 32, func(w, h int) {
+		controls := min(8, max(5, h/3))
+		content.ResizeItem(form, controls, 0)
+		content.ResizeItem(s.cellInfo, min(3, max(1, h/6)), 0)
+		fit(w, controls)
+	})
 	s.pages.AddPage("cell", root, true, true)
 	s.app.SetFocus(s.cellText)
 }

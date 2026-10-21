@@ -156,7 +156,7 @@ func (s *screen) showSearch(replace bool) {
 	for i := 0; i < form.GetButtonCount(); i++ {
 		clickable(form.GetButton(i))
 	}
-	s.pages.AddPage("search", form, true, true)
+	s.pages.AddPage("search", s.formDialog(form, nil, 92), true, true)
 	s.app.SetFocus(form)
 }
 

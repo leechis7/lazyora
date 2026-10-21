@@ -19,7 +19,7 @@ func (s *screen) newChoice(label string, options []string, selected int, changed
 	}
 	normal := tcell.StyleDefault.Foreground(foreground).Background(background)
 	dropdown := tview.NewDropDown().SetLabel(label).SetOptions(options, changed).SetCurrentOption(selected).
-		SetFieldWidth(40).SetTextOptions("", "", " ", " v", " v").
+		SetFieldWidth(40).SetTextOptions("", "", " ", " ▾", " ▾").
 		SetFieldStyle(normal).SetFocusedStyle(focusStyle()).SetListStyles(normal, focusStyle()).
 		SetPrefixStyle(normal)
 	return &choiceField{DropDown: dropdown, background: background, foreground: foreground}

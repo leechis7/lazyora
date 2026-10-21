@@ -44,16 +44,32 @@ func styleBox(box *tview.Box) {
 
 func styleForm(form *tview.Form) {
 	styleBox(form.Box)
+	form.SetBackgroundColor(palette.surface).SetBorderPadding(1, 1, 2, 2)
+	singleLineBorder(form.Box)
+	form.SetButtonsAlign(tview.AlignCenter)
 	form.SetLabelColor(palette.muted).SetFieldStyle(fieldStyle()).
-		SetButtonStyle(buttonStyle()).SetButtonActivatedStyle(buttonFocusStyle())
+		SetButtonStyle(tcell.StyleDefault.Foreground(palette.text).Background(palette.footer).Bold(true)).SetButtonActivatedStyle(buttonFocusStyle())
 	for index := 0; index < form.GetFormItemCount(); index++ {
 		switch item := form.GetFormItem(index).(type) {
 		case *tview.InputField:
-			item.SetBackgroundColor(palette.background)
+			item.SetBackgroundColor(palette.surface)
+			item.SetPlaceholderStyle(tcell.StyleDefault.Foreground(tcell.GetColor("#66758a")).Background(palette.field))
+			// Form reapplies field attributes before Draw. Set the focused input's
+			// contrast here without replacing InputField or disturbing its caret.
+			item.SetDrawFunc(func(_ tcell.Screen, x, y, width, height int) (int, int, int, int) {
+				label := tcell.StyleDefault.Foreground(palette.muted).Background(palette.surface)
+				input := fieldStyle()
+				if item.HasFocus() {
+					label = label.Foreground(palette.accent).Bold(true)
+					input = input.Background(tcell.ColorWhite).Bold(true)
+				}
+				item.SetLabelStyle(label).SetFieldStyle(input)
+				return x, y, width, height
+			})
 		case *choiceField:
 			item.SetFocusedStyle(focusStyle())
 		case *tview.Checkbox:
-			item.SetActivatedStyle(focusStyle())
+			item.SetActivatedStyle(focusStyle()).SetCheckedString(tview.Escape("[x]")).SetUncheckedString(tview.Escape("[ ]"))
 		}
 	}
 }
@@ -215,6 +231,16 @@ func singleLineBorder(box *tview.Box) {
 				replace(x+width-1, py)
 			}
 		}
-		return x + 1, y + 1, max(0, width-2), max(0, height-2)
+		// Invalidate the cached custom rectangle, then preserve the actual
+		// border and padding configured by each form/help/list.
+		box.SetRect(x, y, width, height)
+		return box.GetInnerRect()
 	})
+}
+
+// Confirmation cards share the form surface while retaining their safe default.
+func styleModal(modal *tview.Modal) {
+	styleBox(modal.Box)
+	modal.SetBackgroundColor(palette.surface)
+	singleLineBorder(modal.Box)
 }

@@ -51,7 +51,7 @@ func (s *screen) showExitConfirmation() {
 		}
 		s.confirmExit(action)
 	})
-	styleBox(s.exitDialog.Box)
+	styleModal(s.exitDialog)
 	s.exitDialog.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if s.busy {
 			return action, nil

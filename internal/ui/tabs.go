@@ -25,6 +25,7 @@ type sqlTab struct {
 	rows       [][]string
 	headers    []string
 	selection  resultSelection
+	grid       gridState
 	status     string
 	statusArgs []any
 }
@@ -51,6 +52,7 @@ func (s *screen) stashTab() {
 	tab.bindSQL, tab.bindValues = s.bindSQL, s.bindValues
 	tab.editor, tab.table, tab.document = s.editor, s.table, s.document
 	tab.rows, tab.headers, tab.selection = s.resultRows, s.resultHeaders, s.resultSelection
+	tab.grid = s.grid
 	tab.status, tab.statusArgs = s.statusKey, append([]any(nil), s.statusArgs...)
 }
 
@@ -67,6 +69,7 @@ func (s *screen) switchTab(index int) {
 	s.bindSQL, s.bindValues = tab.bindSQL, tab.bindValues
 	s.editor, s.table, s.document = tab.editor, tab.table, tab.document
 	s.resultRows, s.resultHeaders, s.resultSelection = tab.rows, tab.headers, tab.selection
+	s.grid = tab.grid
 	s.setStatus(tab.status, tab.statusArgs...)
 	s.rebuildPanels()
 	s.refreshDocumentTitle()
@@ -126,6 +129,7 @@ func (s *screen) closeTab() {
 			s.resultRows = nil
 			s.resultHeaders = nil
 			s.resultSelection = resultSelection{}
+			s.grid = gridState{}
 			s.resultValues = nil
 			s.resultTruncated = false
 			s.resultQuery = nil
@@ -147,6 +151,7 @@ func (s *screen) closeTab() {
 		s.bindSQL, s.bindValues = tab.bindSQL, tab.bindValues
 		s.editor, s.table, s.document = tab.editor, tab.table, tab.document
 		s.resultRows, s.resultHeaders, s.resultSelection = tab.rows, tab.headers, tab.selection
+		s.grid = tab.grid
 		s.setStatus(tab.status, tab.statusArgs...)
 		s.rebuildPanels()
 		s.refreshDocumentTitle()

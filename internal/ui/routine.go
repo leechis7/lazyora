@@ -199,7 +199,7 @@ func (s *screen) showRoutineResults(result oracle.RoutineResult) {
 		buttons := tview.NewFlex().AddItem(clickable(tview.NewButton(s.tr("export")).SetSelectedFunc(s.showExport)), 0, 1, false).
 			AddItem(clickable(tview.NewButton(s.tr("copy_row")).SetSelectedFunc(func() { s.copyResults("row") })), 0, 1, false).
 			AddItem(clickable(tview.NewButton(s.tr("close")).SetSelectedFunc(closeGrid)), 0, 1, false)
-		grid := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.table, 0, 1, true).AddItem(buttons, 1, 0, false)
+		grid := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.resultGrid(), 0, 1, true).AddItem(buttons, 1, 0, false)
 		s.pages.AddPage("routine_grid", grid, true, true)
 		s.app.SetFocus(s.table)
 	}

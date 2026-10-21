@@ -136,6 +136,7 @@ type screen struct {
 	resultRows                               [][]string
 	resultHeaders                            []string
 	resultSelection                          resultSelection
+	grid                                     gridState
 	clipboardText                            string
 	copyFocus                                tview.Primitive
 	copyText                                 *tview.TextView
@@ -238,7 +239,7 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 	s.status = tview.NewTextView()
 	s.queryLayout = tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(s.editor, 0, 2, true).
-		AddItem(s.table, 0, 3, false).AddItem(s.status, 2, 0, false)
+		AddItem(s.resultGrid(), 0, 3, false).AddItem(s.status, 2, 0, false)
 	s.mainLayout = tview.NewFlex().AddItem(s.newBrowser(), 0, 1, false).AddItem(s.queryLayout, 0, 3, true)
 	s.pages = tview.NewPages().AddPage("main", s.mainLayout, true, true)
 	s.pages.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
@@ -687,16 +688,40 @@ func (s *screen) render(result oracle.Result) {
 		s.resultRows[i] = append([]string(nil), row...)
 	}
 	s.resultSelection = resultSelection{}
+	s.grid = gridState{widths: make([]int, len(result.Columns))}
+	s.table.SetSelectionChangedFunc(nil)
 	s.table.Clear()
 	for col, name := range result.Columns {
-		s.table.SetCell(0, col, tview.NewTableCell(tview.Escape(name)).SetStyle(tcell.StyleDefault.Foreground(palette.accent).Background(palette.surface).Bold(true)).SetSelectable(false))
+		style := tcell.StyleDefault.Foreground(palette.accent).Background(palette.surface).Bold(true)
+		if s.limitedColors {
+			style = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorTeal).Bold(true)
+		}
+		s.table.SetCell(0, col, tview.NewTableCell(tview.Escape(name)).SetStyle(style).SetSelectable(false))
 	}
 	if len(result.Rows) > 0 && len(result.Columns) > 0 {
 		s.table.Select(1, 0)
 	}
 	for row, values := range result.Rows {
 		for col, value := range values {
-			s.table.SetCell(row+1, col, tview.NewTableCell(tview.Escape(value)).SetTextColor(palette.text).SetMaxWidth(80))
+			text := gridPreview(value)
+			if s.resultValues[row][col].Null {
+				text = "∅ NULL"
+			}
+			cell := tview.NewTableCell(tview.Escape(text)).SetStyle(s.gridBaseStyle(row+1, col)).SetMaxWidth(40)
+			if gridNumeric(s.resultValues[row][col]) {
+				cell.SetAlign(tview.AlignRight)
+			}
+			s.table.SetCell(row+1, col, cell)
 		}
 	}
+	for col := range result.Columns {
+		width := s.gridAutoWidth(col)
+		s.grid.widths[col] = width
+		for row := 0; row < s.table.GetRowCount(); row++ {
+			s.table.GetCell(row, col).SetMaxWidth(width)
+		}
+	}
+	s.table.SetSelectionChangedFunc(func(_, _ int) { s.highlightResults(); s.refreshResultPosition() })
+	s.highlightResults()
+	s.refreshResultPosition()
 }

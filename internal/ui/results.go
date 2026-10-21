@@ -19,16 +19,17 @@ func (s *screen) resultBounds() (int, int, int, int) {
 }
 
 func (s *screen) highlightResults() {
-	r1, c1, r2, c2 := s.resultBounds()
-	for row := 1; row < s.table.GetRowCount(); row++ {
-		for col := 0; col < s.table.GetColumnCount(); col++ {
-			bg := palette.background
-			if s.resultSelection.active && row >= r1 && row <= r2 && col >= c1 && col <= c2 {
-				bg = palette.footer
+	current, _ := s.table.GetSelection()
+	rows := map[int]bool{s.grid.row: true, current: true}
+	for _, selection := range []resultSelection{s.grid.painted, s.resultSelection} {
+		if selection.active {
+			for row := min(selection.anchorRow, selection.endRow); row <= max(selection.anchorRow, selection.endRow); row++ {
+				rows[row] = true
 			}
-			s.table.GetCell(row, col).SetBackgroundColor(bg)
 		}
 	}
+	s.paintResultRows(rows)
+	s.grid.painted, s.grid.row = s.resultSelection, current
 }
 
 func (s *screen) clearResultSelection() {
@@ -46,6 +47,16 @@ func (s *screen) resultMouse(action tview.MouseAction, event *tcell.EventMouse) 
 	}
 	x, y := event.Position()
 	row, col := s.table.CellAt(x, y)
+	innerX, _, _, _ := s.table.GetInnerRect()
+	if x < innerX && s.table.InRect(x, y) && row > 0 && row < s.table.GetRowCount() && (action == tview.MouseLeftDown || action == tview.MouseLeftClick) {
+		if action == tview.MouseLeftDown {
+			s.resultSelection = resultSelection{anchorRow: row, endRow: row, anchorCol: 0, endCol: len(s.resultHeaders) - 1, active: true}
+			s.table.Select(row, 0)
+			s.app.SetFocus(s.table)
+			s.highlightResults()
+		}
+		return tview.MouseConsumed, nil
+	}
 	valid := s.table.InRect(x, y) && row > 0 && row < s.table.GetRowCount() && col >= 0 && col < s.table.GetColumnCount()
 	switch action {
 	case tview.MouseRightClick:

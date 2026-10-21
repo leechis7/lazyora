@@ -4,6 +4,11 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"grid_widen":             {"Widen current column", "현재 컬럼 너비 늘리기"},
+	"grid_narrow":            {"Narrow current column", "현재 컬럼 너비 줄이기"},
+	"grid_auto":              {"Auto-fit current column", "현재 컬럼 너비 자동 조절"},
+	"grid_width":             {"Column %s: %d cells wide", "컬럼 %s: 너비 %d칸"},
+	"grid_position":          {" · Row %d/%d · Col %d/%d ", " · %d/%d행 · %d/%d열 "},
 	"definition_loaded":      {"Loaded %s metadata", "%s 정보를 조회했습니다"},
 	"footer_definition":      {"1–6 Section | Enter / Alt+O Explore | Alt+Left Back | Ctrl+C Copy | Ctrl+R Refresh | Esc Close/cancel", "1–6 항목 | Enter / Alt+O 객체 탐색 | Alt+Left 뒤로 | Ctrl+C 복사 | Ctrl+R 새로고침 | Esc 닫기/취소"},
 	"grants":                 {"Grants", "권한"},

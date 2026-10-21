@@ -72,6 +72,13 @@ var commands = []command{
 	{"routine_results", "routine_results", menuView, nil},
 	{"complete", "completion", menuEdit, []binding{{"Ctrl+T", tcell.KeyCtrlT, 0, 0}}},
 	{"complete_refresh", "completion_refresh", menuEdit, nil},
+	{"duplicate_line", "duplicate_line", menuEdit, nil},
+	{"copy_line", "copy_line", menuEdit, nil},
+	{"cut_line", "cut_line", menuEdit, nil},
+	{"delete_line", "delete_line", menuEdit, nil},
+	{"line_up", "line_up", menuEdit, nil},
+	{"line_down", "line_down", menuEdit, nil},
+	{"transpose_line", "transpose_line", menuEdit, nil},
 	{"format_code", "format_code", menuEdit, []binding{{"Ctrl+Shift+F", tcell.KeyCtrlF, tcell.ModShift, 0}}},
 	{"help", "help", menuHelp, []binding{{"F1", tcell.KeyF1, 0, 0}}},
 }
@@ -109,6 +116,8 @@ func (s *screen) commandEnabled(id string) bool {
 		return false
 	}
 	switch id {
+	case "duplicate_line", "copy_line", "cut_line", "delete_line", "line_up", "line_down", "transpose_line":
+		return !s.busy && s.editor.HasFocus()
 	case "format_code":
 		return !s.busy && s.editor.HasFocus()
 	case "complete", "complete_refresh":
@@ -134,7 +143,7 @@ func (s *screen) commandEnabled(id string) bool {
 	case "undo", "redo", "paste", "select_all":
 		return !s.busy && s.editor.HasFocus()
 	case "cut":
-		return !s.busy && s.editor.HasFocus() && s.editor.HasSelection()
+		return !s.busy && s.editor.HasFocus() && (s.editor.HasSelection() || s.prefs.EditorKeymap == "notepad++")
 	case "browser_refresh":
 		return !s.busy && s.browser != nil && (s.connected || s.demo)
 	case "history":
@@ -154,7 +163,7 @@ func (s *screen) commandEnabled(id string) bool {
 	case "describe", "quick_describe":
 		return !s.busy && (s.connected || s.demo)
 	case "copy":
-		return (s.table.HasFocus() && len(s.resultRows) > 0) || (s.editor.HasFocus() && s.editor.HasSelection())
+		return (s.table.HasFocus() && len(s.resultRows) > 0) || (s.editor.HasFocus() && (s.editor.HasSelection() || s.prefs.EditorKeymap == "notepad++"))
 	case "copy_row":
 		return s.table.HasFocus() && len(s.resultRows) > 0
 	case "export":
@@ -178,6 +187,8 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "duplicate_line", "copy_line", "cut_line", "delete_line", "line_up", "line_down", "transpose_line":
+		s.editorLineAction(s.editor, id)
 	case "format_code":
 		s.formatCode()
 	case "complete":
@@ -193,6 +204,10 @@ func (s *screen) invoke(id string) {
 	case "output_toggle":
 		s.requestOutputToggle()
 	case "undo", "redo", "cut", "paste", "select_all":
+		if id == "cut" && s.prefs.EditorKeymap == "notepad++" && !s.editor.HasSelection() {
+			s.editorLineAction(s.editor, "cut_line")
+			return
+		}
 		// Dispatch directly to the editor to retain its selection and undo history.
 		// Going through the global key handler would invoke this command again.
 		s.editor.InputHandler()(tcell.NewEventKey(commandFor(id).bindings[0].key, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
@@ -261,7 +276,11 @@ func (s *screen) invoke(id string) {
 			s.copyResults("selection")
 		} else {
 			text, _, _ := s.editor.GetSelection()
-			s.sendClipboard(text)
+			if text == "" && s.prefs.EditorKeymap == "notepad++" {
+				s.editorLineAction(s.editor, "copy_line")
+			} else {
+				s.sendClipboard(text)
+			}
 		}
 	case "copy_preview":
 		s.copyPreview()

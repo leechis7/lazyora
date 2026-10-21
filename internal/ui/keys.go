@@ -52,6 +52,20 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if s.buttonArrow(event) {
 		return nil
 	}
+	if page == "editor_actions" {
+		if event.Key() == tcell.KeyEscape || event.Key() == tcell.KeyF10 {
+			s.closeSourceEdit()
+			return nil
+		}
+		if event.Key() == tcell.KeyF1 {
+			s.showHelp()
+			return nil
+		}
+		if event.Key() == tcell.KeyCtrlC {
+			return nil
+		}
+		return event
+	}
 	if page == "completion" {
 		return s.completionKey(event)
 	}
@@ -167,7 +181,7 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 			return nil
 		}
 		if event.Key() == tcell.KeyEnter && s.searchForm.GetFormItem(0).HasFocus() {
-			s.searchAction("next")
+			s.searchAction("submit")
 			return nil
 		}
 		if event.Key() == tcell.KeyF3 {
@@ -220,6 +234,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		s.showHelp()
 		return nil
 	}
+	if s.editorKey(event) {
+		return nil
+	}
 	if page == "object" {
 		if alt && letter == 'e' {
 			s.showRoutine(s.object, "")
@@ -250,6 +267,18 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return event
 	}
 	if page == "source" {
+		if event.Key() == tcell.KeyF10 {
+			s.showSourceEdit()
+			return nil
+		}
+		if alt && letter == 'x' {
+			s.closeSource()
+			return nil
+		}
+		if alt && letter == 'r' {
+			s.reloadSource()
+			return nil
+		}
 		if event.Key() == tcell.KeyCtrlF && event.Modifiers()&tcell.ModShift != 0 {
 			s.formatCode()
 			return nil
@@ -303,6 +332,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 				return nil
 			case 'm':
 				focusForm(s, s.prefsForm, 1)
+				return nil
+			case 'k':
+				focusForm(s, s.prefsForm, 2)
 				return nil
 			}
 		}

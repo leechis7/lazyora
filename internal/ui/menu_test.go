@@ -125,7 +125,7 @@ func TestLongMenuScrollsWithinSmallTerminal(t *testing.T) {
 			visible.WriteRune(main)
 		}
 	}
-	if !strings.Contains(visible.String(), s.tr("clear_sql")) {
+	if !strings.Contains(visible.String(), s.tr("format_code")) {
 		t.Fatal("last edit command is not reachable on a short terminal")
 	}
 }

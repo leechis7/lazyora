@@ -28,6 +28,14 @@ func (s *screen) settingsForm() {
 	}
 	form.AddFormItem(s.newChoice(s.tr("language"), []string{"English", "한국어"}, selected, nil)).
 		AddCheckbox(s.tr("mouse")+" — "+s.tr("mouse_label"), s.prefs.Mouse, nil)
+	keymaps := []string{"", "vim", "notepad++"}
+	keymapIndex := 0
+	for i, keymap := range keymaps {
+		if keymap == s.prefs.EditorKeymap {
+			keymapIndex = i
+		}
+	}
+	form.AddFormItem(s.newChoice(s.tr("editor_keymap"), []string{s.tr("keymap_default"), "Vim", "Notepad++"}, keymapIndex, nil))
 	s.savePrefs = func() {
 		index, _ := form.GetFormItem(0).(*choiceField).GetCurrentOption()
 		language := "en"
@@ -35,11 +43,14 @@ func (s *screen) settingsForm() {
 			language = "ko"
 		}
 		prefs := settings.Config{Language: language, Mouse: form.GetFormItem(1).(*tview.Checkbox).IsChecked()}
+		keymapIndex, _ := form.GetFormItem(2).(*choiceField).GetCurrentOption()
+		prefs.EditorKeymap = keymaps[keymapIndex]
 		if err := settings.Save(s.prefsPath, prefs); err != nil {
 			form.SetTitle(" " + fmt.Sprintf(s.tr("settings_error"), err) + " ")
 			return
 		}
 		s.prefs = prefs
+		s.vim = vimState{}
 		s.app.EnableMouse(prefs.Mouse)
 		s.refreshLabels()
 		s.closeSettings()

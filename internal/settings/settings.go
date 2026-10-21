@@ -10,8 +10,9 @@ import (
 )
 
 type Config struct {
-	Language string `json:"language"`
-	Mouse    bool   `json:"mouse"`
+	Language     string `json:"language"`
+	Mouse        bool   `json:"mouse"`
+	EditorKeymap string `json:"editor_keymap,omitempty"`
 }
 
 func Default() Config {
@@ -42,6 +43,9 @@ func Path() (string, error) {
 func (c Config) Validate() error {
 	if c.Language != "en" && c.Language != "ko" {
 		return errors.New("language must be en or ko")
+	}
+	if c.EditorKeymap != "" && c.EditorKeymap != "vim" && c.EditorKeymap != "notepad++" {
+		return errors.New("editor_keymap must be empty (default), vim or notepad++")
 	}
 	return nil
 }

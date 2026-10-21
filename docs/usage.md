@@ -246,3 +246,21 @@ SQL 절·선택 컬럼·블록을 줄바꿈하고 두 칸 들여쓰기로 정리
 선택 범위는 최대 4 MiB, 출력은 최대 16 MiB, 들여쓰기 중첩은 최대 64단계입니다. 큰 파일은 필요한 범위를 선택해 정렬할 수 있습니다. 표준 Go 코드로 구현하며 별도 외부 포맷터 설치나 라이선스는 추가하지 않습니다.
 
 단축키 참고: [Quest Format Code 안내](https://support.quest.com/de-de/technical-documents/toad-for-oracle/2026%20r1/getting-started-guide/33).
+
+## 편집기 키맵
+
+도구 → 설정 → **편집기 키맵(Alt+K)**에서 **기본 / Vim / Notepad++**를 선택하고 저장합니다. 기존 설정 파일에는 기본 키맵을 적용하며, 변경해도 SQL 원문·탭·선택·실행 취소 기록을 지우지 않습니다. 설정 파일의 `editor_keymap`은 생략/빈 문자열이면 기본, `vim` 또는 `notepad++`입니다.
+
+키맵은 포커스가 있는 SQL·소스 편집기에만 적용합니다. 접속 입력·메뉴·결과 그리드의 조작은 유지하며 F9 실행, F5 스크립트, 세션의 커밋·롤백과 Ctrl+Q 종료 확인은 기존 경로를 사용합니다. Tab은 기존처럼 패널·버튼 이동입니다. 소스에서는 F9 컴파일 확인, **Alt+R 다시 조회 / Alt+X 닫기 / F10 편집 메뉴**를 사용합니다. 터미널 붙여넣기는 모드와 관계없이 원문을 삽입합니다.
+
+| 키맵 | 지원하는 조작 |
+| --- | --- |
+| 기본 | 기존 단축키 유지. Ctrl+L 전체 선택, Ctrl+D 빠른 객체 상세, Ctrl+T 자동완성, Ctrl+R 바꾸기(소스는 다시 조회) |
+| Vim | NORMAL·INSERT·VISUAL 표시. hjkl/방향키, w/b/e, 0/^/$, gg/G, 이동·d/y/c·x/X의 최대 999회 횟수. i/a/I/A/o/O 입력, Esc 일반 모드, v/V 선택. d/y/c와 이동 또는 dd/yy/cc, x/X/D/C, p/P, u 및 Ctrl+R 다시 실행. /·? 일반 문자열 찾기, n/N 같은/반대 방향 반복 |
+| Notepad++ | Ctrl+A 전체 선택, Ctrl+D 선택/줄 복제, Ctrl+L 줄 잘라내기, Ctrl+Shift+L 줄 삭제, Ctrl+Shift+위/아래 줄 이동, Ctrl+T 위 줄과 바꾸기. 선택 없는 Ctrl+C/X는 줄 복사/잘라내기. Ctrl+Space 자동완성, Ctrl+F·F3 찾기, Ctrl+R 바꾸기 |
+
+Vim은 위에 명시한 일부 명령을 지원합니다. 전체 Vim·Ex(`:`)·텍스트 객체·블록 선택·여러 레지스터·매크로·점 반복은 지원하지 않습니다. 삽입 실행 취소 묶음은 기존 편집기를 따릅니다. Vim의 Ctrl+R은 바꾸기/소스 다시 조회 대신 다시 실행이므로 편집 메뉴 또는 소스의 다시 조회 버튼을 사용하세요. 새로 선택한 편집기/다른 탭은 NORMAL에서 시작합니다.
+
+Notepad++에서는 Ctrl+D/Ctrl+L/Ctrl+T를 편집 조작으로 사용하므로 전체 선택은 Ctrl+A, 자동완성은 Ctrl+Space, 객체 상세는 F4/보기 메뉴를 사용합니다. Ctrl+H는 구형 터미널의 Backspace와 구분되지 않아 바꾸기에 배정하지 않습니다. Ctrl+Space·Ctrl+Shift 조합을 전달하지 못하는 터미널은 편집 메뉴(SQL: Alt+E, 소스: F10)를 사용하세요. F1 도움말과 포커스별 하단 안내도 선택한 키맵을 반영합니다.
+
+키 대조 근거: [Notepad++ 편집 설명서](https://github.com/notepad-plus-plus/npp-usermanual/blob/master/content/docs/editing.md), [Notepad++ 공식 기본 키 정의](https://github.com/notepad-plus-plus/notepad-plus-plus/blob/master/PowerEditor/src/Parameters.cpp), [Vim 이동·연산자 설명서](https://vimhelp.org/motion.txt.html).

@@ -36,6 +36,9 @@ type job struct {
 }
 
 type screen struct {
+	vim                                  vimState
+	yankText                             string
+	yankLine                             bool
 	completionEditor                     *tview.TextArea
 	completionOriginal                   string
 	completionCursor                     int

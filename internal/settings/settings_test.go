@@ -121,3 +121,32 @@ func TestUnsetSavedLanguageUsesLocaleWithoutError(t *testing.T) {
 		t.Fatal("invalid explicit language silently accepted")
 	}
 }
+
+func TestEditorKeymapValidationAndLegacyConfig(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "settings.json")
+	for _, keymap := range []string{"", "vim", "notepad++"} {
+		want := Config{Language: "en", Mouse: true, EditorKeymap: keymap}
+		if err := Save(path, want); err != nil {
+			t.Fatal(err)
+		}
+		got, err := Load(path)
+		if err != nil || got != want {
+			t.Fatalf("roundtrip: %+v %v", got, err)
+		}
+	}
+	before, _ := os.ReadFile(path)
+	if err := Save(path, Config{Language: "en", EditorKeymap: "emacs"}); err == nil {
+		t.Fatal("invalid map accepted")
+	}
+	after, _ := os.ReadFile(path)
+	if string(before) != string(after) {
+		t.Fatal("invalid save overwrote config")
+	}
+	if err := os.WriteFile(path, []byte(`{"language":"ko","mouse":false}`), 0600); err != nil {
+		t.Fatal(err)
+	}
+	got, err := Load(path)
+	if err != nil || got.EditorKeymap != "" || got.Language != "ko" || got.Mouse {
+		t.Fatal("legacy config changed defaults")
+	}
+}

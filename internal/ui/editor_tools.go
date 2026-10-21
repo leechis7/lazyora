@@ -95,9 +95,13 @@ func (s *screen) closeHistory() {
 }
 
 func (s *screen) showSearch(replace bool) {
+	editor := s.activeEditor()
+	if editor == nil {
+		return
+	}
 	s.searchFocus = s.app.GetFocus()
 	form := tview.NewForm().AddInputField(s.tr("find_text"), s.findText, 40, nil, nil)
-	if selected, _, _ := s.editor.GetSelection(); selected != "" && !strings.Contains(selected, "\n") {
+	if selected, _, _ := editor.GetSelection(); selected != "" && !strings.Contains(selected, "\n") {
 		form.GetFormItem(0).(*tview.InputField).SetText(selected)
 	}
 	s.searchForm = form
@@ -114,22 +118,29 @@ func (s *screen) showSearch(replace bool) {
 			s.replaceText = form.GetFormItem(1).(*tview.InputField).GetText()
 		}
 		s.closeSearch()
+		if action == "submit" {
+			action = "next"
+			if s.prefs.EditorKeymap == "vim" && s.vim.searchBack {
+				action = "previous"
+			}
+		}
 		switch action {
 		case "replace":
-			selected, start, end := s.editor.GetSelection()
-			if selected == s.findText {
-				s.editor.Replace(start, end, s.replaceText).Select(start+len(s.replaceText), start+len(s.replaceText))
+			selected, start, end := editor.GetSelection()
+			if selected == s.findText || s.prefs.EditorKeymap == "vim" && start == end && strings.HasPrefix(editor.GetText()[start:], s.findText) {
+				end = start + len(s.findText)
+				editor.Replace(start, end, s.replaceText).Select(start+len(s.replaceText), start+len(s.replaceText))
 			}
-			s.findSQL(false)
+			s.findEditorFrom(editor, false, false)
 		case "replace_all":
-			text := s.editor.GetText()
+			text := editor.GetText()
 			count := strings.Count(text, s.findText)
 			if count > 0 {
-				s.editor.Replace(0, len(text), strings.ReplaceAll(text, s.findText, s.replaceText))
+				editor.Replace(0, len(text), strings.ReplaceAll(text, s.findText, s.replaceText))
 			}
 			s.setStatus("replaced", count)
 		default:
-			s.findSQL(action == "previous")
+			s.findEditor(editor, action == "previous")
 		}
 	}
 	for _, entry := range []struct{ label, action string }{{"find_next", "next"}, {"find_previous", "previous"}} {
@@ -158,13 +169,22 @@ func (s *screen) closeSearch() {
 	}
 }
 
-func (s *screen) findSQL(previous bool) {
+func (s *screen) findSQL(previous bool) { s.findEditor(s.editor, previous) }
+
+func (s *screen) findEditor(editor *tview.TextArea, previous bool) {
+	s.findEditorFrom(editor, previous, true)
+}
+
+func (s *screen) findEditorFrom(editor *tview.TextArea, previous, skipCaret bool) {
 	if s.findText == "" {
 		s.showSearch(false)
 		return
 	}
-	text := s.editor.GetText()
-	_, start, end := s.editor.GetSelection()
+	text := editor.GetText()
+	_, start, end := editor.GetSelection()
+	if skipCaret && s.prefs.EditorKeymap == "vim" && start == end && end < len(text) {
+		end = nextCluster(text, end)
+	}
 	found := -1
 	if previous {
 		found = strings.LastIndex(text[:start], s.findText)
@@ -182,7 +202,12 @@ func (s *screen) findSQL(previous bool) {
 		s.setStatus("find_not_found")
 		return
 	}
-	s.editor.Select(found, found+len(s.findText))
-	s.focusPanel("sql")
+	editor.Select(found, found+len(s.findText))
+	if s.prefs.EditorKeymap == "vim" {
+		s.vim.editor, s.vim.mode, s.vim.dot = editor, "NORMAL", found
+		s.vim.position()
+		s.vim.remember()
+	}
+	s.app.SetFocus(editor)
 	s.setStatus("find_match", found+1)
 }

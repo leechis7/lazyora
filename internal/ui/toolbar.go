@@ -5,6 +5,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"lazyora/internal/appinfo"
+	"strings"
 )
 
 // tview may report a rapid click on a different button as a double click.
@@ -51,6 +52,14 @@ func (s *screen) toolbar() *tview.Flex {
 				s.invoke(key.action)
 				return
 			}
+			if page, _ := s.pages.GetFrontPage(); page == "source" && key.action == "reload" {
+				s.reloadSource()
+				return
+			}
+			if page, _ := s.pages.GetFrontPage(); page == "source" && key.action == "close" {
+				s.closeSource()
+				return
+			}
 			if key.action == "source" {
 				s.showSource()
 				return
@@ -90,6 +99,9 @@ func (s *screen) refreshFooter() {
 	}
 	hint := "footer_sql"
 	switch page {
+	case "editor_actions":
+		hint = "menu_hint"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
 	case "completion":
 		hint = "footer_completion"
 		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+R", "completion_refresh", tcell.KeyCtrlR, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
@@ -202,7 +214,7 @@ func (s *screen) refreshFooter() {
 		}
 	case "source":
 		hint = "footer_source"
-		keys = []footerKey{{"F9", "compile", tcell.KeyF9, 0}, {"Ctrl+R", "reload", tcell.KeyCtrlR, tcell.ModNone}, {"Esc", "close", tcell.KeyEscape, tcell.ModNone}}
+		keys = []footerKey{{"F9", "compile", tcell.KeyF9, 0}, {"Alt+R", "reload", tcell.KeyRune, tcell.ModAlt}, {"Alt+X", "close", tcell.KeyRune, tcell.ModAlt}}
 	case "arguments":
 		hint = "footer_arguments"
 		keys = []footerKey{{"F1", "help", tcell.KeyF1, tcell.ModNone}, {"PgUp", "previous_page", tcell.KeyPgUp, tcell.ModNone}, {"PgDn", "next_page", tcell.KeyPgDn, tcell.ModNone}, {"Esc", "close", tcell.KeyEscape, tcell.ModNone}}
@@ -218,9 +230,23 @@ func (s *screen) refreshFooter() {
 		}
 	}
 	text := s.tr(hint)
+	if hint == "footer_source" {
+		text = s.sourceKeymapFooter()
+	}
 	viewKeys := shortcut("fullscreen_sql") + " / " + shortcut("fullscreen_results") + " " + s.tr("fullscreen_short")
 	if hint == "footer_sql" {
 		text = fmt.Sprintf(text, bindingLabels("execute", 2), shortcut("describe"), shortcut("focus_toggle"), viewKeys)
+	}
+	if hint == "footer_sql" && s.activeEditor() != nil {
+		if s.prefs.EditorKeymap == "notepad++" {
+			text = strings.ReplaceAll(text, "Ctrl+T", "Ctrl+Space")
+		}
+		if s.prefs.EditorKeymap == "vim" {
+			text = "Vim " + s.vimMode() + " | " + text
+		}
+		if s.prefs.EditorKeymap == "notepad++" {
+			text = "Notepad++ | " + text
+		}
 	}
 	if hint == "footer_results" {
 		text = fmt.Sprintf(text, shortcut("copy"), shortcut("copy_row"), shortcut("focus_toggle"), viewKeys)

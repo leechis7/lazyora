@@ -187,6 +187,9 @@ type screen struct {
 	busy, quitting, demo, connected          bool
 	cancel                                   context.CancelFunc
 	helpFocus, connectFocus, prefsFocus      tview.Primitive
+	helpText                                 *tview.TextView
+	helpTopics                               *tview.List
+	helpContextText                          string
 	connectForm, connectProfiles, prefsForm  *tview.Form
 	connectAction, saveConnection, savePrefs func()
 	connectionOptions                        func()

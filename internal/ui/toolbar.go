@@ -68,8 +68,8 @@ func (s *screen) toolbar() *tview.Flex {
 				s.showArguments()
 				return
 			}
-			if page, root := s.pages.GetFrontPage(); page == "help" {
-				s.app.SetFocus(root.(*tview.Flex).GetItem(0))
+			if page, _ := s.pages.GetFrontPage(); page == "help" {
+				s.app.SetFocus(s.helpText)
 			} else if page == "object" {
 				s.app.SetFocus(s.objectTable)
 			} else if page == "arguments" {

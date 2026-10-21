@@ -164,9 +164,9 @@ func (s *screen) refreshBorders() {
 			apply(form.Box, form.HasFocus(), false)
 		}
 	}
-	if page, root := s.pages.GetFrontPage(); page == "help" {
-		help := root.(*tview.Flex).GetItem(0).(*tview.TextView)
-		apply(help.Box, help.HasFocus(), false)
+	if s.helpText != nil {
+		apply(s.helpText.Box, s.helpText.HasFocus(), false)
+		apply(s.helpTopics.Box, s.helpTopics.HasFocus(), false)
 	}
 }
 

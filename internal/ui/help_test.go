@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -10,6 +11,76 @@ import (
 	"lazyora/internal/appinfo"
 	"lazyora/internal/oracle"
 )
+
+func TestHelpResponsiveTopicsKeyboardAndResize(t *testing.T) {
+	for _, language := range []string{"en", "ko"} {
+		for _, limited := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/limited=%v", language, limited), func(t *testing.T) {
+				s := shortcutScreen(t)
+				s.prefs.Language, s.limitedColors = language, limited
+				s.app.SetFocus(s.editor)
+				s.showHelp()
+				_, root := s.pages.GetFrontPage()
+				terminal := tcell.NewSimulationScreen("UTF-8")
+				if err := terminal.Init(); err != nil {
+					t.Fatal(err)
+				}
+				defer terminal.Fini()
+				deliver := func(event *tcell.EventKey) {
+					if event = s.key(event); event != nil {
+						s.app.GetFocus().InputHandler()(event, func(p tview.Primitive) { s.app.SetFocus(p) })
+					}
+				}
+				for _, size := range [][2]int{{100, 30}, {60, 20}, {40, 12}, {80, 24}} {
+					terminal.SetSize(size[0], size[1])
+					root.SetRect(0, 0, size[0], size[1]-2)
+					root.Draw(terminal)
+					x, y, w, h := s.helpText.GetRect()
+					_, ty, tw, th := s.helpTopics.GetRect()
+					if w < 35 || h < 4 || tw <= 0 || th <= 0 {
+						t.Fatalf("unreadable layout at %v: article=%d,%d %dx%d contents=%dx%d", size, x, y, w, h, tw, th)
+					}
+					if size[0] < 76 && y <= ty || size[0] >= 76 && (y != ty || x < tw) {
+						t.Fatalf("contents did not adapt to terminal width %v", size)
+					}
+				}
+				// Shift+Tab from the article reaches the contents; arrows change
+				// topics without sending any application command to the worker.
+				deliver(tcell.NewEventKey(tcell.KeyBacktab, 0, 0))
+				if !s.helpTopics.HasFocus() {
+					t.Fatal("cannot reach contents with the keyboard")
+				}
+				deliver(tcell.NewEventKey(tcell.KeyDown, 0, 0))
+				if s.helpTopics.GetCurrentItem() != 1 || !strings.Contains(s.helpText.GetText(true), "Ctrl+Enter") {
+					t.Fatal("contents navigation did not load SQL commands")
+				}
+				deliver(tcell.NewEventKey(tcell.KeyEnter, 0, 0))
+				if !s.helpText.HasFocus() {
+					t.Fatal("Enter did not move to the selected article")
+				}
+				deliver(tcell.NewEventKey(tcell.KeyRune, '9', 0))
+				if !strings.Contains(s.helpText.GetText(true), "Notepad++") || strings.Contains(s.helpText.GetText(true), appinfo.Email) {
+					t.Fatal("keymap topic was missing or mixed with app information")
+				}
+				s.refreshBorders()
+				root.Draw(terminal)
+				for py := 0; py < 22; py++ {
+					for px := 0; px < 80; px++ {
+						_, _, style, _ := terminal.GetContent(px, py)
+						_, _, attributes := style.Decompose()
+						if attributes&tcell.AttrUnderline != 0 {
+							t.Fatal("help reintroduced underlined article or topic decoration")
+						}
+					}
+				}
+				deliver(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+				if s.helpText != nil || s.helpTopics != nil || !s.editor.HasFocus() || len(s.jobs) != 0 {
+					t.Fatal("help did not release its state and preserve the editor")
+				}
+			})
+		}
+	}
+}
 
 func TestClosingHelpPreservesRunningOperation(t *testing.T) {
 	for _, language := range []string{"en", "ko"} {
@@ -98,28 +169,28 @@ func TestHelpJumpsToSectionsAndBackInBothLanguages(t *testing.T) {
 			s.key(tcell.NewEventKey(tcell.KeyF1, 0, 0))
 			_, root := s.pages.GetFrontPage()
 			layout := root.(*tview.Flex)
-			help := layout.GetItem(0).(*tview.TextView)
+			help := s.helpText
 			draw := func() { layout.SetRect(0, 0, 80, 22); layout.Draw(terminal) }
 			draw()
 			text := help.GetText(true)
-			if strings.Index(text, s.tr("help_current")) > strings.Index(text, "1  SQL") || strings.Index(text, appinfo.Email) < strings.Index(text, s.tr("help_about")) {
-				t.Fatal("help does not lead with context and keep app details last")
+			if !strings.Contains(text, s.tr("help_current")) || strings.Contains(text, appinfo.Email) || strings.Contains(text, s.tr("vim_commands")) {
+				t.Fatal("help does not isolate current-screen guidance from other topics")
 			}
 			// Result focus should produce copying controls instead of SQL execution controls.
-			top := strings.Split(text, s.tr("help_contents"))[0]
+			top := text
 			if !strings.Contains(top, "Ctrl+C") || strings.Contains(top, "Ctrl+Enter") {
 				t.Fatal("quick controls do not match result focus")
 			}
 			s.key(tcell.NewEventKey(tcell.KeyRune, '8', 0))
 			draw()
 			row, _ := help.GetScrollOffset()
-			if row == 0 || len(help.GetHighlights()) != 1 || help.GetHighlights()[0] != "about" {
-				t.Fatal("8 did not scroll to app information")
+			if row != 0 || !strings.Contains(help.GetText(true), appinfo.Email) || s.helpTopics.GetCurrentItem() != 8 {
+				t.Fatal("8 did not show a separate app information topic from its beginning")
 			}
 			s.key(tcell.NewEventKey(tcell.KeyRune, '0', 0))
 			draw()
 			row, _ = help.GetScrollOffset()
-			if row > 5 {
+			if row != 0 || strings.Contains(help.GetText(true), appinfo.Email) {
 				t.Fatal("0 did not return to quick controls")
 			}
 			s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
@@ -136,9 +207,8 @@ func TestHelpConnectionContextKeepsCredentialsOutOfText(t *testing.T) {
 	s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).SetText("private-password")
 	previous := s.app.GetFocus()
 	s.showHelp()
-	_, root := s.pages.GetFrontPage()
-	text := root.(*tview.Flex).GetItem(0).(*tview.TextView).GetText(true)
-	if strings.Contains(text, "private-password") || !strings.Contains(strings.Split(text, s.tr("help_contents"))[0], "Alt+C") {
+	text := s.helpText.GetText(true)
+	if strings.Contains(text, "private-password") || !strings.Contains(text, "Alt+C") {
 		t.Fatal("help exposed credentials or omitted connection controls")
 	}
 	s.key(tcell.NewEventKey(tcell.KeyRune, '4', 0))

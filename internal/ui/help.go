@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"lazyora/internal/appinfo"
 )
@@ -46,30 +47,87 @@ func (s *screen) helpLanguage() int {
 	return 0
 }
 
-func helpHeading(id, title string) string {
-	return fmt.Sprintf("[\"%s\"][::b]%s[::-][\"\"]\n\n", id, tview.Escape(title))
-}
-
 func (s *screen) mainHelp() string {
 	var out strings.Builder
-	language := s.helpLanguage()
-	for i, section := range helpSections {
-		out.WriteString(helpHeading(section.id, fmt.Sprintf("%d  %s", i+1, section.title[language])))
-		for _, id := range section.commands {
-			// Common command definitions keep the help aligned with actual bindings.
-			fmt.Fprintf(&out, "  [::b]%-26s[::-] %s\n", tview.Escape(s.editorBindingLabels(id, 2)), tview.Escape(s.tr(commandFor(id).label)))
-		}
-		if len(section.commands) > 0 {
-			out.WriteByte('\n')
-		}
-		notes := section.notes[language]
-		if section.id == "sql" {
-			notes += "\n" + s.tr("format_hint") + "\n\n" + s.keymapHelp()
-		}
-		out.WriteString(tview.Escape(notes) + "\n\n\n")
+	for topic := 1; topic <= 9; topic++ {
+		out.WriteString(s.helpArticle(topic))
+		out.WriteString("\n\n")
 	}
-	out.WriteString(helpHeading("about", s.tr("help_about")))
-	fmt.Fprintf(&out, "%s v%s\n%s: %s\n%s: %s\n%s: %s\n%s\nCopyright (C) 2026 Chaekang Lee\n", appinfo.Name, appinfo.Version, s.tr("developer"), appinfo.Developer, s.tr("email"), appinfo.Email, s.tr("license"), appinfo.License, appinfo.LicenseURL)
+	return out.String()
+}
+
+// Keep navigation short; detailed titles and explanations belong in the article.
+var helpTopicNames = [][2]string{
+	{"Current screen", "현재 화면"}, {"SQL editor", "SQL 편집·실행"},
+	{"Results / copy", "결과·복사·내보내기"}, {"Windows / menus", "화면·메뉴"},
+	{"Connection", "접속·환경설정"}, {"Schema / source", "스키마·소스"},
+	{"Transactions", "커밋·롤백·종료"}, {"Terminal / limits", "터미널·지원 범위"},
+	{"About", "앱 정보"}, {"Editor keymaps", "편집기 키맵"},
+}
+
+func (s *screen) helpSubheading(title string) string {
+	color := fmt.Sprintf("#%06x", palette.accent.Hex())
+	if s.limitedColors {
+		color = "teal"
+	}
+	return fmt.Sprintf("[%s::b]%s[-::-]\n\n", color, tview.Escape(title))
+}
+
+func (s *screen) helpCommands(ids []string) string {
+	var out strings.Builder
+	for _, id := range ids {
+		// No fixed-width padding: long labels and key combinations wrap naturally.
+		fmt.Fprintf(&out, "[::b]%s[::-]  %s\n", tview.Escape(s.editorBindingLabels(id, 2)), tview.Escape(s.tr(commandFor(id).label)))
+	}
+	out.WriteByte('\n')
+	return out.String()
+}
+
+func helpParagraphs(text string) string {
+	var out strings.Builder
+	for _, line := range strings.Split(text, "\n") {
+		if line = strings.TrimSpace(line); line != "" {
+			out.WriteString("• " + tview.Escape(line) + "\n\n")
+		}
+	}
+	return out.String()
+}
+
+func (s *screen) helpArticle(topic int) string {
+	language := s.helpLanguage()
+	if topic == 0 {
+		return s.helpSubheading(s.tr("help_current")) + helpParagraphs(s.helpContextText) +
+			s.helpSubheading(s.tr("help_reading")) + helpParagraphs(s.tr("help_reading_hint"))
+	}
+	if topic == 8 {
+		return s.helpSubheading(s.tr("help_about")) + fmt.Sprintf("[::b]%s v%s[::-]\n\n%s: %s\n\n%s: %s\n\n%s: %s\n%s\n\nCopyright (C) 2026 Chaekang Lee\n", appinfo.Name, appinfo.Version, s.tr("developer"), appinfo.Developer, s.tr("email"), appinfo.Email, s.tr("license"), appinfo.License, appinfo.LicenseURL)
+	}
+	if topic == 9 {
+		return s.helpSubheading(helpTopicNames[9][language]) + helpParagraphs(s.keymapHelp())
+	}
+	section := helpSections[topic-1]
+	var out strings.Builder
+	out.WriteString(s.helpSubheading(section.title[language]))
+	if topic == 1 {
+		for _, group := range []struct {
+			title    string
+			commands []string
+		}{
+			{"help_run", []string{"execute", "script", "script_report", "plan", "output_view", "output_toggle", "routine_execute", "routine_results"}},
+			{"help_files", []string{"file_new", "file_open", "file_save", "file_save_as", "file_close", "tab_next", "tab_previous"}},
+			{"help_edit", []string{"undo", "redo", "cut", "copy", "paste", "select_all", "find", "find_next", "find_previous", "replace", "complete", "complete_refresh", "format_code", "duplicate_line", "copy_line", "cut_line", "delete_line", "line_up", "line_down", "transpose_line", "clear_sql", "history"}},
+		} {
+			out.WriteString(s.helpSubheading(s.tr(group.title)))
+			out.WriteString(s.helpCommands(group.commands))
+		}
+	} else {
+		out.WriteString(s.helpCommands(section.commands))
+	}
+	out.WriteString(s.helpSubheading(s.tr("help_details")))
+	out.WriteString(helpParagraphs(section.notes[language]))
+	if topic == 1 {
+		out.WriteString(helpParagraphs(s.tr("format_hint")))
+	}
 	return out.String()
 }
 
@@ -136,32 +194,57 @@ func (s *screen) helpContext(page string) string {
 }
 
 func (s *screen) showHelp() {
+	if page, _ := s.pages.GetFrontPage(); page == "help" {
+		return
+	}
 	s.helpFocus = s.app.GetFocus()
 	page, _ := s.pages.GetFrontPage()
-	text := fmt.Sprintf("[::b]%s v%s[::-]  ·  %s\n%s\n\n", appinfo.Name, appinfo.Version, s.tr("help_title"), s.tr("help_navigation"))
-	text += helpHeading("current", s.tr("help_current")) + tview.Escape(s.helpContext(page)) + "\n\n" + s.tr("help_contents") + "\n\n\n" + s.mainHelp()
-	help := tview.NewTextView().SetDynamicColors(true).SetRegions(true).SetText(text).SetWrap(true).SetWordWrap(true).SetScrollable(true)
+	s.helpContextText = s.helpContext(page)
+	help := tview.NewTextView().SetDynamicColors(true).SetWrap(true).SetWordWrap(true).SetScrollable(true)
 	help.SetBorder(true).SetTitle(s.tr("help_title"))
 	help.SetBorderPadding(1, 1, 2, 2)
 	styleBox(help.Box)
 	help.SetTextColor(palette.text)
+	singleLineBorder(help.Box)
+	topics := tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetSelectedFocusOnly(false)
+	topics.SetMainTextColor(palette.text).SetSelectedStyle(buttonFocusStyle().Underline(false))
+	topics.SetBorder(true).SetTitle(s.tr("help_topics"))
+	styleBox(topics.Box)
+	singleLineBorder(topics.Box)
+	s.helpText, s.helpTopics = help, topics
+	for i, title := range helpTopicNames {
+		topics.AddItem(fmt.Sprintf("%d  %s", i, title[s.helpLanguage()]), "", 0, nil)
+	}
+	topics.SetChangedFunc(func(index int, _, _ string, _ rune) { s.selectHelpTopic(index) })
+	topics.SetSelectedFunc(func(_ int, _, _ string, _ rune) { s.app.SetFocus(help) })
+	body := tview.NewFlex().AddItem(topics, 26, 0, false).AddItem(help, 0, 1, true)
+	// Narrow terminals retain both navigation and readable article width.
+	body.SetDrawFunc(func(_ tcell.Screen, x, y, width, height int) (int, int, int, int) {
+		if width < 76 {
+			body.SetDirection(tview.FlexRow).ResizeItem(topics, min(5, max(3, height/4)), 0)
+		} else {
+			body.SetDirection(tview.FlexColumn).ResizeItem(topics, 26, 0)
+		}
+		return x, y, width, height
+	})
 	close := clickable(tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeHelp))
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(help, 0, 1, true).AddItem(close, 1, 0, false)
+	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(body, 0, 1, true).AddItem(close, 1, 0, false)
+	s.selectHelpTopic(0)
 	s.pages.AddPage("help", root, true, true)
 	s.app.SetFocus(help)
 }
 
 func (s *screen) helpJump(section int) {
-	_, root := s.pages.GetFrontPage()
-	help := root.(*tview.Flex).GetItem(0).(*tview.TextView)
-	id := "current"
-	if section > 0 && section <= len(helpSections) {
-		id = helpSections[section-1].id
-	} else if section == 8 {
-		id = "about"
+	if s.helpTopics == nil || section < 0 || section >= len(helpTopicNames) {
+		return
 	}
-	help.Highlight(id).ScrollToHighlight()
-	s.app.SetFocus(help)
+	s.helpTopics.SetCurrentItem(section)
+	s.selectHelpTopic(section)
+	s.app.SetFocus(s.helpText)
+}
+
+func (s *screen) selectHelpTopic(topic int) {
+	s.helpText.SetText(s.helpArticle(topic)).ScrollToBeginning()
 }
 
 func (s *screen) closeHelp() {
@@ -170,4 +253,5 @@ func (s *screen) closeHelp() {
 		s.app.SetFocus(s.helpFocus)
 	}
 	s.helpFocus = nil
+	s.helpText, s.helpTopics, s.helpContextText = nil, nil, ""
 }

@@ -164,10 +164,11 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 	wait(func() bool {
 		return strings.Contains(s.footer.GetText(false), "닫기") && strings.Contains(s.buttons[2].GetLabel(), "PgDn")
 	})
-	s.app.QueueEvent(tcell.NewEventMouse(10, 10, tcell.WheelDown, tcell.ModNone))
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyRune, '1', 0))
+	wait(func() bool { return s.helpTopics.GetCurrentItem() == 1 })
+	s.app.QueueEvent(tcell.NewEventMouse(40, 10, tcell.WheelDown, tcell.ModNone))
 	wait(func() bool {
-		_, root := s.pages.GetFrontPage()
-		row, _ := root.(*tview.Flex).GetItem(0).(*tview.TextView).GetScrollOffset()
+		row, _ := s.helpText.GetScrollOffset()
 		return row > 0
 	})
 	click(func() tview.Primitive { _, root := s.pages.GetFrontPage(); return root.(*tview.Flex).GetItem(1) })

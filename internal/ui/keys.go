@@ -27,7 +27,7 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		event = tcell.NewEventKey(tcell.KeyEnter, 0, event.Modifiers()&^tcell.ModCtrl)
 	}
 
-	page, pageRoot := s.pages.GetFrontPage()
+	page, _ := s.pages.GetFrontPage()
 	executeEnter := event.Key() == tcell.KeyEnter && event.Modifiers()&(tcell.ModCtrl|tcell.ModAlt) != 0
 	alt := event.Modifiers()&tcell.ModAlt != 0
 	letter := unicode.ToLower(event.Rune())
@@ -112,7 +112,7 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if event.Key() == tcell.KeyTab || event.Key() == tcell.KeyBacktab {
 		switch page {
 		case "help":
-			s.dialogTab(event, pageRoot.(*tview.Flex).GetItem(0))
+			s.dialogTab(event, s.helpTopics, s.helpText)
 			return nil
 		case "object":
 			s.dialogTab(event, s.objectTable)
@@ -210,7 +210,7 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	// Help owns its close keys even while a background operation is running.
 	// Closing the overlay must never be mistaken for cancelling that operation.
 	if page == "help" {
-		if event.Key() == tcell.KeyRune && event.Modifiers() == 0 && event.Rune() >= '0' && event.Rune() <= '8' {
+		if event.Key() == tcell.KeyRune && event.Modifiers() == 0 && event.Rune() >= '0' && event.Rune() <= '9' {
 			s.helpJump(int(event.Rune() - '0'))
 			return nil
 		}

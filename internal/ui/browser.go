@@ -292,7 +292,7 @@ func (s *screen) openObject(object oracle.Object) {
 	s.renderObject(nil)
 	close := clickable(tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeObject))
 	buttons := tview.NewFlex()
-	for _, item := range []struct{ section, key string }{{"ddl", "Alt+D"}, {"constraints", "Alt+C"}, {"indexes", "Alt+I"}} {
+	for _, item := range []struct{ section, key string }{{"ddl", "Alt+D"}, {"constraints", "Alt+C"}, {"indexes", "Alt+I"}, {"grants", "Alt+G"}} {
 		if item.section == "constraints" && !object.HasColumns() {
 			continue
 		}

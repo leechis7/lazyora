@@ -45,6 +45,9 @@ type screen struct {
 	definitionRoot                   *tview.Flex
 	definitionInfo, definitionText   *tview.TextView
 	definitionTable                  *tview.Table
+	definitionTargets                []oracle.ObjectRelation
+	definitionTrail                  []definitionLocation
+	definitionSelectors              []tview.Primitive
 
 	vim                                  vimState
 	yankText                             string

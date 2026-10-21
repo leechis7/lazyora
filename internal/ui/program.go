@@ -61,8 +61,7 @@ func (s *screen) showSource() {
 	s.sourceEditor.SetClipboard(s.sendClipboard, func() string { return s.clipboardText })
 	s.sourceEditor.SetBorder(true)
 	s.styleBox(s.sourceEditor.Box)
-	s.sourceEditor.SetBackgroundColor(s.colors().field).SetTitleColor(s.colors().fieldText)
-	s.sourceEditor.SetTextStyle(s.fieldStyle()).SetSelectedStyle(s.focusStyle())
+	s.styleEditor(s.sourceEditor)
 	s.colorEditor(s.sourceEditor, s.refreshSourceTitle)
 	s.sourceEditor.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if !s.sourceLoaded || s.busy {

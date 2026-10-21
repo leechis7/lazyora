@@ -195,10 +195,21 @@ func colorSQL(text string, spans []sqlColorSpan) []sqlColorSpan {
 var sqlRichColors = [...]tcell.Color{0, tcell.GetColor("#204a87"), tcell.GetColor("#006b73"), tcell.GetColor("#5951a0"), tcell.GetColor("#a3273a"), tcell.GetColor("#6945a3"), tcell.GetColor("#526a43"), tcell.GetColor("#8b4f00")}
 var sqlANSIColors = [...]tcell.Color{0, tcell.ColorNavy, tcell.ColorTeal, tcell.ColorPurple, tcell.ColorMaroon, tcell.ColorPurple, tcell.ColorGreen, tcell.ColorOlive}
 
+var sqlDarkColors = [...]tcell.Color{0, tcell.GetColor("#8db8ff"), tcell.GetColor("#73d7ce"), tcell.GetColor("#c7adff"), tcell.GetColor("#efa3aa"), tcell.GetColor("#ebcd79"), tcell.GetColor("#a2bb98"), tcell.GetColor("#f2bc84")}
+var sqlDarkANSIColors = [...]tcell.Color{0, tcell.ColorAqua, tcell.ColorWhite, tcell.ColorFuchsia, tcell.ColorYellow, tcell.ColorYellow, tcell.ColorLime, tcell.ColorWhite}
+
 func sqlTokenStyle(kind sqlColorKind, limited bool, base tcell.Style) tcell.Style {
 	colors := sqlRichColors
 	if limited {
 		colors = sqlANSIColors
+	}
+	_, bg, _ := base.Decompose()
+	r, g, b := bg.RGB()
+	if r >= 0 && 299*r+587*g+114*b < 128000 {
+		colors = sqlDarkColors
+		if limited {
+			colors = sqlDarkANSIColors
+		}
 	}
 	style := base.Foreground(colors[kind])
 	if kind == sqlKeyword || kind == sqlBind {

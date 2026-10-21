@@ -14,6 +14,7 @@ func (s *screen) applyTheme(previous string) {
 	from, to := old.colors(), s.colors()
 	oldGrid, newGrid := old.gridColors(), s.gridColors()
 	pairs := [][2]tcell.Color{
+		{from.editor, to.editor}, {from.editorText, to.editorText},
 		{from.background, to.background}, {from.surface, to.surface}, {from.footer, to.footer},
 		{from.field, to.field}, {from.text, to.text}, {from.muted, to.muted}, {from.accent, to.accent}, {from.button, to.button},
 		{from.placeholder, to.placeholder}, {from.warning, to.warning},
@@ -39,6 +40,13 @@ func (s *screen) applyTheme(previous string) {
 			return
 		}
 		seen[p] = true
+		previousBG, previousBorder := tcell.ColorDefault, tcell.ColorDefault
+		if b, ok := p.(interface {
+			GetBackgroundColor() tcell.Color
+			GetBorderColor() tcell.Color
+		}); ok {
+			previousBG, previousBorder = b.GetBackgroundColor(), b.GetBorderColor()
+		}
 		var box *tview.Box
 		switch w := p.(type) {
 		case *formPopupLayer:
@@ -74,7 +82,7 @@ func (s *screen) applyTheme(previous string) {
 			w.SetActivatedStyle(s.focusStyle())
 		case *tview.TextArea:
 			box = w.Box
-			w.SetTextStyle(s.fieldStyle()).SetSelectedStyle(s.focusStyle())
+			s.styleEditor(w)
 		case *tview.TextView:
 			box = w.Box
 			fg := to.text
@@ -120,9 +128,16 @@ func (s *screen) applyTheme(previous string) {
 			box = w
 		}
 		if box != nil {
-			box.SetBackgroundColor(color(box.GetBackgroundColor())).SetBorderColor(color(box.GetBorderColor())).SetTitleColor(to.text)
-			if _, ok := p.(*tview.TextArea); ok {
-				box.SetTitleColor(to.fieldText)
+			box.SetBackgroundColor(color(previousBG)).SetBorderColor(color(previousBorder)).SetTitleColor(to.text)
+			switch p.(type) {
+			case *tview.TextArea:
+				box.SetBackgroundColor(to.editor).SetTitleColor(to.editorText)
+			case *tview.Form, *tview.Modal:
+				box.SetBackgroundColor(to.surface)
+			case *tview.TextView:
+				if previousBG == from.field {
+					box.SetBackgroundColor(to.field)
+				}
 			}
 		}
 	}

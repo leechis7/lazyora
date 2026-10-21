@@ -38,6 +38,9 @@ func TestThemeSwitchPreservesWorkspaceAndCredentials(t *testing.T) {
 				}
 				s.prefsForm.GetFormItem(3).(*choiceField).SetCurrentOption(index)
 				s.savePrefs()
+				if s.editor.GetBackgroundColor() != s.colors().editor {
+					t.Fatal("editor did not follow theme")
+				}
 				if s.prefs.Theme != theme || s.connectForm.GetBackgroundColor() != s.colors().surface {
 					t.Fatal("theme not applied to open form")
 				}
@@ -139,4 +142,19 @@ func TestHiddenTabFollowsThemeWithoutSwitchingItsData(t *testing.T) {
 	if s.resultRows[0][0] != "first" {
 		t.Fatal("theme changed inactive tab data")
 	}
+}
+
+func TestLightToDarkKeepsCopyPreviewReadable(t *testing.T) {
+	s, terminal := resultScreen(t)
+	s.prefs.Theme = "light"
+	s.table.Select(1, 0)
+	s.copyResults("cell")
+	s.copyPreview()
+	s.prefs.Theme = "dark"
+	s.applyTheme("light")
+	if s.copyText.GetBackgroundColor() != s.colors().field {
+		t.Fatal("read-only field was mistaken for SQL editor")
+	}
+	s.copyText.SetRect(0, 0, 80, 10)
+	s.copyText.Draw(terminal)
 }

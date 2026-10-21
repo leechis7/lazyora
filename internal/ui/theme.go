@@ -8,11 +8,12 @@ import (
 // Nord-inspired neutral surfaces and cyan accents, with light input fields.
 // https://www.nordtheme.com/docs/colors-and-palettes/
 type themeColors struct {
-	background, surface, footer, field, text, muted, accent, button tcell.Color
-	fieldText, selectionText, placeholder, warning                  tcell.Color
+	background, surface, footer, field, text, muted, accent, button    tcell.Color
+	editor, editorText, fieldText, selectionText, placeholder, warning tcell.Color
 }
 
 var palette = themeColors{
+	editor: tcell.GetColor("#242d3a"), editorText: tcell.GetColor("#e5edf5"),
 	background: tcell.GetColor("#2e3440"),
 	surface:    tcell.GetColor("#3b4252"),
 	footer:     tcell.GetColor("#434c5e"),
@@ -80,8 +81,7 @@ func (s *screen) styleForm(form *tview.Form) {
 
 func (s *screen) styleScreen() {
 	s.styleBox(s.editor.Box)
-	s.editor.SetBackgroundColor(s.colors().field).SetTitleColor(s.colors().fieldText)
-	s.editor.SetTextStyle(s.fieldStyle()).SetSelectedStyle(s.focusStyle())
+	s.styleEditor(s.editor)
 	s.styleBox(s.table.Box)
 	s.table.SetSelectedStyle(s.focusStyle())
 	s.status.SetBackgroundColor(s.colors().background)
@@ -130,7 +130,7 @@ func (s *screen) refreshBorders() {
 	if s.documentModal != nil {
 		apply(s.documentModal.Box, s.documentModal.HasFocus(), false)
 	}
-	apply(s.editor.Box, s.editor.HasFocus(), true)
+	apply(s.editor.Box, s.editor.HasFocus(), s.prefs.Theme == "light")
 	apply(s.table.Box, s.table.HasFocus(), false)
 	if s.pendingTable != nil {
 		apply(s.pendingTable.Box, s.pendingTable.HasFocus(), false)
@@ -172,7 +172,7 @@ func (s *screen) refreshBorders() {
 		apply(s.programModal.Box, s.programModal.HasFocus(), false)
 	}
 	if s.sourceEditor != nil {
-		apply(s.sourceEditor.Box, s.sourceEditor.HasFocus(), true)
+		apply(s.sourceEditor.Box, s.sourceEditor.HasFocus(), s.prefs.Theme == "light")
 	}
 	for _, table := range []*tview.Table{s.sourceDiagnostics, s.argumentTable} {
 		if table != nil {
@@ -250,6 +250,7 @@ func (s *screen) styleModal(modal *tview.Modal) {
 }
 
 var lightPalette = themeColors{
+	editor: tcell.ColorWhite, editorText: tcell.GetColor("#202a36"),
 	background: tcell.GetColor("#f3f5f7"), surface: tcell.GetColor("#e4eaf0"), footer: tcell.GetColor("#ccd7e2"),
 	field: tcell.ColorWhite, text: tcell.GetColor("#202a36"), muted: tcell.GetColor("#485869"),
 	accent: tcell.GetColor("#276a8e"), button: tcell.GetColor("#bbd4e5"), fieldText: tcell.GetColor("#202a36"),
@@ -263,7 +264,12 @@ func (s *screen) colors() themeColors {
 		}
 		return lightPalette
 	}
-	return palette
+	colors := palette
+	if s.limitedColors {
+		colors.editor = tcell.ColorBlack
+		colors.editorText = tcell.ColorWhite
+	}
+	return colors
 }
 
 // Defaults retained for small standalone widgets and tests; application widgets
@@ -275,7 +281,16 @@ func focusStyle() tcell.Style  { return (&screen{}).focusStyle() }
 func buttonStyle() tcell.Style { return (&screen{}).buttonStyle() }
 
 var lightANSI = themeColors{
+	editor: tcell.ColorWhite, editorText: tcell.ColorBlack,
 	background: tcell.ColorSilver, surface: tcell.ColorSilver, footer: tcell.ColorWhite, field: tcell.ColorWhite,
 	text: tcell.ColorBlack, muted: tcell.ColorNavy, accent: tcell.ColorNavy, button: tcell.ColorTeal,
 	fieldText: tcell.ColorBlack, selectionText: tcell.ColorWhite, placeholder: tcell.ColorGray, warning: tcell.ColorMaroon,
+}
+
+func (s *screen) editorStyle() tcell.Style {
+	return tcell.StyleDefault.Foreground(s.colors().editorText).Background(s.colors().editor)
+}
+func (s *screen) styleEditor(editor *tview.TextArea) {
+	editor.SetBackgroundColor(s.colors().editor).SetTitleColor(s.colors().editorText)
+	editor.SetTextStyle(s.editorStyle()).SetSelectedStyle(s.focusStyle())
 }

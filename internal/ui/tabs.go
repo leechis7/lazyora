@@ -93,8 +93,7 @@ func (s *screen) newTab() {
 	editor := tview.NewTextArea()
 	editor.SetBorder(true)
 	s.styleBox(editor.Box)
-	editor.SetBackgroundColor(s.colors().field).SetTitleColor(s.colors().fieldText)
-	editor.SetTextStyle(s.fieldStyle()).SetSelectedStyle(s.focusStyle())
+	s.styleEditor(editor)
 	editor.SetClipboard(s.sendClipboard, func() string { return s.clipboardText })
 	editor.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if action == tview.MouseRightClick {

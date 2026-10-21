@@ -11,6 +11,8 @@ import (
 const MaxGridRows = 10000
 const MaxGridBytes = 64 * 1024 * 1024 // Estimate includes retained cell/row overhead.
 
+type fetchWatchKey struct{}
+
 type queryPage struct {
 	rows         *sql.Rows
 	types        []*sql.ColumnType
@@ -64,6 +66,7 @@ func (s *Session) readPage(ctx context.Context) (result Result, err error) {
 		return result, err
 	}
 	defer stop()
+	ctx = context.WithValue(ctx, fetchWatchKey{}, true)
 	for {
 		if err = ctx.Err(); err != nil {
 			return result, err
@@ -79,7 +82,7 @@ func (s *Session) readPage(ctx context.Context) (result Result, err error) {
 				s.ClosePage()
 				return result, err
 			}
-			cells, err = scanCells(page.rows, page.types)
+			cells, err = s.scanCells(ctx, page.rows, page.types, true)
 			if err != nil {
 				return result, err
 			}

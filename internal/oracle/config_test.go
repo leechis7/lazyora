@@ -16,6 +16,9 @@ func TestConnectionModes(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		if u.Query().Get("LOB FETCH") != "STREAM" || u.Query().Get("LOB READ") != "NONE" {
+			t.Fatal("LOB values must use explicit streaming")
+		}
 		password, _ := u.User.Password()
 		if password != c.Password {
 			t.Fatal("password was not round-tripped")

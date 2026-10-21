@@ -78,6 +78,7 @@ var commands = []command{
 	{"result_sort_desc", "result_sort_desc", menuView, nil},
 	{"result_filter", "result_filter", menuView, nil},
 	{"result_view_reset", "result_view_reset", menuView, nil},
+	{"cell_detail", "cell_detail", menuView, nil},
 	{"complete", "completion", menuEdit, []binding{{"Ctrl+T", tcell.KeyCtrlT, 0, 0}}},
 	{"complete_refresh", "completion_refresh", menuEdit, nil},
 	{"duplicate_line", "duplicate_line", menuEdit, nil},
@@ -124,6 +125,8 @@ func (s *screen) commandEnabled(id string) bool {
 		return false
 	}
 	switch id {
+	case "cell_detail":
+		return !s.busy && s.table.HasFocus() && len(s.resultRows) > 0
 	case "fetch_more":
 		return !s.busy && s.connected && s.table.HasFocus() && s.resultBrowser.source.PageID != 0
 	case "result_sort_asc", "result_sort_desc", "result_filter", "result_view_reset":
@@ -201,6 +204,8 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "cell_detail":
+		s.showCellDetail()
 	case "fetch_more":
 		s.fetchMoreResults()
 	case "result_sort_asc":

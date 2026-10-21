@@ -239,6 +239,9 @@ func (s *screen) routineKey(event *tcell.EventKey, page string) *tcell.EventKey 
 	if page == "routine_grid" {
 		if s.table.HasFocus() {
 			switch event.Key() {
+			case tcell.KeyEnter:
+				s.showCellDetail()
+				return nil
 			case tcell.KeyUp, tcell.KeyDown, tcell.KeyLeft, tcell.KeyRight:
 				if event.Modifiers()&tcell.ModShift != 0 {
 					s.extendResultSelection(event.Key())

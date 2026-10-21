@@ -4,6 +4,20 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"cell_detail":            {"Cell details", "셀 상세"},
+	"cell_copy":              {"Copy raw/hex", "원문/16진수 복사"},
+	"cell_expand":            {"Larger preview", "미리보기 확대"},
+	"cell_bytes":             {"bytes", "바이트"},
+	"cell_units":             {"DB UTF-16 units", "DB UTF-16 단위"},
+	"cell_partial":           {"Preview only. Save streams the full original value; copy/export never silently uses a preview.", "미리보기입니다. 저장은 전체 원문을 읽으며 복사·내보내기는 미리보기를 원문으로 사용하지 않습니다."},
+	"cell_complete":          {"Full value retained; long text/hex dump may be shortened visually. Save writes UTF-8 text or original binary bytes.", "전체 값이 보관돼 있습니다. 긴 본문·16진수 덤프는 화면에서 줄여 표시합니다. 저장은 UTF-8 텍스트 또는 원래 바이너리 바이트입니다."},
+	"cell_copy_partial":      {"Only a LOB preview is retained. Open cell details and save the full value.", "LOB 미리보기만 보관돼 있습니다. 셀 상세에서 전체 값을 파일로 저장하세요."},
+	"cell_saving":            {"Saving full cell value… Esc cancels", "셀 전체 값을 저장 중입니다… Esc로 취소"},
+	"cell_saved":             {"Saved %d bytes: %s", "%d바이트 저장: %s"},
+	"cell_error":             {"Cell operation failed; existing destination was preserved", "셀 작업 실패: 기존 대상 파일은 유지했습니다"},
+	"cell_overwrite":         {"Replace this file with the full original cell value?\n%s", "셀 전체 원문으로 파일을 덮어쓸까요?\n%s"},
+	"footer_cell":            {"Ctrl+S Save full value | Ctrl+C Copy raw/hex | Alt+V Preview | Tab Move | Esc Close/cancel", "Ctrl+S 전체 저장 | Ctrl+C 원문/16진수 복사 | Alt+V 미리보기 | Tab 이동 | Esc 닫기/취소"},
+	"cell_hint":              {"Enter/double-click a result cell. Text is saved as UTF-8; RAW/BLOB are saved as binary. NULL differs from empty content. Large LOB references expire on new SQL/commit/rollback/reconnect. Saving is buffered, cancellable and replaces an existing file only on full success.", "결과 셀에서 Enter/더블클릭으로 엽니다. 텍스트는 UTF-8, RAW/BLOB은 바이너리로 저장합니다. NULL과 빈 값은 구분합니다. 대형 LOB 참조는 새 SQL·커밋·롤백·재접속 시 만료됩니다. 저장은 버퍼·취소를 지원하며 성공한 경우에만 기존 파일을 바꿉니다."},
 	"result_paging_hint":     {"View / F10: fetch the next 1,000 rows from the same live F9 SELECT cursor; no SQL replay. Other executions/commit/rollback/full DB export/reconnect close it. Local sort/filter covers loaded rows only; Full DB export separately requeries the original SQL and ignores local sort/filter. Grid retention: 10,000 rows or estimated 64 MiB.", "보기 / F10에서 같은 F9 SELECT 커서의 다음 1,000행을 가져옵니다. SQL 재실행이 아니며 다른 실행·커밋·롤백·DB 전체 내보내기·재접속은 커서를 닫습니다. 정렬·필터는 가져온 행에만 적용합니다. DB 전체 내보내기는 별도로 원 SQL을 재조회하므로 화면 정렬·필터를 적용하지 않습니다. 화면 보관은 10,000행 또는 추정 64 MiB로 제한합니다."},
 	"footer_result_filter":   {"Tab Fields/buttons | Enter Select | Esc Cancel", "Tab 입력/버튼 이동 | Enter 선택 | Esc 취소"},
 	"result_filter_hint":     {"Case-insensitive literal substring across loaded columns. This does not add a SQL WHERE or fetch unseen rows.", "가져온 컬럼에서 대소문자 구분 없는 일반 문자열을 찾습니다. SQL WHERE를 추가하거나 아직 가져오지 않은 행을 조회하지 않습니다."},

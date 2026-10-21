@@ -2,10 +2,27 @@
 set -eu
 cd "$(dirname "$0")"
 
-# Always release the test DB memory when this launcher exits. Keep its data volume.
+# Offer to release DB memory on interactive exits. Keep its data volume.
 cleanup() {
     run_status=$?
     trap - 0 HUP INT TERM
+    case "$run_status" in
+        129|130|143) ;; # Signals must not leave the launcher waiting for input.
+        *)
+            if [ -t 0 ]; then
+                printf '\n%s' 'Oracle Free를 종료할까요? [Y/n] ' >&2
+                answer=
+                if IFS= read -r answer; then
+                    case "$answer" in
+                        n|N|no|NO)
+                            printf '%s\n' 'Oracle 시험 환경을 계속 실행합니다. 종료하려면 make -C test/oracle down을 실행하세요.'
+                            exit "$run_status"
+                            ;;
+                    esac
+                fi
+            fi
+            ;;
+    esac
     printf '\n%s\n' 'Oracle 시험 환경을 종료합니다(DB 데이터는 보존합니다).'
     if ! docker compose -f compose.yaml down; then
         printf '%s\n' 'Oracle 종료에 실패했습니다. make -C test/oracle down으로 다시 시도하세요.' >&2

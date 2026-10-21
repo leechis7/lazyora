@@ -28,6 +28,18 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	}
 
 	page, _ := s.pages.GetFrontPage()
+	if page == "result_filter" {
+		if event.Key() == tcell.KeyEscape {
+			s.pages.RemovePage("result_filter")
+			s.app.SetFocus(s.table)
+			return nil
+		}
+		if event.Key() == tcell.KeyF1 {
+			s.showHelp()
+			return nil
+		}
+		return event
+	}
 	executeEnter := event.Key() == tcell.KeyEnter && event.Modifiers()&(tcell.ModCtrl|tcell.ModAlt) != 0
 	alt := event.Modifiers()&tcell.ModAlt != 0
 	letter := unicode.ToLower(event.Rune())

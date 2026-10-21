@@ -10,6 +10,7 @@ var bindKinds = []string{"text", "number", "date", "timestamp"}
 
 func (s *screen) clearBindValues() {
 	s.resultQuery = nil
+	s.resultBrowser.source.Query = nil
 	for i := range s.scriptReport.Steps {
 		s.scriptReport.Steps[i].Result.Query = nil
 	}
@@ -17,6 +18,7 @@ func (s *screen) clearBindValues() {
 	s.bindValues = nil
 	for _, tab := range s.tabs {
 		tab.query = nil
+		tab.browser.source.Query = nil
 		for i := range tab.script.Steps {
 			tab.script.Steps[i].Result.Query = nil
 		}

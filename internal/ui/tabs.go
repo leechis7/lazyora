@@ -26,6 +26,7 @@ type sqlTab struct {
 	headers    []string
 	selection  resultSelection
 	grid       gridState
+	browser    resultBrowser
 	status     string
 	statusArgs []any
 }
@@ -53,6 +54,7 @@ func (s *screen) stashTab() {
 	tab.editor, tab.table, tab.document = s.editor, s.table, s.document
 	tab.rows, tab.headers, tab.selection = s.resultRows, s.resultHeaders, s.resultSelection
 	tab.grid = s.grid
+	tab.browser = s.resultBrowser
 	tab.status, tab.statusArgs = s.statusKey, append([]any(nil), s.statusArgs...)
 }
 
@@ -70,6 +72,7 @@ func (s *screen) switchTab(index int) {
 	s.editor, s.table, s.document = tab.editor, tab.table, tab.document
 	s.resultRows, s.resultHeaders, s.resultSelection = tab.rows, tab.headers, tab.selection
 	s.grid = tab.grid
+	s.resultBrowser = tab.browser
 	s.setStatus(tab.status, tab.statusArgs...)
 	s.rebuildPanels()
 	s.refreshDocumentTitle()
@@ -116,6 +119,9 @@ func (s *screen) closeTab() {
 		return
 	}
 	s.guardDocument(func() {
+		if s.resultBrowser.source.PageID != 0 {
+			s.submit(job{action: "close_page", pageID: s.resultBrowser.source.PageID})
+		}
 		index := s.activeTab
 		// Store the latest pointers before unlinking the active tab.
 		s.stashTab()
@@ -130,6 +136,7 @@ func (s *screen) closeTab() {
 			s.resultHeaders = nil
 			s.resultSelection = resultSelection{}
 			s.grid = gridState{}
+			s.resultBrowser = resultBrowser{}
 			s.resultValues = nil
 			s.resultTruncated = false
 			s.resultQuery = nil
@@ -152,6 +159,7 @@ func (s *screen) closeTab() {
 		s.editor, s.table, s.document = tab.editor, tab.table, tab.document
 		s.resultRows, s.resultHeaders, s.resultSelection = tab.rows, tab.headers, tab.selection
 		s.grid = tab.grid
+		s.resultBrowser = tab.browser
 		s.setStatus(tab.status, tab.statusArgs...)
 		s.rebuildPanels()
 		s.refreshDocumentTitle()

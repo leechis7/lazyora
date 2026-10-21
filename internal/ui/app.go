@@ -16,6 +16,7 @@ import (
 )
 
 type job struct {
+	pageID        uint64
 	completion    oracle.CompletionContext
 	refresh       bool
 	routine       oracle.Routine
@@ -137,6 +138,7 @@ type screen struct {
 	resultHeaders                            []string
 	resultSelection                          resultSelection
 	grid                                     gridState
+	resultBrowser                            resultBrowser
 	clipboardText                            string
 	copyFocus                                tview.Primitive
 	copyText                                 *tview.TextView
@@ -414,7 +416,14 @@ func (s *screen) worker() {
 		var plan []oracle.PlanStep
 		var exported int64
 		var err error
+		if session != nil && (j.action == "plan" || j.action == "routine_run" || j.action == "compile_source" || j.action == "output_toggle") {
+			session.ClosePage()
+		}
 		switch j.action {
+		case "close_page":
+			if session.PageID() == j.pageID {
+				session.ClosePage()
+			}
 		case "export":
 			progressAt := time.Time{}
 			options := j.exportOptions
@@ -452,7 +461,9 @@ func (s *screen) worker() {
 		case "connect":
 			session, err = oracle.Reconnect(j.ctx, session, j.config, j.resolution)
 		case "execute":
-			result, err = session.Execute(j.ctx, j.text, j.bindings)
+			result, err = session.ExecutePaged(j.ctx, j.text, j.bindings)
+		case "fetch_more":
+			result, err = session.FetchPage(j.ctx, j.pageID)
 		case "output_toggle":
 			err = session.SetOutput(j.ctx, !session.OutputEnabled())
 		case "script":
@@ -503,6 +514,14 @@ func (s *screen) worker() {
 				s.pendingChanges = session.PendingChanges()
 				s.transactionUncertain = session.TransactionUncertain()
 				s.pendingWork = session.PendingWork()
+				s.invalidateResultCursors(session.PageID())
+			}
+			if j.action == "fetch_more" {
+				s.acceptResultPage(result, err)
+				return
+			}
+			if j.action == "close_page" {
+				return
 			}
 			if j.action == "exit_commit" || j.action == "exit_rollback" {
 				if err == nil {
@@ -589,6 +608,7 @@ func (s *screen) worker() {
 					s.resultValues = nil
 					s.resultTruncated = false
 					s.resultSelection = resultSelection{}
+					s.resultBrowser = resultBrowser{}
 					s.resetBrowser()
 					s.setStatus("connected", j.config.User, j.config.Host, j.config.Port, j.config.Name, j.config.Mode)
 					if !s.quitting {
@@ -602,6 +622,9 @@ func (s *screen) worker() {
 							key = "rows_limited"
 						}
 						s.setStatus(key, len(result.Rows), result.Elapsed.Round(time.Millisecond))
+						if result.PageLimited {
+							s.setStatus("result_page_limit", oracle.MaxGridRows, oracle.MaxGridBytes/(1024*1024))
+						}
 					} else {
 						s.setStatus("executed", result.Affected, result.Elapsed.Round(time.Millisecond))
 					}
@@ -669,6 +692,11 @@ func (s *screen) worker() {
 }
 
 func (s *screen) render(result oracle.Result) {
+	s.resultBrowser = resultBrowser{source: result, sortColumn: -1}
+	s.applyResultBrowser(false)
+}
+
+func (s *screen) renderGrid(result oracle.Result) {
 	s.resultQuery = result.Query
 	s.resultTruncated = result.Truncated
 	s.resultValues = make([][]oracle.Cell, len(result.Rows))
@@ -691,6 +719,7 @@ func (s *screen) render(result oracle.Result) {
 	s.grid = gridState{widths: make([]int, len(result.Columns))}
 	s.table.SetSelectionChangedFunc(nil)
 	s.table.Clear()
+	s.table.ScrollToBeginning()
 	for col, name := range result.Columns {
 		style := tcell.StyleDefault.Foreground(palette.accent).Background(palette.surface).Bold(true)
 		if s.limitedColors {

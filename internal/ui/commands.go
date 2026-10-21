@@ -73,6 +73,11 @@ var commands = []command{
 	{"grid_widen", "grid_widen", menuView, nil},
 	{"grid_narrow", "grid_narrow", menuView, nil},
 	{"grid_auto", "grid_auto", menuView, nil},
+	{"fetch_more", "fetch_more", menuView, nil},
+	{"result_sort_asc", "result_sort_asc", menuView, nil},
+	{"result_sort_desc", "result_sort_desc", menuView, nil},
+	{"result_filter", "result_filter", menuView, nil},
+	{"result_view_reset", "result_view_reset", menuView, nil},
 	{"complete", "completion", menuEdit, []binding{{"Ctrl+T", tcell.KeyCtrlT, 0, 0}}},
 	{"complete_refresh", "completion_refresh", menuEdit, nil},
 	{"duplicate_line", "duplicate_line", menuEdit, nil},
@@ -119,6 +124,10 @@ func (s *screen) commandEnabled(id string) bool {
 		return false
 	}
 	switch id {
+	case "fetch_more":
+		return !s.busy && s.connected && s.table.HasFocus() && s.resultBrowser.source.PageID != 0
+	case "result_sort_asc", "result_sort_desc", "result_filter", "result_view_reset":
+		return !s.busy && s.table.HasFocus() && len(s.resultHeaders) > 0
 	case "grid_widen", "grid_narrow", "grid_auto":
 		return !s.busy && s.table.HasFocus() && len(s.resultHeaders) > 0
 	case "duplicate_line", "copy_line", "cut_line", "delete_line", "line_up", "line_down", "transpose_line":
@@ -192,6 +201,16 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "fetch_more":
+		s.fetchMoreResults()
+	case "result_sort_asc":
+		s.sortResult(false)
+	case "result_sort_desc":
+		s.sortResult(true)
+	case "result_filter":
+		s.showResultFilter()
+	case "result_view_reset":
+		s.resetResultView()
 	case "grid_widen":
 		s.resizeResultColumn(4)
 	case "grid_narrow":

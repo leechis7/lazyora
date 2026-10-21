@@ -190,5 +190,8 @@ func (s *screen) refreshResultPosition() {
 	if row > 0 && row <= len(s.resultRows) && col >= 0 && col < len(s.resultHeaders) {
 		title += fmt.Sprintf(s.tr("grid_position"), row, len(s.resultRows), col+1, len(s.resultHeaders))
 	}
+	if s.resultBrowser.sorted || s.resultBrowser.filter != "" {
+		title += fmt.Sprintf(s.tr("result_view_title"), len(s.resultBrowser.source.Rows))
+	}
 	s.table.SetTitle(title)
 }

@@ -264,3 +264,13 @@ Vim은 위에 명시한 일부 명령을 지원합니다. 전체 Vim·Ex(`:`)·�
 Notepad++에서는 Ctrl+D/Ctrl+L/Ctrl+T를 편집 조작으로 사용하므로 전체 선택은 Ctrl+A, 자동완성은 Ctrl+Space, 객체 상세는 F4/보기 메뉴를 사용합니다. Ctrl+H는 구형 터미널의 Backspace와 구분되지 않아 바꾸기에 배정하지 않습니다. Ctrl+Space·Ctrl+Shift 조합을 전달하지 못하는 터미널은 편집 메뉴(SQL: Alt+E, 소스: F10)를 사용하세요. F1 도움말과 포커스별 하단 안내도 선택한 키맵을 반영합니다.
 
 키 대조 근거: [Notepad++ 편집 설명서](https://github.com/notepad-plus-plus/npp-usermanual/blob/master/content/docs/editing.md), [Notepad++ 공식 기본 키 정의](https://github.com/notepad-plus-plus/notepad-plus-plus/blob/master/PowerEditor/src/Parameters.cpp), [Vim 이동·연산자 설명서](https://vimhelp.org/motion.txt.html).
+
+## 객체 DDL·제약조건·인덱스
+
+스키마 객체의 상세 화면에서 **Alt+D DDL / Alt+C 제약조건 / Alt+I 인덱스**를 엽니다. 창 안에서는 **1/2/3**으로 전환하고, Tab으로 목록·상세·버튼을 이동합니다. 필요한 항목만 조회하며 Ctrl+R로 현재 항목을 새로 고칩니다. 창을 닫으면 캐시를 버립니다. 목록의 Ctrl+C는 선택 행의 원문 TSV, 상세의 Ctrl+C는 검사 조건·인덱스 식 등 상세 원문, DDL의 Ctrl+C는 조회한 DDL 전체를 복사합니다. Esc는 조회 중 취소, 대기 중 뒤로 가기입니다.
+
+DDL은 DBMS_METADATA로 읽으며 테이블·뷰·구체화 뷰·프로그램·시퀀스·동의어·인덱스·트리거·타입을 지원합니다. 패키지/타입의 명세와 본문을 구분하고, 생성·컴파일·커밋·롤백하지 않습니다. 일반 사용자는 자기 객체 외의 DDL을 읽지 못할 수 있습니다. 이 경우 실제 Oracle 오류를 표시하며 임의의 대체 DDL을 만들지 않습니다. 제약조건·인덱스는 별도 ALL_* 조회이므로 DDL 권한 오류와 독립적으로 열 수 있습니다.
+
+제약조건에는 종류(C/P/U/R 등), 상태·검증 상태, 순서가 있는 컬럼·복합 외래키 참조 컬럼, 삭제 규칙·지연 정보·검사 조건을 표시합니다. 인덱스에는 소유자·종류·고유성·상태, 컬럼 순서·ASC/DESC·함수 식을 표시합니다. 권한에 따라 참조 테이블의 상세가 보이지 않을 수 있으며, 기본 참조 소유자·제약조건 이름은 유지합니다.
+
+미리보기는 DDL 최대 262,144자(초과 시 오류), 항목별 제약조건/인덱스 256개·컬럼 2,048개로 제한합니다. 목록 제한과 조회 실패·부분 정보는 화면에 표시합니다. 구형 Oracle의 LONG 및 임시 CLOB 드라이버 제한을 피하려고 서버에서 문자열로 변환해 전달하고 임시 LOB를 해제합니다. 실제 10g/19c 검증 여부는 호환성 검증 기록과 별개입니다. 권한 모델과 객체 종류는 [Oracle DBMS_METADATA 설명서](https://docs.oracle.com/cd/B19306_01/appdev.102/b14258/d_metada.htm)를 참고하세요.

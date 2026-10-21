@@ -36,6 +36,16 @@ type job struct {
 }
 
 type screen struct {
+	definitionCopyDetail             bool
+	definitionObject                 oracle.Object
+	definitionSection, definitionDDL string
+	definitionCache                  map[string]oracle.ObjectDefinition
+	definitionRows                   [][]string
+	definitionDetails                []string
+	definitionRoot                   *tview.Flex
+	definitionInfo, definitionText   *tview.TextView
+	definitionTable                  *tview.Table
+
 	vim                                  vimState
 	yankText                             string
 	yankLine                             bool
@@ -364,7 +374,7 @@ func (s *screen) submit(j job) {
 	} else {
 		j.ctx, s.cancel = context.WithTimeout(context.Background(), 60*time.Second)
 	}
-	if j.action == "complete" || j.action == "schemas" || j.action == "objects" || j.action == "columns" || j.action == "object_info" || j.action == "source" || j.action == "arguments" {
+	if j.action == "definition" || j.action == "complete" || j.action == "schemas" || j.action == "objects" || j.action == "columns" || j.action == "object_info" || j.action == "source" || j.action == "arguments" {
 		s.setStatus("browser_loading")
 	} else {
 		s.setStatus("running", j.action)
@@ -385,6 +395,7 @@ func (s *screen) worker() {
 		var catalog oracle.Catalog
 		var objects []oracle.Object
 		var columns []oracle.Column
+		var definition oracle.ObjectDefinition
 		var object oracle.Object
 		var source string
 		var arguments []oracle.Argument
@@ -455,6 +466,8 @@ func (s *screen) worker() {
 			object, err = session.FindObject(j.ctx, j.text)
 		case "object_info":
 			object, err = session.ObjectInfo(j.ctx, j.object)
+		case "definition":
+			definition, err = session.Definition(j.ctx, j.object, j.text)
 		case "source":
 			source, err = session.Source(j.ctx, j.object)
 		case "complete":
@@ -491,6 +504,9 @@ func (s *screen) worker() {
 					s.exitDialog.SetText(s.tr("exit_failed") + "\n" + tview.Escape(err.Error()))
 				}
 				return
+			}
+			if j.action == "definition" {
+				s.acceptDefinition(j.object, j.text, definition, err)
 			}
 			if j.action == "complete" {
 				s.acceptCompletions(completions, err)

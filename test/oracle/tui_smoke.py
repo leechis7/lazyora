@@ -5,6 +5,7 @@ import fcntl
 import os
 import platform
 import pty
+import re
 import select
 import signal
 import struct
@@ -91,6 +92,39 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         send(b"\x1bo\r\x1b[H\r")  # Back to Table.
         wait_for("SAMPLE_ROWS")
         send(b"\x1bu\rLAZYORA\r")  # Alt+U user chooser, keep login account.
+        output.clear()
+        send(b"\t\t\r")  # User -> Type -> object list -> table details.
+        wait_for("CHANGED_AT")  # Wait for actual columns, not the loading title.
+        send(b"\x1bd")
+        wait_for("CREATE TABLE", seconds=65)
+        output.clear()
+        send(b"\x03")
+        wait_for(b"\x1b]52;c;")
+        captured = re.findall(rb"\x1b\]52;c;([^\x07\x1b]*)", output)
+        assert captured and b'"SAMPLE_ROWS"' in base64.b64decode(captured[-1])
+        output.clear()
+        send(b"2")
+        wait_for("ENABLED", seconds=15)
+        output.clear()
+        send(b"\x03")
+        wait_for(b"\x1b]52;c;")
+        captured = re.findall(rb"\x1b\]52;c;([^\x07\x1b]*)", output)
+        assert captured and b"ENABLED" in base64.b64decode(captured[-1])
+        output.clear()
+        send(b"\t\x03")  # Detail pane.
+        wait_for(b"\x1b]52;c;")
+        captured = re.findall(rb"\x1b\]52;c;([^\x07\x1b]*)", output)
+        detail_copy = base64.b64decode(captured[-1])
+        assert b"Check condition" in detail_copy
+        output.clear()
+        send(b"\t\t\t\t\r")  # Selectors -> copy button preserves detail target.
+        copied(detail_copy.decode())
+        output.clear()
+        send(b"3")
+        wait_for("BROWSER_INDEX", seconds=15)
+        send(b"\x1b")  # Definition -> object.
+        send(b"\x1b")  # Object -> browser.
+        print("Read-only DDL/constraints/indexes, section switching and raw copy: passed")
         print("Startup login, Alt+L, Alt+U user and Alt+O object types: passed")
         send(b"\x1bp")
         wait_for("DBMS_OUTPUT disabled")

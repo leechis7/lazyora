@@ -41,6 +41,8 @@ type job struct {
 }
 
 type screen struct {
+	aboutText                        *tview.TextView
+	aboutFocus                       tview.Primitive
 	editChange                       oracle.EditChange
 	editForm                         *tview.Form
 	editInfo                         *tview.TextView
@@ -425,6 +427,7 @@ func (s *screen) worker() {
 		var compilation oracle.Compilation
 		var script oracle.ScriptReport
 		var plan []oracle.PlanStep
+		var editApplied bool
 		var exported int64
 		var cell oracle.Cell
 		var err error
@@ -436,11 +439,9 @@ func (s *screen) worker() {
 			result, err = session.EditableTable(j.ctx, j.object)
 		case "edit_apply":
 			err = session.ApplyEdit(j.ctx, j.edit)
+			editApplied = err == nil
 			if err == nil {
 				result, err = session.EditableTable(j.ctx, j.object)
-				if err != nil {
-					err = fmt.Errorf("%s: %w", s.tr("edit_applied_reload_error"), err)
-				}
 			}
 		case "cell_preview":
 			cell, err = session.PreviewCell(j.ctx, j.cell)
@@ -555,6 +556,9 @@ func (s *screen) worker() {
 				s.invalidateEditResults(session.EditID())
 			}
 			if j.action == "edit_load" || j.action == "edit_apply" {
+				if err != nil && editApplied {
+					err = fmt.Errorf("%s: %w", s.tr("edit_applied_reload_error"), err)
+				}
 				if err != nil {
 					s.setStatus("error", err)
 					if s.editInfo != nil {

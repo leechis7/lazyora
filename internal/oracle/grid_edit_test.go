@@ -8,7 +8,7 @@ import (
 )
 
 func TestEditTypeValidationAndNoCapability(t *testing.T) {
-	for _, kind := range []string{"CLOB", "BLOB", "LONG", "XMLTYPE", "TIMESTAMP WITH TIME ZONE", "NVARCHAR2"} {
+	for _, kind := range []string{"CLOB", "BLOB", "LONG", "XMLTYPE", "TIMESTAMP WITH TIME ZONE", "NCLOB"} {
 		if editableType(kind) {
 			t.Fatalf("unsupported type editable: %s", kind)
 		}
@@ -45,6 +45,9 @@ func TestGridEditRollbackFailureBlocksFurtherWork(t *testing.T) {
 	}
 	if _, err = s.Execute(context.Background(), "SELECT 1 FROM dual"); err == nil {
 		t.Fatal("executed after uncertain update")
+	}
+	if err = s.Finish(true); err == nil || !s.TransactionUncertain() || !s.PendingChanges() {
+		t.Fatal("uncertain transaction allowed commit or cleared its warning")
 	}
 	mock.ExpectRollback()
 }

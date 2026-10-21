@@ -92,6 +92,7 @@ var commands = []command{
 	{"transpose_line", "transpose_line", menuEdit, nil},
 	{"format_code", "format_code", menuEdit, []binding{{"Ctrl+Shift+F", tcell.KeyCtrlF, tcell.ModShift, 0}}},
 	{"help", "help", menuHelp, []binding{{"F1", tcell.KeyF1, 0, 0}}},
+	{"about", "about", menuHelp, nil},
 }
 
 func commandFor(id string) command {
@@ -154,7 +155,7 @@ func (s *screen) commandEnabled(id string) bool {
 		return true
 	case "output_toggle":
 		return s.connected && !s.busy && !s.transactionUncertain
-	case "quit", "help", "settings", "focus_toggle", "context_menu", "passwords":
+	case "quit", "about", "help", "settings", "focus_toggle", "context_menu", "passwords":
 		return true
 	case "fullscreen_sql", "fullscreen_results":
 		return true
@@ -211,6 +212,8 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "about":
+		s.showAbout()
 	case "table_edit_load":
 		s.loadEditTable()
 	case "grid_edit":

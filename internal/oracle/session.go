@@ -220,6 +220,20 @@ func formatValue(value any) string {
 }
 
 func (s *Session) Finish(commit bool) error {
+	// A failed savepoint rollback leaves the transaction handle alive solely
+	// for cleanup. Never let a later Commit claim a known outcome.
+	if s.finishErr != nil {
+		s.edit = nil
+		s.ClosePage()
+		s.clearLOBs()
+		if !commit && s.tx != nil {
+			tx := s.tx
+			s.tx = nil
+			_ = tx.Rollback()
+		}
+		return s.finishErr
+	}
+
 	s.edit = nil
 	s.ClosePage()
 	s.clearLOBs()

@@ -6,7 +6,6 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"lazyora/internal/appinfo"
 )
 
 type helpSection struct {
@@ -100,7 +99,7 @@ func (s *screen) helpArticle(topic int) string {
 			s.helpSubheading(s.tr("help_reading")) + helpParagraphs(s.tr("help_reading_hint"))
 	}
 	if topic == 8 {
-		return s.helpSubheading(s.tr("help_about")) + fmt.Sprintf("[::b]%s v%s[::-]\n\n%s: %s\n\n%s: %s\n\n%s: %s\n%s\n\nCopyright (C) 2026 Chaekang Lee\n", appinfo.Name, appinfo.Version, s.tr("developer"), appinfo.Developer, s.tr("email"), appinfo.Email, s.tr("license"), appinfo.License, appinfo.LicenseURL)
+		return s.helpSubheading(s.tr("help_about")) + tview.Escape(s.aboutContent())
 	}
 	if topic == 9 {
 		return s.helpSubheading(helpTopicNames[9][language]) + helpParagraphs(s.keymapHelp())
@@ -136,6 +135,8 @@ func (s *screen) helpArticle(topic int) string {
 
 func (s *screen) helpContext(page string) string {
 	switch page {
+	case "about":
+		return s.tr("footer_about")
 	case "grid_edit":
 		return s.tr("footer_grid_edit") + "\n" + s.tr("edit_hint")
 	case "cell":

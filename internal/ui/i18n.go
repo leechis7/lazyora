@@ -4,6 +4,9 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"about":                     {"About", "이 프로그램은"},
+	"project":                   {"Project", "프로젝트"},
+	"footer_about":              {"Tab Switch | Ctrl+C Copy info | Esc Close", "Tab 이동 | Ctrl+C 정보 복사 | Esc 닫기"},
 	"table_edit_load":           {"Load table data for safe editing", "테이블 편집 데이터 열기·새로고침"},
 	"grid_edit":                 {"Edit selected table cell", "선택한 테이블 셀 편집"},
 	"edit_readonly":             {"Read-only · reload to edit", "읽기 전용 · 편집하려면 재조회"},

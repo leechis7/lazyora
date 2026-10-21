@@ -224,8 +224,21 @@ func (s *screen) sourceKeymapFooter() string {
 	}
 	return s.keymapHint() + " | F9 " + s.tr("compile") + " | Alt+R " + s.tr("reload") + " | Alt+X " + s.tr("close")
 }
+func (s *screen) keymapHelpSections() []struct{ title, text string } {
+	return []struct{ title, text string }{
+		{s.tr("help_keymap_common"), s.tr("keymap_scope")},
+		{s.tr("keymap_default"), s.tr("default_commands")},
+		{"Vim", s.tr("vim_commands")},
+		{"Notepad++", s.tr("npp_commands")},
+	}
+}
 func (s *screen) keymapHelp() string {
-	return s.keymapHint() + "\n" + s.tr("keymap_scope") + "\n" + s.tr("vim_commands") + "\n" + s.tr("npp_commands")
+	var out strings.Builder
+	out.WriteString(s.keymapHint())
+	for _, section := range s.keymapHelpSections() {
+		out.WriteString("\n" + section.title + "\n" + strings.ReplaceAll(section.text, "\t", "  "))
+	}
+	return out.String()
 }
 
 func (s *screen) closeSourceEdit() {

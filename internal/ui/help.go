@@ -26,8 +26,8 @@ var helpSections = []helpSection{
 		"Tab / Shift+Tab cycles visible panels. Repeat the fullscreen key to restore split.\nView > Maximize retains menus/status/footer; Alt+B / View > Schemas shows/hides the browser.\nAlt+M opens menus; Alt+F/G/E/S/X/V/T/H opens File/SQL tabs/Edit/Session/Execute/View/Tools/Help.\nMenus: arrows select, Enter runs, Esc closes. F10 / right-click opens a context menu.\nButtons: Tab reaches the row, Left/Right selects, Enter runs. Focus is white bold underlined text on dark blue.",
 		"Tab / Shift+Tab으로 표시 중인 창을 순환합니다. 전체화면 키를 다시 누르면 분할 화면으로 복원합니다.\n보기 > 창 최대화는 메뉴·상태·푸터를 유지합니다. Alt+B 또는 보기 > 스키마로 탐색기를 표시·숨깁니다.\nAlt+M 메뉴 열기. Alt+F/G/E/S/X/V/T/H는 파일/SQL 탭/편집/세션/실행/보기/도구/도움말입니다.\n메뉴는 방향키 선택, Enter 실행, Esc 닫기입니다. F10 / 우클릭은 문맥 메뉴입니다.\n버튼은 Tab으로 접근, 좌우로 선택, Enter로 실행합니다. 선택은 진한 파랑 배경·흰색 굵은 밑줄 글자입니다."}},
 	{"connection", [2]string{"Connection and settings", "접속 · 환경설정"}, []string{"connect"}, [2]string{
-		"Startup opens login; Alt+L reopens it. Session > Connect (Alt+S, Enter)   |   Tools > Settings (Alt+T, Enter)\nConnection: profiles above; editable fields below, starting with Alias.\n  Alt+R profiles, Alt+A alias, Alt+H/P/U/W/T/N host/port/user/password/type/name\n  Ctrl+Enter / Alt+Enter / Alt+C connect, Ctrl+S / Alt+S save, Esc cancel\nSettings: Alt+L language, Alt+M mouse, Space toggle, Ctrl+S save.\nWhite fields accept text; dark fields with v select options. Passwords are not saved by default. Enable encrypted saving and press Save to opt in.\nAlt+K / Tools > Passwords: unlock, lock, change master, reset. Unlock needs the master password; it cannot be recovered.",
-		"시작하면 접속 창이 열립니다. Alt+L로 다시 열거나 세션 > 접속(Alt+S, Enter)   |   도구 > 설정(Alt+T, Enter)\n접속 화면 위쪽은 저장된 접속 선택, 아래쪽은 별칭부터 시작하는 정보 편집입니다.\n  Alt+R 저장된 접속, Alt+A 별칭, Alt+H/P/U/W/T/N 호스트/포트/계정/암호/방식/이름\n  Ctrl+Enter / Alt+Enter / Alt+C 접속, Ctrl+S / Alt+S 저장, Esc 취소\n환경설정: Alt+L 언어, Alt+M 마우스, Space 선택, Ctrl+S 저장.\n흰 배경은 텍스트 입력, 어두운 배경과 v는 선택박스입니다. 비밀번호는 기본 미저장이며, 암호화 저장을 선택하고 저장해야 보관합니다.\nAlt+K / 도구 > 암호 관리: 잠금 해제·잠금·마스터 변경·초기화. 마스터 암호는 복구할 수 없습니다."}},
+		"Startup opens login; Alt+L reopens it. Session > Connect (Alt+S, Enter)   |   Tools > Settings (Alt+T, Enter)\nConnection: profiles above; editable fields below, starting with Alias.\n  Alt+R profiles, Alt+A alias, Alt+H/P/U/W/T/N host/port/user/password/type/name\n  Ctrl+Enter / Alt+Enter / Alt+C connect, Ctrl+S / Alt+S save, Esc cancel\nSettings: Alt+L language, Alt+M mouse, Space toggle, Ctrl+S save.\nWhite fields accept text; dark fields with ▾ select options. Passwords are not saved by default. Enable encrypted saving and press Save to opt in.\nAlt+K / Tools > Passwords: unlock, lock, change master, reset. Unlock needs the master password; it cannot be recovered.",
+		"시작하면 접속 창이 열립니다. Alt+L로 다시 열거나 세션 > 접속(Alt+S, Enter)   |   도구 > 설정(Alt+T, Enter)\n접속 화면 위쪽은 저장된 접속 선택, 아래쪽은 별칭부터 시작하는 정보 편집입니다.\n  Alt+R 저장된 접속, Alt+A 별칭, Alt+H/P/U/W/T/N 호스트/포트/계정/암호/방식/이름\n  Ctrl+Enter / Alt+Enter / Alt+C 접속, Ctrl+S / Alt+S 저장, Esc 취소\n환경설정: Alt+L 언어, Alt+M 마우스, Space 선택, Ctrl+S 저장.\n흰 배경은 텍스트 입력, 어두운 배경과 ▾는 선택박스입니다. 비밀번호는 기본 미저장이며, 암호화 저장을 선택하고 저장해야 보관합니다.\nAlt+K / 도구 > 암호 관리: 잠금 해제·잠금·마스터 변경·초기화. 마스터 암호는 복구할 수 없습니다."}},
 	{"schema", [2]string{"Schema, object details and source", "스키마 · 객체 상세 · 소스"}, []string{"browser_user", "browser_type", "browser_refresh", "describe", "quick_describe"}, [2]string{
 		"Browser: choose User and Type above the object list. The login user and Tables are selected initially.\nAlt+U selects User; Alt+O selects Type. Tab cycles the selectors and list.\nArrows move, Enter/click opens, Ctrl+R refreshes. Selecting a browser user does not change the SQL session.\nObject: Alt+D DDL, Alt+C constraints, Alt+I indexes, Alt+G grants/relations, Alt+S source/edit, Alt+A arguments, Ctrl+R refresh, Esc back.\nSource: F9 apply/compile, Alt+R reload, Alt+X close, F10 edit menu, Tab cycles source/errors/buttons.\nCompilation is DDL and may commit prior DML, even when compilation fails.\nDiscarding unapplied source edits requires confirmation.",
 		"탐색기 위쪽에서 사용자와 객체 종류를 선택합니다. 기본값은 접속 계정과 테이블입니다.\nAlt+U 사용자, Alt+O 객체 종류로 이동하고 Tab으로 선택칸과 목록을 순환합니다.\n방향키 이동, Enter/클릭 상세 조회, Ctrl+R 새로고침. 사용자 선택은 SQL 세션을 변경하지 않습니다.\n객체 상세: Alt+D DDL, Alt+C 제약조건, Alt+I 인덱스, Alt+G 권한·의존성, Alt+S 소스·편집, Alt+A 인자, Ctrl+R 새로고침, Esc 돌아가기.\n소스: F9 적용·컴파일, Alt+R 다시 조회, Alt+X 닫기, F10 편집 메뉴, Tab 소스/오류/버튼 이동.\n컴파일은 DDL이므로 실패하더라도 이전 DML이 커밋될 수 있습니다.\nDB에 적용하지 않은 소스 편집을 버릴 때는 확인합니다."}},
@@ -61,7 +61,7 @@ var helpTopicNames = [][2]string{
 	{"Results / copy", "결과·복사·내보내기"}, {"Windows / menus", "화면·메뉴"},
 	{"Connection", "접속·환경설정"}, {"Schema / source", "스키마·소스"},
 	{"Transactions", "커밋·롤백·종료"}, {"Terminal / limits", "터미널·지원 범위"},
-	{"About", "앱 정보"}, {"Editor keymaps", "편집기 키맵"},
+	{"Editor keymaps", "편집기 키맵"}, {"About", "앱 정보"},
 }
 
 func (s *screen) helpSubheading(title string) string {
@@ -92,17 +92,35 @@ func helpParagraphs(text string) string {
 	return out.String()
 }
 
+// Key groups use the same key-first rows as command help; notes get their
+// own paragraphs so they cannot crowd the shortcut list.
+func (s *screen) keymapArticle() string {
+	var out strings.Builder
+	for _, section := range s.keymapHelpSections() {
+		out.WriteString(s.helpSubheading(section.title))
+		for _, line := range strings.Split(section.text, "\n") {
+			if keys, description, ok := strings.Cut(line, "\t"); ok {
+				fmt.Fprintf(&out, "[::b]%s[::-]  %s\n", tview.Escape(keys), tview.Escape(description))
+			} else {
+				out.WriteString("\n" + helpParagraphs(line))
+			}
+		}
+		out.WriteString("\n")
+	}
+	return out.String()
+}
+
 func (s *screen) helpArticle(topic int) string {
 	language := s.helpLanguage()
 	if topic == 0 {
 		return s.helpSubheading(s.tr("help_current")) + helpParagraphs(s.helpContextText) +
 			s.helpSubheading(s.tr("help_reading")) + helpParagraphs(s.tr("help_reading_hint"))
 	}
-	if topic == 8 {
+	if topic == 9 {
 		return s.helpSubheading(s.tr("help_about")) + tview.Escape(s.aboutContent())
 	}
-	if topic == 9 {
-		return s.helpSubheading(helpTopicNames[9][language]) + helpParagraphs(s.keymapHelp())
+	if topic == 8 {
+		return s.helpSubheading(helpTopicNames[8][language]) + s.keymapArticle()
 	}
 	section := helpSections[topic-1]
 	var out strings.Builder

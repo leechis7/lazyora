@@ -30,7 +30,7 @@ func TestAboutMenuSharedMetadataAndStatePreserved(t *testing.T) {
 					t.Fatal("menu did not open About")
 				}
 				for _, value := range []string{appinfo.Name, appinfo.Version, appinfo.Developer, appinfo.Email, appinfo.License, appinfo.LicenseURL, appinfo.ProjectURL} {
-					if !strings.Contains(s.aboutText.GetText(false), value) || !strings.Contains(s.helpArticle(8), value) {
+					if !strings.Contains(s.aboutText.GetText(false), value) || !strings.Contains(s.helpArticle(9), value) {
 						t.Fatalf("inconsistent info: %s", value)
 					}
 				}

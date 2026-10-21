@@ -243,6 +243,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if page == "object" {
 		if alt {
 			switch letter {
+			case 'g':
+				s.showDefinition("grants")
+				return nil
 			case 'd':
 				s.showDefinition("ddl")
 				return nil

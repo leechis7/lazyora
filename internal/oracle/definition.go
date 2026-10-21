@@ -32,6 +32,8 @@ type ObjectDefinition struct {
 	DDL         string
 	Constraints []Constraint
 	Indexes     []Index
+	Grants      []ObjectGrant
+	Relations   []ObjectRelation
 	Limited     bool
 }
 
@@ -51,10 +53,17 @@ func metadataKind(kind string) (string, error) {
 // calls the execute pipeline or mutates DBMS_METADATA session transforms.
 func (s *Session) Definition(ctx context.Context, object Object, section string) (ObjectDefinition, error) {
 	var result ObjectDefinition
+	if s.finishErr != nil {
+		return result, s.finishErr
+	}
 	if object.Owner == "" || object.Name == "" {
 		return result, errors.New("schema and object name are required")
 	}
 	switch section {
+	case "grants":
+		return s.objectGrants(ctx, object)
+	case "dependencies", "dependents":
+		return s.objectRelations(ctx, object, section == "dependents")
 	case "ddl":
 		ddl, err := s.definitionDDL(ctx, object)
 		result.DDL = ddl

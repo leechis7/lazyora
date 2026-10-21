@@ -117,14 +117,33 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         detail_copy = base64.b64decode(captured[-1])
         assert b"Check condition" in detail_copy
         output.clear()
-        send(b"\t\t\t\t\r")  # Selectors -> copy button preserves detail target.
+        send(b"\t" * 7 + b"\r")  # Six selectors -> copy button preserves detail target.
         copied(detail_copy.decode())
         output.clear()
         send(b"3")
         wait_for("BROWSER_INDEX", seconds=15)
+        output.clear()
+        send(b"4")
+        wait_for("No accessible information")
+        output.clear()
+        send(b"6")
+        wait_for("HARD")
+        send(b"\x1b[F")  # Last dependent is SAMPLE_ROWS_VIEW (VIEW).
+        wait_for("SAMPLE_ROWS_VIEW")
+        output.clear()
+        send(b"\r")  # Explore the selected view's dependencies.
+        wait_for("HARD")
+        send(b"\x03")
+        wait_for(b"\x1b]52;c;")
+        captured = re.findall(rb"\x1b\]52;c;([^\x07\x1b]*)", output)
+        assert b"SAMPLE_ROWS" in base64.b64decode(captured[-1])
+        output.clear()
+        send(b"\x1b[1;3D")  # Alt+Left restores cached dependents and row.
+        wait_for('"LAZYORA"."SAMPLE_ROWS"')
         send(b"\x1b")  # Definition -> object.
         send(b"\x1b")  # Object -> browser.
         print("Read-only DDL/constraints/indexes, section switching and raw copy: passed")
+        print("Visible grants, dependents, related-object exploration and back: passed")
         print("Startup login, Alt+L, Alt+U user and Alt+O object types: passed")
         send(b"\x1bp")
         wait_for("DBMS_OUTPUT disabled")

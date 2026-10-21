@@ -10,6 +10,15 @@ import (
 	"lazyora/internal/oracle"
 )
 
+var definitionSections = []string{"ddl", "constraints", "indexes", "grants", "dependencies", "dependents"}
+
+type definitionLocation struct {
+	object  oracle.Object
+	section string
+	cache   map[string]oracle.ObjectDefinition
+	row     int
+}
+
 func (s *screen) showDefinition(section string) {
 	if s.busy {
 		return
@@ -21,6 +30,8 @@ func (s *screen) showDefinition(section string) {
 	if page != "definition" {
 		s.definitionObject = s.object
 		s.definitionCopyDetail = false
+		s.definitionTrail = nil
+		s.definitionSelectors = nil
 		s.definitionCache = make(map[string]oracle.ObjectDefinition)
 		s.definitionInfo = tview.NewTextView().SetWrap(true)
 		s.definitionInfo.SetBackgroundColor(palette.background)
@@ -52,6 +63,7 @@ func (s *screen) closeDefinition() {
 	}
 	s.pages.RemovePage("definition")
 	s.definitionCache = nil
+	s.definitionTargets, s.definitionTrail, s.definitionSelectors = nil, nil, nil
 	s.definitionRoot = nil
 	s.definitionInfo, s.definitionText, s.definitionTable = nil, nil, nil
 	s.definitionRows, s.definitionDetails = nil, nil
@@ -81,7 +93,10 @@ func quoteColumns(columns []string) string {
 }
 func (s *screen) renderDefinition(data oracle.ObjectDefinition, err error) {
 	s.definitionDDL = data.DDL
-	message := oracle.QualifiedObject(s.definitionObject) + " · " + s.tr(s.definitionSection) + "\n" + s.tr("definition_note")
+	message := oracle.QualifiedObject(s.definitionObject) + " · " + s.definitionObject.Kind + " · " + s.definitionObject.Status + " · " + s.tr(s.definitionSection) + "\n" + s.tr("definition_note")
+	if s.definitionSection == "grants" || s.definitionSection == "dependencies" || s.definitionSection == "dependents" {
+		message += "\n" + s.tr("relations_scope")
+	}
 	if data.Limited {
 		message += "\n" + s.tr("definition_limited")
 	}
@@ -105,6 +120,7 @@ func (s *screen) renderDefinition(data oracle.ObjectDefinition, err error) {
 	s.definitionTable.SetBorder(true).SetTitle(s.tr(s.definitionSection))
 	styleBox(s.definitionTable.Box)
 	s.definitionRows, s.definitionDetails = nil, nil
+	s.definitionTargets = nil
 	var headers []string
 	if s.definitionSection == "constraints" {
 		headers = []string{"object_name", "object_type", "object_status", "definition_columns", "definition_reference", "definition_validated"}
@@ -135,6 +151,32 @@ func (s *screen) renderDefinition(data oracle.ObjectDefinition, err error) {
 			s.definitionRows = append(s.definitionRows, []string{index.Owner, index.Name, index.Kind, index.Uniqueness, index.Status, strings.Join(cols, ", ")})
 			s.definitionDetails = append(s.definitionDetails, oracle.QualifiedObject(oracle.Object{Owner: index.TableOwner, Name: index.TableName})+"\n"+strings.Join(cols, ", ")+"\n\n"+strings.Join(expressions, "\n"))
 		}
+	} else if s.definitionSection == "grants" {
+		headers = []string{"grant_grantee", "grant_privilege", "definition_columns", "grant_grantable", "grant_grantor"}
+		for _, grant := range data.Grants {
+			s.definitionRows = append(s.definitionRows, []string{grant.Grantee, grant.Privilege, grant.Column, grant.Grantable, grant.Grantor})
+			s.definitionDetails = append(s.definitionDetails, fmt.Sprintf("%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s", s.tr("grant_grantee"), grant.Grantee, s.tr("grant_privilege"), grant.Privilege, s.tr("definition_columns"), grant.Column, s.tr("grant_grantable"), grant.Grantable, s.tr("grant_grantor"), grant.Grantor))
+		}
+	} else if s.definitionSection == "dependencies" || s.definitionSection == "dependents" {
+		headers = []string{"owner", "object_name", "object_type", "object_status", "relation_link", "relation_kind"}
+		for _, relation := range data.Relations {
+			status := relation.Object.Status
+			if !relation.Visible {
+				status = s.tr("relation_unknown")
+			}
+			s.definitionRows = append(s.definitionRows, []string{relation.Object.Owner, relation.Object.Name, relation.Object.Kind, status, relation.Link, relation.Dependency})
+			detail := oracle.QualifiedObject(relation.Object) + "\n" + relation.Object.Kind + " · " + status + "\n" + s.tr("relation_kind") + ": " + relation.Dependency
+			if relation.Navigable() {
+				detail += "\n" + s.tr("relation_open_hint")
+			} else {
+				detail += "\n" + s.tr("relation_unavailable")
+			}
+			if relation.Link != "" {
+				detail += "\n" + s.tr("relation_link") + ": " + relation.Link
+			}
+			s.definitionDetails = append(s.definitionDetails, detail)
+			s.definitionTargets = append(s.definitionTargets, relation)
+		}
 	}
 	for col, label := range headers {
 		s.definitionTable.SetCell(0, col, tview.NewTableCell(s.tr(label)).SetSelectable(false).SetStyle(tcell.StyleDefault.Foreground(palette.accent).Background(palette.surface).Bold(true)))
@@ -149,6 +191,7 @@ func (s *screen) renderDefinition(data oracle.ObjectDefinition, err error) {
 			s.definitionText.SetText(s.definitionDetails[row-1]).ScrollToBeginning()
 		}
 	})
+	s.definitionTable.SetSelectedFunc(func(_, _ int) { s.openDefinitionRelation() })
 	var selectors, buttons *tview.Flex
 	if s.definitionRoot.GetItemCount() > 1 {
 		selectors = s.definitionRoot.GetItem(1).(*tview.Flex)
@@ -156,12 +199,19 @@ func (s *screen) renderDefinition(data oracle.ObjectDefinition, err error) {
 	}
 	s.definitionRoot.Clear().AddItem(s.definitionInfo, 5, 0, false)
 	if selectors == nil {
-		selectors = tview.NewFlex()
-		for i, section := range []string{"ddl", "constraints", "indexes"} {
-			selectors.AddItem(clickable(tview.NewButton(fmt.Sprintf("%d %s", i+1, s.tr(section))).SetSelectedFunc(func() { s.showDefinition(section) })), 0, 1, false)
+		selectors = tview.NewFlex().SetDirection(tview.FlexRow)
+		for from := 0; from < len(definitionSections); from += 3 {
+			row := tview.NewFlex()
+			for i := from; i < from+3; i++ {
+				section := definitionSections[i]
+				button := clickable(tview.NewButton(fmt.Sprintf("%d %s", i+1, s.tr(section))).SetSelectedFunc(func() { s.showDefinition(section) }))
+				s.definitionSelectors = append(s.definitionSelectors, button)
+				row.AddItem(button, 0, 1, false)
+			}
+			selectors.AddItem(row, 1, 0, false)
 		}
 	}
-	s.definitionRoot.AddItem(selectors, 1, 0, false)
+	s.definitionRoot.AddItem(selectors, 2, 0, false)
 	if s.definitionSection == "ddl" {
 		s.definitionText.SetText(data.DDL)
 		s.definitionRoot.AddItem(s.definitionText, 0, 1, true)
@@ -181,6 +231,8 @@ func (s *screen) renderDefinition(data oracle.ObjectDefinition, err error) {
 	if buttons == nil {
 		buttons = tview.NewFlex().AddItem(clickable(tview.NewButton(s.tr("copy_selection")+" (Ctrl+C)").SetSelectedFunc(s.copyDefinition)), 0, 1, false).
 			AddItem(clickable(tview.NewButton(s.tr("reload")+" (Ctrl+R)").SetSelectedFunc(s.refreshDefinition)), 0, 1, false).
+			AddItem(clickable(tview.NewButton(s.tr("relation_open")+" (Alt+O)").SetSelectedFunc(s.openDefinitionRelation)), 0, 1, false).
+			AddItem(clickable(tview.NewButton(s.tr("relation_back")+" (Alt+Left)").SetSelectedFunc(s.backDefinitionRelation)), 0, 1, false).
 			AddItem(clickable(tview.NewButton(s.tr("close")+" (Esc)").SetSelectedFunc(s.closeDefinition)), 0, 1, false)
 	}
 	s.definitionRoot.AddItem(buttons, 1, 0, false)
@@ -219,6 +271,16 @@ func (s *screen) copyDefinition() {
 	}
 }
 func (s *screen) definitionKey(event *tcell.EventKey) *tcell.EventKey {
+	if event.Modifiers()&tcell.ModAlt != 0 {
+		if event.Key() == tcell.KeyLeft {
+			s.backDefinitionRelation()
+			return nil
+		}
+		if event.Key() == tcell.KeyRune && (event.Rune() == 'o' || event.Rune() == 'O') {
+			s.openDefinitionRelation()
+			return nil
+		}
+	}
 	switch event.Key() {
 	case tcell.KeyF1:
 		s.showHelp()
@@ -237,17 +299,46 @@ func (s *screen) definitionKey(event *tcell.EventKey) *tcell.EventKey {
 		if s.definitionSection != "ddl" {
 			content = []tview.Primitive{s.definitionTable, s.definitionText}
 		}
-		selectors := s.definitionRoot.GetItem(1).(*tview.Flex)
-		for i := 0; i < selectors.GetItemCount(); i++ {
-			content = append(content, selectors.GetItem(i))
-		}
+		content = append(content, s.definitionSelectors...)
 		s.dialogTab(event, content...)
 		return nil
 	case tcell.KeyRune:
-		if event.Modifiers() == 0 && event.Rune() >= '1' && event.Rune() <= '3' {
-			s.showDefinition([]string{"ddl", "constraints", "indexes"}[event.Rune()-'1'])
+		if event.Modifiers() == 0 && event.Rune() >= '1' && event.Rune() <= '6' {
+			s.showDefinition(definitionSections[event.Rune()-'1'])
 			return nil
 		}
 	}
 	return event
+}
+
+func (s *screen) openDefinitionRelation() {
+	if s.busy {
+		return
+	}
+	row, _ := s.definitionTable.GetSelection()
+	if row < 1 || row > len(s.definitionTargets) {
+		return
+	}
+	target := s.definitionTargets[row-1]
+	if !target.Navigable() || len(s.definitionTrail) >= 32 {
+		s.definitionInfo.SetText(s.definitionInfo.GetText(false) + "\n" + s.tr("relation_unavailable"))
+		return
+	}
+	s.definitionTrail = append(s.definitionTrail, definitionLocation{s.definitionObject, s.definitionSection, s.definitionCache, row})
+	s.definitionObject, s.definitionCache = target.Object, make(map[string]oracle.ObjectDefinition)
+	s.definitionCopyDetail = false
+	s.showDefinition("dependencies")
+}
+
+func (s *screen) backDefinitionRelation() {
+	if s.busy || len(s.definitionTrail) == 0 {
+		return
+	}
+	last := len(s.definitionTrail) - 1
+	location := s.definitionTrail[last]
+	s.definitionTrail = s.definitionTrail[:last]
+	s.definitionObject, s.definitionCache = location.object, location.cache
+	s.definitionCopyDetail = false
+	s.showDefinition(location.section)
+	s.definitionTable.Select(location.row, 0)
 }

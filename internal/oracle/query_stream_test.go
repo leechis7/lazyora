@@ -9,6 +9,22 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 )
 
+func TestNumericMetadataWhenDriverOmitsTypeName(t *testing.T) {
+	s, m := mockSession(t)
+	m.ExpectBegin()
+	rows := sqlmock.NewRowsWithColumnDefinition(sqlmock.NewColumn("N").OfType("", "").WithPrecisionAndScale(38, 0), sqlmock.NewColumn("TEXT").OfType("", "")).
+		AddRow("99999999999999999999999999999999999999", "00123").AddRow(nil, "10")
+	m.ExpectQuery("SELECT n,text FROM t").WillReturnRows(rows).RowsWillBeClosed()
+	result, err := s.Execute(context.Background(), "SELECT n,text FROM t")
+	if err != nil || result.Values[0][0].Type != "NUMBER" || result.Values[0][0].Text != "99999999999999999999999999999999999999" || result.Values[1][0].Type != "NUMBER" || !result.Values[1][0].Null || result.Values[0][1].Type != "VARCHAR2" {
+		t.Fatalf("numeric metadata/string precision: %+v %v", result, err)
+	}
+	m.ExpectRollback()
+	if err = s.Finish(false); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestQueryReplaySnapshotAndValidation(t *testing.T) {
 	values := map[string]BindValue{"N": {Kind: "text", Text: "original"}, "UNUSED": {Text: "do not retain"}}
 	spec, err := NewQuerySpec("SELECT :n, q'[FOR UPDATE]' FROM dual;", values)

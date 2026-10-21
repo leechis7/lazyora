@@ -64,6 +64,7 @@ type QueryRows struct {
 }
 
 func (s *Session) OpenQuery(ctx context.Context, spec *QuerySpec) (*QueryRows, error) {
+	s.ClosePage()
 	if s.finishErr != nil {
 		return nil, s.finishErr
 	}
@@ -131,6 +132,14 @@ func scanCells(rows *sql.Rows, columnTypes []*sql.ColumnType) ([]Cell, error) {
 	cells := make([]Cell, len(values))
 	for i, value := range values {
 		kind := columnTypes[i].DatabaseTypeName()
+		// go-ora can omit DatabaseTypeName and return Oracle NUMBER as text.
+		// Precision/scale metadata identifies numeric columns without guessing
+		// from text values (which would corrupt numeric-looking VARCHAR2 data).
+		if kind == "" {
+			if _, _, numeric := columnTypes[i].DecimalSize(); numeric {
+				kind = "NUMBER"
+			}
+		}
 		if kind == "" {
 			switch value.(type) {
 			case int64, int32, int, float64, float32:

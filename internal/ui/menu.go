@@ -53,7 +53,7 @@ func (s *screen) showContextMenu() {
 	if page != "main" {
 		return
 	}
-	ids := []string{"file_new", "file_close", "execute", "script", "plan", "undo", "redo", "cut", "copy", "paste", "select_all", "find", "replace", "clear_sql", "history", "describe", "fullscreen_sql", "maximize"}
+	ids := []string{"file_new", "file_close", "execute", "script", "plan", "undo", "redo", "cut", "copy", "paste", "select_all", "find", "replace", "clear_sql", "history", "describe", "complete", "fullscreen_sql", "maximize"}
 	if s.table.HasFocus() {
 		ids = []string{"copy", "copy_row", "export", "copy_preview", "fullscreen_results", "maximize", "focus_toggle"}
 	}

@@ -16,6 +16,8 @@ import (
 )
 
 type job struct {
+	completion    oracle.CompletionContext
+	refresh       bool
 	routine       oracle.Routine
 	routineInputs map[int]oracle.RoutineInput
 	query         *oracle.QuerySpec
@@ -34,21 +36,30 @@ type job struct {
 }
 
 type screen struct {
-	routineResultsFocus            tview.Primitive
-	routines                       []oracle.Routine
-	routineList, routineResultList *tview.List
-	routineInfo                    *tview.TextView
-	routineForm                    *tview.Form
-	routineSubmit                  func()
-	routineFocus                   tview.Primitive
-	routineResults                 oracle.RoutineResult
-	outputEnabled, outputTruncated bool
-	outputLines                    []string
-	outputSize                     int
-	outputError                    string
-	outputText, outputInfo         *tview.TextView
-	outputToggle                   *tview.Button
-	outputFocus                    tview.Primitive
+	completionEditor                     *tview.TextArea
+	completionOriginal                   string
+	completionCursor                     int
+	completionContext                    oracle.CompletionContext
+	completionResult                     oracle.Completions
+	completionCandidates, completionRows []oracle.CompletionCandidate
+	completionList                       *tview.List
+	completionFilter                     *tview.InputField
+	completionInfo                       *tview.TextView
+	routineResultsFocus                  tview.Primitive
+	routines                             []oracle.Routine
+	routineList, routineResultList       *tview.List
+	routineInfo                          *tview.TextView
+	routineForm                          *tview.Form
+	routineSubmit                        func()
+	routineFocus                         tview.Primitive
+	routineResults                       oracle.RoutineResult
+	outputEnabled, outputTruncated       bool
+	outputLines                          []string
+	outputSize                           int
+	outputError                          string
+	outputText, outputInfo               *tview.TextView
+	outputToggle                         *tview.Button
+	outputFocus                          tview.Primitive
 
 	resultQuery            *oracle.QuerySpec
 	exportForm             *tview.Form
@@ -350,7 +361,7 @@ func (s *screen) submit(j job) {
 	} else {
 		j.ctx, s.cancel = context.WithTimeout(context.Background(), 60*time.Second)
 	}
-	if j.action == "schemas" || j.action == "objects" || j.action == "columns" || j.action == "object_info" || j.action == "source" || j.action == "arguments" {
+	if j.action == "complete" || j.action == "schemas" || j.action == "objects" || j.action == "columns" || j.action == "object_info" || j.action == "source" || j.action == "arguments" {
 		s.setStatus("browser_loading")
 	} else {
 		s.setStatus("running", j.action)
@@ -375,6 +386,7 @@ func (s *screen) worker() {
 		var source string
 		var arguments []oracle.Argument
 		var routines []oracle.Routine
+		var completions oracle.Completions
 		var routineResult oracle.RoutineResult
 		var compilation oracle.Compilation
 		var script oracle.ScriptReport
@@ -442,6 +454,8 @@ func (s *screen) worker() {
 			object, err = session.ObjectInfo(j.ctx, j.object)
 		case "source":
 			source, err = session.Source(j.ctx, j.object)
+		case "complete":
+			completions, err = session.Complete(j.ctx, j.completion, j.refresh)
 		case "routines":
 			object = j.object
 			if object.Name == "" {
@@ -474,6 +488,9 @@ func (s *screen) worker() {
 					s.exitDialog.SetText(s.tr("exit_failed") + "\n" + tview.Escape(err.Error()))
 				}
 				return
+			}
+			if j.action == "complete" {
+				s.acceptCompletions(completions, err)
 			}
 			if j.action == "compile_source" {
 				s.object = compilation.Object

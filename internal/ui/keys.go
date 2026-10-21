@@ -52,6 +52,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if s.buttonArrow(event) {
 		return nil
 	}
+	if page == "completion" {
+		return s.completionKey(event)
+	}
 	if page == "output" {
 		return s.outputKey(event)
 	}
@@ -247,6 +250,10 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return event
 	}
 	if page == "source" {
+		if event.Key() == tcell.KeyCtrlT {
+			s.showCompletion(false)
+			return nil
+		}
 		if event.Key() == tcell.KeyEscape {
 			s.closeSource()
 			return nil

@@ -70,6 +70,8 @@ var commands = []command{
 	{"passwords", "passwords", menuTools, []binding{{"Alt+K", tcell.KeyRune, tcell.ModAlt, 'k'}}},
 	{"routine_execute", "routine_execute", menuExecute, nil},
 	{"routine_results", "routine_results", menuView, nil},
+	{"complete", "completion", menuEdit, []binding{{"Ctrl+T", tcell.KeyCtrlT, 0, 0}}},
+	{"complete_refresh", "completion_refresh", menuEdit, nil},
 	{"help", "help", menuHelp, []binding{{"F1", tcell.KeyF1, 0, 0}}},
 }
 
@@ -106,6 +108,8 @@ func (s *screen) commandEnabled(id string) bool {
 		return false
 	}
 	switch id {
+	case "complete", "complete_refresh":
+		return !s.busy && s.editor.HasFocus() && !s.editor.HasSelection()
 	case "routine_execute":
 		return s.connected && !s.busy && !s.transactionUncertain
 	case "routine_results":
@@ -171,6 +175,10 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "complete":
+		s.showCompletion(false)
+	case "complete_refresh":
+		s.showCompletion(true)
 	case "routine_execute":
 		s.requestRoutine()
 	case "routine_results":

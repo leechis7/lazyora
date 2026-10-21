@@ -58,6 +58,7 @@ func (s *screen) showSource() {
 	s.sourceInfo.SetTextColor(palette.text)
 	s.sourceInfo.SetText(s.tr("browser_loading"))
 	s.sourceEditor = tview.NewTextArea()
+	s.sourceEditor.SetClipboard(s.sendClipboard, func() string { return s.clipboardText })
 	s.sourceEditor.SetBorder(true)
 	styleBox(s.sourceEditor.Box)
 	s.sourceEditor.SetBackgroundColor(palette.field).SetTitleColor(palette.background)
@@ -78,7 +79,7 @@ func (s *screen) showSource() {
 		label  string
 		action func()
 	}{
-		{"compile_button", s.requestCompile}, {"format_code", func() { s.app.SetFocus(s.sourceEditor); s.formatCode() }}, {"reload_button", s.reloadSource}, {"close", s.closeSource},
+		{"compile_button", s.requestCompile}, {"source_edit", s.showSourceEdit}, {"format_code", func() { s.app.SetFocus(s.sourceEditor); s.formatCode() }}, {"reload_button", s.reloadSource}, {"close", s.closeSource},
 	} {
 		buttons.AddItem(clickable(tview.NewButton(s.tr(item.label)).SetSelectedFunc(item.action)), 0, 1, false)
 	}

@@ -218,7 +218,7 @@ func SQLCompletionContext(text string, cursor int) (CompletionContext, error) {
 			c.Blocked = true
 			return c, nil
 		}
-		if t.identifier && cursor > t.start && cursor <= t.end {
+		if t.identifier && cursor >= t.start && cursor <= t.end {
 			selected = i
 			activeScope = t.scope
 			break

@@ -53,7 +53,7 @@ func (s *screen) showContextMenu() {
 	if page != "main" {
 		return
 	}
-	ids := []string{"file_new", "file_close", "execute", "script", "plan", "undo", "redo", "cut", "copy", "paste", "select_all", "find", "replace", "clear_sql", "history", "describe", "complete", "format_code", "fullscreen_sql", "maximize"}
+	ids := []string{"file_new", "file_close", "execute", "script", "plan", "undo", "redo", "cut", "copy", "paste", "select_all", "find", "replace", "clear_sql", "history", "describe", "complete", "format_code", "duplicate_line", "line_up", "line_down", "fullscreen_sql", "maximize"}
 	if s.table.HasFocus() {
 		ids = []string{"copy", "copy_row", "export", "copy_preview", "fullscreen_results", "maximize", "focus_toggle"}
 	}
@@ -82,7 +82,7 @@ func (s *screen) openCommandMenu(title string, entries []command, index int) {
 	for _, cmd := range entries {
 		enabled := s.commandEnabled(cmd.id)
 		label := s.tr(cmd.label)
-		if key := shortcut(cmd.id); key != "" {
+		if key := s.editorBindingLabels(cmd.id, 1); key != "" {
 			label += "  " + key
 		}
 		if !enabled {

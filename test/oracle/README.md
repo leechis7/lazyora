@@ -50,7 +50,7 @@ docker compose -f test/oracle/compose.yaml exec oracle \
 make -C test/oracle run
 ```
 
-`run.sh`로 실행한 LazyOra를 종료하면 **이 시험 환경의 `docker compose down`도 자동 실행**해 Oracle 컨테이너의 메모리를 반환합니다. 앱이 오류로 종료돼도 정리를 시도하며, DB 데이터 볼륨은 삭제하지 않습니다. 다시 시험하려면 `make -C test/oracle run`으로 시작하세요. 이 환경을 함께 사용하는 다른 시험 연결도 종료됩니다.
+`run.sh`로 실행한 LazyOra를 종료하면 **Oracle Free를 종료할지 `[Y/n]`으로 확인**합니다. Enter/Y는 `docker compose down`으로 컨테이너의 메모리를 반환하고, n은 DB를 계속 실행합니다. 입력을 받을 수 없는 자동 실행이나 종료 신호에는 자동으로 정리하며, DB 데이터 볼륨은 삭제하지 않습니다. 다시 시험하려면 `make -C test/oracle run`으로 시작하세요. down을 선택하면 이 환경을 함께 사용하는 다른 시험 연결도 종료됩니다.
 
 `run.sh`가 로컬 `.env`를 읽어 접속 화면의 기본값을 채웁니다. 실행 시 먼저 열린 접속 화면에서 **Ctrl+Enter 또는 Alt+C**로 접속하고 **Ctrl+Enter·Alt+Enter 또는 F9**로 편집기의 기본 조회문을 실행합니다. 접속 버튼을 마우스로 클릭해도 됩니다. 접속 화면은 Alt+L로 다시 엽니다. **F1**은 단축키 도움말, **도구 → 설정**은 언어·마우스 설정입니다. 입력 항목은 클릭하거나 Alt+H/P/U/W/T/N으로 선택할 수 있습니다. 비밀번호를 직접 복사하거나 명령행에 입력할 필요는 없습니다. DB 접속은 사용자가 접속을 실행할 때 이루어집니다.
 

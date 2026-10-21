@@ -16,7 +16,7 @@ type helpSection struct {
 }
 
 var helpSections = []helpSection{
-	{"sql", [2]string{"SQL editor", "SQL 편집"}, []string{"file_new", "file_open", "file_save", "file_save_as", "file_close", "tab_next", "tab_previous", "execute", "script", "script_report", "plan", "output_view", "output_toggle", "complete", "complete_refresh", "format_code", "routine_execute", "routine_results", "undo", "redo", "cut", "copy", "paste", "select_all", "find", "find_next", "find_previous", "replace", "clear_sql", "history"}, [2]string{
+	{"sql", [2]string{"SQL editor", "SQL 편집"}, []string{"file_new", "file_open", "file_save", "file_save_as", "file_close", "tab_next", "tab_previous", "execute", "script", "script_report", "plan", "output_view", "output_toggle", "complete", "complete_refresh", "format_code", "duplicate_line", "copy_line", "cut_line", "delete_line", "line_up", "line_down", "transpose_line", "routine_execute", "routine_results", "undo", "redo", "cut", "copy", "paste", "select_all", "find", "find_next", "find_previous", "replace", "clear_sql", "history"}, [2]string{
 		"UTF-8 SQL files: Open/Save/Save As in File; the title shows the file name and * for unsaved edits.\nSQL tabs (Alt+G): New/Close/Next/Previous tab. Ctrl+N opens a new tab. Ctrl+Tab / Alt+PgDn next, Ctrl+Shift+Tab / Alt+PgUp previous. Tabs share one DB transaction; switching/closing is locked while running.\nClose/Open/Exit ask Save, Discard or Cancel for unsaved SQL. File saving does not commit the database.\nIf Ctrl+Shift+S is indistinguishable from Ctrl+S, use File > Save SQL as.\nIN binds prompt for Text/NUMBER/DATE/TIMESTAMP/NULL; up to 32 names. Values stay in memory for the tab's last SQL; reconnect/clear removes them. General SQL binds are IN-only. Object details / Arguments > Execute (Alt+E) supports routine OUT, IN OUT and REF CURSOR.\nDBMS_OUTPUT: Alt+P opens output. Enable (Alt+E) before SQL; F9/F5 capture after execution. Ctrl+C copies, Alt+D clears the retained display. Session-specific, no commit/rollback, bounded output and collection warning shown separately.\nEnter inserts a newline. Alt+Enter / Shift+F9 also execute.\nExecute selected text; without a selection, execute the statement at the cursor. SQL uses semicolons; separate PL/SQL units with a standalone /.\nFind is literal and case sensitive; next/previous wraps.\nHistory: this run only, up to 100 entries in memory. Loading does not execute SQL.\nDDL and UPDATE/DELETE without an outer WHERE ask before execution. The default is Cancel; Esc also cancels.",
 		"파일 메뉴에서 UTF-8 SQL 열기/저장/다른 이름 저장. 제목에 파일명과 미저장 표시(*)가 나타납니다.\nSQL 탭(Alt+G) 메뉴에서 새 탭/닫기/다음/이전 선택. Ctrl+N 새 탭, Ctrl+Tab / Alt+PgDn 다음, Ctrl+Shift+Tab / Alt+PgUp 이전 탭. DB 트랜잭션은 공유하며 실행 중 탭 전환·닫기가 잠깁니다.\n닫기/열기/종료 전 미저장 SQL은 저장·버리기·취소를 확인합니다. 파일 저장은 DB 커밋과 별개입니다.\nCtrl+Shift+S를 구분하지 못하는 터미널은 파일 > SQL 다른 이름으로 저장을 사용하세요.\nIN 바인드는 문자열/NUMBER/DATE/TIMESTAMP/NULL을 입력합니다(최대 32개). 값은 탭 최근 SQL의 메모리에만 유지하며 재접속/지우기로 제거합니다. 일반 SQL 바인드는 IN 전용입니다. 객체 상세 / 인자 > 실행(Alt+E)에서 루틴 OUT·IN OUT·REF CURSOR를 지원합니다.\nDBMS_OUTPUT: Alt+P로 출력 창을 열고 실행 전에 Alt+E로 켭니다. F9/F5 실행 후 수집하며 Ctrl+C 복사·Alt+D 표시 지우기를 제공합니다. 접속별로 적용하고 커밋·롤백하지 않습니다. 출력 제한과 수집 경고는 별도로 안내합니다.\nEnter는 줄바꿈입니다. Alt+Enter / Shift+F9로도 실행합니다.\n선택한 SQL을 실행하며, 선택이 없으면 커서 위치 문장을 실행합니다. SQL은 세미콜론, PL/SQL 단위는 별도 줄 /로 구분합니다.\n찾기는 대소문자를 구분하는 일반 문자열 검색이며 끝에서 순환합니다.\n이력은 이번 실행의 SQL 최대 100개를 메모리에만 보관하며, 불러와도 자동 실행하지 않습니다.\nDDL과 최상위 WHERE 없는 UPDATE/DELETE는 실행 전 확인합니다. 기본 선택과 Esc는 취소입니다."}},
 	{"results", [2]string{"Results and copying", "조회 결과 · 복사"}, []string{"copy", "copy_row", "export"}, [2]string{
@@ -29,8 +29,8 @@ var helpSections = []helpSection{
 		"Startup opens login; Alt+L reopens it. Session > Connect (Alt+S, Enter)   |   Tools > Settings (Alt+T, Enter)\nConnection: profiles above; editable fields below, starting with Alias.\n  Alt+R profiles, Alt+A alias, Alt+H/P/U/W/T/N host/port/user/password/type/name\n  Ctrl+Enter / Alt+Enter / Alt+C connect, Ctrl+S / Alt+S save, Esc cancel\nSettings: Alt+L language, Alt+M mouse, Space toggle, Ctrl+S save.\nWhite fields accept text; dark fields with v select options. Passwords are not saved by default. Enable encrypted saving and press Save to opt in.\nAlt+K / Tools > Passwords: unlock, lock, change master, reset. Unlock needs the master password; it cannot be recovered.",
 		"시작하면 접속 창이 열립니다. Alt+L로 다시 열거나 세션 > 접속(Alt+S, Enter)   |   도구 > 설정(Alt+T, Enter)\n접속 화면 위쪽은 저장된 접속 선택, 아래쪽은 별칭부터 시작하는 정보 편집입니다.\n  Alt+R 저장된 접속, Alt+A 별칭, Alt+H/P/U/W/T/N 호스트/포트/계정/암호/방식/이름\n  Ctrl+Enter / Alt+Enter / Alt+C 접속, Ctrl+S / Alt+S 저장, Esc 취소\n환경설정: Alt+L 언어, Alt+M 마우스, Space 선택, Ctrl+S 저장.\n흰 배경은 텍스트 입력, 어두운 배경과 v는 선택박스입니다. 비밀번호는 기본 미저장이며, 암호화 저장을 선택하고 저장해야 보관합니다.\nAlt+K / 도구 > 암호 관리: 잠금 해제·잠금·마스터 변경·초기화. 마스터 암호는 복구할 수 없습니다."}},
 	{"schema", [2]string{"Schema, object details and source", "스키마 · 객체 상세 · 소스"}, []string{"browser_user", "browser_type", "browser_refresh", "describe", "quick_describe"}, [2]string{
-		"Browser: choose User and Type above the object list. The login user and Tables are selected initially.\nAlt+U selects User; Alt+O selects Type. Tab cycles the selectors and list.\nArrows move, Enter/click opens, Ctrl+R refreshes. Selecting a browser user does not change the SQL session.\nObject: Alt+S source/edit, Alt+A arguments, Ctrl+R refresh, Esc back.\nSource: F9 apply/compile, Ctrl+R reload, Tab cycles source/errors/buttons.\nCompilation is DDL and may commit prior DML, even when compilation fails.\nDiscarding unapplied source edits requires confirmation.",
-		"탐색기 위쪽에서 사용자와 객체 종류를 선택합니다. 기본값은 접속 계정과 테이블입니다.\nAlt+U 사용자, Alt+O 객체 종류로 이동하고 Tab으로 선택칸과 목록을 순환합니다.\n방향키 이동, Enter/클릭 상세 조회, Ctrl+R 새로고침. 사용자 선택은 SQL 세션을 변경하지 않습니다.\n객체 상세: Alt+S 소스·편집, Alt+A 인자, Ctrl+R 새로고침, Esc 돌아가기.\n소스: F9 적용·컴파일, Ctrl+R 다시 조회, Tab 소스/오류/버튼 이동.\n컴파일은 DDL이므로 실패하더라도 이전 DML이 커밋될 수 있습니다.\nDB에 적용하지 않은 소스 편집을 버릴 때는 확인합니다."}},
+		"Browser: choose User and Type above the object list. The login user and Tables are selected initially.\nAlt+U selects User; Alt+O selects Type. Tab cycles the selectors and list.\nArrows move, Enter/click opens, Ctrl+R refreshes. Selecting a browser user does not change the SQL session.\nObject: Alt+S source/edit, Alt+A arguments, Ctrl+R refresh, Esc back.\nSource: F9 apply/compile, Alt+R reload, Alt+X close, F10 edit menu, Tab cycles source/errors/buttons.\nCompilation is DDL and may commit prior DML, even when compilation fails.\nDiscarding unapplied source edits requires confirmation.",
+		"탐색기 위쪽에서 사용자와 객체 종류를 선택합니다. 기본값은 접속 계정과 테이블입니다.\nAlt+U 사용자, Alt+O 객체 종류로 이동하고 Tab으로 선택칸과 목록을 순환합니다.\n방향키 이동, Enter/클릭 상세 조회, Ctrl+R 새로고침. 사용자 선택은 SQL 세션을 변경하지 않습니다.\n객체 상세: Alt+S 소스·편집, Alt+A 인자, Ctrl+R 새로고침, Esc 돌아가기.\n소스: F9 적용·컴파일, Alt+R 다시 조회, Alt+X 닫기, F10 편집 메뉴, Tab 소스/오류/버튼 이동.\n컴파일은 DDL이므로 실패하더라도 이전 DML이 커밋될 수 있습니다.\nDB에 적용하지 않은 소스 편집을 버릴 때는 확인합니다."}},
 	{"transactions", [2]string{"Commit, rollback and exit", "커밋 · 롤백 · 종료"}, []string{"commit", "rollback", "pending_work", "cancel", "quit"}, [2]string{
 		"DML uses manual commit. DDL / PL/SQL may commit implicitly.\nSession > View pending work lists SQL, time, outcome and affected rows since the last successful commit/rollback.\nExit > View pending work (Alt+V) opens the same details; Esc returns without resolving anything.\nThis is a memory-only execution journal (latest 100 statements, up to 64 KiB SQL each), not a row-level diff.\nExit always asks. Pending changes: commit and exit / rollback and exit / keep working.\nThe default is keep working; Esc cancels exit. Forced termination cannot show confirmation.",
 		"DML은 수동 커밋입니다. DDL·PL/SQL은 암시적 커밋을 수행할 수 있습니다.\n세션 > 미커밋 내역 보기에서 마지막 커밋·롤백 이후 SQL·시각·결과·처리 행 수를 확인합니다.\n종료창의 내역 보기(Alt+V)도 같은 상세를 열며 Esc로 돌아가도 DB 상태는 바뀌지 않습니다.\n메모리 실행 기록(최근 100개, SQL당 64 KiB)이며 행별 변경 비교는 아닙니다.\n종료는 항상 확인합니다. 미커밋 가능 내역이 있으면 커밋 후 종료 / 롤백 후 종료 / 계속 사용을 선택합니다.\n기본 선택은 계속 사용이며 Esc는 종료를 취소합니다. 강제 종료에는 확인창을 보장하지 않습니다."}},
@@ -57,14 +57,14 @@ func (s *screen) mainHelp() string {
 		out.WriteString(helpHeading(section.id, fmt.Sprintf("%d  %s", i+1, section.title[language])))
 		for _, id := range section.commands {
 			// Common command definitions keep the help aligned with actual bindings.
-			fmt.Fprintf(&out, "  [::b]%-26s[::-] %s\n", tview.Escape(bindingLabels(id, 2)), tview.Escape(s.tr(commandFor(id).label)))
+			fmt.Fprintf(&out, "  [::b]%-26s[::-] %s\n", tview.Escape(s.editorBindingLabels(id, 2)), tview.Escape(s.tr(commandFor(id).label)))
 		}
 		if len(section.commands) > 0 {
 			out.WriteByte('\n')
 		}
 		notes := section.notes[language]
 		if section.id == "sql" {
-			notes += "\n" + s.tr("format_hint")
+			notes += "\n" + s.tr("format_hint") + "\n\n" + s.keymapHelp()
 		}
 		out.WriteString(tview.Escape(notes) + "\n\n\n")
 	}
@@ -75,6 +75,8 @@ func (s *screen) mainHelp() string {
 
 func (s *screen) helpContext(page string) string {
 	switch page {
+	case "editor_actions":
+		return s.tr("menu_hint") + "\n" + s.keymapHelp()
 	case "completion":
 		return s.tr("footer_completion") + "\n" + s.tr("completion_hint")
 	case "export":
@@ -106,7 +108,7 @@ func (s *screen) helpContext(page string) string {
 	case "object":
 		return s.tr("footer_object") + "\nAlt+S: " + s.tr("source") + " | Alt+A: " + s.tr("arguments")
 	case "source":
-		return s.tr("footer_source") + "\n" + s.tr("syntax_colors") + "\n" + s.tr("format_hint")
+		return s.sourceKeymapFooter() + "\n" + s.tr("syntax_colors") + "\n" + s.tr("format_hint")
 	case "arguments":
 		return s.tr("footer_arguments")
 	case "search":
@@ -124,7 +126,11 @@ func (s *screen) helpContext(page string) string {
 	if s.table.HasFocus() {
 		return fmt.Sprintf(s.tr("footer_results"), shortcut("copy"), shortcut("copy_row"), shortcut("focus_toggle"), "F2 / Shift+F2")
 	}
-	return fmt.Sprintf(s.tr("footer_sql"), bindingLabels("execute", 2), shortcut("describe"), shortcut("focus_toggle"), "F2 / Shift+F2") + "\n" + s.tr("syntax_colors")
+	hint := fmt.Sprintf(s.tr("footer_sql"), bindingLabels("execute", 2), shortcut("describe"), shortcut("focus_toggle"), "F2 / Shift+F2")
+	if s.prefs.EditorKeymap == "notepad++" {
+		hint = strings.ReplaceAll(hint, "Ctrl+T", "Ctrl+Space")
+	}
+	return s.keymapHint() + "\n" + hint + "\n" + s.tr("syntax_colors")
 }
 
 func (s *screen) showHelp() {

@@ -114,3 +114,17 @@ func BenchmarkCompletionLongFile(b *testing.B) {
 		}
 	}
 }
+
+func TestCompletionAtWordStartReplacesWholeToken(t *testing.T) {
+	for _, sql := range []string{`SELECT s.|title FROM sample_rows s`, `SELECT |title FROM sample_rows`, `SELECT "s".|"이름" FROM "테이블" "s"`} {
+		c := completionContext(t, sql)
+		if c.Blocked || c.Start != strings.Index(sql, "|") || c.End <= c.Start || c.Prefix != "" {
+			t.Fatalf("start of token: %+v", c)
+		}
+		original := strings.Replace(sql, "|", "", 1)
+		replaced := original[:c.Start] + `"picked"` + original[c.End:]
+		if strings.Contains(replaced, "title") || strings.Contains(replaced, "이름") {
+			t.Fatalf("left existing token suffix: %s", replaced)
+		}
+	}
+}

@@ -70,6 +70,9 @@ var commands = []command{
 	{"passwords", "passwords", menuTools, []binding{{"Alt+K", tcell.KeyRune, tcell.ModAlt, 'k'}}},
 	{"routine_execute", "routine_execute", menuExecute, nil},
 	{"routine_results", "routine_results", menuView, nil},
+	{"grid_widen", "grid_widen", menuView, nil},
+	{"grid_narrow", "grid_narrow", menuView, nil},
+	{"grid_auto", "grid_auto", menuView, nil},
 	{"complete", "completion", menuEdit, []binding{{"Ctrl+T", tcell.KeyCtrlT, 0, 0}}},
 	{"complete_refresh", "completion_refresh", menuEdit, nil},
 	{"duplicate_line", "duplicate_line", menuEdit, nil},
@@ -116,6 +119,8 @@ func (s *screen) commandEnabled(id string) bool {
 		return false
 	}
 	switch id {
+	case "grid_widen", "grid_narrow", "grid_auto":
+		return !s.busy && s.table.HasFocus() && len(s.resultHeaders) > 0
 	case "duplicate_line", "copy_line", "cut_line", "delete_line", "line_up", "line_down", "transpose_line":
 		return !s.busy && s.editor.HasFocus()
 	case "format_code":
@@ -187,6 +192,12 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "grid_widen":
+		s.resizeResultColumn(4)
+	case "grid_narrow":
+		s.resizeResultColumn(-4)
+	case "grid_auto":
+		s.resizeResultColumn(0)
 	case "duplicate_line", "copy_line", "cut_line", "delete_line", "line_up", "line_down", "transpose_line":
 		s.editorLineAction(s.editor, id)
 	case "format_code":

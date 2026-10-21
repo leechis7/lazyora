@@ -29,9 +29,9 @@ func (s *screen) rebuildPanels() {
 	case "sql":
 		s.queryLayout.AddItem(s.editor, 0, 1, true)
 	case "results":
-		s.queryLayout.AddItem(s.table, 0, 1, true)
+		s.queryLayout.AddItem(s.resultGrid(), 0, 1, true)
 	default:
-		s.queryLayout.AddItem(s.editor, 0, 2, true).AddItem(s.table, 0, 3, false)
+		s.queryLayout.AddItem(s.editor, 0, 2, true).AddItem(s.resultGrid(), 0, 3, false)
 		if s.browser != nil && !s.browserHidden {
 			s.mainLayout.AddItem(s.browserPanel, 0, 1, false)
 		}

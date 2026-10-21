@@ -263,9 +263,9 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         send(b"\x1b[1;2Q")
         read_for(0.2)
         # Maximized results: header at y=1, data rows y=2/3 (zero based).
-        send(b"\x1b[<0;2;3M")
-        send(b"\x1b[<32;5;4M")
-        send(b"\x1b[<0;5;4m")
+        send(b"\x1b[<0;5;3M")
+        send(b"\x1b[<32;8;4M")
+        send(b"\x1b[<0;8;4m")
         output.clear()
         send(b"\x03")
         copied("11\t22\n33\t44")

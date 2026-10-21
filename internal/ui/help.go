@@ -65,7 +65,7 @@ var helpTopicNames = [][2]string{
 }
 
 func (s *screen) helpSubheading(title string) string {
-	color := fmt.Sprintf("#%06x", palette.accent.Hex())
+	color := fmt.Sprintf("#%06x", s.colors().accent.Hex())
 	if s.limitedColors {
 		color = "teal"
 	}
@@ -231,13 +231,13 @@ func (s *screen) showHelp() {
 	help := tview.NewTextView().SetDynamicColors(true).SetWrap(true).SetWordWrap(true).SetScrollable(true)
 	help.SetBorder(true).SetTitle(s.tr("help_title"))
 	help.SetBorderPadding(1, 1, 2, 2)
-	styleBox(help.Box)
-	help.SetTextColor(palette.text)
+	s.styleBox(help.Box)
+	help.SetTextColor(s.colors().text)
 	singleLineBorder(help.Box)
-	topics := tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetSelectedFocusOnly(false)
-	topics.SetMainTextColor(palette.text).SetSelectedStyle(buttonFocusStyle().Underline(false))
+	topics := tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetHighlightFullLine(true).SetSelectedFocusOnly(false)
+	topics.SetMainTextColor(s.colors().text).SetSelectedStyle(buttonFocusStyle().Underline(false))
 	topics.SetBorder(true).SetTitle(s.tr("help_topics"))
-	styleBox(topics.Box)
+	s.styleBox(topics.Box)
 	singleLineBorder(topics.Box)
 	s.helpText, s.helpTopics = help, topics
 	for i, title := range helpTopicNames {
@@ -255,7 +255,7 @@ func (s *screen) showHelp() {
 		}
 		return x, y, width, height
 	})
-	close := clickable(tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeHelp))
+	close := s.clickable(tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeHelp))
 	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(body, 0, 1, true).AddItem(close, 1, 0, false)
 	s.selectHelpTopic(0)
 	s.pages.AddPage("help", root, true, true)

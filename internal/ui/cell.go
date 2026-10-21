@@ -25,11 +25,11 @@ func (s *screen) showCellDetail() {
 	}
 	s.cellValue = s.resultValues[row-1][col]
 	s.cellFocus = s.app.GetFocus()
-	s.cellInfo = tview.NewTextView().SetWrap(true).SetTextColor(palette.muted)
-	s.cellInfo.SetBackgroundColor(palette.background)
-	s.cellText = tview.NewTextView().SetWrap(false).SetScrollable(true).SetDynamicColors(false).SetTextColor(palette.text)
+	s.cellInfo = tview.NewTextView().SetWrap(true).SetTextColor(s.colors().muted)
+	s.cellInfo.SetBackgroundColor(s.colors().background)
+	s.cellText = tview.NewTextView().SetWrap(false).SetScrollable(true).SetDynamicColors(false).SetTextColor(s.colors().text)
 	s.cellText.SetBorder(true).SetTitle(fmt.Sprintf("%s · %s", s.tr("cell_detail"), tview.Escape(s.resultHeaders[col])))
-	styleBox(s.cellText.Box)
+	s.styleBox(s.cellText.Box)
 	name := "cell.txt"
 	if s.cellValue.Type == "RAW" || s.cellValue.Type == "BLOB" {
 		name = "cell.bin"
@@ -40,9 +40,9 @@ func (s *screen) showCellDetail() {
 	form.AddButton(s.tr("cell_copy")+" (Ctrl+C)", s.copyCellDetail)
 	form.AddButton(s.tr("cell_expand")+" (Alt+V)", s.expandCellPreview)
 	form.AddButton(s.tr("close")+" (Esc)", s.closeCellDetail)
-	styleForm(form)
+	s.styleForm(form)
 	for i := 0; i < form.GetButtonCount(); i++ {
-		clickable(form.GetButton(i))
+		s.clickable(form.GetButton(i))
 	}
 	s.renderCellDetail()
 	form.SetBorder(true)

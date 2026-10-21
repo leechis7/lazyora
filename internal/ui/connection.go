@@ -115,7 +115,7 @@ func (s *screen) connectionForm() {
 	selector := tview.NewForm().AddFormItem(s.newChoice("", options, 0, nil))
 	s.connectProfiles = selector
 	selector.SetBorder(true)
-	styleForm(selector)
+	s.styleForm(selector)
 	selectProfile := func(_ string, index int) {
 		// Always discard the previous password, including environment defaults.
 		form.GetFormItem(connectionSavePassword).(*tview.Checkbox).SetChecked(false)
@@ -321,16 +321,16 @@ func (s *screen) connectionForm() {
 		}
 	}
 	form.AddButton("", s.connectAction).AddButton("", s.closeConnection).AddButton("", s.saveConnection)
-	clickable(form.GetButton(0))
-	clickable(form.GetButton(1))
-	clickable(form.GetButton(2))
+	s.clickable(form.GetButton(0))
+	s.clickable(form.GetButton(1))
+	s.clickable(form.GetButton(2))
 	form.SetBorder(true)
-	styleForm(form)
+	s.styleForm(form)
 	s.localizeConnection()
 	if loadErr != nil {
 		form.SetTitle(" " + fmt.Sprintf(s.tr("connection_load_error"), loadErr) + " ")
 	}
-	gap := tview.NewBox().SetBackgroundColor(palette.surface)
+	gap := tview.NewBox().SetBackgroundColor(s.colors().surface)
 	content := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(selector, 5, 0, false).AddItem(gap, 1, 0, false).AddItem(form, 0, 1, true)
 	root := s.formPopup(content, 84, 27, func(width, height int) {
 		spacing := 1

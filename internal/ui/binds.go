@@ -90,12 +90,12 @@ func (s *screen) withBinds(text string, next func(map[string]oracle.BindValue)) 
 		}
 	}).AddButton(s.tr("cancel"), close)
 	form.SetBorder(true).SetTitle(s.tr("bind_title"))
-	styleForm(form)
+	s.styleForm(form)
 	for i := 0; i < form.GetButtonCount(); i++ {
-		clickable(form.GetButton(i))
+		s.clickable(form.GetButton(i))
 	}
 	info := tview.NewTextView().SetWrap(true).SetText(s.tr("bind_hint"))
-	info.SetTextColor(palette.muted).SetBackgroundColor(palette.background)
+	info.SetTextColor(s.colors().muted).SetBackgroundColor(s.colors().background)
 	root := s.formDialog(form, info, 88)
 	s.bindForm = form
 	s.pages.AddPage("bind", root, true, true)

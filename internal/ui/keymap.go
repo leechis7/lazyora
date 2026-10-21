@@ -253,9 +253,9 @@ func (s *screen) showSourceEdit() {
 		return
 	}
 	e := s.sourceEditor
-	list := tview.NewList().ShowSecondaryText(false).SetSelectedStyle(focusStyle())
+	list := tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
 	list.SetBorder(true).SetTitle(s.tr("source_edit"))
-	styleBox(list.Box)
+	s.styleBox(list.Box)
 	for _, id := range []string{"undo", "redo", "cut", "copy", "paste", "select_all", "find", "replace", "complete", "complete_refresh", "duplicate_line", "copy_line", "cut_line", "delete_line", "line_up", "line_down", "transpose_line", "format_code"} {
 		label := s.tr(commandFor(id).label)
 		if key := s.editorBindingLabels(id, 1); key != "" {

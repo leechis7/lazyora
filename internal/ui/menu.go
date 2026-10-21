@@ -70,12 +70,12 @@ func (s *screen) showContextMenu() {
 func (s *screen) openCommandMenu(title string, entries []command, index int) {
 	s.menuFocus = s.app.GetFocus()
 	s.menuIndex = index
-	list := tview.NewList().ShowSecondaryText(false).SetSelectedStyle(focusStyle())
+	list := tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
 	list.SetBorder(true).SetTitle(title)
-	styleBox(list.Box)
-	list.SetBackgroundColor(palette.surface)
-	list.SetMainTextStyle(tcell.StyleDefault.Foreground(palette.text).Background(palette.surface))
-	list.SetBorderStyle(tcell.StyleDefault.Foreground(palette.button).Background(palette.surface))
+	s.styleBox(list.Box)
+	list.SetBackgroundColor(s.colors().surface)
+	list.SetMainTextStyle(tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().surface))
+	list.SetBorderStyle(tcell.StyleDefault.Foreground(s.colors().button).Background(s.colors().surface))
 	singleLineBorder(list.Box)
 	s.menuList = list
 	count := 0

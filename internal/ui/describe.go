@@ -79,9 +79,9 @@ func (s *screen) describe(prompt bool) {
 	s.describeAction = load
 	form.AddButton(s.tr("describe"), load).AddButton(s.tr("cancel"), s.closeDescribe)
 	form.SetBorder(true).SetTitle(s.tr("describe"))
-	styleForm(form)
-	clickable(form.GetButton(0))
-	clickable(form.GetButton(1))
+	s.styleForm(form)
+	s.clickable(form.GetButton(0))
+	s.clickable(form.GetButton(1))
 	form.GetFormItem(0).SetFinishedFunc(func(key tcell.Key) {
 		if key == tcell.KeyEnter {
 			load()

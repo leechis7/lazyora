@@ -198,9 +198,9 @@ func (s *screen) showResultFilter() {
 	})
 	form.AddButton(s.tr("cancel"), close)
 	form.SetBorder(true).SetTitle(s.tr("result_filter") + " · " + fmt.Sprintf(s.tr("result_local_rows"), len(s.resultBrowser.source.Rows)))
-	styleForm(form)
+	s.styleForm(form)
 	for i := 0; i < form.GetButtonCount(); i++ {
-		clickable(form.GetButton(i))
+		s.clickable(form.GetButton(i))
 	}
 	s.pages.AddPage("result_filter", s.formDialog(form, nil, 80), true, true)
 	s.app.SetFocus(form)

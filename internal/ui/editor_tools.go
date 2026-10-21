@@ -62,9 +62,9 @@ func (s *screen) recordSQLHistory(text string) {
 
 func (s *screen) showHistory() {
 	s.historyFocus = s.app.GetFocus()
-	list := tview.NewList().ShowSecondaryText(false).SetSelectedStyle(focusStyle())
+	list := tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
 	list.SetBorder(true).SetTitle(s.tr("history"))
-	styleBox(list.Box)
+	s.styleBox(list.Box)
 	s.historyList = list
 	for i := len(s.sqlHistory) - 1; i >= 0; i-- {
 		sql := s.sqlHistory[i]
@@ -152,9 +152,9 @@ func (s *screen) showSearch(replace bool) {
 	}
 	form.AddButton(s.tr("close"), s.closeSearch)
 	form.SetBorder(true).SetTitle(s.tr("find_hint"))
-	styleForm(form)
+	s.styleForm(form)
 	for i := 0; i < form.GetButtonCount(); i++ {
-		clickable(form.GetButton(i))
+		s.clickable(form.GetButton(i))
 	}
 	s.pages.AddPage("search", s.formDialog(form, nil, 92), true, true)
 	s.app.SetFocus(form)

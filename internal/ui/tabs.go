@@ -92,9 +92,9 @@ func (s *screen) newTab() {
 	s.stashTab()
 	editor := tview.NewTextArea()
 	editor.SetBorder(true)
-	styleBox(editor.Box)
-	editor.SetBackgroundColor(palette.field).SetTitleColor(palette.background)
-	editor.SetTextStyle(fieldStyle()).SetSelectedStyle(focusStyle())
+	s.styleBox(editor.Box)
+	editor.SetBackgroundColor(s.colors().field).SetTitleColor(s.colors().fieldText)
+	editor.SetTextStyle(s.fieldStyle()).SetSelectedStyle(s.focusStyle())
 	editor.SetClipboard(s.sendClipboard, func() string { return s.clipboardText })
 	editor.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if action == tview.MouseRightClick {
@@ -104,9 +104,9 @@ func (s *screen) newTab() {
 		}
 		return action, event
 	})
-	table := tview.NewTable().SetFixed(1, 0).SetSelectable(true, true).SetSelectedStyle(focusStyle())
+	table := tview.NewTable().SetFixed(1, 0).SetSelectable(true, true).SetSelectedStyle(s.focusStyle())
 	table.SetBorder(true)
-	styleBox(table.Box)
+	s.styleBox(table.Box)
 	table.SetTitle(s.tr("results_title"))
 	table.SetMouseCapture(s.resultMouse)
 	s.tabs = append(s.tabs, &sqlTab{editor: editor, table: table, document: &sqlfile.Document{}, status: "tab_shared"})
@@ -204,14 +204,14 @@ func (s *screen) refreshTabs() {
 	}
 	s.tabBar.Clear()
 	shared := tview.NewTextView().SetText(s.tr("tab_session"))
-	shared.SetTextColor(palette.muted).SetBackgroundColor(palette.background)
+	shared.SetTextColor(s.colors().muted).SetBackgroundColor(s.colors().background)
 	s.tabBar.AddItem(shared, 10, 0, false)
 	// Keep the active tab visible even on a narrow terminal. All tabs remain
 	// reachable with previous/next; at most four labels share the row.
 	start := max(0, s.activeTab-3)
 	end := min(len(s.tabs), start+4)
 	if len(s.tabs) > 4 {
-		s.tabBar.AddItem(clickable(tview.NewButton("<").SetSelectedFunc(func() { s.cycleTab(-1) })), 3, 0, false)
+		s.tabBar.AddItem(s.clickable(tview.NewButton("<").SetSelectedFunc(func() { s.cycleTab(-1) })), 3, 0, false)
 	}
 	for i := start; i < end; i++ {
 		tab := s.tabs[i]
@@ -232,13 +232,13 @@ func (s *screen) refreshTabs() {
 			label = "> " + label
 		}
 		index := i
-		button := clickable(tview.NewButton(label).SetSelectedFunc(func() { s.switchTab(index) }))
+		button := s.clickable(tview.NewButton(label).SetSelectedFunc(func() { s.switchTab(index) }))
 		if i == s.activeTab {
 			button.SetStyle(buttonFocusStyle())
 		}
 		s.tabBar.AddItem(button, 0, 1, false)
 	}
 	if len(s.tabs) > 4 {
-		s.tabBar.AddItem(clickable(tview.NewButton(">").SetSelectedFunc(func() { s.cycleTab(1) })), 3, 0, false)
+		s.tabBar.AddItem(s.clickable(tview.NewButton(">").SetSelectedFunc(func() { s.cycleTab(1) })), 3, 0, false)
 	}
 }

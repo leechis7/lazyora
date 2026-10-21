@@ -358,7 +358,7 @@ func (s *screen) commandKey(event *tcell.EventKey) bool {
 func (s *screen) menuBar() *tview.Flex {
 	bar := tview.NewFlex()
 	for index := range menuGroups {
-		button := clickable(tview.NewButton("").SetSelectedFunc(func() { s.showMenu(index) }))
+		button := s.clickable(tview.NewButton("").SetSelectedFunc(func() { s.showMenu(index) }))
 		button.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 			// Menu clicks act on the current panel; do not transfer focus to the bar.
 			if action == tview.MouseLeftDown {

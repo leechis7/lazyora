@@ -52,13 +52,13 @@ func (s *screen) showGridEdit() {
 		value = ""
 	}
 	s.editInfo = tview.NewTextView().SetWrap(true).SetText(fmt.Sprintf("%s · %s (%s)\n%s: %s\n%s", tview.Escape(oracle.QualifiedObject(source.EditObject)), tview.Escape(source.Columns[col]), old.Type, s.tr("edit_old"), tview.Escape(old.Text), s.tr("edit_hint"))).SetDynamicColors(true)
-	styleBox(s.editInfo.Box)
+	s.styleBox(s.editInfo.Box)
 	form := tview.NewForm().AddInputField(s.tr("edit_new"), value, 50, nil, nil).AddCheckbox("NULL", old.Null, nil)
 	s.editForm = form
 	form.AddButton(s.tr("edit_preview"), s.previewGridEdit).AddButton(s.tr("cancel"), s.closeGridEdit)
-	styleForm(form)
+	s.styleForm(form)
 	for i := 0; i < form.GetButtonCount(); i++ {
-		clickable(form.GetButton(i))
+		s.clickable(form.GetButton(i))
 	}
 	root := s.formDialog(form, s.editInfo, 92)
 	s.pages.AddPage("grid_edit", root, true, true)

@@ -104,7 +104,7 @@ func (s *screen) showExport() {
 	if s.resultTruncated {
 		info.SetText(info.GetText(false) + "\n" + s.tr("export_truncated"))
 	}
-	info.SetTextColor(palette.muted).SetBackgroundColor(palette.background)
+	info.SetTextColor(s.colors().muted).SetBackgroundColor(s.colors().background)
 	s.exportInfo = info
 	s.exportForm = form
 	s.exportSubmit = func() {
@@ -179,9 +179,9 @@ func (s *screen) showExport() {
 	}
 	form.AddButton(s.tr("export"), s.exportSubmit).AddButton(s.tr("cancel"), s.cancelExport)
 	form.SetBorder(true).SetTitle(s.tr("export"))
-	styleForm(form)
+	s.styleForm(form)
 	for i := 0; i < form.GetButtonCount(); i++ {
-		clickable(form.GetButton(i))
+		s.clickable(form.GetButton(i))
 	}
 	root := s.formDialog(form, info, 96)
 	s.pages.AddPage("export", root, true, true)

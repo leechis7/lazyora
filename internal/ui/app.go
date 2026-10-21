@@ -324,6 +324,7 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 	s.menuLayout = s.menuBar()
 	layout := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(s.menuLayout, 1, 0, false).AddItem(s.pages, 0, 1, true).AddItem(s.footer, 1, 0, false).AddItem(s.toolbar(), 1, 0, false)
+	layout.Box = tview.NewBox().SetBackgroundColor(s.colors().background)
 	s.rootLayout = layout
 	s.app.SetRoot(layout, true).SetFocus(s.editor).SetInputCapture(s.key).EnableMouse(prefs.Mouse)
 	s.app.SetBeforeDrawFunc(func(tcell.Screen) bool {
@@ -797,9 +798,12 @@ func (s *screen) renderGrid(result oracle.Result) {
 	s.table.SetSelectionChangedFunc(nil)
 	s.table.Clear()
 	s.table.SetSeparator('│').SetEvaluateAllRows(false)
-	s.table.SetBackgroundColor(gridPalette.background)
+	s.table.SetBackgroundColor(s.gridColors().background)
 	if s.limitedColors {
 		s.table.SetBackgroundColor(tcell.ColorBlack)
+		if s.prefs.Theme == "light" {
+			s.table.SetBackgroundColor(tcell.ColorWhite)
+		}
 	}
 	s.table.ScrollToBeginning()
 	for col, name := range result.Columns {

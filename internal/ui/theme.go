@@ -7,9 +7,12 @@ import (
 
 // Nord-inspired neutral surfaces and cyan accents, with light input fields.
 // https://www.nordtheme.com/docs/colors-and-palettes/
-var palette = struct {
+type themeColors struct {
 	background, surface, footer, field, text, muted, accent, button tcell.Color
-}{
+	fieldText, selectionText, placeholder, warning                  tcell.Color
+}
+
+var palette = themeColors{
 	background: tcell.GetColor("#2e3440"),
 	surface:    tcell.GetColor("#3b4252"),
 	footer:     tcell.GetColor("#434c5e"),
@@ -18,14 +21,15 @@ var palette = struct {
 	muted:      tcell.GetColor("#d8dee9"),
 	accent:     tcell.GetColor("#88c0d0"),
 	button:     tcell.GetColor("#81a1c1"),
+	fieldText:  tcell.GetColor("#2e3440"), selectionText: tcell.GetColor("#2e3440"), placeholder: tcell.GetColor("#66758a"), warning: tcell.ColorYellow,
 }
 
-func fieldStyle() tcell.Style {
-	return tcell.StyleDefault.Foreground(palette.background).Background(palette.field)
+func (s *screen) fieldStyle() tcell.Style {
+	return tcell.StyleDefault.Foreground(s.colors().fieldText).Background(s.colors().field)
 }
 
-func focusStyle() tcell.Style {
-	return tcell.StyleDefault.Foreground(palette.background).Background(palette.accent).Bold(true)
+func (s *screen) focusStyle() tcell.Style {
+	return tcell.StyleDefault.Foreground(s.colors().selectionText).Background(s.colors().accent).Bold(true)
 }
 
 // A separate button focus palette stays distinct even when pale RGB colors
@@ -34,56 +38,56 @@ func buttonFocusStyle() tcell.Style {
 	return tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorNavy).Bold(true).Underline(true)
 }
 
-func buttonStyle() tcell.Style {
-	return tcell.StyleDefault.Foreground(palette.background).Background(palette.button)
+func (s *screen) buttonStyle() tcell.Style {
+	return tcell.StyleDefault.Foreground(s.colors().fieldText).Background(s.colors().button)
 }
 
-func styleBox(box *tview.Box) {
-	box.SetBackgroundColor(palette.background).SetBorderColor(palette.button).SetTitleColor(palette.text)
+func (s *screen) styleBox(box *tview.Box) {
+	box.SetBackgroundColor(s.colors().background).SetBorderColor(s.colors().button).SetTitleColor(s.colors().text)
 }
 
-func styleForm(form *tview.Form) {
-	styleBox(form.Box)
-	form.SetBackgroundColor(palette.surface).SetBorderPadding(1, 1, 2, 2)
+func (s *screen) styleForm(form *tview.Form) {
+	s.styleBox(form.Box)
+	form.SetBackgroundColor(s.colors().surface).SetBorderPadding(1, 1, 2, 2)
 	singleLineBorder(form.Box)
 	form.SetButtonsAlign(tview.AlignCenter)
-	form.SetLabelColor(palette.muted).SetFieldStyle(fieldStyle()).
-		SetButtonStyle(tcell.StyleDefault.Foreground(palette.text).Background(palette.footer).Bold(true)).SetButtonActivatedStyle(buttonFocusStyle())
+	form.SetLabelColor(s.colors().muted).SetFieldStyle(s.fieldStyle()).
+		SetButtonStyle(tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().footer).Bold(true)).SetButtonActivatedStyle(buttonFocusStyle())
 	for index := 0; index < form.GetFormItemCount(); index++ {
 		switch item := form.GetFormItem(index).(type) {
 		case *tview.InputField:
-			item.SetBackgroundColor(palette.surface)
-			item.SetPlaceholderStyle(tcell.StyleDefault.Foreground(tcell.GetColor("#66758a")).Background(palette.field))
+			item.SetBackgroundColor(s.colors().surface)
+			item.SetPlaceholderStyle(tcell.StyleDefault.Foreground(s.colors().placeholder).Background(s.colors().field))
 			// Form reapplies field attributes before Draw. Set the focused input's
 			// contrast here without replacing InputField or disturbing its caret.
 			item.SetDrawFunc(func(_ tcell.Screen, x, y, width, height int) (int, int, int, int) {
-				label := tcell.StyleDefault.Foreground(palette.muted).Background(palette.surface)
-				input := fieldStyle()
+				label := tcell.StyleDefault.Foreground(s.colors().muted).Background(s.colors().surface)
+				input := s.fieldStyle()
 				if item.HasFocus() {
-					label = label.Foreground(palette.accent).Bold(true)
+					label = label.Foreground(s.colors().accent).Bold(true)
 					input = input.Background(tcell.ColorWhite).Bold(true)
 				}
 				item.SetLabelStyle(label).SetFieldStyle(input)
 				return x, y, width, height
 			})
 		case *choiceField:
-			item.SetFocusedStyle(focusStyle())
+			item.SetFocusedStyle(s.focusStyle())
 		case *tview.Checkbox:
-			item.SetActivatedStyle(focusStyle()).SetCheckedString(tview.Escape("[x]")).SetUncheckedString(tview.Escape("[ ]"))
+			item.SetActivatedStyle(s.focusStyle()).SetCheckedString(tview.Escape("[x]")).SetUncheckedString(tview.Escape("[ ]"))
 		}
 	}
 }
 
 func (s *screen) styleScreen() {
-	styleBox(s.editor.Box)
-	s.editor.SetBackgroundColor(palette.field).SetTitleColor(palette.background)
-	s.editor.SetTextStyle(fieldStyle()).SetSelectedStyle(focusStyle())
-	styleBox(s.table.Box)
-	s.table.SetSelectedStyle(focusStyle())
-	s.status.SetBackgroundColor(palette.background)
-	s.status.SetTextColor(palette.muted)
-	s.footer.SetBackgroundColor(palette.surface)
-	s.footer.SetTextColor(palette.accent)
+	s.styleBox(s.editor.Box)
+	s.editor.SetBackgroundColor(s.colors().field).SetTitleColor(s.colors().fieldText)
+	s.editor.SetTextStyle(s.fieldStyle()).SetSelectedStyle(s.focusStyle())
+	s.styleBox(s.table.Box)
+	s.table.SetSelectedStyle(s.focusStyle())
+	s.status.SetBackgroundColor(s.colors().background)
+	s.status.SetTextColor(s.colors().muted)
+	s.footer.SetBackgroundColor(s.colors().surface)
+	s.footer.SetTextColor(s.colors().accent)
 }
 
 // Pale RGB borders can collapse to white on an 8/16-color terminal. Use
@@ -94,10 +98,10 @@ func (s *screen) refreshBorders() {
 	}
 	apply := func(box *tview.Box, focused, light bool) {
 		color := tcell.ColorTeal
-		background := palette.background
+		background := s.colors().background
 		if light {
 			color = tcell.ColorNavy
-			background = palette.field
+			background = s.colors().field
 		}
 		box.SetBorderStyle(tcell.StyleDefault.Foreground(color).Background(background).Bold(focused))
 	}
@@ -239,8 +243,39 @@ func singleLineBorder(box *tview.Box) {
 }
 
 // Confirmation cards share the form surface while retaining their safe default.
-func styleModal(modal *tview.Modal) {
-	styleBox(modal.Box)
-	modal.SetBackgroundColor(palette.surface)
+func (s *screen) styleModal(modal *tview.Modal) {
+	s.styleBox(modal.Box)
+	modal.SetBackgroundColor(s.colors().surface)
 	singleLineBorder(modal.Box)
+}
+
+var lightPalette = themeColors{
+	background: tcell.GetColor("#f3f5f7"), surface: tcell.GetColor("#e4eaf0"), footer: tcell.GetColor("#ccd7e2"),
+	field: tcell.ColorWhite, text: tcell.GetColor("#202a36"), muted: tcell.GetColor("#485869"),
+	accent: tcell.GetColor("#276a8e"), button: tcell.GetColor("#bbd4e5"), fieldText: tcell.GetColor("#202a36"),
+	selectionText: tcell.ColorWhite, placeholder: tcell.GetColor("#66758a"), warning: tcell.GetColor("#8b4f00"),
+}
+
+func (s *screen) colors() themeColors {
+	if s.prefs.Theme == "light" {
+		if s.limitedColors {
+			return lightANSI
+		}
+		return lightPalette
+	}
+	return palette
+}
+
+// Defaults retained for small standalone widgets and tests; application widgets
+// always use their screen's theme, with no process-wide mutable theme state.
+func styleBox(b *tview.Box)    { (&screen{}).styleBox(b) }
+func styleForm(f *tview.Form)  { (&screen{}).styleForm(f) }
+func fieldStyle() tcell.Style  { return (&screen{}).fieldStyle() }
+func focusStyle() tcell.Style  { return (&screen{}).focusStyle() }
+func buttonStyle() tcell.Style { return (&screen{}).buttonStyle() }
+
+var lightANSI = themeColors{
+	background: tcell.ColorSilver, surface: tcell.ColorSilver, footer: tcell.ColorWhite, field: tcell.ColorWhite,
+	text: tcell.ColorBlack, muted: tcell.ColorNavy, accent: tcell.ColorNavy, button: tcell.ColorTeal,
+	fieldText: tcell.ColorBlack, selectionText: tcell.ColorWhite, placeholder: tcell.ColorGray, warning: tcell.ColorMaroon,
 }

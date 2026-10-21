@@ -36,27 +36,27 @@ func (s *screen) showScriptReport() {
 		return
 	}
 	s.scriptFocus = s.app.GetFocus()
-	list := tview.NewList().ShowSecondaryText(false).SetSelectedStyle(focusStyle())
+	list := tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
 	list.SetBorder(true).SetTitle(s.tr("script_report"))
-	styleBox(list.Box)
-	table := tview.NewTable().SetFixed(1, 0).SetSelectable(true, true).SetSelectedStyle(focusStyle())
+	s.styleBox(list.Box)
+	table := tview.NewTable().SetFixed(1, 0).SetSelectable(true, true).SetSelectedStyle(s.focusStyle())
 	table.SetBorder(true).SetTitle(s.tr("results_title"))
-	styleBox(table.Box)
+	s.styleBox(table.Box)
 	preview := tview.NewTextView().SetWrap(false).SetScrollable(true)
 	preview.SetBorder(true)
-	styleBox(preview.Box)
-	preview.SetTextColor(palette.text)
+	s.styleBox(preview.Box)
+	preview.SetTextColor(s.colors().text)
 	s.scriptList, s.scriptResult, s.scriptText = list, table, preview
 	selectResult := func(index int) {
 		step := s.scriptReport.Steps[index]
 		preview.SetText(step.Statement.Text + "\n\n" + step.Error)
 		table.Clear()
 		for col, name := range step.Result.Columns {
-			table.SetCell(0, col, tview.NewTableCell(tview.Escape(name)).SetSelectable(false).SetTextColor(palette.accent))
+			table.SetCell(0, col, tview.NewTableCell(tview.Escape(name)).SetSelectable(false).SetTextColor(s.colors().accent))
 		}
 		for row, values := range step.Result.Rows {
 			for col, value := range values {
-				table.SetCell(row+1, col, tview.NewTableCell(tview.Escape(value)).SetTextColor(palette.text))
+				table.SetCell(row+1, col, tview.NewTableCell(tview.Escape(value)).SetTextColor(s.colors().text))
 			}
 		}
 	}
@@ -73,7 +73,7 @@ func (s *screen) showScriptReport() {
 	}
 	list.SetChangedFunc(func(index int, _, _ string, _ rune) { selectResult(index) })
 	selectResult(0)
-	use := clickable(tview.NewButton(s.tr("script_use_result")).SetSelectedFunc(func() {
+	use := s.clickable(tview.NewButton(s.tr("script_use_result")).SetSelectedFunc(func() {
 		step := s.scriptReport.Steps[list.GetCurrentItem()]
 		if len(step.Result.Columns) > 0 {
 			s.render(step.Result)
@@ -81,7 +81,7 @@ func (s *screen) showScriptReport() {
 			s.focusPanel("results")
 		}
 	}))
-	close := clickable(tview.NewButton(s.tr("close")).SetSelectedFunc(s.closeScriptReport))
+	close := s.clickable(tview.NewButton(s.tr("close")).SetSelectedFunc(s.closeScriptReport))
 	buttons := tview.NewFlex().AddItem(use, 0, 1, false).AddItem(close, 0, 1, false)
 	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(list, 0, 1, true).AddItem(preview, 0, 1, false).AddItem(table, 0, 2, false).AddItem(buttons, 1, 0, false)
 	s.pages.AddPage("script", root, true, true)

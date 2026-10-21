@@ -20,23 +20,23 @@ func (s *screen) confirmActionPreview(text, message, title, button string, submi
 	}
 	s.sqlConfirmFocus = s.app.GetFocus()
 	reason := tview.NewTextView().SetWrap(true).SetText(message)
-	reason.SetBackgroundColor(palette.background)
-	reason.SetTextColor(tcell.ColorYellow)
+	reason.SetBackgroundColor(s.colors().background)
+	reason.SetTextColor(s.colors().warning)
 	preview := tview.NewTextView().SetText(text).SetDynamicColors(false).SetWrap(false).SetScrollable(true)
 	preview.SetBorder(true).SetTitle(title)
-	styleBox(preview.Box)
-	preview.SetTextColor(palette.text)
+	s.styleBox(preview.Box)
+	preview.SetTextColor(s.colors().text)
 	s.sqlConfirmText = preview
-	execute := clickable(tview.NewButton(button).SetSelectedFunc(func() {
+	execute := s.clickable(tview.NewButton(button).SetSelectedFunc(func() {
 		if s.busy {
 			return
 		}
 		s.closeSQLConfirmation()
 		submit() // Submit the reviewed snapshot, never a later editor value.
 	}))
-	cancel := clickable(tview.NewButton(s.tr("cancel")).SetSelectedFunc(s.closeSQLConfirmation))
+	cancel := s.clickable(tview.NewButton(s.tr("cancel")).SetSelectedFunc(s.closeSQLConfirmation))
 	buttons := tview.NewFlex().AddItem(execute, 0, 1, false).AddItem(cancel, 0, 1, true)
-	reason.SetBackgroundColor(palette.surface)
+	reason.SetBackgroundColor(s.colors().surface)
 	content := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(reason, 8, 0, false).AddItem(preview, 0, 1, false).AddItem(buttons, 1, 0, true)
 	root := s.formPopup(content, 104, 32, func(w, h int) {
 		content.ResizeItem(reason, min(8, max(3, h/3)), 0)

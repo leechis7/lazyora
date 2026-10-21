@@ -10,8 +10,8 @@ import (
 
 // tview may report a rapid click on a different button as a double click.
 // Buttons should activate on either kind of click; text selection stays unchanged.
-func clickable(button *tview.Button) *tview.Button {
-	button.SetStyle(buttonStyle()).SetActivatedStyle(buttonFocusStyle())
+func (s *screen) clickable(button *tview.Button) *tview.Button {
+	button.SetStyle(s.buttonStyle()).SetActivatedStyle(buttonFocusStyle())
 	button.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if action == tview.MouseLeftDoubleClick {
 			action = tview.MouseLeftClick
@@ -31,7 +31,7 @@ func (s *screen) toolbar() *tview.Flex {
 	bar := tview.NewFlex()
 	s.footerBar = bar
 	for index := range 6 {
-		button := clickable(tview.NewButton("").SetSelectedFunc(func() {
+		button := s.clickable(tview.NewButton("").SetSelectedFunc(func() {
 			if index >= len(s.footerKeys) {
 				return
 			}
@@ -77,11 +77,11 @@ func (s *screen) toolbar() *tview.Flex {
 			}
 			s.app.QueueEvent(tcell.NewEventKey(key.key, 0, key.mod))
 		}))
-		button.SetStyle(tcell.StyleDefault.Foreground(palette.text).Background(palette.footer))
+		button.SetStyle(tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().footer))
 		s.buttons = append(s.buttons, button)
 	}
 	version := tview.NewTextView().SetText("v" + appinfo.Version).SetTextAlign(tview.AlignRight).SetWrap(false)
-	version.SetTextColor(palette.accent).SetBackgroundColor(palette.footer)
+	version.SetTextColor(s.colors().accent).SetBackgroundColor(s.colors().footer)
 	s.footerVersion = version
 	return bar
 }
@@ -315,3 +315,5 @@ func (s *screen) action(action string) {
 		s.requestQuit()
 	}
 }
+
+func clickable(button *tview.Button) *tview.Button { return (&screen{}).clickable(button) }

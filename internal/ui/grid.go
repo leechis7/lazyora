@@ -30,15 +30,17 @@ func (s *screen) resultGrid() tview.Primitive              { return &resultGrid{
 
 // Grid-specific surfaces retain the app's muted blue/cyan palette while
 // distinguishing header, row, range and active cell without bright row stripes.
-var gridPalette = struct{ background, stripe, header, current, rangeBG, divider, muted tcell.Color }{
+type gridColors struct{ background, stripe, header, current, rangeBG, divider, muted tcell.Color }
+
+var gridPalette = gridColors{
 	tcell.GetColor("#232b38"), tcell.GetColor("#293342"), tcell.GetColor("#3b4e67"),
 	tcell.GetColor("#35485f"), tcell.GetColor("#496b82"), tcell.GetColor("#52647a"), tcell.GetColor("#95a5b9"),
 }
 
 func (s *screen) gridHeaderStyle(active bool) tcell.Style {
-	fg, bg := palette.text, gridPalette.header
+	fg, bg := s.colors().text, s.gridColors().header
 	if active {
-		bg = palette.button
+		bg = s.colors().button
 	}
 	if s.limitedColors {
 		fg, bg = tcell.ColorWhite, tcell.ColorNavy
@@ -49,9 +51,9 @@ func (s *screen) gridHeaderStyle(active bool) tcell.Style {
 	return tcell.StyleDefault.Foreground(fg).Background(bg).Bold(true)
 }
 func (s *screen) gridActiveStyle(focused bool) tcell.Style {
-	fg, bg := palette.background, palette.accent
+	fg, bg := s.colors().selectionText, s.colors().accent
 	if !focused {
-		fg, bg = palette.text, gridPalette.header
+		fg, bg = s.colors().text, s.gridColors().header
 	}
 	if s.limitedColors {
 		fg, bg = tcell.ColorBlack, tcell.ColorTeal
@@ -101,9 +103,12 @@ func (g *resultGrid) Draw(terminal tcell.Screen) {
 	}
 	for py := y; py < y+h; py++ {
 		row, _ := g.CellAt(x, py)
-		style := tcell.StyleDefault.Foreground(gridPalette.muted).Background(gridPalette.background)
+		style := tcell.StyleDefault.Foreground(s.gridColors().muted).Background(s.gridColors().background)
 		if s.limitedColors {
 			style = tcell.StyleDefault.Foreground(tcell.ColorSilver).Background(tcell.ColorBlack)
+			if s.prefs.Theme == "light" {
+				style = style.Foreground(tcell.ColorNavy).Background(tcell.ColorWhite)
+			}
 		}
 		label := ""
 		if row == 0 {
@@ -119,7 +124,7 @@ func (g *resultGrid) Draw(terminal tcell.Screen) {
 		gridFill(terminal, x-gutter, py, gutter, style)
 		fg, _, _ := style.Decompose()
 		tview.Print(terminal, label, x-gutter+1, py, gutter-2, tview.AlignRight, fg)
-		divider := gridPalette.divider
+		divider := s.gridColors().divider
 		if s.limitedColors {
 			divider = tcell.ColorTeal
 		}
@@ -131,9 +136,12 @@ func (g *resultGrid) Draw(terminal tcell.Screen) {
 			terminal.SetContent(x-gutter, py, '›', nil, s.gridActiveStyle(g.HasFocus()))
 		}
 	}
-	bar := tcell.StyleDefault.Foreground(palette.muted).Background(palette.surface)
+	bar := tcell.StyleDefault.Foreground(s.colors().muted).Background(s.colors().surface)
 	if s.limitedColors {
 		bar = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorNavy)
+		if s.prefs.Theme == "light" {
+			bar = bar.Foreground(tcell.ColorBlack).Background(tcell.ColorSilver)
+		}
 	}
 	gridFill(terminal, x-gutter, y+h, w+gutter, bar)
 	text := s.gridStatusText()
@@ -222,28 +230,37 @@ func gridNumeric(cell oracle.Cell) bool {
 	return false
 }
 func (s *screen) gridBaseStyle(row, col int) tcell.Style {
-	fg, bg := palette.text, gridPalette.background
+	fg, bg := s.colors().text, s.gridColors().background
 	if row%2 == 0 {
-		bg = gridPalette.stripe
+		bg = s.gridColors().stripe
 	}
 	current, _ := s.table.GetSelection()
 	if row == current && row > 0 {
-		bg = gridPalette.current
+		bg = s.gridColors().current
 	}
 	if s.limitedColors {
 		fg, bg = tcell.ColorWhite, tcell.ColorBlack
 		if row == current && row > 0 {
 			bg = tcell.ColorNavy
 		}
+		if s.prefs.Theme == "light" {
+			fg, bg = tcell.ColorBlack, tcell.ColorWhite
+			if row == current && row > 0 {
+				bg = tcell.ColorSilver
+			}
+		}
 	}
 	style := tcell.StyleDefault
 	if row > 0 && row <= len(s.resultValues) && col < len(s.resultValues[row-1]) {
 		cell := s.resultValues[row-1][col]
 		if cell.Null {
-			fg = gridPalette.muted
+			fg = s.gridColors().muted
 			style = style.Italic(true)
 			if s.limitedColors {
 				fg = tcell.ColorSilver
+				if s.prefs.Theme == "light" {
+					fg = tcell.ColorNavy
+				}
 			}
 		}
 	}
@@ -263,7 +280,7 @@ func (s *screen) paintResultRows(rows map[int]bool) {
 				style = style.Bold(true)
 			}
 			if s.resultSelection.active && row >= r1 && row <= r2 && col >= c1 && col <= c2 {
-				style = style.Foreground(palette.text).Background(gridPalette.rangeBG)
+				style = style.Foreground(s.colors().text).Background(s.gridColors().rangeBG)
 				if s.limitedColors {
 					style = style.Foreground(tcell.ColorBlack).Background(tcell.ColorSilver).Bold(true)
 				}
@@ -317,4 +334,16 @@ func (s *screen) refreshResultPosition() {
 		}
 	}
 	s.table.SetTitle(title)
+}
+
+var lightGridPalette = gridColors{
+	tcell.GetColor("#ffffff"), tcell.GetColor("#f0f4f8"), tcell.GetColor("#d4e0eb"),
+	tcell.GetColor("#dce9f4"), tcell.GetColor("#bdd9ea"), tcell.GetColor("#91a6b8"), tcell.GetColor("#526579"),
+}
+
+func (s *screen) gridColors() gridColors {
+	if s.prefs.Theme == "light" {
+		return lightGridPalette
+	}
+	return gridPalette
 }

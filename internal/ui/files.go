@@ -75,9 +75,9 @@ func (s *screen) guardDocument(next func()) {
 	}
 	focus := s.app.GetFocus()
 	modal := tview.NewModal().SetText(s.tr("file_unsaved")).AddButtons([]string{s.tr("save"), s.tr("file_discard"), s.tr("cancel")}).SetFocus(2)
-	modal.SetBackgroundColor(palette.background)
-	modal.SetTextColor(palette.text).SetButtonStyle(buttonStyle()).SetButtonActivatedStyle(buttonFocusStyle())
-	styleModal(modal)
+	modal.SetBackgroundColor(s.colors().background)
+	modal.SetTextColor(s.colors().text).SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(buttonFocusStyle())
+	s.styleModal(modal)
 	modal.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if action == tview.MouseLeftDoubleClick {
 			action = tview.MouseLeftClick
@@ -190,15 +190,15 @@ func (s *screen) showFileDialog(mode string, next func()) {
 	dialog := &fileDialog{directory: directory, mode: mode, focus: s.app.GetFocus()}
 	s.fileDialog = dialog
 	dialog.form = tview.NewForm().SetItemPadding(0).AddInputField(s.tr("file_path"), path, 0, nil, nil)
-	styleForm(dialog.form)
-	dialog.list = tview.NewList().ShowSecondaryText(false).SetSelectedStyle(focusStyle())
-	dialog.list.SetBackgroundColor(palette.background)
-	dialog.list.SetMainTextColor(palette.text)
+	s.styleForm(dialog.form)
+	dialog.list = tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
+	dialog.list.SetBackgroundColor(s.colors().background)
+	dialog.list.SetMainTextColor(s.colors().text)
 	dialog.list.SetBorder(true)
-	styleBox(dialog.list.Box)
+	s.styleBox(dialog.list.Box)
 	dialog.info = tview.NewTextView().SetWrap(true).SetText(s.tr("file_picker_hint"))
-	dialog.info.SetBackgroundColor(palette.background)
-	dialog.info.SetTextColor(palette.text)
+	dialog.info.SetBackgroundColor(s.colors().background)
+	dialog.info.SetTextColor(s.colors().text)
 	dialog.close = func() { s.pages.RemovePage("file"); s.fileDialog = nil; s.app.SetFocus(dialog.focus) }
 	pathField := dialog.form.GetFormItem(0).(*tview.InputField)
 	var browse func(string)
@@ -266,8 +266,8 @@ func (s *screen) showFileDialog(mode string, next func()) {
 			write()
 		}
 	}
-	apply := clickable(tview.NewButton(s.tr("file_" + mode)).SetSelectedFunc(dialog.apply))
-	cancel := clickable(tview.NewButton(s.tr("cancel")).SetSelectedFunc(dialog.close))
+	apply := s.clickable(tview.NewButton(s.tr("file_" + mode)).SetSelectedFunc(dialog.apply))
+	cancel := s.clickable(tview.NewButton(s.tr("cancel")).SetSelectedFunc(dialog.close))
 	row := tview.NewFlex().AddItem(apply, 0, 1, false).AddItem(cancel, 0, 1, false)
 	dialog.form.SetBorder(true)
 	content := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(dialog.form, 5, 0, true).AddItem(dialog.list, 0, 1, false).AddItem(dialog.info, 3, 0, false).AddItem(row, 1, 0, false)

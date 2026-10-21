@@ -19,7 +19,7 @@ func (s *screen) formDialog(form *tview.Form, info *tview.TextView, width int) *
 	content := tview.NewFlex().SetDirection(tview.FlexRow)
 	if info != nil {
 		infoHeight = 5
-		info.SetBackgroundColor(palette.surface).SetBorder(true).SetBorderPadding(0, 0, 2, 2)
+		info.SetBackgroundColor(s.colors().surface).SetBorder(true).SetBorderPadding(0, 0, 2, 2)
 		singleLineBorder(info.Box)
 		content.AddItem(info, infoHeight, 0, false)
 	}
@@ -42,7 +42,7 @@ func (s *screen) formPopup(content tview.Primitive, preferredWidth, preferredHei
 		for py := y; py < y+height; py++ {
 			for px := x; px < x+width; px++ {
 				r, comb, style, cellWidth := terminal.GetContent(px, py)
-				backdrop := style.Foreground(palette.muted).Background(palette.background).Dim(true)
+				backdrop := style.Foreground(s.colors().muted).Background(s.colors().background).Dim(true)
 				if s.limitedColors {
 					backdrop = backdrop.Foreground(tcell.ColorSilver).Background(tcell.ColorBlack)
 				}

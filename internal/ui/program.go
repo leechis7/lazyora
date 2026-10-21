@@ -17,9 +17,9 @@ func (s *screen) showProgramConfirm(message string, action func()) {
 	}
 	s.programFocus = s.app.GetFocus()
 	s.programModal = tview.NewModal().SetText(message).AddButtons([]string{s.tr("proceed"), s.tr("cancel")}).
-		SetBackgroundColor(palette.background).SetTextColor(palette.text).
-		SetButtonStyle(buttonStyle()).SetButtonActivatedStyle(buttonFocusStyle()).SetFocus(1)
-	styleModal(s.programModal)
+		SetBackgroundColor(s.colors().background).SetTextColor(s.colors().text).
+		SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(buttonFocusStyle()).SetFocus(1)
+	s.styleModal(s.programModal)
 	s.programModal.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if action == tview.MouseLeftDoubleClick {
 			action = tview.MouseLeftClick
@@ -54,15 +54,15 @@ func (s *screen) showSource() {
 	}
 	s.sourceBase, s.sourceLoaded = "", false
 	s.sourceInfo = tview.NewTextView().SetWrap(true)
-	s.sourceInfo.SetBackgroundColor(palette.background)
-	s.sourceInfo.SetTextColor(palette.text)
+	s.sourceInfo.SetBackgroundColor(s.colors().background)
+	s.sourceInfo.SetTextColor(s.colors().text)
 	s.sourceInfo.SetText(s.tr("browser_loading"))
 	s.sourceEditor = tview.NewTextArea()
 	s.sourceEditor.SetClipboard(s.sendClipboard, func() string { return s.clipboardText })
 	s.sourceEditor.SetBorder(true)
-	styleBox(s.sourceEditor.Box)
-	s.sourceEditor.SetBackgroundColor(palette.field).SetTitleColor(palette.background)
-	s.sourceEditor.SetTextStyle(fieldStyle()).SetSelectedStyle(focusStyle())
+	s.styleBox(s.sourceEditor.Box)
+	s.sourceEditor.SetBackgroundColor(s.colors().field).SetTitleColor(s.colors().fieldText)
+	s.sourceEditor.SetTextStyle(s.fieldStyle()).SetSelectedStyle(s.focusStyle())
 	s.colorEditor(s.sourceEditor, s.refreshSourceTitle)
 	s.sourceEditor.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if !s.sourceLoaded || s.busy {
@@ -70,9 +70,9 @@ func (s *screen) showSource() {
 		}
 		return event
 	})
-	s.sourceDiagnostics = tview.NewTable().SetFixed(1, 0).SetSelectable(true, false).SetSelectedStyle(focusStyle())
+	s.sourceDiagnostics = tview.NewTable().SetFixed(1, 0).SetSelectable(true, false).SetSelectedStyle(s.focusStyle())
 	s.sourceDiagnostics.SetBorder(true)
-	styleBox(s.sourceDiagnostics.Box)
+	s.styleBox(s.sourceDiagnostics.Box)
 	s.renderDiagnostics(nil)
 	buttons := tview.NewFlex()
 	for _, item := range []struct {
@@ -81,7 +81,7 @@ func (s *screen) showSource() {
 	}{
 		{"compile_button", s.requestCompile}, {"source_edit", s.showSourceEdit}, {"format_code", func() { s.app.SetFocus(s.sourceEditor); s.formatCode() }}, {"reload_button", s.reloadSource}, {"close", s.closeSource},
 	} {
-		buttons.AddItem(clickable(tview.NewButton(s.tr(item.label)).SetSelectedFunc(item.action)), 0, 1, false)
+		buttons.AddItem(s.clickable(tview.NewButton(s.tr(item.label)).SetSelectedFunc(item.action)), 0, 1, false)
 	}
 	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.sourceInfo, 2, 0, false).
 		AddItem(s.sourceEditor, 0, 3, true).AddItem(s.sourceDiagnostics, 0, 1, false).AddItem(buttons, 1, 0, false)
@@ -159,11 +159,11 @@ func (s *screen) requestCompile() {
 func (s *screen) renderDiagnostics(diagnostics []oracle.Diagnostic) {
 	s.sourceDiagnostics.Clear().SetTitle(s.tr("diagnostics"))
 	for i, key := range []string{"line", "position", "object_type", "message"} {
-		s.sourceDiagnostics.SetCell(0, i, tview.NewTableCell(s.tr(key)).SetTextColor(palette.accent).SetSelectable(false))
+		s.sourceDiagnostics.SetCell(0, i, tview.NewTableCell(s.tr(key)).SetTextColor(s.colors().accent).SetSelectable(false))
 	}
 	for row, diagnostic := range diagnostics {
 		for col, text := range []string{fmt.Sprint(diagnostic.Line), fmt.Sprint(diagnostic.Position), diagnostic.Attribute, diagnostic.Text} {
-			s.sourceDiagnostics.SetCell(row+1, col, tview.NewTableCell(tview.Escape(text)).SetTextColor(palette.text))
+			s.sourceDiagnostics.SetCell(row+1, col, tview.NewTableCell(tview.Escape(text)).SetTextColor(s.colors().text))
 		}
 	}
 }
@@ -174,15 +174,15 @@ func (s *screen) showArguments() {
 	}
 	s.argumentFocus = s.app.GetFocus()
 	s.argumentInfo = tview.NewTextView().SetText(s.object.Owner + "." + s.object.Name + " — " + s.tr("browser_loading")).SetWrap(true)
-	s.argumentInfo.SetBackgroundColor(palette.background)
-	s.argumentInfo.SetTextColor(palette.text)
-	s.argumentTable = tview.NewTable().SetFixed(1, 0).SetSelectable(true, true).SetSelectedStyle(focusStyle())
+	s.argumentInfo.SetBackgroundColor(s.colors().background)
+	s.argumentInfo.SetTextColor(s.colors().text)
+	s.argumentTable = tview.NewTable().SetFixed(1, 0).SetSelectable(true, true).SetSelectedStyle(s.focusStyle())
 	s.argumentTable.SetBorder(true)
-	styleBox(s.argumentTable.Box)
+	s.styleBox(s.argumentTable.Box)
 	s.argumentTable.SetTitle(s.tr("arguments"))
-	close := clickable(tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeArguments))
+	close := s.clickable(tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeArguments))
 	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.argumentInfo, 2, 0, false).
-		AddItem(s.argumentTable, 0, 1, true).AddItem(tview.NewFlex().AddItem(clickable(tview.NewButton(s.tr("routine_button")).SetSelectedFunc(func() { s.showRoutine(s.object, "") })), 0, 1, false).AddItem(close, 0, 1, false), 1, 0, false)
+		AddItem(s.argumentTable, 0, 1, true).AddItem(tview.NewFlex().AddItem(s.clickable(tview.NewButton(s.tr("routine_button")).SetSelectedFunc(func() { s.showRoutine(s.object, "") })), 0, 1, false).AddItem(close, 0, 1, false), 1, 0, false)
 	s.pages.AddPage("arguments", root, true, true)
 	s.app.SetFocus(s.argumentTable)
 	if s.demo && !s.connected {
@@ -195,7 +195,7 @@ func (s *screen) showArguments() {
 func (s *screen) renderArguments(arguments []oracle.Argument) {
 	s.argumentTable.Clear()
 	for i, key := range []string{"member", "overload", "position", "argument", "direction", "data_type", "depth"} {
-		s.argumentTable.SetCell(0, i, tview.NewTableCell(s.tr(key)).SetTextColor(palette.accent).SetSelectable(false))
+		s.argumentTable.SetCell(0, i, tview.NewTableCell(s.tr(key)).SetTextColor(s.colors().accent).SetSelectable(false))
 	}
 	for row, argument := range arguments {
 		name := argument.Name
@@ -203,7 +203,7 @@ func (s *screen) renderArguments(arguments []oracle.Argument) {
 			name = s.tr("return_value")
 		}
 		for col, text := range []string{argument.Member, argument.Overload, fmt.Sprint(argument.Position), name, argument.Direction, argument.DataType, fmt.Sprint(argument.Depth)} {
-			s.argumentTable.SetCell(row+1, col, tview.NewTableCell(tview.Escape(text)).SetTextColor(palette.text))
+			s.argumentTable.SetCell(row+1, col, tview.NewTableCell(tview.Escape(text)).SetTextColor(s.colors().text))
 		}
 	}
 	s.argumentInfo.SetText(s.object.Owner + "." + s.object.Name)

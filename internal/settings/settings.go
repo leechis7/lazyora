@@ -10,6 +10,7 @@ import (
 )
 
 type Config struct {
+	Theme        string `json:"theme,omitempty"`
 	Language     string `json:"language"`
 	Mouse        bool   `json:"mouse"`
 	EditorKeymap string `json:"editor_keymap,omitempty"`
@@ -41,6 +42,9 @@ func Path() (string, error) {
 }
 
 func (c Config) Validate() error {
+	if c.Theme != "" && c.Theme != "dark" && c.Theme != "light" {
+		return errors.New("theme must be dark or light")
+	}
 	if c.Language != "en" && c.Language != "ko" {
 		return errors.New("language must be en or ko")
 	}

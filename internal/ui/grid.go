@@ -187,6 +187,14 @@ func (s *screen) gridAutoWidth(col int) int {
 func (s *screen) refreshResultPosition() {
 	row, col := s.table.GetSelection()
 	title := s.tr("results_title")
+	if object := s.resultBrowser.source.EditObject; object.Kind == "TABLE" {
+		title += " · " + tview.Escape(oracle.QualifiedObject(object))
+		if s.resultBrowser.source.EditID != 0 {
+			title += " · " + s.tr("grid_edit")
+		} else {
+			title += " · " + s.tr("edit_readonly")
+		}
+	}
 	if row > 0 && row <= len(s.resultRows) && col >= 0 && col < len(s.resultHeaders) {
 		title += fmt.Sprintf(s.tr("grid_position"), row, len(s.resultRows), col+1, len(s.resultHeaders))
 	}

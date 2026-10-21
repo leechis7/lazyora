@@ -170,6 +170,9 @@ func (s *screen) cellKey(event *tcell.EventKey) *tcell.EventKey {
 	if s.busy {
 		return nil
 	}
+	if s.buttonArrow(event) {
+		return nil
+	}
 	switch event.Key() {
 	case tcell.KeyCtrlS:
 		s.saveCellFile()

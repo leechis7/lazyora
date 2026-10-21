@@ -60,7 +60,7 @@ func (s *screen) toggleBrowser() {
 func (s *screen) newBrowser() *tview.Flex {
 	s.browser = tview.NewTreeView().SetTopLevel(1).SetGraphics(false)
 	s.browser.SetBorder(true)
-	styleBox(s.browser.Box)
+	s.styleBox(s.browser.Box)
 	s.browser.SetSelectedFunc(s.activateBrowser)
 	s.browser.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if action == tview.MouseLeftDoubleClick {
@@ -73,7 +73,7 @@ func (s *screen) newBrowser() *tview.Flex {
 	s.browserUsers.SetFieldWidth(0)
 	s.browserTypes.SetFieldWidth(0)
 	s.browserForm = tview.NewForm().SetItemPadding(0).AddFormItem(s.browserUsers).AddFormItem(s.browserTypes)
-	styleForm(s.browserForm)
+	s.styleForm(s.browserForm)
 	s.browserForm.SetBorder(true).SetTitle(s.tr("browser_title"))
 	s.browserPanel = tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.browserForm, 6, 0, false).AddItem(s.browser, 0, 1, true)
 	s.resetBrowser()
@@ -168,8 +168,8 @@ func (s *screen) renderBrowserObjects() {
 
 func (s *screen) treeNode(text string, data *browserNode) *tview.TreeNode {
 	return tview.NewTreeNode(tview.Escape(text)).SetReference(data).
-		SetTextStyle(tcell.StyleDefault.Foreground(palette.text).Background(palette.background)).
-		SetSelectedTextStyle(focusStyle())
+		SetTextStyle(tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().background)).
+		SetSelectedTextStyle(s.focusStyle())
 }
 
 func (s *screen) treeMessage(key string) *tview.TreeNode {
@@ -284,19 +284,29 @@ func (s *screen) openObject(object oracle.Object) {
 	s.object = object
 	s.objectColumns = nil
 	s.objectInfo = tview.NewTextView().SetWrap(true)
-	s.objectInfo.SetBackgroundColor(palette.background)
-	s.objectInfo.SetTextColor(palette.text)
-	s.objectTable = tview.NewTable().SetFixed(1, 0).SetSelectable(true, false).SetSelectedStyle(focusStyle())
+	s.objectInfo.SetBackgroundColor(s.colors().background)
+	s.objectInfo.SetTextColor(s.colors().text)
+	s.objectTable = tview.NewTable().SetFixed(1, 0).SetSelectable(true, false).SetSelectedStyle(s.focusStyle())
 	s.objectTable.SetBorder(true)
-	styleBox(s.objectTable.Box)
+	s.styleBox(s.objectTable.Box)
 	s.renderObject(nil)
-	close := clickable(tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeObject))
+	close := s.clickable(tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeObject))
 	buttons := tview.NewFlex()
+	for _, item := range []struct{ section, key string }{{"ddl", "Alt+D"}, {"constraints", "Alt+C"}, {"indexes", "Alt+I"}, {"grants", "Alt+G"}} {
+		if item.section == "constraints" && !object.HasColumns() {
+			continue
+		}
+		if item.section == "indexes" && !object.HasColumns() && object.Kind != "INDEX" {
+			continue
+		}
+		buttons.AddItem(s.clickable(tview.NewButton(s.tr(item.section)+" ("+item.key+")").SetSelectedFunc(func() { s.showDefinition(item.section) })), 0, 1, false)
+	}
 	if object.HasSource() {
-		buttons.AddItem(clickable(tview.NewButton(s.tr("source_button")).SetSelectedFunc(s.showSource)), 0, 1, false)
+		buttons.AddItem(s.clickable(tview.NewButton(s.tr("source_button")).SetSelectedFunc(s.showSource)), 0, 1, false)
 	}
 	if object.HasArguments() {
-		buttons.AddItem(clickable(tview.NewButton(s.tr("arguments_button")).SetSelectedFunc(s.showArguments)), 0, 1, false)
+		buttons.AddItem(s.clickable(tview.NewButton(s.tr("arguments_button")).SetSelectedFunc(s.showArguments)), 0, 1, false)
+		buttons.AddItem(s.clickable(tview.NewButton(s.tr("routine_button")).SetSelectedFunc(func() { s.showRoutine(s.object, "") })), 0, 1, false)
 	}
 	buttons.AddItem(close, 0, 1, false)
 	root := tview.NewFlex().SetDirection(tview.FlexRow).
@@ -325,18 +335,18 @@ func (s *screen) renderObject(columns []oracle.Column) {
 	if !s.object.HasColumns() {
 		s.objectTable.SetTitle(s.tr("object_details"))
 		for i, key := range []string{"property", "value"} {
-			s.objectTable.SetCell(0, i, tview.NewTableCell(s.tr(key)).SetTextColor(palette.accent).SetSelectable(false))
+			s.objectTable.SetCell(0, i, tview.NewTableCell(s.tr(key)).SetTextColor(s.colors().accent).SetSelectable(false))
 		}
 		for row, pair := range [][2]string{{s.tr("owner"), s.object.Owner}, {s.tr("object_name"), s.object.Name}, {s.tr("object_type"), s.object.Kind}, {s.tr("object_status"), s.object.Status}} {
 			for col, value := range pair {
-				s.objectTable.SetCell(row+1, col, tview.NewTableCell(tview.Escape(value)).SetTextColor(palette.text))
+				s.objectTable.SetCell(row+1, col, tview.NewTableCell(tview.Escape(value)).SetTextColor(s.colors().text))
 			}
 		}
 		s.objectInfo.SetText(s.objectInfo.GetText(false) + "\n" + s.tr("object_info_only"))
 		return
 	}
 	for i, key := range []string{"column_position", "column_name", "data_type", "nullable", "column_comment"} {
-		s.objectTable.SetCell(0, i, tview.NewTableCell(s.tr(key)).SetStyle(tcell.StyleDefault.Foreground(palette.accent).Background(palette.surface).Bold(true)).SetSelectable(false))
+		s.objectTable.SetCell(0, i, tview.NewTableCell(s.tr(key)).SetStyle(tcell.StyleDefault.Foreground(s.colors().accent).Background(s.colors().surface).Bold(true)).SetSelectable(false))
 	}
 	for row, column := range columns {
 		nullable := "no"
@@ -344,7 +354,7 @@ func (s *screen) renderObject(columns []oracle.Column) {
 			nullable = "yes"
 		}
 		for col, value := range []string{fmt.Sprint(row + 1), column.Name, column.DataType, s.tr(nullable), column.Comment} {
-			s.objectTable.SetCell(row+1, col, tview.NewTableCell(tview.Escape(value)).SetTextColor(palette.text))
+			s.objectTable.SetCell(row+1, col, tview.NewTableCell(tview.Escape(value)).SetTextColor(s.colors().text))
 		}
 	}
 }

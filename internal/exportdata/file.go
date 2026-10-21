@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -43,6 +44,25 @@ func Save(ctx context.Context, path string, expected Revision, data Dataset, opt
 // SaveStream opens the source only after validating the destination and
 // acquiring its lock. The live DB cursor closes before replacing any file.
 func SaveStream(ctx context.Context, path string, expected Revision, open func() (Source, error), options Options) (int64, error) {
+	return SaveContent(ctx, path, expected, func(writer io.Writer) (int64, error) {
+		source, err := open()
+		if err != nil {
+			return 0, err
+		}
+		count, err := WriteStream(ctx, writer, source, options)
+		if source.Close != nil {
+			closeErr := source.Close()
+			if err == nil {
+				err = closeErr
+			}
+		}
+		return count, err
+	})
+}
+
+// SaveContent shares destination locking/revision checks and atomic replacement
+// with result exports. write runs only after the destination is validated.
+func SaveContent(ctx context.Context, path string, expected Revision, write func(io.Writer) (int64, error)) (int64, error) {
 	if err := ctx.Err(); err != nil {
 		return 0, err
 	}
@@ -80,17 +100,7 @@ func SaveStream(ctx context.Context, path string, expected Revision, open func()
 	defer os.Remove(file.Name())
 	var count int64
 	if err = file.Chmod(mode); err == nil {
-		var source Source
-		source, err = open()
-		if err == nil {
-			count, err = WriteStream(ctx, file, source, options)
-			if source.Close != nil {
-				closeErr := source.Close()
-				if err == nil {
-					err = closeErr
-				}
-			}
-		}
+		count, err = write(file)
 	}
 	if err == nil {
 		err = file.Sync()

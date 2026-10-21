@@ -2,15 +2,27 @@
 set -eu
 cd "$(dirname "$0")"
 
-if [ ! -f .env ]; then
-    printf '%s\n' '먼저 프로젝트 루트에서 make -C test/oracle up을 실행하세요.' >&2
-    exit 1
-fi
-
-# Always release the test DB memory when this launcher exits. Keep its data volume.
+# Offer to release DB memory on interactive exits. Keep its data volume.
 cleanup() {
     run_status=$?
     trap - 0 HUP INT TERM
+    case "$run_status" in
+        129|130|143) ;; # Signals must not leave the launcher waiting for input.
+        *)
+            if [ -t 0 ]; then
+                printf '\n%s' 'Oracle Free를 종료할까요? [Y/n] ' >&2
+                answer=
+                if IFS= read -r answer; then
+                    case "$answer" in
+                        n|N|no|NO)
+                            printf '%s\n' 'Oracle 시험 환경을 계속 실행합니다. 종료하려면 make -C test/oracle down을 실행하세요.'
+                            exit "$run_status"
+                            ;;
+                    esac
+                fi
+            fi
+            ;;
+    esac
     printf '\n%s\n' 'Oracle 시험 환경을 종료합니다(DB 데이터는 보존합니다).'
     if ! docker compose -f compose.yaml down; then
         printf '%s\n' 'Oracle 종료에 실패했습니다. make -C test/oracle down으로 다시 시도하세요.' >&2
@@ -20,14 +32,6 @@ cleanup() {
     fi
     exit "$run_status"
 }
-trap cleanup 0
-trap 'exit 129' HUP
-trap 'exit 130' INT
-trap 'exit 143' TERM
-
-# Load only the local test settings; do not put passwords in command arguments.
-. ./.env
-
 case "$(uname -s)" in
     Linux) target_os=linux ;;
     Darwin) target_os=darwin ;;
@@ -44,6 +48,18 @@ if [ ! -x "$binary" ]; then
     printf '%s\n' '먼저 프로젝트 루트에서 make build-native를 실행하세요.' >&2
     exit 1
 fi
+
+# Create local settings if needed, then start (or reuse) the DB and wait until
+# its healthcheck succeeds before opening the app. Never pass passwords as args.
+sh env.sh
+. ./.env
+: "${APP_USER_PASSWORD:?로컬 .env의 APP_USER_PASSWORD를 설정하세요}"
+trap cleanup 0
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+printf '%s\n' 'Oracle 시험 환경을 준비합니다(DB 접속 준비까지 기다립니다).'
+docker compose -f compose.yaml up -d --wait --wait-timeout 600 oracle
 
 export LAZYORA_HOST=127.0.0.1
 export LAZYORA_PORT="${ORACLE_PORT:-1521}"

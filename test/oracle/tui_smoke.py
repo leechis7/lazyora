@@ -5,6 +5,7 @@ import fcntl
 import os
 import platform
 import pty
+import re
 import select
 import signal
 import struct
@@ -91,7 +92,140 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         send(b"\x1bo\r\x1b[H\r")  # Back to Table.
         wait_for("SAMPLE_ROWS")
         send(b"\x1bu\rLAZYORA\r")  # Alt+U user chooser, keep login account.
+        output.clear()
+        send(b"\t\t\r")  # User -> Type -> object list -> table details.
+        wait_for("CHANGED_AT")  # Wait for actual columns, not the loading title.
+        send(b"\x1bd")
+        wait_for("CREATE TABLE", seconds=65)
+        output.clear()
+        send(b"\x03")
+        wait_for(b"\x1b]52;c;")
+        captured = re.findall(rb"\x1b\]52;c;([^\x07\x1b]*)", output)
+        assert captured and b'"SAMPLE_ROWS"' in base64.b64decode(captured[-1])
+        output.clear()
+        send(b"2")
+        wait_for("ENABLED", seconds=15)
+        output.clear()
+        send(b"\x03")
+        wait_for(b"\x1b]52;c;")
+        captured = re.findall(rb"\x1b\]52;c;([^\x07\x1b]*)", output)
+        assert captured and b"ENABLED" in base64.b64decode(captured[-1])
+        output.clear()
+        send(b"\t\x03")  # Detail pane.
+        wait_for(b"\x1b]52;c;")
+        captured = re.findall(rb"\x1b\]52;c;([^\x07\x1b]*)", output)
+        detail_copy = base64.b64decode(captured[-1])
+        assert b"Check condition" in detail_copy
+        output.clear()
+        send(b"\t" * 7 + b"\r")  # Six selectors -> copy button preserves detail target.
+        copied(detail_copy.decode())
+        output.clear()
+        send(b"3")
+        wait_for("BROWSER_INDEX", seconds=15)
+        output.clear()
+        send(b"4")
+        wait_for("No accessible information")
+        output.clear()
+        send(b"6")
+        wait_for("HARD")
+        send(b"\x1b[F")  # Last dependent is SAMPLE_ROWS_VIEW (VIEW).
+        wait_for("SAMPLE_ROWS_VIEW")
+        output.clear()
+        send(b"\r")  # Explore the selected view's dependencies.
+        wait_for("HARD")
+        send(b"\x03")
+        wait_for(b"\x1b]52;c;")
+        captured = re.findall(rb"\x1b\]52;c;([^\x07\x1b]*)", output)
+        assert b"SAMPLE_ROWS" in base64.b64decode(captured[-1])
+        output.clear()
+        send(b"\x1b[1;3D")  # Alt+Left restores cached dependents and row.
+        wait_for('"LAZYORA"."SAMPLE_ROWS"')
+        send(b"\x1b")  # Definition -> object.
+        send(b"\x1b")  # Object -> browser.
+        print("Read-only DDL/constraints/indexes, section switching and raw copy: passed")
+        print("Visible grants, dependents, related-object exploration and back: passed")
         print("Startup login, Alt+L, Alt+U user and Alt+O object types: passed")
+        send(b"\x1bp")
+        wait_for("DBMS_OUTPUT disabled")
+        send(b"\x1be")
+        wait_for("DBMS_OUTPUT enabled")
+        send(b"\x1b")
+        send(b"\x1bOQ\x1bOQ\x01\x0b")
+        send("BEGIN DBMS_OUTPUT.PUT_LINE('PTY output 한글 [red]'); END;".encode())
+        output.clear()
+        send(b"\x1b[20~")
+        wait_for("Statement completed")
+        send(b"\x1bp")
+        send(b"\x03")
+        copied("PTY output 한글 [red]\n")
+        send(b"\x1bd")
+        wait_for("0 retained lines")
+        send(b"\x1be")
+        wait_for("DBMS_OUTPUT disabled")
+        send(b"\x1b")
+        send(b"\x1br")
+        wait_for("Rollback completed.")
+        print("DBMS_OUTPUT enable, F9 capture, raw Unicode copy, clear, disable and rollback: passed")
+        # Routine execution through the menu uses metadata, explicit input,
+        # a default-cancel confirmation, and the normal raw-value grid copy.
+        send(b"\x1bOQ\x1bOQ\x01\x0bBROWSER_FUNCTION")
+        output.clear()
+        send(b"\x1bx\x1b[F\r")  # Execute menu -> last item: routine execution.
+        wait_for("P_VALUE IN NUMBER")
+        send(b"\r")  # Select standalone function signature.
+        send(b"\r\x1b[H\r\t42")  # Default selector -> Value, input 42.
+        output.clear()
+        send(b"\x1b[20~")
+        wait_for("Execute this routine")
+        send(b"\r")  # Default is Cancel, no execution.
+        output.clear()
+        send(b"\x1b[20~\x1b[D\r")
+        wait_for("Routine results")
+        send(b"\r")  # Scalar outputs -> result grid.
+        output.clear()
+        send(b"\x1b[C\x1b[C\x1b[C\x03")
+        copied("42")
+        # Separate Escape events: adjacent ESC bytes may decode as Alt+Esc.
+        for _ in range(4):
+            send(b"\x1b")  # Grid -> outputs -> inputs -> routines -> main.
+        send(b"\x1br")
+        wait_for("Rollback completed.")
+        print("Routine metadata, value input, default-cancel, F9 run, output grid and raw copy: passed")
+        send(b"\x1bOQ\x1bOQ\x01\x0bSELECT * FROM sam")
+        output.clear()
+        send(b"\x14")  # Ctrl+T: Toad Code Insight.
+        wait_for('"SAMPLE_ROWS"')
+        send(b"\x1b")  # Cancel must preserve the partial word.
+        output.clear()
+        send(b"\x14")
+        wait_for('"SAMPLE_ROWS"')
+        send(b"\r WHERE id=1")
+        output.clear()
+        send(b"\x1b[20~")
+        wait_for("1 rows")
+        send(b"\x01\x0bSELECT s.ti FROM sample_rows s\x01" + b"\x1b[C" * 11)
+        output.clear()
+        send(b"\x14")
+        wait_for('"TITLE"')
+        send(b"\r\x1b[F WHERE id=1")
+        output.clear()
+        send(b"\x1b[20~")
+        wait_for("1 rows")
+        print("Ctrl+T object/alias column completion, cancel and quoted replacement: passed")
+        original_format_sql = "SELECT 11 AS ELEVEN,22 AS TWENTYTWO FROM dual"
+        send(b"\x1bOQ\x1bOQ\x01\x0b" + original_format_sql.encode())
+        output.clear()
+        send(b"\x1be\x1b[F\r")  # Edit menu -> Format (Shift shortcut fallback).
+        wait_for("Code formatted")
+        output.clear()
+        send(b"\x1b[20~")
+        wait_for("1 rows")
+        send(b"\x1a")  # Ctrl+Z restores one original line in one edit.
+        output.clear()
+        send(b"\x0c\x03")  # Ctrl+L select all, Ctrl+C raw SQL copy.
+        copied(original_format_sql)
+        send(b"\x1b[C")  # End selection without changing text.
+        print("SQL formatter menu, formatted F9 execution and one-step undo: passed")
         sql("SELECT 11 AS ELEVEN FROM dual", b"\x1b[13;5u", newline=True)
         sql("SELECT 12 AS TWELVE FROM dual", b"\x1b[27;5;13~")
         sql("SELECT 13 AS THIRTEEN FROM dual", b"\x1b\r")
@@ -129,15 +263,15 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         send(b"\x1b[1;2Q")
         read_for(0.2)
         # Maximized results: header at y=1, data rows y=2/3 (zero based).
-        send(b"\x1b[<0;2;3M")
-        send(b"\x1b[<32;5;4M")
-        send(b"\x1b[<0;5;4m")
+        send(b"\x1b[<0;7;3M")
+        send(b"\x1b[<32;12;4M")
+        send(b"\x1b[<0;12;4m")
         output.clear()
         send(b"\x03")
         copied("11\t22\n33\t44")
         send(b"\x1be")  # Edit menu.
         wait_for("Copy preview")
-        send(b"\x1b[B\x1b[B\x1b[B\r")
+        send(b"\x1b[H" + b"\x1b[B" * 8 + b"\r")  # Copy preview after the editor actions.
         wait_for("Mouse reporting is off")
         send(b"\x1b")
         send(b"\x1b[1;2Q")  # Shift+F2 restores split.
@@ -182,7 +316,30 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         send(b"SELECT level AS n FROM dual CONNECT BY level <= 2507 ORDER BY level")
         output.clear()
         send(b"\x1b[20~")
-        wait_for("limited to 1000 rows")
+        wait_for("partial result")
+        send(b"\x1b[17~")  # F6 -> results.
+        output.clear()
+        send(b"\x1b[21~\x1b[H" + b"\x1b[B" * 7 + b"\r")
+        wait_for("2000 of 2000 loaded rows")
+        output.clear()
+        send(b"\x1b[21~\x1b[H" + b"\x1b[B" * 7 + b"\r")
+        wait_for("2507 of 2507 loaded rows")
+        output.clear()
+        send(b"\x1b[21~\x1b[H" + b"\x1b[B" * 9 + b"\r\x03")
+        copied("2507")
+        output.clear()
+        send(b"\x1b[21~\x1b[H" + b"\x1b[B" * 10 + b"\r")
+        wait_for("Filter loaded rows")
+        send(b"2507\t\r")
+        wait_for("1 of 2507 loaded rows")
+        output.clear()
+        send(b"\x1by")
+        copied("2507")
+        send(b"\x1b[21~\x1b[H" + b"\x1b[B" * 11 + b"\r")
+        output.clear()
+        send(b"\x03")
+        copied("1")
+        print("Same-cursor 1000/2000/2507 fetch, local sort/filter/reset and raw copy: passed")
         output.clear()
         send(b"\x1bw")
         wait_for("Export results")

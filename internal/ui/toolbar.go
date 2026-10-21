@@ -5,12 +5,13 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"lazyora/internal/appinfo"
+	"strings"
 )
 
 // tview may report a rapid click on a different button as a double click.
 // Buttons should activate on either kind of click; text selection stays unchanged.
-func clickable(button *tview.Button) *tview.Button {
-	button.SetStyle(buttonStyle()).SetActivatedStyle(buttonFocusStyle())
+func (s *screen) clickable(button *tview.Button) *tview.Button {
+	button.SetStyle(s.buttonStyle()).SetActivatedStyle(buttonFocusStyle())
 	button.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if action == tview.MouseLeftDoubleClick {
 			action = tview.MouseLeftClick
@@ -30,7 +31,7 @@ func (s *screen) toolbar() *tview.Flex {
 	bar := tview.NewFlex()
 	s.footerBar = bar
 	for index := range 6 {
-		button := clickable(tview.NewButton("").SetSelectedFunc(func() {
+		button := s.clickable(tview.NewButton("").SetSelectedFunc(func() {
 			if index >= len(s.footerKeys) {
 				return
 			}
@@ -51,6 +52,14 @@ func (s *screen) toolbar() *tview.Flex {
 				s.invoke(key.action)
 				return
 			}
+			if page, _ := s.pages.GetFrontPage(); page == "source" && key.action == "reload" {
+				s.reloadSource()
+				return
+			}
+			if page, _ := s.pages.GetFrontPage(); page == "source" && key.action == "close" {
+				s.closeSource()
+				return
+			}
 			if key.action == "source" {
 				s.showSource()
 				return
@@ -59,8 +68,8 @@ func (s *screen) toolbar() *tview.Flex {
 				s.showArguments()
 				return
 			}
-			if page, root := s.pages.GetFrontPage(); page == "help" {
-				s.app.SetFocus(root.(*tview.Flex).GetItem(0))
+			if page, _ := s.pages.GetFrontPage(); page == "help" {
+				s.app.SetFocus(s.helpText)
 			} else if page == "object" {
 				s.app.SetFocus(s.objectTable)
 			} else if page == "arguments" {
@@ -68,11 +77,11 @@ func (s *screen) toolbar() *tview.Flex {
 			}
 			s.app.QueueEvent(tcell.NewEventKey(key.key, 0, key.mod))
 		}))
-		button.SetStyle(tcell.StyleDefault.Foreground(palette.text).Background(palette.footer))
+		button.SetStyle(tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().footer))
 		s.buttons = append(s.buttons, button)
 	}
 	version := tview.NewTextView().SetText("v" + appinfo.Version).SetTextAlign(tview.AlignRight).SetWrap(false)
-	version.SetTextColor(palette.accent).SetBackgroundColor(palette.footer)
+	version.SetTextColor(s.colors().accent).SetBackgroundColor(s.colors().footer)
 	s.footerVersion = version
 	return bar
 }
@@ -90,6 +99,27 @@ func (s *screen) refreshFooter() {
 	}
 	hint := "footer_sql"
 	switch page {
+	case "about":
+		hint = "footer_about"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+C", "copy", tcell.KeyCtrlC, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+	case "grid_edit":
+		hint = "footer_grid_edit"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+S", "edit_preview", tcell.KeyCtrlS, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
+	case "cell":
+		hint = "footer_cell"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+S", "save", tcell.KeyCtrlS, 0}, {"Ctrl+C", "copy", tcell.KeyCtrlC, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+	case "result_filter":
+		hint = "footer_result_filter"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+	case "definition":
+		hint = "footer_definition"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+R", "reload", tcell.KeyCtrlR, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+	case "editor_actions":
+		hint = "menu_hint"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+	case "completion":
+		hint = "footer_completion"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+R", "completion_refresh", tcell.KeyCtrlR, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
 	case "export":
 		hint = "footer_export"
 		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+S", "export", tcell.KeyCtrlS, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
@@ -99,6 +129,9 @@ func (s *screen) refreshFooter() {
 		}
 	case "plan":
 		hint = "footer_plan"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+	case "routines", "routine_input", "routine_results", "routine_grid":
+		hint = "footer_routine"
 		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
 	case "bind":
 		hint = "footer_bind"
@@ -132,6 +165,9 @@ func (s *screen) refreshFooter() {
 	case "pending":
 		hint = "footer_pending"
 		keys = []footerKey{{"Esc", "close", tcell.KeyEscape, 0}}
+	case "output":
+		hint = "footer_output"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
 	case "history":
 		hint = "footer_history"
 		keys = []footerKey{{"Esc", "close", tcell.KeyEscape, 0}}
@@ -193,7 +229,7 @@ func (s *screen) refreshFooter() {
 		}
 	case "source":
 		hint = "footer_source"
-		keys = []footerKey{{"F9", "compile", tcell.KeyF9, 0}, {"Ctrl+R", "reload", tcell.KeyCtrlR, tcell.ModNone}, {"Esc", "close", tcell.KeyEscape, tcell.ModNone}}
+		keys = []footerKey{{"F9", "compile", tcell.KeyF9, 0}, {"Alt+R", "reload", tcell.KeyRune, tcell.ModAlt}, {"Alt+X", "close", tcell.KeyRune, tcell.ModAlt}}
 	case "arguments":
 		hint = "footer_arguments"
 		keys = []footerKey{{"F1", "help", tcell.KeyF1, tcell.ModNone}, {"PgUp", "previous_page", tcell.KeyPgUp, tcell.ModNone}, {"PgDn", "next_page", tcell.KeyPgDn, tcell.ModNone}, {"Esc", "close", tcell.KeyEscape, tcell.ModNone}}
@@ -209,9 +245,23 @@ func (s *screen) refreshFooter() {
 		}
 	}
 	text := s.tr(hint)
+	if hint == "footer_source" {
+		text = s.sourceKeymapFooter()
+	}
 	viewKeys := shortcut("fullscreen_sql") + " / " + shortcut("fullscreen_results") + " " + s.tr("fullscreen_short")
 	if hint == "footer_sql" {
 		text = fmt.Sprintf(text, bindingLabels("execute", 2), shortcut("describe"), shortcut("focus_toggle"), viewKeys)
+	}
+	if hint == "footer_sql" && s.activeEditor() != nil {
+		if s.prefs.EditorKeymap == "notepad++" {
+			text = strings.ReplaceAll(text, "Ctrl+T", "Ctrl+Space")
+		}
+		if s.prefs.EditorKeymap == "vim" {
+			text = "Vim " + s.vimMode() + " | " + text
+		}
+		if s.prefs.EditorKeymap == "notepad++" {
+			text = "Notepad++ | " + text
+		}
 	}
 	if hint == "footer_results" {
 		text = fmt.Sprintf(text, shortcut("copy"), shortcut("copy_row"), shortcut("focus_toggle"), viewKeys)
@@ -226,7 +276,7 @@ func (s *screen) refreshFooter() {
 		}
 
 	}
-	if s.busy && page != "help" {
+	if s.busy && page != "help" && page != "output" {
 		text = s.tr("footer_busy") + " | " + text
 	}
 	s.footer.SetText(text)
@@ -265,3 +315,5 @@ func (s *screen) action(action string) {
 		s.requestQuit()
 	}
 }
+
+func clickable(button *tview.Button) *tview.Button { return (&screen{}).clickable(button) }

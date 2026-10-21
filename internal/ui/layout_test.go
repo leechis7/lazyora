@@ -57,7 +57,7 @@ func TestMaximizeSwitchRestorePreservesPanelState(t *testing.T) {
 	if s.maximized != "" || s.browserHidden || row != 51 || offset != 40 || s.browser.GetCurrentNode() != node {
 		t.Fatal("restore lost split/selection/scroll/tree")
 	}
-	if s.editor.GetText() != "SELECT 1 FROM dual;" || s.table.GetCell(51, 0).Text != "50" || len(s.jobs) != 0 {
+	if s.editor.GetText() != "SELECT 1 FROM dual;" || s.resultRows[50][0] != "50" || len(s.jobs) != 0 {
 		t.Fatal("layout change altered SQL/data")
 	}
 	s.invoke("browser")
@@ -176,7 +176,7 @@ func TestFullscreenOccupiesEntireTerminalAndRestoresChrome(t *testing.T) {
 		if h != 2 {
 			t.Error("status not restored")
 		}
-		if s.editor.GetText() != "SELECT sysdate AS server_time FROM dual;" || s.table.GetCell(1, 0).Text != "2026-10-14 12:00:00" {
+		if s.editor.GetText() != "SELECT sysdate AS server_time FROM dual;" || s.resultRows[0][0] != "2026-10-14 12:00:00" {
 			t.Error("fullscreen changed SQL/results")
 		}
 	})

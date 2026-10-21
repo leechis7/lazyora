@@ -34,6 +34,7 @@ jobs:
         with:
           go-version: '1.26.9'
           cache-dependency-path: go.sum
+      - uses: ./.github/actions/go-modules
       - name: Test, vet and build
         run: |
           make test

@@ -27,7 +27,32 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		event = tcell.NewEventKey(tcell.KeyEnter, 0, event.Modifiers()&^tcell.ModCtrl)
 	}
 
-	page, pageRoot := s.pages.GetFrontPage()
+	page, _ := s.pages.GetFrontPage()
+	if page == "about" {
+		return s.aboutKey(event)
+	}
+	if page == "grid_edit" {
+		return s.gridEditKey(event)
+	}
+	if page == "cell" {
+		return s.cellKey(event)
+	}
+	if page == "main" && s.table.HasFocus() && event.Key() == tcell.KeyEnter && event.Modifiers() == 0 {
+		s.showCellDetail()
+		return nil
+	}
+	if page == "result_filter" {
+		if event.Key() == tcell.KeyEscape {
+			s.pages.RemovePage("result_filter")
+			s.app.SetFocus(s.table)
+			return nil
+		}
+		if event.Key() == tcell.KeyF1 {
+			s.showHelp()
+			return nil
+		}
+		return event
+	}
 	executeEnter := event.Key() == tcell.KeyEnter && event.Modifiers()&(tcell.ModCtrl|tcell.ModAlt) != 0
 	alt := event.Modifiers()&tcell.ModAlt != 0
 	letter := unicode.ToLower(event.Rune())
@@ -52,8 +77,34 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if s.buttonArrow(event) {
 		return nil
 	}
+	if page == "definition" {
+		return s.definitionKey(event)
+	}
+	if page == "editor_actions" {
+		if event.Key() == tcell.KeyEscape || event.Key() == tcell.KeyF10 {
+			s.closeSourceEdit()
+			return nil
+		}
+		if event.Key() == tcell.KeyF1 {
+			s.showHelp()
+			return nil
+		}
+		if event.Key() == tcell.KeyCtrlC {
+			return nil
+		}
+		return event
+	}
+	if page == "completion" {
+		return s.completionKey(event)
+	}
+	if page == "output" {
+		return s.outputKey(event)
+	}
 	if page == "script" {
 		return s.scriptKey(event)
+	}
+	if page == "routines" || page == "routine_input" || page == "routine_results" || page == "routine_grid" {
+		return s.routineKey(event, page)
 	}
 	if page == "bind" {
 		return s.bindKey(event)
@@ -86,7 +137,7 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if event.Key() == tcell.KeyTab || event.Key() == tcell.KeyBacktab {
 		switch page {
 		case "help":
-			s.dialogTab(event, pageRoot.(*tview.Flex).GetItem(0))
+			s.dialogTab(event, s.helpTopics, s.helpText)
 			return nil
 		case "object":
 			s.dialogTab(event, s.objectTable)
@@ -158,7 +209,7 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 			return nil
 		}
 		if event.Key() == tcell.KeyEnter && s.searchForm.GetFormItem(0).HasFocus() {
-			s.searchAction("next")
+			s.searchAction("submit")
 			return nil
 		}
 		if event.Key() == tcell.KeyF3 {
@@ -184,7 +235,7 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	// Help owns its close keys even while a background operation is running.
 	// Closing the overlay must never be mistaken for cancelling that operation.
 	if page == "help" {
-		if event.Key() == tcell.KeyRune && event.Modifiers() == 0 && event.Rune() >= '0' && event.Rune() <= '8' {
+		if event.Key() == tcell.KeyRune && event.Modifiers() == 0 && event.Rune() >= '0' && event.Rune() <= '9' {
 			s.helpJump(int(event.Rune() - '0'))
 			return nil
 		}
@@ -211,7 +262,30 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		s.showHelp()
 		return nil
 	}
+	if s.editorKey(event) {
+		return nil
+	}
 	if page == "object" {
+		if alt {
+			switch letter {
+			case 'g':
+				s.showDefinition("grants")
+				return nil
+			case 'd':
+				s.showDefinition("ddl")
+				return nil
+			case 'c':
+				s.showDefinition("constraints")
+				return nil
+			case 'i':
+				s.showDefinition("indexes")
+				return nil
+			}
+		}
+		if alt && letter == 'e' {
+			s.showRoutine(s.object, "")
+			return nil
+		}
 		if alt && letter == 's' {
 			s.showSource()
 			return nil
@@ -237,6 +311,26 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return event
 	}
 	if page == "source" {
+		if event.Key() == tcell.KeyF10 {
+			s.showSourceEdit()
+			return nil
+		}
+		if alt && letter == 'x' {
+			s.closeSource()
+			return nil
+		}
+		if alt && letter == 'r' {
+			s.reloadSource()
+			return nil
+		}
+		if event.Key() == tcell.KeyCtrlF && event.Modifiers()&tcell.ModShift != 0 {
+			s.formatCode()
+			return nil
+		}
+		if event.Key() == tcell.KeyCtrlT {
+			s.showCompletion(false)
+			return nil
+		}
 		if event.Key() == tcell.KeyEscape {
 			s.closeSource()
 			return nil
@@ -256,6 +350,10 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return event
 	}
 	if page == "arguments" {
+		if alt && letter == 'e' {
+			s.showRoutine(s.object, "")
+			return nil
+		}
 		if event.Key() == tcell.KeyEscape {
 			s.closeArguments()
 			return nil
@@ -278,6 +376,12 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 				return nil
 			case 'm':
 				focusForm(s, s.prefsForm, 1)
+				return nil
+			case 'k':
+				focusForm(s, s.prefsForm, 2)
+				return nil
+			case 't':
+				focusForm(s, s.prefsForm, 3)
 				return nil
 			}
 		}

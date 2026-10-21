@@ -84,7 +84,7 @@ func TestBrowserToggleRestoresLayoutAndState(t *testing.T) {
 	if restoredWidth != originalWidth || !s.browser.HasFocus() || s.browser.GetCurrentNode() != selected || !schema.IsExpanded() {
 		t.Fatal("showing browser lost layout, focus or tree state")
 	}
-	if s.editor.GetText() != "SELECT 1 FROM dual;" || s.table.GetCell(1, 0).Text != "keep" || len(s.jobs) != 0 {
+	if s.editor.GetText() != "SELECT 1 FROM dual;" || s.resultRows[0][0] != "keep" || len(s.jobs) != 0 {
 		t.Fatal("toggle changed SQL/results or submitted a database job")
 	}
 	s.app.SetFocus(s.table)
@@ -125,7 +125,7 @@ func TestBrowserDetailsPreserveSQLAndResults(t *testing.T) {
 	if page, _ := s.pages.GetFrontPage(); page != "main" || !s.browser.HasFocus() {
 		t.Fatal("Esc did not restore browser")
 	}
-	if s.editor.GetText() != "SELECT 1 FROM dual;" || s.table.GetCell(1, 0).Text != "keep" {
+	if s.editor.GetText() != "SELECT 1 FROM dual;" || s.resultRows[0][0] != "keep" {
 		t.Fatal("browsing changed SQL/results")
 	}
 	if len(s.jobs) != 0 {

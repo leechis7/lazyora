@@ -20,7 +20,7 @@ func (c Config) DSN() (string, error) {
 	if c.Port < 1 || c.Port > 65535 {
 		return "", errors.New("port must be between 1 and 65535")
 	}
-	options := map[string]string{"CONNECTION TIMEOUT": "10", "TIMEOUT": "60"}
+	options := map[string]string{"CONNECTION TIMEOUT": "10", "TIMEOUT": "60", "LOB FETCH": "STREAM", "LOB READ": "NONE"}
 	service := c.Name
 	switch c.Mode {
 	case "service":

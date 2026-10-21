@@ -30,18 +30,18 @@ func (s *screen) explainSQL() {
 
 func (s *screen) showPlan(text string, steps []oracle.PlanStep) {
 	s.planFocus = s.app.GetFocus()
-	rootNode := tview.NewTreeNode(s.tr("plan_title")).SetSelectable(true).SetColor(palette.accent)
+	rootNode := tview.NewTreeNode(s.tr("plan_title")).SetSelectable(true).SetColor(s.colors().accent)
 	tree := tview.NewTreeView().SetRoot(rootNode).SetCurrentNode(rootNode)
 	tree.SetBorder(true)
-	styleBox(tree.Box)
+	s.styleBox(tree.Box)
 	detail := tview.NewTextView().SetWrap(false).SetScrollable(true).SetText(s.tr("plan_hint") + "\n\n" + text)
 	detail.SetBorder(true)
-	styleBox(detail.Box)
-	detail.SetTextColor(palette.text)
+	s.styleBox(detail.Box)
+	detail.SetTextColor(s.colors().text)
 	nodes := map[int]*tview.TreeNode{}
 	for _, step := range steps {
 		label := fmt.Sprintf("%d %s %s %s · cost %s / rows %s", step.ID, step.Operation, step.Options, step.Object, step.Cost, step.Rows)
-		node := tview.NewTreeNode(label).SetReference(step).SetSelectable(true).SetColor(palette.text)
+		node := tview.NewTreeNode(label).SetReference(step).SetSelectable(true).SetColor(s.colors().text)
 		nodes[step.ID] = node
 	}
 	for _, step := range steps {
@@ -60,9 +60,9 @@ func (s *screen) showPlan(text string, steps []oracle.PlanStep) {
 	})
 	tree.SetSelectedFunc(func(node *tview.TreeNode) { node.SetExpanded(!node.IsExpanded()) })
 	s.planTree, s.planText = tree, detail
-	close := clickable(tview.NewButton(s.tr("close")).SetSelectedFunc(s.closePlan))
+	close := s.clickable(tview.NewButton(s.tr("close")).SetSelectedFunc(s.closePlan))
 	info := tview.NewTextView().SetWrap(true).SetText(s.tr("plan_hint"))
-	info.SetTextColor(palette.muted).SetBackgroundColor(palette.background)
+	info.SetTextColor(s.colors().muted).SetBackgroundColor(s.colors().background)
 	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(info, 3, 0, false).AddItem(tree, 0, 3, true).AddItem(detail, 0, 2, false).AddItem(close, 1, 0, false)
 	s.pages.AddPage("plan", root, true, true)
 	s.app.SetFocus(tree)

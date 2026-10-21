@@ -28,6 +28,19 @@ func (s *screen) settingsForm() {
 	}
 	form.AddFormItem(s.newChoice(s.tr("language"), []string{"English", "한국어"}, selected, nil)).
 		AddCheckbox(s.tr("mouse")+" — "+s.tr("mouse_label"), s.prefs.Mouse, nil)
+	keymaps := []string{"", "vim", "notepad++"}
+	keymapIndex := 0
+	for i, keymap := range keymaps {
+		if keymap == s.prefs.EditorKeymap {
+			keymapIndex = i
+		}
+	}
+	form.AddFormItem(s.newChoice(s.tr("editor_keymap"), []string{s.tr("keymap_default"), "Vim", "Notepad++"}, keymapIndex, nil))
+	themeIndex := 0
+	if s.prefs.Theme == "light" {
+		themeIndex = 1
+	}
+	form.AddFormItem(s.newChoice(s.tr("theme"), []string{s.tr("theme_dark"), s.tr("theme_light")}, themeIndex, nil))
 	s.savePrefs = func() {
 		index, _ := form.GetFormItem(0).(*choiceField).GetCurrentOption()
 		language := "en"
@@ -35,11 +48,23 @@ func (s *screen) settingsForm() {
 			language = "ko"
 		}
 		prefs := settings.Config{Language: language, Mouse: form.GetFormItem(1).(*tview.Checkbox).IsChecked()}
+		keymapIndex, _ := form.GetFormItem(2).(*choiceField).GetCurrentOption()
+		prefs.EditorKeymap = keymaps[keymapIndex]
+		themeIndex, _ := form.GetFormItem(3).(*choiceField).GetCurrentOption()
+		prefs.Theme = "dark"
+		if themeIndex == 1 {
+			prefs.Theme = "light"
+		}
 		if err := settings.Save(s.prefsPath, prefs); err != nil {
 			form.SetTitle(" " + fmt.Sprintf(s.tr("settings_error"), err) + " ")
 			return
 		}
+		previousTheme := s.prefs.Theme
 		s.prefs = prefs
+		if previousTheme != prefs.Theme {
+			s.applyTheme(previousTheme)
+		}
+		s.vim = vimState{}
 		s.app.EnableMouse(prefs.Mouse)
 		s.refreshLabels()
 		s.closeSettings()
@@ -47,10 +72,29 @@ func (s *screen) settingsForm() {
 	}
 	form.AddButton(s.tr("save")+" (Ctrl+S)", s.savePrefs).
 		AddButton(s.tr("cancel")+" (Esc)", s.closeSettings)
-	clickable(form.GetButton(0))
-	clickable(form.GetButton(1))
+	s.clickable(form.GetButton(0))
+	s.clickable(form.GetButton(1))
 	form.SetBorder(true).SetTitle(s.tr("settings_title"))
-	styleForm(form)
-	s.pages.AddPage("settings", form, true, true)
+	s.styleForm(form)
+	root := s.formPopup(form, 74, 20, func(width, height int) {
+		spacing := 2
+		if height < 16 {
+			spacing = 1
+		}
+		if height < 12 {
+			spacing = 0
+		}
+		form.SetItemPadding(spacing)
+		if width < 60 {
+			form.GetFormItem(1).(*tview.Checkbox).SetLabel(s.tr("mouse"))
+			form.GetButton(0).SetLabel(s.tr("save"))
+			form.GetButton(1).SetLabel(s.tr("cancel"))
+		} else {
+			form.GetFormItem(1).(*tview.Checkbox).SetLabel(s.tr("mouse") + " — " + s.tr("mouse_label"))
+			form.GetButton(0).SetLabel(s.tr("save") + " (Ctrl+S)")
+			form.GetButton(1).SetLabel(s.tr("cancel") + " (Esc)")
+		}
+	})
+	s.pages.AddPage("settings", root, true, true)
 	s.app.SetFocus(form)
 }

@@ -60,7 +60,7 @@ func TestBrowserSelectorsLoadOnlySelectedUserAndPreserveSessionState(t *testing.
 	if j.object.Owner != "LOGIN" || s.browserKind != 0 {
 		t.Fatal("new connection did not reset user/type")
 	}
-	if !s.pendingChanges || s.editor.GetText() != "SELECT 1 FROM dual;" || s.table.GetCell(1, 0).Text != "keep" {
+	if !s.pendingChanges || s.editor.GetText() != "SELECT 1 FROM dual;" || s.resultRows[0][0] != "keep" {
 		t.Fatal("browsing changed SQL/results/transaction")
 	}
 }

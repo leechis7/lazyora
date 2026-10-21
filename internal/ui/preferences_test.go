@@ -34,7 +34,7 @@ func TestLanguageChangePreservesSQLResultsAndConnectionInputs(t *testing.T) {
 	if s.connectForm.GetFormItem(connectionUser).(*tview.InputField).GetText() != "my_user" || s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).GetText() != "my_password" {
 		t.Fatal("connection inputs were lost")
 	}
-	if s.editor.GetText() != "SELECT 1 FROM dual;" || s.table.GetCell(1, 0).Text != "한글 SQL data" {
+	if s.editor.GetText() != "SELECT 1 FROM dual;" || s.resultRows[0][0] != "한글 SQL data" {
 		t.Fatal("SQL or data was changed by translation")
 	}
 	loaded, err := settings.Load(s.prefsPath)

@@ -299,7 +299,7 @@ func TestSQLFilesPickerMouseAtSmallTerminal(t *testing.T) {
 		s.showFileDialog("open", nil)
 		fileInput(s, dir)
 		_, page := s.pages.GetFrontPage()
-		root := page.(*tview.Flex)
+		root := page.(*formPopupLayer)
 		root.SetRect(0, 0, 80, 21)
 		root.Draw(terminal)
 		list := s.fileDialog.list
@@ -310,7 +310,8 @@ func TestSQLFilesPickerMouseAtSmallTerminal(t *testing.T) {
 		if got := s.fileDialog.form.GetFormItem(0).(*tview.InputField).GetText(); got != path {
 			t.Fatalf("file click selected %q", got)
 		}
-		buttons := root.GetItem(root.GetItemCount() - 1).(*tview.Flex)
+		content := root.content.(*tview.Flex)
+		buttons := content.GetItem(content.GetItemCount() - 1).(*tview.Flex)
 		open := buttons.GetItem(0).(*tview.Button)
 		x, y, width, height := open.GetRect()
 		if x < 0 || x+width > 80 || height != 1 || y >= 21 {

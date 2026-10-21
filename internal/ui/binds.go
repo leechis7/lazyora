@@ -10,6 +10,7 @@ var bindKinds = []string{"text", "number", "date", "timestamp"}
 
 func (s *screen) clearBindValues() {
 	s.resultQuery = nil
+	s.resultBrowser.source.Query = nil
 	for i := range s.scriptReport.Steps {
 		s.scriptReport.Steps[i].Result.Query = nil
 	}
@@ -17,6 +18,7 @@ func (s *screen) clearBindValues() {
 	s.bindValues = nil
 	for _, tab := range s.tabs {
 		tab.query = nil
+		tab.browser.source.Query = nil
 		for i := range tab.script.Steps {
 			tab.script.Steps[i].Result.Query = nil
 		}
@@ -88,13 +90,13 @@ func (s *screen) withBinds(text string, next func(map[string]oracle.BindValue)) 
 		}
 	}).AddButton(s.tr("cancel"), close)
 	form.SetBorder(true).SetTitle(s.tr("bind_title"))
-	styleForm(form)
+	s.styleForm(form)
 	for i := 0; i < form.GetButtonCount(); i++ {
-		clickable(form.GetButton(i))
+		s.clickable(form.GetButton(i))
 	}
 	info := tview.NewTextView().SetWrap(true).SetText(s.tr("bind_hint"))
-	info.SetTextColor(palette.muted).SetBackgroundColor(palette.background)
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(info, 3, 0, false).AddItem(form, 0, 1, true)
+	info.SetTextColor(s.colors().muted).SetBackgroundColor(s.colors().background)
+	root := s.formDialog(form, info, 88)
 	s.bindForm = form
 	s.pages.AddPage("bind", root, true, true)
 	s.app.SetFocus(form)

@@ -18,7 +18,7 @@ browser-fixture:
 	docker compose exec -T oracle sqlplus -L -s / as sysdba < browser.sql
 test:
 	sh test.sh
-run: up
+run:
 	$(MAKE) -C ../.. build-native
 	sh run.sh
 

@@ -125,7 +125,7 @@ func TestLongMenuScrollsWithinSmallTerminal(t *testing.T) {
 			visible.WriteRune(main)
 		}
 	}
-	if !strings.Contains(visible.String(), s.tr("clear_sql")) {
+	if !strings.Contains(visible.String(), s.tr("format_code")) {
 		t.Fatal("last edit command is not reachable on a short terminal")
 	}
 }
@@ -151,7 +151,7 @@ func TestMenuCommandsRespectContextAndNeverAliasScriptToCommit(t *testing.T) {
 	s := demoBrowserScreen(t)
 	s.connected = true
 	s.key(tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModAlt))
-	if s.menuList == nil || s.menuList.GetItemCount() != 6 {
+	if s.menuList == nil || s.menuList.GetItemCount() != 7 {
 		t.Fatal("execute menu not opened")
 	}
 	text, _ := s.menuList.GetItemText(1)

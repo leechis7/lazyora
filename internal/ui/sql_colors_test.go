@@ -178,7 +178,8 @@ func TestSourceEditorHasSyntaxColors(t *testing.T) {
 	editor.Draw(terminal)
 	_, _, style, _ := terminal.GetContent(0, 0)
 	fg, _, _ := style.Decompose()
-	if fg != sqlRichColors[sqlKeyword] {
+	want, _, _ := sqlTokenStyle(sqlKeyword, s.limitedColors, s.editorStyle()).Decompose()
+	if fg != want {
 		t.Fatal("source editor did not use SQL syntax coloring")
 	}
 }
@@ -251,4 +252,36 @@ func FuzzSQLColorRanges(f *testing.F) {
 			end = span.end
 		}
 	})
+}
+
+func TestDarkEditorTokensAndSelectionContrast(t *testing.T) {
+	for _, limited := range []bool{false, true} {
+		s := shortcutScreen(t)
+		s.limitedColors = limited
+		terminal := colorTestTerminal(t, 100, 5)
+		editor := s.editor
+		s.styleEditor(editor)
+		editor.SetBorder(false).SetRect(0, 0, 100, 5)
+		text := "SELECT '한글' AS x, :id, 12.5 FROM dual; -- comment"
+		editor.SetText(text, false)
+		s.colorEditor(editor, nil)
+		editor.Draw(terminal)
+		for _, token := range []struct {
+			text string
+			kind sqlColorKind
+		}{{"SELECT", sqlKeyword}, {"'한글'", sqlString}, {":id", sqlBind}, {"12.5", sqlNumber}, {"-- comment", sqlComment}} {
+			x := uniseg.StringWidth(text[:strings.Index(text, token.text)])
+			_, _, style, _ := terminal.GetContent(x, 0)
+			fg, bg, _ := style.Decompose()
+			want, _, _ := sqlTokenStyle(token.kind, limited, s.editorStyle()).Decompose()
+			if fg != want || bg != s.colors().editor || fg == bg {
+				t.Fatalf("dark token contrast %q", token.text)
+			}
+		}
+		editor.Select(0, 6).Draw(terminal)
+		_, _, selected, _ := terminal.GetContent(0, 0)
+		if selected != s.focusStyle() || editor.GetText() != text {
+			t.Fatal("theme coloring changed selection or SQL")
+		}
+	}
 }

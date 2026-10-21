@@ -74,7 +74,7 @@ func (s *screen) closeConnection() {
 
 func (s *screen) connectionForm() {
 	s.connectFocus = s.app.GetFocus()
-	form := tview.NewForm().SetItemPadding(0)
+	form := tview.NewForm().SetItemPadding(1)
 	s.connectForm = form
 	mode := "service"
 	autofilled := false
@@ -115,7 +115,7 @@ func (s *screen) connectionForm() {
 	selector := tview.NewForm().AddFormItem(s.newChoice("", options, 0, nil))
 	s.connectProfiles = selector
 	selector.SetBorder(true)
-	styleForm(selector)
+	s.styleForm(selector)
 	selectProfile := func(_ string, index int) {
 		// Always discard the previous password, including environment defaults.
 		form.GetFormItem(connectionSavePassword).(*tview.Checkbox).SetChecked(false)
@@ -321,16 +321,43 @@ func (s *screen) connectionForm() {
 		}
 	}
 	form.AddButton("", s.connectAction).AddButton("", s.closeConnection).AddButton("", s.saveConnection)
-	clickable(form.GetButton(0))
-	clickable(form.GetButton(1))
-	clickable(form.GetButton(2))
+	s.clickable(form.GetButton(0))
+	s.clickable(form.GetButton(1))
+	s.clickable(form.GetButton(2))
 	form.SetBorder(true)
-	styleForm(form)
+	s.styleForm(form)
 	s.localizeConnection()
 	if loadErr != nil {
 		form.SetTitle(" " + fmt.Sprintf(s.tr("connection_load_error"), loadErr) + " ")
 	}
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(selector, 5, 0, false).AddItem(form, 0, 1, true)
+	gap := tview.NewBox().SetBackgroundColor(s.colors().surface)
+	content := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(selector, 5, 0, false).AddItem(gap, 1, 0, false).AddItem(form, 0, 1, true)
+	root := s.formPopup(content, 84, 27, func(width, height int) {
+		spacing := 1
+		if height < 26 {
+			spacing = 0
+		}
+		form.SetItemPadding(spacing)
+		profileHeight := 5
+		if height < 18 {
+			profileHeight = 3
+			selector.SetBorderPadding(0, 0, 2, 2)
+			form.SetBorderPadding(0, 0, 2, 2)
+		} else {
+			selector.SetBorderPadding(1, 1, 2, 2)
+			form.SetBorderPadding(1, 1, 2, 2)
+		}
+		content.ResizeItem(selector, profileHeight, 0)
+		if width < 72 {
+			form.GetButton(0).SetLabel(s.tr("connect"))
+			form.GetButton(1).SetLabel(s.tr("cancel"))
+			form.GetButton(2).SetLabel(s.tr("save"))
+		} else {
+			form.GetButton(0).SetLabel(s.tr("connect") + " (Alt+C)")
+			form.GetButton(1).SetLabel(s.tr("cancel") + " (Esc)")
+			form.GetButton(2).SetLabel(s.tr("save") + " (Alt+S)")
+		}
+	})
 	s.pages.AddPage("connect", root, true, true)
 	s.app.SetFocus(form)
 }

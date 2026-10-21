@@ -11,24 +11,41 @@ import (
 const MaxRows = 1000
 
 type Result struct {
-	Query     *QuerySpec
-	Values    [][]Cell
-	Columns   []string
-	Rows      [][]string
-	Affected  int64
-	Truncated bool
-	Elapsed   time.Duration
+	EditID      uint64
+	EditObject  Object
+	PageID      uint64
+	PageLimited bool
+	Output      Output
+	Query       *QuerySpec
+	Values      [][]Cell
+	Columns     []string
+	Rows        [][]string
+	Affected    int64
+	Truncated   bool
+	Elapsed     time.Duration
 }
 
 // Cell retains NULL and database type separately from the display text.
 type Cell struct {
 	Text, Type string
 	Null       bool
+	Partial    bool
+	LOBID      uint64
+	Size       int64 // LOB UTF-16 units for character LOBs; bytes for binary values.
 }
 
 // Session is used only by the UI's single worker. A pinned connection preserves
 // ALTER SESSION state, and the explicit transaction prevents DML auto-commit.
 type Session struct {
+	edit                       *editSnapshot
+	editSequence               uint64
+	lobs                       map[uint64]lobReference
+	lobSequence                uint64
+	page                       *queryPage
+	pageSequence               uint64
+	completionCache            map[completionKey]completionEntry
+	outputEnabled, outputReset bool
+
 	db        *sql.DB
 	conn      *sql.Conn
 	tx        *sql.Tx
@@ -60,9 +77,17 @@ func Open(ctx context.Context, config Config) (*Session, error) {
 	return &Session{db: db, conn: conn}, nil
 }
 
-func (s *Session) Execute(ctx context.Context, text string, bindings ...map[string]BindValue) (Result, error) {
+func (s *Session) Execute(ctx context.Context, text string, bindings ...map[string]BindValue) (result Result, err error) {
+	return s.execute(ctx, text, false, bindings...)
+}
+
+func (s *Session) ExecutePaged(ctx context.Context, text string, bindings ...map[string]BindValue) (Result, error) {
+	return s.execute(ctx, text, true, bindings...)
+}
+
+func (s *Session) execute(ctx context.Context, text string, keepPage bool, bindings ...map[string]BindValue) (result Result, err error) {
 	start := time.Now()
-	result := Result{Affected: -1}
+	result = Result{Affected: -1}
 	if s.finishErr != nil {
 		return result, s.finishErr
 	}
@@ -83,6 +108,12 @@ func (s *Session) Execute(ctx context.Context, text string, bindings ...map[stri
 	if err != nil {
 		return result, err
 	}
+	s.edit = nil
+	s.ClosePage()
+	s.clearLOBs()
+	if err = s.resetOutput(ctx); err != nil {
+		return result, err
+	}
 	if s.tx == nil {
 		// Do not use the per-query context here: database/sql would roll the
 		// entire transaction back when that context's deadline expires.
@@ -90,6 +121,9 @@ func (s *Session) Execute(ctx context.Context, text string, bindings ...map[stri
 		if err != nil {
 			return result, err
 		}
+	}
+	if s.outputEnabled {
+		defer func() { result.Output = s.collectOutput() }()
 	}
 	if !query {
 		// A failed/cancelled statement or PL/SQL block may have executed part
@@ -106,11 +140,28 @@ func (s *Session) Execute(ctx context.Context, text string, bindings ...map[stri
 		s.recordStatement(start, originalStatement, result.Affected, err)
 		return result, err
 	}
-	rows, err := s.tx.QueryContext(ctx, statement, args...)
+	queryContext := ctx
+	var stop func() bool
+	var pageCancel context.CancelFunc
+	if keepPage {
+		queryContext, pageCancel = context.WithCancel(context.WithoutCancel(ctx))
+		stop = context.AfterFunc(ctx, pageCancel)
+		defer func() {
+			stop()
+			if s.page == nil {
+				pageCancel()
+			}
+		}()
+	}
+	rows, err := s.tx.QueryContext(queryContext, statement, args...)
 	if err != nil {
 		return result, err
 	}
-	defer rows.Close()
+	defer func() {
+		if s.page == nil || s.page.rows != rows {
+			_ = rows.Close()
+		}
+	}()
 	result.Columns, err = rows.Columns()
 	if err != nil {
 		return result, err
@@ -120,12 +171,26 @@ func (s *Session) Execute(ctx context.Context, text string, bindings ...map[stri
 		return result, err
 	}
 	result.Query, _ = NewQuerySpec(originalStatement, values)
+	if keepPage {
+		s.pageSequence++
+		s.page = &queryPage{rows: rows, types: columnTypes, columns: result.Columns, cancel: pageCancel, id: s.pageSequence}
+		page, pageErr := s.readPage(ctx)
+		page.Query = result.Query
+		page.Elapsed = time.Since(start)
+		return page, pageErr
+	}
+	stopFetch, err := s.pageFetchContext(ctx)
+	if err != nil {
+		return result, err
+	}
+	defer stopFetch()
+	ctx = context.WithValue(ctx, fetchWatchKey{}, true)
 	for rows.Next() {
 		if len(result.Rows) == MaxRows {
 			result.Truncated = true
 			break
 		}
-		cells, scanErr := scanCells(rows, columnTypes)
+		cells, scanErr := s.scanCells(ctx, rows, columnTypes, true)
 		if scanErr != nil {
 			return result, scanErr
 		}
@@ -155,6 +220,23 @@ func formatValue(value any) string {
 }
 
 func (s *Session) Finish(commit bool) error {
+	// A failed savepoint rollback leaves the transaction handle alive solely
+	// for cleanup. Never let a later Commit claim a known outcome.
+	if s.finishErr != nil {
+		s.edit = nil
+		s.ClosePage()
+		s.clearLOBs()
+		if !commit && s.tx != nil {
+			tx := s.tx
+			s.tx = nil
+			_ = tx.Rollback()
+		}
+		return s.finishErr
+	}
+
+	s.edit = nil
+	s.ClosePage()
+	s.clearLOBs()
 	if s.tx == nil {
 		if s.finishErr == nil {
 			s.pending = false

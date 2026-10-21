@@ -25,6 +25,8 @@ type sqlTab struct {
 	rows       [][]string
 	headers    []string
 	selection  resultSelection
+	grid       gridState
+	browser    resultBrowser
 	status     string
 	statusArgs []any
 }
@@ -51,6 +53,8 @@ func (s *screen) stashTab() {
 	tab.bindSQL, tab.bindValues = s.bindSQL, s.bindValues
 	tab.editor, tab.table, tab.document = s.editor, s.table, s.document
 	tab.rows, tab.headers, tab.selection = s.resultRows, s.resultHeaders, s.resultSelection
+	tab.grid = s.grid
+	tab.browser = s.resultBrowser
 	tab.status, tab.statusArgs = s.statusKey, append([]any(nil), s.statusArgs...)
 }
 
@@ -67,6 +71,8 @@ func (s *screen) switchTab(index int) {
 	s.bindSQL, s.bindValues = tab.bindSQL, tab.bindValues
 	s.editor, s.table, s.document = tab.editor, tab.table, tab.document
 	s.resultRows, s.resultHeaders, s.resultSelection = tab.rows, tab.headers, tab.selection
+	s.grid = tab.grid
+	s.resultBrowser = tab.browser
 	s.setStatus(tab.status, tab.statusArgs...)
 	s.rebuildPanels()
 	s.refreshDocumentTitle()
@@ -86,9 +92,8 @@ func (s *screen) newTab() {
 	s.stashTab()
 	editor := tview.NewTextArea()
 	editor.SetBorder(true)
-	styleBox(editor.Box)
-	editor.SetBackgroundColor(palette.field).SetTitleColor(palette.background)
-	editor.SetTextStyle(fieldStyle()).SetSelectedStyle(focusStyle())
+	s.styleBox(editor.Box)
+	s.styleEditor(editor)
 	editor.SetClipboard(s.sendClipboard, func() string { return s.clipboardText })
 	editor.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if action == tview.MouseRightClick {
@@ -98,9 +103,9 @@ func (s *screen) newTab() {
 		}
 		return action, event
 	})
-	table := tview.NewTable().SetFixed(1, 0).SetSelectable(true, true).SetSelectedStyle(focusStyle())
+	table := tview.NewTable().SetFixed(1, 0).SetSelectable(true, true).SetSelectedStyle(s.focusStyle())
 	table.SetBorder(true)
-	styleBox(table.Box)
+	s.styleBox(table.Box)
 	table.SetTitle(s.tr("results_title"))
 	table.SetMouseCapture(s.resultMouse)
 	s.tabs = append(s.tabs, &sqlTab{editor: editor, table: table, document: &sqlfile.Document{}, status: "tab_shared"})
@@ -113,6 +118,9 @@ func (s *screen) closeTab() {
 		return
 	}
 	s.guardDocument(func() {
+		if s.resultBrowser.source.PageID != 0 {
+			s.submit(job{action: "close_page", pageID: s.resultBrowser.source.PageID})
+		}
 		index := s.activeTab
 		// Store the latest pointers before unlinking the active tab.
 		s.stashTab()
@@ -126,6 +134,8 @@ func (s *screen) closeTab() {
 			s.resultRows = nil
 			s.resultHeaders = nil
 			s.resultSelection = resultSelection{}
+			s.grid = gridState{}
+			s.resultBrowser = resultBrowser{}
 			s.resultValues = nil
 			s.resultTruncated = false
 			s.resultQuery = nil
@@ -147,6 +157,8 @@ func (s *screen) closeTab() {
 		s.bindSQL, s.bindValues = tab.bindSQL, tab.bindValues
 		s.editor, s.table, s.document = tab.editor, tab.table, tab.document
 		s.resultRows, s.resultHeaders, s.resultSelection = tab.rows, tab.headers, tab.selection
+		s.grid = tab.grid
+		s.resultBrowser = tab.browser
 		s.setStatus(tab.status, tab.statusArgs...)
 		s.rebuildPanels()
 		s.refreshDocumentTitle()
@@ -191,14 +203,14 @@ func (s *screen) refreshTabs() {
 	}
 	s.tabBar.Clear()
 	shared := tview.NewTextView().SetText(s.tr("tab_session"))
-	shared.SetTextColor(palette.muted).SetBackgroundColor(palette.background)
+	shared.SetTextColor(s.colors().muted).SetBackgroundColor(s.colors().background)
 	s.tabBar.AddItem(shared, 10, 0, false)
 	// Keep the active tab visible even on a narrow terminal. All tabs remain
 	// reachable with previous/next; at most four labels share the row.
 	start := max(0, s.activeTab-3)
 	end := min(len(s.tabs), start+4)
 	if len(s.tabs) > 4 {
-		s.tabBar.AddItem(clickable(tview.NewButton("<").SetSelectedFunc(func() { s.cycleTab(-1) })), 3, 0, false)
+		s.tabBar.AddItem(s.clickable(tview.NewButton("<").SetSelectedFunc(func() { s.cycleTab(-1) })), 3, 0, false)
 	}
 	for i := start; i < end; i++ {
 		tab := s.tabs[i]
@@ -219,13 +231,13 @@ func (s *screen) refreshTabs() {
 			label = "> " + label
 		}
 		index := i
-		button := clickable(tview.NewButton(label).SetSelectedFunc(func() { s.switchTab(index) }))
+		button := s.clickable(tview.NewButton(label).SetSelectedFunc(func() { s.switchTab(index) }))
 		if i == s.activeTab {
 			button.SetStyle(buttonFocusStyle())
 		}
 		s.tabBar.AddItem(button, 0, 1, false)
 	}
 	if len(s.tabs) > 4 {
-		s.tabBar.AddItem(clickable(tview.NewButton(">").SetSelectedFunc(func() { s.cycleTab(1) })), 3, 0, false)
+		s.tabBar.AddItem(s.clickable(tview.NewButton(">").SetSelectedFunc(func() { s.cycleTab(1) })), 3, 0, false)
 	}
 }

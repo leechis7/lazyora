@@ -36,6 +36,8 @@ var commands = []command{
 	{"copy_row", "copy_row", menuEdit, []binding{{"Alt+Y", tcell.KeyRune, tcell.ModAlt, 'y'}}},
 	{"export", "export", menuEdit, []binding{{"Ctrl+Shift+E", tcell.KeyCtrlE, tcell.ModShift, 0}, {"Alt+W", tcell.KeyRune, tcell.ModAlt, 'w'}}},
 	{"copy_preview", "copy_preview", menuEdit, nil},
+	{"table_edit_load", "table_edit_load", menuEdit, nil},
+	{"grid_edit", "grid_edit", menuEdit, nil},
 	{"find", "find", menuEdit, []binding{{"Ctrl+F", tcell.KeyCtrlF, 0, 0}}},
 	{"find_next", "find_next", menuEdit, []binding{{"F3", tcell.KeyF3, 0, 0}}},
 	{"find_previous", "find_previous", menuEdit, []binding{{"Shift+F3", tcell.KeyF3, tcell.ModShift, 0}}},
@@ -45,6 +47,7 @@ var commands = []command{
 	{"commit", "commit", menuSession, []binding{{"Alt+C", tcell.KeyRune, tcell.ModAlt, 'c'}}},
 	{"rollback", "rollback", menuSession, []binding{{"Alt+R", tcell.KeyRune, tcell.ModAlt, 'r'}}},
 	{"pending_work", "pending_work", menuSession, nil},
+	{"output_toggle", "output_toggle", menuSession, nil},
 	{"execute", "execute", menuExecute, []binding{{"F9", tcell.KeyF9, 0, 0}, {"Ctrl+Enter", tcell.KeyEnter, tcell.ModCtrl, 0}, {"Alt+Enter", tcell.KeyEnter, tcell.ModAlt, 0}, {"Shift+F9", tcell.KeyF9, tcell.ModShift, 0}}},
 	{"script", "script", menuExecute, []binding{{"F5", tcell.KeyF5, 0, 0}}},
 	{"plan", "plan", menuExecute, []binding{{"Ctrl+E", tcell.KeyCtrlE, 0, 0}}},
@@ -53,6 +56,7 @@ var commands = []command{
 	{"debug_continue", "debug_unavailable", menuExecute, []binding{{"F11", tcell.KeyF11, 0, 0}}},
 	{"cancel", "cancel_execution", menuExecute, []binding{{"Esc", tcell.KeyEscape, 0, 0}}},
 	{"history", "history", menuView, []binding{{"F8", tcell.KeyF8, 0, 0}}},
+	{"output_view", "output_view", menuView, []binding{{"Alt+P", tcell.KeyRune, tcell.ModAlt, 'p'}}},
 	{"fullscreen_sql", "fullscreen_sql", menuView, []binding{{"F2", tcell.KeyF2, 0, 0}}},
 	{"fullscreen_results", "fullscreen_results", menuView, []binding{{"Shift+F2", tcell.KeyF2, tcell.ModShift, 0}}},
 	{"focus_toggle", "focus_toggle", menuView, []binding{{"F6", tcell.KeyF6, 0, 0}}},
@@ -66,7 +70,29 @@ var commands = []command{
 	{"quick_describe", "quick_describe", menuView, []binding{{"Ctrl+D", tcell.KeyCtrlD, 0, 0}}},
 	{"settings", "settings", menuTools, nil},
 	{"passwords", "passwords", menuTools, []binding{{"Alt+K", tcell.KeyRune, tcell.ModAlt, 'k'}}},
+	{"routine_execute", "routine_execute", menuExecute, nil},
+	{"routine_results", "routine_results", menuView, nil},
+	{"grid_widen", "grid_widen", menuView, nil},
+	{"grid_narrow", "grid_narrow", menuView, nil},
+	{"grid_auto", "grid_auto", menuView, nil},
+	{"fetch_more", "fetch_more", menuView, nil},
+	{"result_sort_asc", "result_sort_asc", menuView, nil},
+	{"result_sort_desc", "result_sort_desc", menuView, nil},
+	{"result_filter", "result_filter", menuView, nil},
+	{"result_view_reset", "result_view_reset", menuView, nil},
+	{"cell_detail", "cell_detail", menuView, nil},
+	{"complete", "completion", menuEdit, []binding{{"Ctrl+T", tcell.KeyCtrlT, 0, 0}}},
+	{"complete_refresh", "completion_refresh", menuEdit, nil},
+	{"duplicate_line", "duplicate_line", menuEdit, nil},
+	{"copy_line", "copy_line", menuEdit, nil},
+	{"cut_line", "cut_line", menuEdit, nil},
+	{"delete_line", "delete_line", menuEdit, nil},
+	{"line_up", "line_up", menuEdit, nil},
+	{"line_down", "line_down", menuEdit, nil},
+	{"transpose_line", "transpose_line", menuEdit, nil},
+	{"format_code", "format_code", menuEdit, []binding{{"Ctrl+Shift+F", tcell.KeyCtrlF, tcell.ModShift, 0}}},
 	{"help", "help", menuHelp, []binding{{"F1", tcell.KeyF1, 0, 0}}},
+	{"about", "about", menuHelp, nil},
 }
 
 func commandFor(id string) command {
@@ -102,7 +128,34 @@ func (s *screen) commandEnabled(id string) bool {
 		return false
 	}
 	switch id {
-	case "quit", "help", "settings", "focus_toggle", "context_menu", "passwords":
+	case "table_edit_load":
+		return !s.busy && s.connected && !s.transactionUncertain && s.editTableTarget().Kind == "TABLE"
+	case "grid_edit":
+		return !s.busy && s.connected && !s.transactionUncertain && s.table.HasFocus() && s.resultBrowser.source.EditID != 0 && len(s.resultRows) > 0
+
+	case "cell_detail":
+		return !s.busy && s.table.HasFocus() && len(s.resultRows) > 0
+	case "fetch_more":
+		return !s.busy && s.connected && s.table.HasFocus() && s.resultBrowser.source.PageID != 0
+	case "result_sort_asc", "result_sort_desc", "result_filter", "result_view_reset":
+		return !s.busy && s.table.HasFocus() && len(s.resultHeaders) > 0
+	case "grid_widen", "grid_narrow", "grid_auto":
+		return !s.busy && s.table.HasFocus() && len(s.resultHeaders) > 0
+	case "duplicate_line", "copy_line", "cut_line", "delete_line", "line_up", "line_down", "transpose_line":
+		return !s.busy && s.editor.HasFocus()
+	case "format_code":
+		return !s.busy && s.editor.HasFocus()
+	case "complete", "complete_refresh":
+		return !s.busy && s.editor.HasFocus() && !s.editor.HasSelection()
+	case "routine_execute":
+		return s.connected && !s.busy && !s.transactionUncertain
+	case "routine_results":
+		return !s.busy && (len(s.routineResults.Scalars.Rows) > 0 || len(s.routineResults.Cursors) > 0)
+	case "output_view":
+		return true
+	case "output_toggle":
+		return s.connected && !s.busy && !s.transactionUncertain
+	case "quit", "about", "help", "settings", "focus_toggle", "context_menu", "passwords":
 		return true
 	case "fullscreen_sql", "fullscreen_results":
 		return true
@@ -115,7 +168,7 @@ func (s *screen) commandEnabled(id string) bool {
 	case "undo", "redo", "paste", "select_all":
 		return !s.busy && s.editor.HasFocus()
 	case "cut":
-		return !s.busy && s.editor.HasFocus() && s.editor.HasSelection()
+		return !s.busy && s.editor.HasFocus() && (s.editor.HasSelection() || s.prefs.EditorKeymap == "notepad++")
 	case "browser_refresh":
 		return !s.busy && s.browser != nil && (s.connected || s.demo)
 	case "history":
@@ -135,7 +188,7 @@ func (s *screen) commandEnabled(id string) bool {
 	case "describe", "quick_describe":
 		return !s.busy && (s.connected || s.demo)
 	case "copy":
-		return (s.table.HasFocus() && len(s.resultRows) > 0) || (s.editor.HasFocus() && s.editor.HasSelection())
+		return (s.table.HasFocus() && len(s.resultRows) > 0) || (s.editor.HasFocus() && (s.editor.HasSelection() || s.prefs.EditorKeymap == "notepad++"))
 	case "copy_row":
 		return s.table.HasFocus() && len(s.resultRows) > 0
 	case "export":
@@ -159,7 +212,51 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "about":
+		s.showAbout()
+	case "table_edit_load":
+		s.loadEditTable()
+	case "grid_edit":
+		s.showGridEdit()
+	case "cell_detail":
+		s.showCellDetail()
+	case "fetch_more":
+		s.fetchMoreResults()
+	case "result_sort_asc":
+		s.sortResult(false)
+	case "result_sort_desc":
+		s.sortResult(true)
+	case "result_filter":
+		s.showResultFilter()
+	case "result_view_reset":
+		s.resetResultView()
+	case "grid_widen":
+		s.resizeResultColumn(4)
+	case "grid_narrow":
+		s.resizeResultColumn(-4)
+	case "grid_auto":
+		s.resizeResultColumn(0)
+	case "duplicate_line", "copy_line", "cut_line", "delete_line", "line_up", "line_down", "transpose_line":
+		s.editorLineAction(s.editor, id)
+	case "format_code":
+		s.formatCode()
+	case "complete":
+		s.showCompletion(false)
+	case "complete_refresh":
+		s.showCompletion(true)
+	case "routine_execute":
+		s.requestRoutine()
+	case "routine_results":
+		s.showRoutineResults(s.routineResults)
+	case "output_view":
+		s.showOutput()
+	case "output_toggle":
+		s.requestOutputToggle()
 	case "undo", "redo", "cut", "paste", "select_all":
+		if id == "cut" && s.prefs.EditorKeymap == "notepad++" && !s.editor.HasSelection() {
+			s.editorLineAction(s.editor, "cut_line")
+			return
+		}
 		// Dispatch directly to the editor to retain its selection and undo history.
 		// Going through the global key handler would invoke this command again.
 		s.editor.InputHandler()(tcell.NewEventKey(commandFor(id).bindings[0].key, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
@@ -228,7 +325,11 @@ func (s *screen) invoke(id string) {
 			s.copyResults("selection")
 		} else {
 			text, _, _ := s.editor.GetSelection()
-			s.sendClipboard(text)
+			if text == "" && s.prefs.EditorKeymap == "notepad++" {
+				s.editorLineAction(s.editor, "copy_line")
+			} else {
+				s.sendClipboard(text)
+			}
 		}
 	case "copy_preview":
 		s.copyPreview()
@@ -257,7 +358,7 @@ func (s *screen) commandKey(event *tcell.EventKey) bool {
 func (s *screen) menuBar() *tview.Flex {
 	bar := tview.NewFlex()
 	for index := range menuGroups {
-		button := clickable(tview.NewButton("").SetSelectedFunc(func() { s.showMenu(index) }))
+		button := s.clickable(tview.NewButton("").SetSelectedFunc(func() { s.showMenu(index) }))
 		button.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 			// Menu clicks act on the current panel; do not transfer focus to the bar.
 			if action == tview.MouseLeftDown {

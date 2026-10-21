@@ -1,0 +1,18 @@
+name: Download Go modules
+description: Retry transient Go module download failures before running checks
+runs:
+  using: composite
+  steps:
+    - name: Download modules with bounded retry
+      shell: bash
+      run: |
+        for attempt in 1 2 3; do
+          if go mod download; then
+            exit 0
+          fi
+          if [ "$attempt" -eq 3 ]; then
+            exit 1
+          fi
+          echo "::warning::Go module download failed (attempt $attempt/3); retrying"
+          sleep "$((attempt * 2))"
+        done

@@ -13,19 +13,27 @@ type choiceField struct {
 }
 
 func (s *screen) newChoice(label string, options []string, selected int, changed func(string, int)) *choiceField {
-	background, foreground := palette.footer, palette.text
-	if s.limitedColors {
-		background, foreground = tcell.ColorNavy, tcell.ColorWhite
-	}
-	normal := tcell.StyleDefault.Foreground(foreground).Background(background)
+
+	normal := tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().footer)
 	dropdown := tview.NewDropDown().SetLabel(label).SetOptions(options, changed).SetCurrentOption(selected).
-		SetFieldWidth(40).SetTextOptions("", "", " ", " v", " v").
-		SetFieldStyle(normal).SetFocusedStyle(focusStyle()).SetListStyles(normal, focusStyle()).
+		SetFieldWidth(40).SetTextOptions("", "", " ", " ▾", " ▾").
+		SetFieldStyle(normal).SetFocusedStyle(s.focusStyle()).SetListStyles(normal, s.focusStyle()).
 		SetPrefixStyle(normal)
-	return &choiceField{DropDown: dropdown, background: background, foreground: foreground}
+	choice := &choiceField{DropDown: dropdown}
+	s.styleChoice(choice)
+	return choice
 }
 
 func (c *choiceField) SetFormAttributes(labelWidth int, labelColor, bgColor, _, _ tcell.Color) tview.FormItem {
 	c.DropDown.SetFormAttributes(labelWidth, labelColor, bgColor, c.foreground, c.background)
 	return c
+}
+
+func (s *screen) styleChoice(c *choiceField) {
+	c.background, c.foreground = s.colors().footer, s.colors().text
+	if s.limitedColors {
+		c.background, c.foreground = tcell.ColorNavy, tcell.ColorWhite
+	}
+	normal := tcell.StyleDefault.Foreground(c.foreground).Background(c.background)
+	c.SetFieldStyle(normal).SetFocusedStyle(s.focusStyle()).SetListStyles(normal, s.focusStyle()).SetPrefixStyle(normal)
 }

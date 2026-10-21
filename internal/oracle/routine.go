@@ -380,6 +380,8 @@ func (s *Session) RunRoutine(ctx context.Context, routine Routine, inputs map[in
 	if err != nil {
 		return result, err
 	}
+	s.ClosePage()
+	s.clearLOBs()
 	if err = s.resetOutput(ctx); err != nil {
 		return result, err
 	}
@@ -413,7 +415,7 @@ func (s *Session) RunRoutine(ctx context.Context, routine Routine, inputs map[in
 			if out.argument.Position == 0 {
 				named.Name = "RETURN"
 			}
-			named.Result, err = readRoutineCursor(ctx, s.tx, out.cursor)
+			named.Result, err = s.readRoutineCursor(ctx, s.tx, out.cursor)
 			result.Cursors = append(result.Cursors, named)
 			if err != nil {
 				for _, remaining := range call.outputs[i+1:] {
@@ -441,7 +443,7 @@ func (s *Session) RunRoutine(ctx context.Context, routine Routine, inputs map[in
 	result.Scalars.Elapsed = time.Since(started)
 	return result, nil
 }
-func readRoutineCursor(ctx context.Context, tx *sql.Tx, cursor *go_ora.RefCursor) (result Result, err error) {
+func (s *Session) readRoutineCursor(ctx context.Context, tx *sql.Tx, cursor *go_ora.RefCursor) (result Result, err error) {
 	result.Affected = -1
 	rows, err := go_ora.WrapRefCursor(ctx, tx, cursor)
 	if err != nil {
@@ -456,12 +458,18 @@ func readRoutineCursor(ctx context.Context, tx *sql.Tx, cursor *go_ora.RefCursor
 	if err != nil {
 		return result, err
 	}
+	stopFetch, err := s.pageFetchContext(ctx)
+	if err != nil {
+		return result, err
+	}
+	defer stopFetch()
+	ctx = context.WithValue(ctx, fetchWatchKey{}, true)
 	for rows.Next() {
 		if len(result.Rows) == MaxRows {
 			result.Truncated = true
 			break
 		}
-		cells, scanErr := scanCells(rows, types)
+		cells, scanErr := s.scanCells(ctx, rows, types, true)
 		if scanErr != nil {
 			return result, scanErr
 		}

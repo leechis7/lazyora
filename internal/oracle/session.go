@@ -27,11 +27,16 @@ type Result struct {
 type Cell struct {
 	Text, Type string
 	Null       bool
+	Partial    bool
+	LOBID      uint64
+	Size       int64 // LOB UTF-16 units for character LOBs; bytes for binary values.
 }
 
 // Session is used only by the UI's single worker. A pinned connection preserves
 // ALTER SESSION state, and the explicit transaction prevents DML auto-commit.
 type Session struct {
+	lobs                       map[uint64]lobReference
+	lobSequence                uint64
 	page                       *queryPage
 	pageSequence               uint64
 	completionCache            map[completionKey]completionEntry
@@ -100,6 +105,7 @@ func (s *Session) execute(ctx context.Context, text string, keepPage bool, bindi
 		return result, err
 	}
 	s.ClosePage()
+	s.clearLOBs()
 	if err = s.resetOutput(ctx); err != nil {
 		return result, err
 	}
@@ -168,12 +174,18 @@ func (s *Session) execute(ctx context.Context, text string, keepPage bool, bindi
 		page.Elapsed = time.Since(start)
 		return page, pageErr
 	}
+	stopFetch, err := s.pageFetchContext(ctx)
+	if err != nil {
+		return result, err
+	}
+	defer stopFetch()
+	ctx = context.WithValue(ctx, fetchWatchKey{}, true)
 	for rows.Next() {
 		if len(result.Rows) == MaxRows {
 			result.Truncated = true
 			break
 		}
-		cells, scanErr := scanCells(rows, columnTypes)
+		cells, scanErr := s.scanCells(ctx, rows, columnTypes, true)
 		if scanErr != nil {
 			return result, scanErr
 		}
@@ -204,6 +216,7 @@ func formatValue(value any) string {
 
 func (s *Session) Finish(commit bool) error {
 	s.ClosePage()
+	s.clearLOBs()
 	if s.tx == nil {
 		if s.finishErr == nil {
 			s.pending = false

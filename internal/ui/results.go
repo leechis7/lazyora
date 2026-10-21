@@ -59,6 +59,12 @@ func (s *screen) resultMouse(action tview.MouseAction, event *tcell.EventMouse) 
 	}
 	valid := s.table.InRect(x, y) && row > 0 && row < s.table.GetRowCount() && col >= 0 && col < s.table.GetColumnCount()
 	switch action {
+	case tview.MouseLeftDoubleClick:
+		if valid {
+			s.table.Select(row, col)
+			s.showCellDetail()
+			return tview.MouseConsumed, nil
+		}
 	case tview.MouseRightClick:
 		if page == "routine_grid" {
 			return action, event
@@ -81,7 +87,7 @@ func (s *screen) resultMouse(action tview.MouseAction, event *tcell.EventMouse) 
 		}
 	case tview.MouseLeftUp:
 		s.resultSelection.dragging = false
-	case tview.MouseLeftClick, tview.MouseLeftDoubleClick:
+	case tview.MouseLeftClick:
 		// Preserve the drag end; Table's default click would collapse the rectangle.
 		if s.resultSelection.active {
 			return tview.MouseConsumed, nil
@@ -138,6 +144,10 @@ func (s *screen) copyResults(mode string) {
 	for r := r1; r <= r2; r++ {
 		values := make([]string, 0, c2-c1+1)
 		for c := c1; c <= c2; c++ {
+			if r <= len(s.resultValues) && c < len(s.resultValues[r-1]) && s.resultValues[r-1][c].Partial {
+				s.setStatus("cell_copy_partial")
+				return
+			}
 			value := ""
 			if c < len(s.resultRows[r-1]) {
 				value = s.resultRows[r-1][c]

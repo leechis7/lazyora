@@ -28,6 +28,13 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	}
 
 	page, _ := s.pages.GetFrontPage()
+	if page == "cell" {
+		return s.cellKey(event)
+	}
+	if page == "main" && s.table.HasFocus() && event.Key() == tcell.KeyEnter && event.Modifiers() == 0 {
+		s.showCellDetail()
+		return nil
+	}
 	if page == "result_filter" {
 		if event.Key() == tcell.KeyEscape {
 			s.pages.RemovePage("result_filter")

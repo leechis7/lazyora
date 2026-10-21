@@ -1,8 +1,10 @@
 package ui
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"slices"
 	"time"
 
@@ -16,6 +18,7 @@ import (
 )
 
 type job struct {
+	cell          oracle.Cell
 	pageID        uint64
 	completion    oracle.CompletionContext
 	refresh       bool
@@ -37,6 +40,10 @@ type job struct {
 }
 
 type screen struct {
+	cellValue                        oracle.Cell
+	cellInfo, cellText               *tview.TextView
+	cellForm                         *tview.Form
+	cellFocus                        tview.Primitive
 	definitionCopyDetail             bool
 	definitionObject                 oracle.Object
 	definitionSection, definitionDDL string
@@ -373,12 +380,12 @@ func (s *screen) submit(j job) {
 	if s.busy {
 		return
 	}
-	if j.action != "connect" && j.action != "export" && !s.connected {
+	if j.action != "connect" && j.action != "export" && j.action != "cell_save" && !s.connected {
 		s.setStatus("connect_first")
 		return
 	}
 	s.busy = true
-	if j.action == "export" && j.query != nil {
+	if j.action == "cell_save" || j.action == "export" && j.query != nil {
 		j.ctx, s.cancel = context.WithCancel(context.Background())
 	} else {
 		j.ctx, s.cancel = context.WithTimeout(context.Background(), 60*time.Second)
@@ -415,11 +422,27 @@ func (s *screen) worker() {
 		var script oracle.ScriptReport
 		var plan []oracle.PlanStep
 		var exported int64
+		var cell oracle.Cell
 		var err error
 		if session != nil && (j.action == "plan" || j.action == "routine_run" || j.action == "compile_source" || j.action == "output_toggle") {
 			session.ClosePage()
 		}
 		switch j.action {
+		case "cell_preview":
+			cell, err = session.PreviewCell(j.ctx, j.cell)
+		case "cell_save":
+			writer := session
+			if writer == nil {
+				writer = &oracle.Session{}
+			}
+			exported, err = exportdata.SaveContent(j.ctx, j.path, j.revision, func(target io.Writer) (int64, error) {
+				buffer := bufio.NewWriterSize(target, 256*1024)
+				n, e := writer.WriteCell(j.ctx, buffer, j.cell)
+				if e == nil {
+					e = buffer.Flush()
+				}
+				return n, e
+			})
 		case "close_page":
 			if session.PageID() == j.pageID {
 				session.ClosePage()
@@ -521,6 +544,21 @@ func (s *screen) worker() {
 				return
 			}
 			if j.action == "close_page" {
+				return
+			}
+			if j.action == "cell_preview" || j.action == "cell_save" {
+				if s.cellText != nil {
+					if err != nil {
+						s.cellInfo.SetText(s.tr("cell_error") + "\n" + err.Error())
+						s.setStatus("error", err)
+					} else if j.action == "cell_preview" {
+						s.cellValue = cell
+						s.renderCellDetail()
+					} else {
+						s.cellInfo.SetText(fmt.Sprintf(s.tr("cell_saved"), exported, j.path))
+						s.setStatus("cell_saved", exported, j.path)
+					}
+				}
 				return
 			}
 			if j.action == "exit_commit" || j.action == "exit_rollback" {

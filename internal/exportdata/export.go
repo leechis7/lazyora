@@ -103,6 +103,9 @@ func (r *rowReader) next() ([]oracle.Cell, error) {
 		return nil, fmt.Errorf("result row width does not match columns")
 	}
 	for _, cell := range row {
+		if cell.Partial {
+			return nil, fmt.Errorf("result contains a LOB preview; save the individual cell or use Full DB export within the cell limit")
+		}
 		if !utf8.ValidString(cell.Text) {
 			return nil, fmt.Errorf("invalid UTF-8 result value")
 		}

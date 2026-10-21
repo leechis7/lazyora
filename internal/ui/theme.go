@@ -168,6 +168,10 @@ func (s *screen) refreshBorders() {
 		apply(s.helpText.Box, s.helpText.HasFocus(), false)
 		apply(s.helpTopics.Box, s.helpTopics.HasFocus(), false)
 	}
+	if s.cellText != nil {
+		apply(s.cellText.Box, s.cellText.HasFocus(), false)
+		apply(s.cellForm.Box, s.cellForm.HasFocus(), false)
+	}
 }
 
 // Box normally uses double lines while focused. Normalize only this box's

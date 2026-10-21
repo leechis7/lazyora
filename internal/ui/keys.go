@@ -52,6 +52,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if s.buttonArrow(event) {
 		return nil
 	}
+	if page == "definition" {
+		return s.definitionKey(event)
+	}
 	if page == "editor_actions" {
 		if event.Key() == tcell.KeyEscape || event.Key() == tcell.KeyF10 {
 			s.closeSourceEdit()
@@ -238,6 +241,19 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 	}
 	if page == "object" {
+		if alt {
+			switch letter {
+			case 'd':
+				s.showDefinition("ddl")
+				return nil
+			case 'c':
+				s.showDefinition("constraints")
+				return nil
+			case 'i':
+				s.showDefinition("indexes")
+				return nil
+			}
+		}
 		if alt && letter == 'e' {
 			s.showRoutine(s.object, "")
 			return nil

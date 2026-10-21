@@ -380,6 +380,7 @@ func (s *Session) RunRoutine(ctx context.Context, routine Routine, inputs map[in
 	if err != nil {
 		return result, err
 	}
+	s.edit = nil
 	s.ClosePage()
 	s.clearLOBs()
 	if err = s.resetOutput(ctx); err != nil {

@@ -159,6 +159,20 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         send(b"\x1b[20~")
         wait_for("1 rows")
         print("Ctrl+T object/alias column completion, cancel and quoted replacement: passed")
+        original_format_sql = "SELECT 11 AS ELEVEN,22 AS TWENTYTWO FROM dual"
+        send(b"\x1bOQ\x1bOQ\x01\x0b" + original_format_sql.encode())
+        output.clear()
+        send(b"\x1be\x1b[F\r")  # Edit menu -> Format (Shift shortcut fallback).
+        wait_for("Code formatted")
+        output.clear()
+        send(b"\x1b[20~")
+        wait_for("1 rows")
+        send(b"\x1a")  # Ctrl+Z restores one original line in one edit.
+        output.clear()
+        send(b"\x0c\x03")  # Ctrl+L select all, Ctrl+C raw SQL copy.
+        copied(original_format_sql)
+        send(b"\x1b[C")  # End selection without changing text.
+        print("SQL formatter menu, formatted F9 execution and one-step undo: passed")
         sql("SELECT 11 AS ELEVEN FROM dual", b"\x1b[13;5u", newline=True)
         sql("SELECT 12 AS TWELVE FROM dual", b"\x1b[27;5;13~")
         sql("SELECT 13 AS THIRTEEN FROM dual", b"\x1b\r")

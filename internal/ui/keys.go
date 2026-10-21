@@ -250,6 +250,10 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return event
 	}
 	if page == "source" {
+		if event.Key() == tcell.KeyCtrlF && event.Modifiers()&tcell.ModShift != 0 {
+			s.formatCode()
+			return nil
+		}
 		if event.Key() == tcell.KeyCtrlT {
 			s.showCompletion(false)
 			return nil

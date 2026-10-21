@@ -37,6 +37,9 @@ func completionIdent(r rune) bool {
 	return unicode.IsLetter(r) || unicode.IsDigit(r) || strings.ContainsRune("_$#", r)
 }
 func lexCompletion(text string, cursor int) []completionToken {
+	return lexEditorRange(text, cursor, 0, len(text))
+}
+func lexEditorRange(text string, cursor, from, to int) []completionToken {
 	var tokens []completionToken
 	for i := 0; i < len(text); {
 		start := i
@@ -125,7 +128,7 @@ func lexCompletion(text string, cursor int) []completionToken {
 		}
 		token.end = i
 		token.text = text[start:i]
-		if token.text == ";" && !token.opaque && !token.quoted {
+		if cursor >= 0 && token.text == ";" && !token.opaque && !token.quoted {
 			if token.end <= cursor {
 				tokens = tokens[:0]
 				continue
@@ -134,7 +137,12 @@ func lexCompletion(text string, cursor int) []completionToken {
 				break
 			}
 		}
-		tokens = append(tokens, token)
+		if token.start >= to {
+			break
+		}
+		if token.end > from {
+			tokens = append(tokens, token)
+		}
 	}
 	return tokens
 }

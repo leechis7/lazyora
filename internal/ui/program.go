@@ -78,7 +78,7 @@ func (s *screen) showSource() {
 		label  string
 		action func()
 	}{
-		{"compile_button", s.requestCompile}, {"reload_button", s.reloadSource}, {"close", s.closeSource},
+		{"compile_button", s.requestCompile}, {"format_code", func() { s.app.SetFocus(s.sourceEditor); s.formatCode() }}, {"reload_button", s.reloadSource}, {"close", s.closeSource},
 	} {
 		buttons.AddItem(clickable(tview.NewButton(s.tr(item.label)).SetSelectedFunc(item.action)), 0, 1, false)
 	}

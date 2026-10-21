@@ -29,8 +29,8 @@ func TestOracleGridEditIntegration(t *testing.T) {
 		}
 	})
 	for _, sql := range []string{
-		`CREATE TABLE grid_edit_fixture(id NUMBER(8) PRIMARY KEY,title VARCHAR2(100), amount NUMBER(38,4),d DATE,ts TIMESTAMP(6),r RAW(8),flag CHAR(3))`,
-		`INSERT INTO grid_edit_fixture VALUES(1,'original',123456789012345678901234567890.1234,TO_DATE('2026-10-21 12:34:56','YYYY-MM-DD HH24:MI:SS'),TIMESTAMP '2026-10-21 12:34:56.123456',HEXTORAW('0001FF'),'a')`,
+		`CREATE TABLE grid_edit_fixture(id NUMBER(8) PRIMARY KEY,title VARCHAR2(100), amount NUMBER(38,4),d DATE,ts TIMESTAMP(6),r RAW(8),flag CHAR(3),n NVARCHAR2(100),nf NCHAR(5))`,
+		`INSERT INTO grid_edit_fixture VALUES(1,'original',123456789012345678901234567890.1234,TO_DATE('2026-10-21 12:34:56','YYYY-MM-DD HH24:MI:SS'),TIMESTAMP '2026-10-21 12:34:56.123456',HEXTORAW('0001FF'),'a',N'한글👩',N'문자')`,
 		`CREATE TABLE grid_edit_duplicate(title VARCHAR2(100))`,
 		`INSERT INTO grid_edit_duplicate SELECT 'same' FROM dual CONNECT BY LEVEL<=2`,
 	} {
@@ -45,7 +45,7 @@ func TestOracleGridEditIntegration(t *testing.T) {
 	load := func() oracle.Result {
 		t.Helper()
 		r, err := s.EditableTable(ctx, object)
-		if err != nil || len(r.Rows) != 1 || r.EditID == 0 || len(r.Columns) != 7 {
+		if err != nil || len(r.Rows) != 1 || r.EditID == 0 || len(r.Columns) != 9 {
 			t.Fatalf("load: %+v %v", r, err)
 		}
 		return r
@@ -143,7 +143,7 @@ func TestOracleGridEditIntegration(t *testing.T) {
 		col  int
 		text string
 		null bool
-	}{{1, "", true}, {3, "2026-11-01 23:59:58", false}, {4, "2026-11-01 23:59:58.987654", false}, {5, "FF0002", false}} {
+	}{{1, "", true}, {3, "2026-11-01 23:59:58", false}, {4, "2026-11-01 23:59:58.987654", false}, {5, "FF0002", false}, {7, "국가문자👩‍💻", false}, {8, "한글", false}} {
 		r = load()
 		if err = s.ApplyEdit(ctx, oracle.EditChange{ID: r.EditID, Row: 0, Column: tc.col, Text: tc.text, Null: tc.null}); err != nil {
 			t.Fatal(err)
@@ -153,7 +153,7 @@ func TestOracleGridEditIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 	checked := load()
-	if !checked.Values[0][1].Null || checked.Rows[0][3] != "2026-11-01 23:59:58" || checked.Rows[0][4] != "2026-11-01 23:59:58.987654000" || checked.Rows[0][5] != "FF0002" {
+	if !checked.Values[0][1].Null || checked.Rows[0][3] != "2026-11-01 23:59:58" || checked.Rows[0][4] != "2026-11-01 23:59:58.987654000" || checked.Rows[0][5] != "FF0002" || checked.Rows[0][7] != "국가문자👩‍💻" || strings.TrimSpace(checked.Rows[0][8]) != "한글" {
 		t.Fatalf("types: %+v", checked.Rows)
 	}
 	if _, err = s.Execute(ctx, "SELECT title FROM grid_edit_fixture"); err != nil {

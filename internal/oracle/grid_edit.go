@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	oraTypes "github.com/sijms/go-ora/v3/types"
 	"strings"
 	"time"
 )
@@ -100,7 +101,7 @@ func (s *Session) EditableTable(ctx context.Context, object Object) (Result, err
 	return result, nil
 }
 func editableType(kind string) bool {
-	return kind == "NUMBER" || kind == "VARCHAR2" || kind == "CHAR" || kind == "DATE" || kind == "RAW" || strings.HasPrefix(kind, "TIMESTAMP(") && !strings.Contains(kind, "TIME ZONE") || kind == "TIMESTAMP"
+	return kind == "NUMBER" || kind == "VARCHAR2" || kind == "CHAR" || kind == "NVARCHAR2" || kind == "NCHAR" || kind == "DATE" || kind == "RAW" || strings.HasPrefix(kind, "TIMESTAMP(") && !strings.Contains(kind, "TIME ZONE") || kind == "TIMESTAMP"
 }
 func editExpression(column, kind string) string {
 	if kind == "DATE" {
@@ -155,6 +156,13 @@ func editValue(kind, text string, null bool) (any, error) {
 	}
 	if len(text) > 32767 {
 		return nil, errors.New("new cell value is too large for safe editing")
+	}
+	if kind == "NVARCHAR2" || kind == "NCHAR" {
+		value := &oraTypes.String{UseNCharset: true}
+		if err := value.SetValue(text); err != nil {
+			return nil, err
+		}
+		return value, nil
 	}
 	return text, nil
 }

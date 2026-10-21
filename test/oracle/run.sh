@@ -2,11 +2,6 @@
 set -eu
 cd "$(dirname "$0")"
 
-if [ ! -f .env ]; then
-    printf '%s\n' '먼저 프로젝트 루트에서 make -C test/oracle up을 실행하세요.' >&2
-    exit 1
-fi
-
 # Always release the test DB memory when this launcher exits. Keep its data volume.
 cleanup() {
     run_status=$?
@@ -20,14 +15,6 @@ cleanup() {
     fi
     exit "$run_status"
 }
-trap cleanup 0
-trap 'exit 129' HUP
-trap 'exit 130' INT
-trap 'exit 143' TERM
-
-# Load only the local test settings; do not put passwords in command arguments.
-. ./.env
-
 case "$(uname -s)" in
     Linux) target_os=linux ;;
     Darwin) target_os=darwin ;;
@@ -44,6 +31,18 @@ if [ ! -x "$binary" ]; then
     printf '%s\n' '먼저 프로젝트 루트에서 make build-native를 실행하세요.' >&2
     exit 1
 fi
+
+# Create local settings if needed, then start (or reuse) the DB and wait until
+# its healthcheck succeeds before opening the app. Never pass passwords as args.
+sh env.sh
+. ./.env
+: "${APP_USER_PASSWORD:?로컬 .env의 APP_USER_PASSWORD를 설정하세요}"
+trap cleanup 0
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+printf '%s\n' 'Oracle 시험 환경을 준비합니다(DB 접속 준비까지 기다립니다).'
+docker compose -f compose.yaml up -d --wait --wait-timeout 600 oracle
 
 export LAZYORA_HOST=127.0.0.1
 export LAZYORA_PORT="${ORACLE_PORT:-1521}"

@@ -23,7 +23,7 @@ func TestGridDecorationPreservesRawCopyHitTestingAndRowNumbers(t *testing.T) {
 				grid.SetRect(0, 0, width, 12)
 				grid.Draw(terminal)
 			}
-			if s.table.GetCell(1, 0).Align != tview.AlignRight || s.table.GetCell(1, 2).Text != "∅ NULL" || !strings.Contains(s.table.GetCell(1, 1).Text, "…") {
+			if s.table.GetCell(1, 0).Align != tview.AlignRight || strings.TrimSpace(s.table.GetCell(1, 2).Text) != "∅ NULL" || !strings.Contains(s.table.GetCell(1, 1).Text, "…") {
 				t.Fatal("typed preview/alignment missing")
 			}
 			x, y, _ := s.table.GetCell(1, 0).GetLastPosition()

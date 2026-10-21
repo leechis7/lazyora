@@ -64,7 +64,7 @@ func TestClearSQLConfirmsAndSupportsUndoWithoutChangingResults(t *testing.T) {
 	s.key(tcell.NewEventKey(tcell.KeyF7, 0, 0))
 	modalKey(s, tcell.KeyLeft)
 	modalKey(s, tcell.KeyEnter)
-	if s.editor.GetText() != "" || s.table.GetCell(1, 0).Text != "keep" || !s.pendingChanges || len(s.jobs) != 0 {
+	if s.editor.GetText() != "" || s.resultRows[0][0] != "keep" || !s.pendingChanges || len(s.jobs) != 0 {
 		t.Fatal("clear affected SQL/results/transaction incorrectly")
 	}
 	s.editor.InputHandler()(tcell.NewEventKey(tcell.KeyCtrlZ, 0, 0), func(tview.Primitive) {})

@@ -116,8 +116,7 @@ func (s *screen) applyResultBrowser(preserveWidths bool) {
 			for row := 0; row < s.table.GetRowCount(); row++ {
 				s.table.GetCell(row, col).SetMaxWidth(width)
 			}
-			header := s.resultHeaders[col]
-			s.table.GetCell(0, col).SetText(tview.Escape(header) + strings.Repeat(" ", max(0, width-tview.TaggedStringWidth(tview.Escape(header)))))
+			s.refreshGridHeader(col)
 		}
 	}
 }
@@ -203,6 +202,6 @@ func (s *screen) showResultFilter() {
 	for i := 0; i < form.GetButtonCount(); i++ {
 		clickable(form.GetButton(i))
 	}
-	s.pages.AddPage("result_filter", form, true, true)
+	s.pages.AddPage("result_filter", s.formDialog(form, nil, 80), true, true)
 	s.app.SetFocus(form)
 }

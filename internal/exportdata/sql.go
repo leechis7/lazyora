@@ -41,6 +41,9 @@ func targetIdentifier(name string) (string, error) {
 }
 
 func SQLLiteral(cell oracle.Cell) (string, error) {
+	if cell.Partial {
+		return "", fmt.Errorf("partial LOB cannot be exported as a complete SQL value")
+	}
 	if cell.Null {
 		return "NULL", nil
 	}

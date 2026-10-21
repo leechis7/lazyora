@@ -1,8 +1,10 @@
 package ui
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"slices"
 	"time"
 
@@ -16,6 +18,9 @@ import (
 )
 
 type job struct {
+	edit          oracle.EditChange
+	cell          oracle.Cell
+	pageID        uint64
 	completion    oracle.CompletionContext
 	refresh       bool
 	routine       oracle.Routine
@@ -36,6 +41,15 @@ type job struct {
 }
 
 type screen struct {
+	aboutText                        *tview.TextView
+	aboutFocus                       tview.Primitive
+	editChange                       oracle.EditChange
+	editForm                         *tview.Form
+	editInfo                         *tview.TextView
+	cellValue                        oracle.Cell
+	cellInfo, cellText               *tview.TextView
+	cellForm                         *tview.Form
+	cellFocus                        tview.Primitive
 	definitionCopyDetail             bool
 	definitionObject                 oracle.Object
 	definitionSection, definitionDDL string
@@ -45,6 +59,9 @@ type screen struct {
 	definitionRoot                   *tview.Flex
 	definitionInfo, definitionText   *tview.TextView
 	definitionTable                  *tview.Table
+	definitionTargets                []oracle.ObjectRelation
+	definitionTrail                  []definitionLocation
+	definitionSelectors              []tview.Primitive
 
 	vim                                  vimState
 	yankText                             string
@@ -133,6 +150,8 @@ type screen struct {
 	resultRows                               [][]string
 	resultHeaders                            []string
 	resultSelection                          resultSelection
+	grid                                     gridState
+	resultBrowser                            resultBrowser
 	clipboardText                            string
 	copyFocus                                tview.Primitive
 	copyText                                 *tview.TextView
@@ -187,6 +206,9 @@ type screen struct {
 	busy, quitting, demo, connected          bool
 	cancel                                   context.CancelFunc
 	helpFocus, connectFocus, prefsFocus      tview.Primitive
+	helpText                                 *tview.TextView
+	helpTopics                               *tview.List
+	helpContextText                          string
 	connectForm, connectProfiles, prefsForm  *tview.Form
 	connectAction, saveConnection, savePrefs func()
 	connectionOptions                        func()
@@ -232,7 +254,7 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 	s.status = tview.NewTextView()
 	s.queryLayout = tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(s.editor, 0, 2, true).
-		AddItem(s.table, 0, 3, false).AddItem(s.status, 2, 0, false)
+		AddItem(s.resultGrid(), 0, 3, false).AddItem(s.status, 2, 0, false)
 	s.mainLayout = tview.NewFlex().AddItem(s.newBrowser(), 0, 1, false).AddItem(s.queryLayout, 0, 3, true)
 	s.pages = tview.NewPages().AddPage("main", s.mainLayout, true, true)
 	s.pages.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
@@ -364,12 +386,12 @@ func (s *screen) submit(j job) {
 	if s.busy {
 		return
 	}
-	if j.action != "connect" && j.action != "export" && !s.connected {
+	if j.action != "connect" && j.action != "export" && j.action != "cell_save" && !s.connected {
 		s.setStatus("connect_first")
 		return
 	}
 	s.busy = true
-	if j.action == "export" && j.query != nil {
+	if j.action == "cell_save" || j.action == "export" && j.query != nil {
 		j.ctx, s.cancel = context.WithCancel(context.Background())
 	} else {
 		j.ctx, s.cancel = context.WithTimeout(context.Background(), 60*time.Second)
@@ -405,9 +427,41 @@ func (s *screen) worker() {
 		var compilation oracle.Compilation
 		var script oracle.ScriptReport
 		var plan []oracle.PlanStep
+		var editApplied bool
 		var exported int64
+		var cell oracle.Cell
 		var err error
+		if session != nil && (j.action == "plan" || j.action == "routine_run" || j.action == "compile_source" || j.action == "output_toggle") {
+			session.ClosePage()
+		}
 		switch j.action {
+		case "edit_load":
+			result, err = session.EditableTable(j.ctx, j.object)
+		case "edit_apply":
+			err = session.ApplyEdit(j.ctx, j.edit)
+			editApplied = err == nil
+			if err == nil {
+				result, err = session.EditableTable(j.ctx, j.object)
+			}
+		case "cell_preview":
+			cell, err = session.PreviewCell(j.ctx, j.cell)
+		case "cell_save":
+			writer := session
+			if writer == nil {
+				writer = &oracle.Session{}
+			}
+			exported, err = exportdata.SaveContent(j.ctx, j.path, j.revision, func(target io.Writer) (int64, error) {
+				buffer := bufio.NewWriterSize(target, 256*1024)
+				n, e := writer.WriteCell(j.ctx, buffer, j.cell)
+				if e == nil {
+					e = buffer.Flush()
+				}
+				return n, e
+			})
+		case "close_page":
+			if session.PageID() == j.pageID {
+				session.ClosePage()
+			}
 		case "export":
 			progressAt := time.Time{}
 			options := j.exportOptions
@@ -445,7 +499,9 @@ func (s *screen) worker() {
 		case "connect":
 			session, err = oracle.Reconnect(j.ctx, session, j.config, j.resolution)
 		case "execute":
-			result, err = session.Execute(j.ctx, j.text, j.bindings)
+			result, err = session.ExecutePaged(j.ctx, j.text, j.bindings)
+		case "fetch_more":
+			result, err = session.FetchPage(j.ctx, j.pageID)
 		case "output_toggle":
 			err = session.SetOutput(j.ctx, !session.OutputEnabled())
 		case "script":
@@ -496,6 +552,53 @@ func (s *screen) worker() {
 				s.pendingChanges = session.PendingChanges()
 				s.transactionUncertain = session.TransactionUncertain()
 				s.pendingWork = session.PendingWork()
+				s.invalidateResultCursors(session.PageID())
+				s.invalidateEditResults(session.EditID())
+			}
+			if j.action == "edit_load" || j.action == "edit_apply" {
+				if err != nil && editApplied {
+					err = fmt.Errorf("%s: %w", s.tr("edit_applied_reload_error"), err)
+				}
+				if err != nil {
+					s.setStatus("error", err)
+					if s.editInfo != nil {
+						s.editInfo.SetText(err.Error() + "\n" + s.tr("edit_hint"))
+					}
+				} else {
+					if s.editForm != nil {
+						s.closeGridEdit()
+					}
+					s.render(result)
+					s.app.SetFocus(s.table)
+					if j.action == "edit_apply" {
+						s.setStatus("edit_applied")
+					} else {
+						s.setStatus("edit_loaded")
+					}
+				}
+				return
+			}
+			if j.action == "fetch_more" {
+				s.acceptResultPage(result, err)
+				return
+			}
+			if j.action == "close_page" {
+				return
+			}
+			if j.action == "cell_preview" || j.action == "cell_save" {
+				if s.cellText != nil {
+					if err != nil {
+						s.cellInfo.SetText(s.tr("cell_error") + "\n" + err.Error())
+						s.setStatus("error", err)
+					} else if j.action == "cell_preview" {
+						s.cellValue = cell
+						s.renderCellDetail()
+					} else {
+						s.cellInfo.SetText(fmt.Sprintf(s.tr("cell_saved"), exported, j.path))
+						s.setStatus("cell_saved", exported, j.path)
+					}
+				}
+				return
 			}
 			if j.action == "exit_commit" || j.action == "exit_rollback" {
 				if err == nil {
@@ -582,6 +685,7 @@ func (s *screen) worker() {
 					s.resultValues = nil
 					s.resultTruncated = false
 					s.resultSelection = resultSelection{}
+					s.resultBrowser = resultBrowser{}
 					s.resetBrowser()
 					s.setStatus("connected", j.config.User, j.config.Host, j.config.Port, j.config.Name, j.config.Mode)
 					if !s.quitting {
@@ -595,6 +699,9 @@ func (s *screen) worker() {
 							key = "rows_limited"
 						}
 						s.setStatus(key, len(result.Rows), result.Elapsed.Round(time.Millisecond))
+						if result.PageLimited {
+							s.setStatus("result_page_limit", oracle.MaxGridRows, oracle.MaxGridBytes/(1024*1024))
+						}
 					} else {
 						s.setStatus("executed", result.Affected, result.Elapsed.Round(time.Millisecond))
 					}
@@ -662,6 +769,11 @@ func (s *screen) worker() {
 }
 
 func (s *screen) render(result oracle.Result) {
+	s.resultBrowser = resultBrowser{source: result, sortColumn: -1}
+	s.applyResultBrowser(false)
+}
+
+func (s *screen) renderGrid(result oracle.Result) {
 	s.resultQuery = result.Query
 	s.resultTruncated = result.Truncated
 	s.resultValues = make([][]oracle.Cell, len(result.Rows))
@@ -681,16 +793,41 @@ func (s *screen) render(result oracle.Result) {
 		s.resultRows[i] = append([]string(nil), row...)
 	}
 	s.resultSelection = resultSelection{}
+	s.grid = gridState{widths: make([]int, len(result.Columns))}
+	s.table.SetSelectionChangedFunc(nil)
 	s.table.Clear()
+	s.table.ScrollToBeginning()
 	for col, name := range result.Columns {
-		s.table.SetCell(0, col, tview.NewTableCell(tview.Escape(name)).SetStyle(tcell.StyleDefault.Foreground(palette.accent).Background(palette.surface).Bold(true)).SetSelectable(false))
+		style := tcell.StyleDefault.Foreground(palette.accent).Background(palette.surface).Bold(true)
+		if s.limitedColors {
+			style = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorTeal).Bold(true)
+		}
+		s.table.SetCell(0, col, tview.NewTableCell(tview.Escape(name)).SetStyle(style).SetSelectable(false))
 	}
 	if len(result.Rows) > 0 && len(result.Columns) > 0 {
 		s.table.Select(1, 0)
 	}
 	for row, values := range result.Rows {
 		for col, value := range values {
-			s.table.SetCell(row+1, col, tview.NewTableCell(tview.Escape(value)).SetTextColor(palette.text).SetMaxWidth(80))
+			text := gridPreview(value)
+			if s.resultValues[row][col].Null {
+				text = "∅ NULL"
+			}
+			cell := tview.NewTableCell(tview.Escape(text)).SetStyle(s.gridBaseStyle(row+1, col)).SetMaxWidth(40)
+			if gridNumeric(s.resultValues[row][col]) {
+				cell.SetAlign(tview.AlignRight)
+			}
+			s.table.SetCell(row+1, col, cell)
 		}
 	}
+	for col := range result.Columns {
+		width := s.gridAutoWidth(col)
+		s.grid.widths[col] = width
+		for row := 0; row < s.table.GetRowCount(); row++ {
+			s.table.GetCell(row, col).SetMaxWidth(width)
+		}
+	}
+	s.table.SetSelectionChangedFunc(func(_, _ int) { s.highlightResults(); s.refreshResultPosition() })
+	s.highlightResults()
+	s.refreshResultPosition()
 }

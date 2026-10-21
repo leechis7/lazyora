@@ -10,3 +10,4 @@ set -a
 set +a
 cd ../..
 python3 test/oracle/tui_smoke.py
+python3 test/oracle/tui_cells_smoke.py

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"sync"
 	"time"
 )
 
@@ -57,13 +58,19 @@ func NewQuerySpec(text string, bindings map[string]BindValue) (*QuerySpec, error
 // QueryRows holds a single live cursor. Call Close before running another job.
 // It retains only the current row; callers must not accumulate rows for export.
 type QueryRows struct {
-	Columns []string
-	rows    *sql.Rows
-	types   []*sql.ColumnType
-	ctx     context.Context
+	owner    *Session
+	stop     func()
+	stopOnce sync.Once
+	Columns  []string
+	rows     *sql.Rows
+	types    []*sql.ColumnType
+	ctx      context.Context
 }
 
 func (s *Session) OpenQuery(ctx context.Context, spec *QuerySpec) (*QueryRows, error) {
+	s.edit = nil
+	s.ClosePage()
+	s.clearLOBs()
 	if s.finishErr != nil {
 		return nil, s.finishErr
 	}
@@ -102,7 +109,12 @@ func (s *Session) OpenQuery(ctx context.Context, spec *QuerySpec) (*QueryRows, e
 		rows.Close()
 		return nil, err
 	}
-	return &QueryRows{Columns: columns, rows: rows, types: types, ctx: ctx}, nil
+	stop, err := s.pageFetchContext(ctx)
+	if err != nil {
+		rows.Close()
+		return nil, err
+	}
+	return &QueryRows{Columns: columns, rows: rows, types: types, ctx: context.WithValue(ctx, fetchWatchKey{}, true), owner: s, stop: stop}, nil
 }
 
 func (r *QueryRows) Next() ([]Cell, error) {
@@ -115,11 +127,18 @@ func (r *QueryRows) Next() ([]Cell, error) {
 		}
 		return nil, io.EOF
 	}
-	return scanCells(r.rows, r.types)
+	return r.owner.scanCells(r.ctx, r.rows, r.types, false)
 }
-func (r *QueryRows) Close() error { return r.rows.Close() }
+func (r *QueryRows) Close() error {
+	r.stopOnce.Do(func() {
+		if r.stop != nil {
+			r.stop()
+		}
+	})
+	return r.rows.Close()
+}
 
-func scanCells(rows *sql.Rows, columnTypes []*sql.ColumnType) ([]Cell, error) {
+func (s *Session) scanCells(ctx context.Context, rows *sql.Rows, columnTypes []*sql.ColumnType, retain bool) ([]Cell, error) {
 	values := make([]any, len(columnTypes))
 	pointers := make([]any, len(values))
 	for i := range values {
@@ -130,7 +149,23 @@ func scanCells(rows *sql.Rows, columnTypes []*sql.ColumnType) ([]Cell, error) {
 	}
 	cells := make([]Cell, len(values))
 	for i, value := range values {
+		if reference, ok := lobValue(value); ok {
+			cell, err := s.scanLOB(ctx, reference, retain)
+			if err != nil {
+				return nil, err
+			}
+			cells[i] = cell
+			continue
+		}
 		kind := columnTypes[i].DatabaseTypeName()
+		// go-ora can omit DatabaseTypeName and return Oracle NUMBER as text.
+		// Precision/scale metadata identifies numeric columns without guessing
+		// from text values (which would corrupt numeric-looking VARCHAR2 data).
+		if kind == "" {
+			if _, _, numeric := columnTypes[i].DecimalSize(); numeric {
+				kind = "NUMBER"
+			}
+		}
 		if kind == "" {
 			switch value.(type) {
 			case int64, int32, int, float64, float32:
@@ -144,6 +179,10 @@ func scanCells(rows *sql.Rows, columnTypes []*sql.ColumnType) ([]Cell, error) {
 			}
 		}
 		cells[i] = Cell{Text: formatValue(value), Type: kind, Null: value == nil}
+		cells[i].Size = int64(len(cells[i].Text))
+		if kind == "RAW" {
+			cells[i].Size /= 2
+		}
 	}
 	return cells, nil
 }

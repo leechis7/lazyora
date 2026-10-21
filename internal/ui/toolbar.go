@@ -68,8 +68,8 @@ func (s *screen) toolbar() *tview.Flex {
 				s.showArguments()
 				return
 			}
-			if page, root := s.pages.GetFrontPage(); page == "help" {
-				s.app.SetFocus(root.(*tview.Flex).GetItem(0))
+			if page, _ := s.pages.GetFrontPage(); page == "help" {
+				s.app.SetFocus(s.helpText)
 			} else if page == "object" {
 				s.app.SetFocus(s.objectTable)
 			} else if page == "arguments" {
@@ -99,6 +99,18 @@ func (s *screen) refreshFooter() {
 	}
 	hint := "footer_sql"
 	switch page {
+	case "about":
+		hint = "footer_about"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+C", "copy", tcell.KeyCtrlC, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+	case "grid_edit":
+		hint = "footer_grid_edit"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+S", "edit_preview", tcell.KeyCtrlS, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
+	case "cell":
+		hint = "footer_cell"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+S", "save", tcell.KeyCtrlS, 0}, {"Ctrl+C", "copy", tcell.KeyCtrlC, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+	case "result_filter":
+		hint = "footer_result_filter"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
 	case "definition":
 		hint = "footer_definition"
 		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+R", "reload", tcell.KeyCtrlR, 0}, {"Esc", "close", tcell.KeyEscape, 0}}

@@ -36,6 +36,8 @@ var commands = []command{
 	{"copy_row", "copy_row", menuEdit, []binding{{"Alt+Y", tcell.KeyRune, tcell.ModAlt, 'y'}}},
 	{"export", "export", menuEdit, []binding{{"Ctrl+Shift+E", tcell.KeyCtrlE, tcell.ModShift, 0}, {"Alt+W", tcell.KeyRune, tcell.ModAlt, 'w'}}},
 	{"copy_preview", "copy_preview", menuEdit, nil},
+	{"table_edit_load", "table_edit_load", menuEdit, nil},
+	{"grid_edit", "grid_edit", menuEdit, nil},
 	{"find", "find", menuEdit, []binding{{"Ctrl+F", tcell.KeyCtrlF, 0, 0}}},
 	{"find_next", "find_next", menuEdit, []binding{{"F3", tcell.KeyF3, 0, 0}}},
 	{"find_previous", "find_previous", menuEdit, []binding{{"Shift+F3", tcell.KeyF3, tcell.ModShift, 0}}},
@@ -70,6 +72,15 @@ var commands = []command{
 	{"passwords", "passwords", menuTools, []binding{{"Alt+K", tcell.KeyRune, tcell.ModAlt, 'k'}}},
 	{"routine_execute", "routine_execute", menuExecute, nil},
 	{"routine_results", "routine_results", menuView, nil},
+	{"grid_widen", "grid_widen", menuView, nil},
+	{"grid_narrow", "grid_narrow", menuView, nil},
+	{"grid_auto", "grid_auto", menuView, nil},
+	{"fetch_more", "fetch_more", menuView, nil},
+	{"result_sort_asc", "result_sort_asc", menuView, nil},
+	{"result_sort_desc", "result_sort_desc", menuView, nil},
+	{"result_filter", "result_filter", menuView, nil},
+	{"result_view_reset", "result_view_reset", menuView, nil},
+	{"cell_detail", "cell_detail", menuView, nil},
 	{"complete", "completion", menuEdit, []binding{{"Ctrl+T", tcell.KeyCtrlT, 0, 0}}},
 	{"complete_refresh", "completion_refresh", menuEdit, nil},
 	{"duplicate_line", "duplicate_line", menuEdit, nil},
@@ -81,6 +92,7 @@ var commands = []command{
 	{"transpose_line", "transpose_line", menuEdit, nil},
 	{"format_code", "format_code", menuEdit, []binding{{"Ctrl+Shift+F", tcell.KeyCtrlF, tcell.ModShift, 0}}},
 	{"help", "help", menuHelp, []binding{{"F1", tcell.KeyF1, 0, 0}}},
+	{"about", "about", menuHelp, nil},
 }
 
 func commandFor(id string) command {
@@ -116,6 +128,19 @@ func (s *screen) commandEnabled(id string) bool {
 		return false
 	}
 	switch id {
+	case "table_edit_load":
+		return !s.busy && s.connected && !s.transactionUncertain && s.editTableTarget().Kind == "TABLE"
+	case "grid_edit":
+		return !s.busy && s.connected && !s.transactionUncertain && s.table.HasFocus() && s.resultBrowser.source.EditID != 0 && len(s.resultRows) > 0
+
+	case "cell_detail":
+		return !s.busy && s.table.HasFocus() && len(s.resultRows) > 0
+	case "fetch_more":
+		return !s.busy && s.connected && s.table.HasFocus() && s.resultBrowser.source.PageID != 0
+	case "result_sort_asc", "result_sort_desc", "result_filter", "result_view_reset":
+		return !s.busy && s.table.HasFocus() && len(s.resultHeaders) > 0
+	case "grid_widen", "grid_narrow", "grid_auto":
+		return !s.busy && s.table.HasFocus() && len(s.resultHeaders) > 0
 	case "duplicate_line", "copy_line", "cut_line", "delete_line", "line_up", "line_down", "transpose_line":
 		return !s.busy && s.editor.HasFocus()
 	case "format_code":
@@ -130,7 +155,7 @@ func (s *screen) commandEnabled(id string) bool {
 		return true
 	case "output_toggle":
 		return s.connected && !s.busy && !s.transactionUncertain
-	case "quit", "help", "settings", "focus_toggle", "context_menu", "passwords":
+	case "quit", "about", "help", "settings", "focus_toggle", "context_menu", "passwords":
 		return true
 	case "fullscreen_sql", "fullscreen_results":
 		return true
@@ -187,6 +212,30 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "about":
+		s.showAbout()
+	case "table_edit_load":
+		s.loadEditTable()
+	case "grid_edit":
+		s.showGridEdit()
+	case "cell_detail":
+		s.showCellDetail()
+	case "fetch_more":
+		s.fetchMoreResults()
+	case "result_sort_asc":
+		s.sortResult(false)
+	case "result_sort_desc":
+		s.sortResult(true)
+	case "result_filter":
+		s.showResultFilter()
+	case "result_view_reset":
+		s.resetResultView()
+	case "grid_widen":
+		s.resizeResultColumn(4)
+	case "grid_narrow":
+		s.resizeResultColumn(-4)
+	case "grid_auto":
+		s.resizeResultColumn(0)
 	case "duplicate_line", "copy_line", "cut_line", "delete_line", "line_up", "line_down", "transpose_line":
 		s.editorLineAction(s.editor, id)
 	case "format_code":

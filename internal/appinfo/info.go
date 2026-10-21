@@ -2,6 +2,7 @@
 package appinfo
 
 const (
+	ProjectURL = "https://github.com/leechis7/lazyora"
 	Name       = "LazyOra"
 	Version    = "0.6.0"
 	Developer  = "이채강 (Chaekang Lee)"

@@ -34,8 +34,8 @@ func (s *screen) showDefinition(section string) {
 		s.definitionSelectors = nil
 		s.definitionCache = make(map[string]oracle.ObjectDefinition)
 		s.definitionInfo = tview.NewTextView().SetWrap(true)
-		s.definitionInfo.SetBackgroundColor(palette.background)
-		s.definitionInfo.SetTextColor(palette.text)
+		s.definitionInfo.SetBackgroundColor(s.colors().background)
+		s.definitionInfo.SetTextColor(s.colors().text)
 		s.definitionRoot = tview.NewFlex().SetDirection(tview.FlexRow)
 		s.pages.AddPage("definition", s.definitionRoot, true, true)
 	}
@@ -111,15 +111,15 @@ func (s *screen) renderDefinition(data oracle.ObjectDefinition, err error) {
 	s.definitionText.SetFocusFunc(func() { s.definitionCopyDetail = true })
 	s.definitionText.SetText("").ScrollToBeginning()
 	s.definitionText.SetBorder(true).SetTitle(s.tr("object_details"))
-	styleBox(s.definitionText.Box)
-	s.definitionText.SetTextColor(palette.text)
+	s.styleBox(s.definitionText.Box)
+	s.definitionText.SetTextColor(s.colors().text)
 	if s.definitionTable == nil {
-		s.definitionTable = tview.NewTable().SetFixed(1, 0).SetSelectable(true, false).SetSelectedStyle(focusStyle())
+		s.definitionTable = tview.NewTable().SetFixed(1, 0).SetSelectable(true, false).SetSelectedStyle(s.focusStyle())
 	}
 	s.definitionTable.SetFocusFunc(func() { s.definitionCopyDetail = false })
 	s.definitionTable.Clear()
 	s.definitionTable.SetBorder(true).SetTitle(s.tr(s.definitionSection))
-	styleBox(s.definitionTable.Box)
+	s.styleBox(s.definitionTable.Box)
 	s.definitionRows, s.definitionDetails = nil, nil
 	s.definitionTargets = nil
 	var headers []string
@@ -180,11 +180,11 @@ func (s *screen) renderDefinition(data oracle.ObjectDefinition, err error) {
 		}
 	}
 	for col, label := range headers {
-		s.definitionTable.SetCell(0, col, tview.NewTableCell(s.tr(label)).SetSelectable(false).SetStyle(tcell.StyleDefault.Foreground(palette.accent).Background(palette.surface).Bold(true)))
+		s.definitionTable.SetCell(0, col, tview.NewTableCell(s.tr(label)).SetSelectable(false).SetStyle(tcell.StyleDefault.Foreground(s.colors().accent).Background(s.colors().surface).Bold(true)))
 	}
 	for row, values := range s.definitionRows {
 		for col, value := range values {
-			s.definitionTable.SetCell(row+1, col, tview.NewTableCell(tview.Escape(value)).SetTextColor(palette.text))
+			s.definitionTable.SetCell(row+1, col, tview.NewTableCell(tview.Escape(value)).SetTextColor(s.colors().text))
 		}
 	}
 	s.definitionTable.SetSelectionChangedFunc(func(row, col int) {
@@ -205,7 +205,7 @@ func (s *screen) renderDefinition(data oracle.ObjectDefinition, err error) {
 			row := tview.NewFlex()
 			for i := from; i < from+3; i++ {
 				section := definitionSections[i]
-				button := clickable(tview.NewButton(fmt.Sprintf("%d %s", i+1, s.tr(section))).SetSelectedFunc(func() { s.showDefinition(section) }))
+				button := s.clickable(tview.NewButton(fmt.Sprintf("%d %s", i+1, s.tr(section))).SetSelectedFunc(func() { s.showDefinition(section) }))
 				s.definitionSelectors = append(s.definitionSelectors, button)
 				row.AddItem(button, 0, 1, false)
 			}
@@ -230,11 +230,11 @@ func (s *screen) renderDefinition(data oracle.ObjectDefinition, err error) {
 		}
 	}
 	if buttons == nil {
-		buttons = tview.NewFlex().AddItem(clickable(tview.NewButton(s.tr("copy_selection")+" (Ctrl+C)").SetSelectedFunc(s.copyDefinition)), 0, 1, false).
-			AddItem(clickable(tview.NewButton(s.tr("reload")+" (Ctrl+R)").SetSelectedFunc(s.refreshDefinition)), 0, 1, false).
-			AddItem(clickable(tview.NewButton(s.tr("relation_open")+" (Alt+O)").SetSelectedFunc(s.openDefinitionRelation)), 0, 1, false).
-			AddItem(clickable(tview.NewButton(s.tr("relation_back")+" (Alt+Left)").SetSelectedFunc(s.backDefinitionRelation)), 0, 1, false).
-			AddItem(clickable(tview.NewButton(s.tr("close")+" (Esc)").SetSelectedFunc(s.closeDefinition)), 0, 1, false)
+		buttons = tview.NewFlex().AddItem(s.clickable(tview.NewButton(s.tr("copy_selection")+" (Ctrl+C)").SetSelectedFunc(s.copyDefinition)), 0, 1, false).
+			AddItem(s.clickable(tview.NewButton(s.tr("reload")+" (Ctrl+R)").SetSelectedFunc(s.refreshDefinition)), 0, 1, false).
+			AddItem(s.clickable(tview.NewButton(s.tr("relation_open")+" (Alt+O)").SetSelectedFunc(s.openDefinitionRelation)), 0, 1, false).
+			AddItem(s.clickable(tview.NewButton(s.tr("relation_back")+" (Alt+Left)").SetSelectedFunc(s.backDefinitionRelation)), 0, 1, false).
+			AddItem(s.clickable(tview.NewButton(s.tr("close")+" (Esc)").SetSelectedFunc(s.closeDefinition)), 0, 1, false)
 	}
 	s.definitionRoot.AddItem(buttons, 1, 0, false)
 	if page, _ := s.pages.GetFrontPage(); page == "definition" {

@@ -150,3 +150,28 @@ func TestEditorKeymapValidationAndLegacyConfig(t *testing.T) {
 		t.Fatal("legacy config changed defaults")
 	}
 }
+
+func TestThemeValidationAndLegacyDefault(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "settings.json")
+	if err := os.WriteFile(path, []byte(`{"language":"en","mouse":true}`), 0600); err != nil {
+		t.Fatal(err)
+	}
+	c, err := Load(path)
+	if err != nil || c.Theme != "" {
+		t.Fatal("legacy settings failed", err)
+	}
+	for _, theme := range []string{"dark", "light"} {
+		c.Theme = theme
+		if err := Save(path, c); err != nil {
+			t.Fatal(err)
+		}
+		loaded, err := Load(path)
+		if err != nil || loaded.Theme != theme {
+			t.Fatal("theme roundtrip", err)
+		}
+	}
+	c.Theme = "invalid"
+	if err := Save(path, c); err == nil {
+		t.Fatal("invalid theme accepted")
+	}
+}

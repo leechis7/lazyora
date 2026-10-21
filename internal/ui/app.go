@@ -324,6 +324,7 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 	s.menuLayout = s.menuBar()
 	layout := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(s.menuLayout, 1, 0, false).AddItem(s.pages, 0, 1, true).AddItem(s.footer, 1, 0, false).AddItem(s.toolbar(), 1, 0, false)
+	layout.Box = tview.NewBox().SetBackgroundColor(s.colors().background)
 	s.rootLayout = layout
 	s.app.SetRoot(layout, true).SetFocus(s.editor).SetInputCapture(s.key).EnableMouse(prefs.Mouse)
 	s.app.SetBeforeDrawFunc(func(tcell.Screen) bool {
@@ -796,13 +797,17 @@ func (s *screen) renderGrid(result oracle.Result) {
 	s.grid = gridState{widths: make([]int, len(result.Columns))}
 	s.table.SetSelectionChangedFunc(nil)
 	s.table.Clear()
+	s.table.SetSeparator('│').SetEvaluateAllRows(false)
+	s.table.SetBackgroundColor(s.gridColors().background)
+	if s.limitedColors {
+		s.table.SetBackgroundColor(tcell.ColorBlack)
+		if s.prefs.Theme == "light" {
+			s.table.SetBackgroundColor(tcell.ColorWhite)
+		}
+	}
 	s.table.ScrollToBeginning()
 	for col, name := range result.Columns {
-		style := tcell.StyleDefault.Foreground(palette.accent).Background(palette.surface).Bold(true)
-		if s.limitedColors {
-			style = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorTeal).Bold(true)
-		}
-		s.table.SetCell(0, col, tview.NewTableCell(tview.Escape(name)).SetStyle(style).SetSelectable(false))
+		s.table.SetCell(0, col, tview.NewTableCell(tview.Escape(" "+name+" ")).SetStyle(s.gridHeaderStyle(false)).SetTransparency(false).SetSelectable(false))
 	}
 	if len(result.Rows) > 0 && len(result.Columns) > 0 {
 		s.table.Select(1, 0)
@@ -813,7 +818,7 @@ func (s *screen) renderGrid(result oracle.Result) {
 			if s.resultValues[row][col].Null {
 				text = "∅ NULL"
 			}
-			cell := tview.NewTableCell(tview.Escape(text)).SetStyle(s.gridBaseStyle(row+1, col)).SetMaxWidth(40)
+			cell := tview.NewTableCell(tview.Escape(" " + text + " ")).SetStyle(s.gridBaseStyle(row+1, col)).SetTransparency(false).SetMaxWidth(40)
 			if gridNumeric(s.resultValues[row][col]) {
 				cell.SetAlign(tview.AlignRight)
 			}
@@ -826,6 +831,7 @@ func (s *screen) renderGrid(result oracle.Result) {
 		for row := 0; row < s.table.GetRowCount(); row++ {
 			s.table.GetCell(row, col).SetMaxWidth(width)
 		}
+		s.refreshGridHeader(col)
 	}
 	s.table.SetSelectionChangedFunc(func(_, _ int) { s.highlightResults(); s.refreshResultPosition() })
 	s.highlightResults()

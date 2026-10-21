@@ -58,7 +58,7 @@ func TestHelpResponsiveTopicsKeyboardAndResize(t *testing.T) {
 				if !s.helpText.HasFocus() {
 					t.Fatal("Enter did not move to the selected article")
 				}
-				deliver(tcell.NewEventKey(tcell.KeyRune, '9', 0))
+				deliver(tcell.NewEventKey(tcell.KeyRune, '8', 0))
 				if !strings.Contains(s.helpText.GetText(true), "Notepad++") || strings.Contains(s.helpText.GetText(true), appinfo.Email) {
 					t.Fatal("keymap topic was missing or mixed with app information")
 				}
@@ -181,11 +181,11 @@ func TestHelpJumpsToSectionsAndBackInBothLanguages(t *testing.T) {
 			if !strings.Contains(top, "Ctrl+C") || strings.Contains(top, "Ctrl+Enter") {
 				t.Fatal("quick controls do not match result focus")
 			}
-			s.key(tcell.NewEventKey(tcell.KeyRune, '8', 0))
+			s.key(tcell.NewEventKey(tcell.KeyRune, '9', 0))
 			draw()
 			row, _ := help.GetScrollOffset()
-			if row != 0 || !strings.Contains(help.GetText(true), appinfo.Email) || s.helpTopics.GetCurrentItem() != 8 {
-				t.Fatal("8 did not show a separate app information topic from its beginning")
+			if row != 0 || !strings.Contains(help.GetText(true), appinfo.Email) || s.helpTopics.GetCurrentItem() != 9 {
+				t.Fatal("9 did not show a separate app information topic from its beginning")
 			}
 			s.key(tcell.NewEventKey(tcell.KeyRune, '0', 0))
 			draw()

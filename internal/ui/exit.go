@@ -30,8 +30,8 @@ func (s *screen) showExitConfirmation() {
 		labels = []string{s.tr("exit_commit"), s.tr("exit_rollback"), s.tr("pending_work"), s.tr("exit_cancel")}
 	}
 	s.exitDialog = tview.NewModal().SetText(s.exitMessage(message)).AddButtons(labels).
-		SetBackgroundColor(palette.background).SetTextColor(palette.text).
-		SetButtonStyle(buttonStyle()).SetButtonActivatedStyle(buttonFocusStyle())
+		SetBackgroundColor(s.colors().background).SetTextColor(s.colors().text).
+		SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(buttonFocusStyle())
 	s.exitDialog.SetDoneFunc(func(index int, _ string) {
 		if index < 0 || index == len(labels)-1 {
 			s.cancelExit()
@@ -51,7 +51,7 @@ func (s *screen) showExitConfirmation() {
 		}
 		s.confirmExit(action)
 	})
-	styleBox(s.exitDialog.Box)
+	s.styleModal(s.exitDialog)
 	s.exitDialog.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if s.busy {
 			return action, nil

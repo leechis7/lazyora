@@ -2,6 +2,7 @@
 import base64
 import csv
 import fcntl
+import json
 import os
 import platform
 import pty
@@ -74,6 +75,18 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         wait_for("SAMPLE_ROWS")
         read_for(0.3)
         output.clear()
+        # Tools -> Settings, then Alt+T selects Theme. Keep Light for all
+        # subsequent real-DB LOB/save/edit/rollback flows in this PTY.
+        output.clear()
+        send(b"\x1bt\r")
+        wait_for("Ctrl+S saves")
+        send(b"\x1bt\r\x1b[B\r")
+        output.clear()
+        send(b"\x13")
+        wait_for("Settings saved.")
+        with open(folder + "/settings.json", encoding="utf-8") as config:
+            assert json.load(config)["theme"] == "light", "theme was not persisted"
+        print("Settings theme shortcut, Light switch and persistence: passed")
         send(b"\x1bh\x1b[F\r")
         wait_for("AGPL-3.0-only")
         send(b"\x03")

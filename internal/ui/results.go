@@ -188,9 +188,9 @@ func (s *screen) copyPreview() {
 	s.copyFocus = s.app.GetFocus()
 	text := tview.NewTextView().SetText(s.clipboardText).SetWrap(false)
 	text.SetBorder(true).SetTitle(s.tr("copy_preview"))
-	styleBox(text.Box)
-	text.SetBackgroundColor(palette.field)
-	text.SetTextColor(palette.background)
+	s.styleBox(text.Box)
+	text.SetBackgroundColor(s.colors().field)
+	text.SetTextColor(s.colors().fieldText)
 
 	s.copyText = text
 	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(tview.NewTextView().SetText(s.tr("copy_preview_hint")).SetWrap(true), 2, 0, false).AddItem(text, 0, 1, true)

@@ -35,7 +35,7 @@ func TestRiskySQLDefaultsToCancelAndPreservesState(t *testing.T) {
 		if len(s.jobs) != 0 || len(s.sqlHistory) != 0 || s.sqlConfirmText != nil {
 			t.Fatal("default confirmation executed SQL")
 		}
-		if s.editor.GetText() != "DELETE FROM demo" || s.table.GetCell(1, 0).Text != "keep" || !s.pendingChanges || !s.editor.HasFocus() {
+		if s.editor.GetText() != "DELETE FROM demo" || s.resultRows[0][0] != "keep" || !s.pendingChanges || !s.editor.HasFocus() {
 			t.Fatal("cancel changed SQL, result, transaction or focus")
 		}
 	}
@@ -126,9 +126,10 @@ func TestSQLWarningMouseCancelAndSmallTerminal(t *testing.T) {
 		s.editor.SetText("DROP TABLE demo", false)
 		s.executeSQL()
 		_, page := s.pages.GetFrontPage()
-		root := page.(*tview.Flex)
-		root.SetRect(0, 0, 80, 21)
-		root.Draw(terminal)
+		popup := page.(*formPopupLayer)
+		root := popup.content.(*tview.Flex)
+		popup.SetRect(0, 0, 80, 21)
+		popup.Draw(terminal)
 		buttons := root.GetItem(root.GetItemCount() - 1).(*tview.Flex)
 		cancel := buttons.GetItem(1).(*tview.Button)
 		x, y, width, height := cancel.GetRect()
@@ -138,7 +139,7 @@ func TestSQLWarningMouseCancelAndSmallTerminal(t *testing.T) {
 		if !cancel.HasFocus() {
 			t.Fatal("cancel not selected by default")
 		}
-		root.MouseHandler()(tview.MouseLeftClick, tcell.NewEventMouse(x+width/2, y, tcell.ButtonNone, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+		popup.MouseHandler()(tview.MouseLeftClick, tcell.NewEventMouse(x+width/2, y, tcell.ButtonNone, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
 		if s.sqlConfirmText != nil || len(s.jobs) != 0 {
 			t.Fatal("mouse cancel did not dismiss safely")
 		}

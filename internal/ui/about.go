@@ -12,13 +12,13 @@ func (s *screen) aboutContent() string {
 }
 func (s *screen) showAbout() {
 	s.aboutFocus = s.app.GetFocus()
-	text := tview.NewTextView().SetWrap(true).SetScrollable(true).SetDynamicColors(false).SetText(s.aboutContent()).SetTextColor(palette.text)
-	text.SetBackgroundColor(palette.background)
+	text := tview.NewTextView().SetWrap(true).SetScrollable(true).SetDynamicColors(false).SetText(s.aboutContent()).SetTextColor(s.colors().text)
+	text.SetBackgroundColor(s.colors().background)
 	text.SetBorder(true).SetTitle(s.tr("about"))
-	styleBox(text.Box)
+	s.styleBox(text.Box)
 	s.aboutText = text
-	close := tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeAbout).SetStyle(buttonStyle()).SetActivatedStyle(buttonFocusStyle())
-	clickable(close)
+	close := tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeAbout).SetStyle(s.buttonStyle()).SetActivatedStyle(buttonFocusStyle())
+	s.clickable(close)
 	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(text, 0, 1, true).AddItem(tview.NewFlex().AddItem(nil, 0, 1, false).AddItem(close, 20, 0, false).AddItem(nil, 0, 1, false), 1, 0, false)
 	s.pages.AddPage("about", root, true, true)
 	s.app.SetFocus(text)

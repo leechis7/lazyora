@@ -35,13 +35,13 @@ func (s *screen) showPendingWork() {
 	s.pendingFocus = s.app.GetFocus()
 	s.pendingSQL = tview.NewTextView().SetWrap(true).SetWordWrap(true).SetScrollable(true)
 	s.pendingSQL.SetBorder(true).SetTitle(s.tr("pending_sql"))
-	styleBox(s.pendingSQL.Box)
-	s.pendingSQL.SetTextColor(palette.text)
-	s.pendingTable = tview.NewTable().SetFixed(1, 0).SetSelectable(true, false).SetSelectedStyle(focusStyle())
+	s.styleBox(s.pendingSQL.Box)
+	s.pendingSQL.SetTextColor(s.colors().text)
+	s.pendingTable = tview.NewTable().SetFixed(1, 0).SetSelectable(true, false).SetSelectedStyle(s.focusStyle())
 	s.pendingTable.SetBorder(true).SetTitle(s.tr("pending_work"))
-	styleBox(s.pendingTable.Box)
+	s.styleBox(s.pendingTable.Box)
 	for col, key := range []string{"pending_number", "pending_time", "pending_outcome", "pending_rows", "pending_sql"} {
-		s.pendingTable.SetCell(0, col, tview.NewTableCell(s.tr(key)).SetSelectable(false).SetTextColor(palette.accent))
+		s.pendingTable.SetCell(0, col, tview.NewTableCell(s.tr(key)).SetSelectable(false).SetTextColor(s.colors().accent))
 	}
 	for i, record := range s.pendingWork.Statements {
 		outcome := s.tr("pending_success")
@@ -53,18 +53,18 @@ func (s *screen) showPendingWork() {
 			rows = fmt.Sprint(record.Affected)
 		}
 		for col, text := range []string{fmt.Sprint(i + 1 + s.pendingWork.Omitted), record.At.Format("15:04:05"), outcome, rows, sqlSummary(record.SQL, 80)} {
-			s.pendingTable.SetCell(i+1, col, tview.NewTableCell(tview.Escape(text)).SetTextColor(palette.text))
+			s.pendingTable.SetCell(i+1, col, tview.NewTableCell(tview.Escape(text)).SetTextColor(s.colors().text))
 		}
 	}
 	s.pendingTable.SetSelectionChangedFunc(func(row, col int) { s.selectPendingStatement(row) })
-	info := tview.NewTextView().SetWrap(true).SetWordWrap(true).SetTextColor(palette.muted)
-	info.SetBackgroundColor(palette.background)
+	info := tview.NewTextView().SetWrap(true).SetWordWrap(true).SetTextColor(s.colors().muted)
+	info.SetBackgroundColor(s.colors().background)
 	text := fmt.Sprintf(s.tr("pending_count"), len(s.pendingWork.Statements)+s.pendingWork.Omitted) + "\n" + s.tr("pending_note")
 	if s.pendingWork.Omitted > 0 {
 		text += "\n" + fmt.Sprintf(s.tr("pending_omitted"), s.pendingWork.Omitted)
 	}
 	info.SetText(text)
-	close := clickable(tview.NewButton(s.tr("back") + " (Esc)").SetSelectedFunc(s.closePendingWork))
+	close := s.clickable(tview.NewButton(s.tr("back") + " (Esc)").SetSelectedFunc(s.closePendingWork))
 	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(info, 5, 0, false).
 		AddItem(s.pendingTable, 0, 2, true).AddItem(s.pendingSQL, 0, 3, false).AddItem(close, 1, 0, false)
 	s.pages.AddPage("pending", root, true, true)

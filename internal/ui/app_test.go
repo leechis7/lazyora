@@ -35,7 +35,7 @@ func TestDemoInterfaceAndConnectionForm(t *testing.T) {
 	case <-time.After(5 * time.Second):
 		t.Fatal("app did not draw")
 	}
-	if ui.table.GetCell(1, 1).Text != "Demo — no database connected" {
+	if ui.resultRows[0][1] != "Demo — no database connected" {
 		t.Fatal("missing demo result")
 	}
 	// Exercise real key dispatch, not just the widget construction.

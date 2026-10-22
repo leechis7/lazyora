@@ -300,9 +300,16 @@ func TestCancelAfterBufferedFileWritesPreservesDestination(t *testing.T) {
 			if entry.Name() == "keep.csv" || strings.HasSuffix(entry.Name(), ".lock") {
 				continue
 			}
-			info, statErr := entry.Info()
-			if statErr != nil {
-				t.Fatal(statErr)
+			// Query the open file handle: Windows directory entries can retain
+			// the old size while the exporting writer still has the file open.
+			file, openErr := os.Open(filepath.Join(dir, entry.Name()))
+			if openErr != nil {
+				t.Fatal(openErr)
+			}
+			info, statErr := file.Stat()
+			closeErr := file.Close()
+			if statErr != nil || closeErr != nil {
+				t.Fatalf("partial file stat/close: %v / %v", statErr, closeErr)
 			}
 			partialWrite = partialWrite || info.Size() > 0
 		}

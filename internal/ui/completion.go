@@ -45,9 +45,9 @@ func (s *screen) showCompletion(refresh bool) {
 	s.completionResult = oracle.Completions{}
 	s.completionList = tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(true).SetSelectedStyle(s.focusStyle())
 	s.completionList.SetBorder(true).SetTitle(s.tr("completion"))
-	s.styleBox(s.completionList.Box)
+	s.styleList(s.completionList)
 	s.completionList.SetSelectedFunc(func(int, string, string, rune) { s.applyCompletion() })
-	s.completionFilter = tview.NewInputField().SetLabel(s.tr("completion_filter")).SetText(context.Prefix).SetFieldWidth(40)
+	s.completionFilter = s.newInputField().SetLabel(s.tr("completion_filter")).SetText(context.Prefix).SetFieldWidth(40)
 	s.completionFilter.SetFieldStyle(s.fieldStyle()).SetLabelStyle(tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().background))
 	s.completionFilter.SetChangedFunc(func(string) { s.filterCompletions() })
 	s.completionFilter.SetDoneFunc(func(key tcell.Key) {
@@ -55,12 +55,12 @@ func (s *screen) showCompletion(refresh bool) {
 			s.applyCompletion()
 		}
 	})
-	s.completionInfo = tview.NewTextView().SetWrap(true).SetText(s.tr("browser_loading"))
+	s.completionInfo = s.newTextView().SetWrap(true).SetText(s.tr("browser_loading"))
 	s.completionInfo.SetTextColor(s.colors().text).SetBackgroundColor(s.colors().background)
-	buttons := tview.NewFlex().AddItem(s.clickable(tview.NewButton(s.tr("completion_insert")).SetSelectedFunc(s.applyCompletion)), 0, 1, false).
+	buttons := s.newFlex().AddItem(s.clickable(tview.NewButton(s.tr("completion_insert")).SetSelectedFunc(s.applyCompletion)), 0, 1, false).
 		AddItem(s.clickable(tview.NewButton(s.tr("completion_refresh")).SetSelectedFunc(func() { s.loadCompletions(true) })), 0, 1, false).
 		AddItem(s.clickable(tview.NewButton(s.tr("cancel")).SetSelectedFunc(s.cancelCompletion)), 0, 1, false)
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.completionInfo, 4, 0, false).AddItem(s.completionFilter, 1, 0, false).AddItem(s.completionList, 0, 1, true).AddItem(buttons, 1, 0, false)
+	root := s.newFlex().SetDirection(tview.FlexRow).AddItem(s.completionInfo, 4, 0, false).AddItem(s.completionFilter, 1, 0, false).AddItem(s.completionList, 0, 1, true).AddItem(buttons, 1, 0, false)
 	s.pages.AddPage("completion", root, true, true)
 	s.app.SetFocus(s.completionList)
 	s.loadCompletions(refresh)

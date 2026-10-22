@@ -17,7 +17,10 @@ func sqlSummary(sql string, limit int) string {
 
 func (s *screen) exitMessage(key string) string {
 	message := s.tr(key)
-	if key != "exit_pending" {
+	if badge := s.connectionBadge(); badge != "" {
+		message = tview.Escape(badge) + "\n\n" + message
+	}
+	if key != "exit_pending" && key != "workspace_exit_pending" {
 		return message
 	}
 	records := s.pendingWork.Statements
@@ -33,7 +36,7 @@ func (s *screen) showPendingWork() {
 		return
 	}
 	s.pendingFocus = s.app.GetFocus()
-	s.pendingSQL = tview.NewTextView().SetWrap(true).SetWordWrap(true).SetScrollable(true)
+	s.pendingSQL = s.newTextView().SetWrap(true).SetWordWrap(true).SetScrollable(true)
 	s.pendingSQL.SetBorder(true).SetTitle(s.tr("pending_sql"))
 	s.styleBox(s.pendingSQL.Box)
 	s.pendingSQL.SetTextColor(s.colors().text)
@@ -57,7 +60,7 @@ func (s *screen) showPendingWork() {
 		}
 	}
 	s.pendingTable.SetSelectionChangedFunc(func(row, col int) { s.selectPendingStatement(row) })
-	info := tview.NewTextView().SetWrap(true).SetWordWrap(true).SetTextColor(s.colors().muted)
+	info := s.newTextView(textHint).SetWrap(true).SetWordWrap(true).SetTextColor(s.colors().muted)
 	info.SetBackgroundColor(s.colors().background)
 	text := fmt.Sprintf(s.tr("pending_count"), len(s.pendingWork.Statements)+s.pendingWork.Omitted) + "\n" + s.tr("pending_note")
 	if s.pendingWork.Omitted > 0 {
@@ -65,7 +68,7 @@ func (s *screen) showPendingWork() {
 	}
 	info.SetText(text)
 	close := s.clickable(tview.NewButton(s.tr("back") + " (Esc)").SetSelectedFunc(s.closePendingWork))
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(info, 5, 0, false).
+	root := s.newFlex().SetDirection(tview.FlexRow).AddItem(info, 5, 0, false).
 		AddItem(s.pendingTable, 0, 2, true).AddItem(s.pendingSQL, 0, 3, false).AddItem(close, 1, 0, false)
 	s.pages.AddPage("pending", root, true, true)
 	if len(s.pendingWork.Statements) > 0 {
@@ -97,7 +100,7 @@ func (s *screen) closePendingWork() {
 	s.pendingTable = nil
 	s.pendingSQL = nil
 	if s.exitDialog != nil {
-		s.exitDialog.SetFocus(3)
+		s.exitDialog.SetFocus(s.exitCancelIndex())
 		s.app.SetFocus(s.exitDialog)
 	} else if s.pendingFocus != nil {
 		s.app.SetFocus(s.pendingFocus)

@@ -100,7 +100,7 @@ func (s *screen) showExport() {
 	form.AddInputField(s.tr("export_schema"), "", 30, nil, nil)
 	form.AddInputField(s.tr("export_table"), "", 30, nil, nil)
 	form.AddInputField(s.tr("export_columns"), csvColumns(s.resultHeaders), 0, nil, nil)
-	info := tview.NewTextView().SetWrap(true).SetText(fmt.Sprintf(s.tr("export_hint"), len(s.resultRows), oracle.MaxGridRows))
+	info := s.newTextView(textHint).SetWrap(true).SetText(fmt.Sprintf(s.tr("export_hint"), len(s.resultRows), oracle.MaxGridRows))
 	if s.resultTruncated {
 		info.SetText(info.GetText(false) + "\n" + s.tr("export_truncated"))
 	}

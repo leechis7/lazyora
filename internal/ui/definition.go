@@ -33,10 +33,10 @@ func (s *screen) showDefinition(section string) {
 		s.definitionTrail = nil
 		s.definitionSelectors = nil
 		s.definitionCache = make(map[string]oracle.ObjectDefinition)
-		s.definitionInfo = tview.NewTextView().SetWrap(true)
+		s.definitionInfo = s.newTextView().SetWrap(true)
 		s.definitionInfo.SetBackgroundColor(s.colors().background)
 		s.definitionInfo.SetTextColor(s.colors().text)
-		s.definitionRoot = tview.NewFlex().SetDirection(tview.FlexRow)
+		s.definitionRoot = s.newFlex().SetDirection(tview.FlexRow)
 		s.pages.AddPage("definition", s.definitionRoot, true, true)
 	}
 	s.definitionSection = section
@@ -106,7 +106,7 @@ func (s *screen) renderDefinition(data oracle.ObjectDefinition, err error) {
 	}
 	s.definitionInfo.SetText(message)
 	if s.definitionText == nil {
-		s.definitionText = tview.NewTextView().SetWrap(false).SetScrollable(true)
+		s.definitionText = s.newTextView().SetWrap(false).SetScrollable(true)
 	}
 	s.definitionText.SetFocusFunc(func() { s.definitionCopyDetail = true })
 	s.definitionText.SetText("").ScrollToBeginning()
@@ -200,9 +200,9 @@ func (s *screen) renderDefinition(data oracle.ObjectDefinition, err error) {
 	}
 	s.definitionRoot.Clear().AddItem(s.definitionInfo, 5, 0, false)
 	if selectors == nil {
-		selectors = tview.NewFlex().SetDirection(tview.FlexRow)
+		selectors = s.newFlex().SetDirection(tview.FlexRow)
 		for from := 0; from < len(definitionSections); from += 3 {
-			row := tview.NewFlex()
+			row := s.newFlex()
 			for i := from; i < from+3; i++ {
 				section := definitionSections[i]
 				button := s.clickable(tview.NewButton(fmt.Sprintf("%d %s", i+1, s.tr(section))).SetSelectedFunc(func() { s.showDefinition(section) }))
@@ -230,7 +230,7 @@ func (s *screen) renderDefinition(data oracle.ObjectDefinition, err error) {
 		}
 	}
 	if buttons == nil {
-		buttons = tview.NewFlex().AddItem(s.clickable(tview.NewButton(s.tr("copy_selection")+" (Ctrl+C)").SetSelectedFunc(s.copyDefinition)), 0, 1, false).
+		buttons = s.newFlex().AddItem(s.clickable(tview.NewButton(s.tr("copy_selection")+" (Ctrl+C)").SetSelectedFunc(s.copyDefinition)), 0, 1, false).
 			AddItem(s.clickable(tview.NewButton(s.tr("reload")+" (Ctrl+R)").SetSelectedFunc(s.refreshDefinition)), 0, 1, false).
 			AddItem(s.clickable(tview.NewButton(s.tr("relation_open")+" (Alt+O)").SetSelectedFunc(s.openDefinitionRelation)), 0, 1, false).
 			AddItem(s.clickable(tview.NewButton(s.tr("relation_back")+" (Alt+Left)").SetSelectedFunc(s.backDefinitionRelation)), 0, 1, false).

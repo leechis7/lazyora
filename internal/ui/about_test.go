@@ -21,10 +21,10 @@ func TestAboutMenuSharedMetadataAndStatePreserved(t *testing.T) {
 				s.pendingChanges = true
 				s.connected = true
 				s.showMenu(menuHelp)
-				if s.menuList.GetItemCount() != 2 {
+				if s.menuList.GetItemCount() != 6 {
 					t.Fatal("Help/About menu missing")
 				}
-				s.menuList.SetCurrentItem(1)
+				s.menuList.SetCurrentItem(s.menuList.GetItemCount() - 1)
 				s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
 				if !s.pages.HasPage("about") {
 					t.Fatal("menu did not open About")
@@ -39,6 +39,11 @@ func TestAboutMenuSharedMetadataAndStatePreserved(t *testing.T) {
 					terminal.SetSize(size[0], size[1])
 					root.SetRect(0, 0, size[0], size[1])
 					root.Draw(terminal)
+					card := root.(*formPopupLayer).content
+					x, y, w, h := card.GetRect()
+					if x != (size[0]-w)/2 || y != (size[1]-h)/2 || w > 76 || h > 24 {
+						t.Fatalf("About card not centered/bounded: %v rect=%d,%d %dx%d", size, x, y, w, h)
+					}
 				}
 				s.key(tcell.NewEventKey(tcell.KeyCtrlC, 0, 0))
 				if s.clipboardText != s.aboutContent() {
@@ -78,7 +83,7 @@ func TestAboutEscapeDoesNotCancelSQLAndMouseClose(t *testing.T) {
 	_, root := s.pages.GetFrontPage()
 	root.SetRect(0, 0, 80, 20)
 	root.Draw(terminal)
-	button := root.(*tview.Flex).GetItem(1).(*tview.Flex).GetItem(1).(*tview.Button)
+	button := root.(*formPopupLayer).content.(*tview.Flex).GetItem(1).(*tview.Flex).GetItem(1).(*tview.Button)
 	x, y, _, _ := button.GetRect()
 	button.MouseHandler()(tview.MouseLeftClick, tcell.NewEventMouse(x+1, y, tcell.Button1, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
 	if s.pages.HasPage("about") {

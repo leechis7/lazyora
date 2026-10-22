@@ -36,7 +36,7 @@ func (s *screen) initTabs() {
 		return
 	}
 	s.tabs = []*sqlTab{{}}
-	s.tabBar = tview.NewFlex()
+	s.tabBar = s.newFlex()
 	s.stashTab()
 	s.refreshTabs()
 	s.rebuildPanels()
@@ -202,7 +202,7 @@ func (s *screen) refreshTabs() {
 		return
 	}
 	s.tabBar.Clear()
-	shared := tview.NewTextView().SetText(s.tr("tab_session"))
+	shared := s.newTextView(textHint).SetText(s.tr("tab_session"))
 	shared.SetTextColor(s.colors().muted).SetBackgroundColor(s.colors().background)
 	s.tabBar.AddItem(shared, 10, 0, false)
 	// Keep the active tab visible even on a narrow terminal. All tabs remain
@@ -233,7 +233,7 @@ func (s *screen) refreshTabs() {
 		index := i
 		button := s.clickable(tview.NewButton(label).SetSelectedFunc(func() { s.switchTab(index) }))
 		if i == s.activeTab {
-			button.SetStyle(buttonFocusStyle())
+			button.SetStyle(s.buttonFocusStyle())
 		}
 		s.tabBar.AddItem(button, 0, 1, false)
 	}

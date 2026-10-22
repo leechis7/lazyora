@@ -38,11 +38,11 @@ func (s *screen) showScriptReport() {
 	s.scriptFocus = s.app.GetFocus()
 	list := tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
 	list.SetBorder(true).SetTitle(s.tr("script_report"))
-	s.styleBox(list.Box)
+	s.styleList(list)
 	table := tview.NewTable().SetFixed(1, 0).SetSelectable(true, true).SetSelectedStyle(s.focusStyle())
 	table.SetBorder(true).SetTitle(s.tr("results_title"))
 	s.styleBox(table.Box)
-	preview := tview.NewTextView().SetWrap(false).SetScrollable(true)
+	preview := s.newTextView().SetWrap(false).SetScrollable(true)
 	preview.SetBorder(true)
 	s.styleBox(preview.Box)
 	preview.SetTextColor(s.colors().text)
@@ -82,8 +82,8 @@ func (s *screen) showScriptReport() {
 		}
 	}))
 	close := s.clickable(tview.NewButton(s.tr("close")).SetSelectedFunc(s.closeScriptReport))
-	buttons := tview.NewFlex().AddItem(use, 0, 1, false).AddItem(close, 0, 1, false)
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(list, 0, 1, true).AddItem(preview, 0, 1, false).AddItem(table, 0, 2, false).AddItem(buttons, 1, 0, false)
+	buttons := s.newFlex().AddItem(use, 0, 1, false).AddItem(close, 0, 1, false)
+	root := s.newFlex().SetDirection(tview.FlexRow).AddItem(list, 0, 1, true).AddItem(preview, 0, 1, false).AddItem(table, 0, 2, false).AddItem(buttons, 1, 0, false)
 	s.pages.AddPage("script", root, true, true)
 	s.app.SetFocus(list)
 }
@@ -99,6 +99,9 @@ func (s *screen) closeScriptReport() {
 }
 
 func (s *screen) scriptKey(event *tcell.EventKey) *tcell.EventKey {
+	if s.listDetailArrow(event, s.scriptList, s.scriptText) {
+		return nil
+	}
 	switch event.Key() {
 	case tcell.KeyEscape:
 		s.closeScriptReport()

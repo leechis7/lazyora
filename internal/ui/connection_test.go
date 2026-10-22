@@ -3,6 +3,7 @@ package ui
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -40,7 +41,7 @@ func TestConnectionProfilesPersistUpdateAndClearPassword(t *testing.T) {
 		t.Fatal("password was written to disk")
 	}
 	info, _ := os.Stat(path)
-	if info.Mode().Perm() != 0600 {
+	if runtime.GOOS != "windows" && info.Mode().Perm() != 0600 {
 		t.Fatalf("connection file permissions: %v", info.Mode())
 	}
 	if s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).GetText() != "secret-only-in-memory" {
@@ -172,7 +173,7 @@ func TestConnectionSectionsAndTabCycle(t *testing.T) {
 	if s.connectForm.GetFormItem(0).GetLabel() != s.tr("alias") {
 		t.Fatal("alias must be first")
 	}
-	if s.connectProfiles.GetFormItemCount() != 1 || s.connectForm.GetFormItemCount() != 8 {
+	if s.connectProfiles.GetFormItemCount() != 1 || s.connectForm.GetFormItemCount() != 9 {
 		t.Fatal("profile picker not separate from editable fields")
 	}
 	connectionKey(s, tcell.KeyBacktab)

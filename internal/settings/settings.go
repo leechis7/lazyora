@@ -42,8 +42,8 @@ func Path() (string, error) {
 }
 
 func (c Config) Validate() error {
-	if c.Theme != "" && c.Theme != "dark" && c.Theme != "light" {
-		return errors.New("theme must be dark or light")
+	if c.Theme != "" && c.Theme != "dark" && c.Theme != "light" && c.Theme != "blackwhite" {
+		return errors.New("theme must be dark, light or blackwhite")
 	}
 	if c.Language != "en" && c.Language != "ko" {
 		return errors.New("language must be en or ko")

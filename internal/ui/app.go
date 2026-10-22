@@ -18,6 +18,7 @@ import (
 )
 
 type job struct {
+	identity      settings.Connection
 	edit          oracle.EditChange
 	cell          oracle.Cell
 	pageID        uint64
@@ -41,6 +42,18 @@ type job struct {
 }
 
 type screen struct {
+	textRoles                           map[*tview.TextView]textRole
+	reference                           *referenceView
+	workspaces                          *workspaceSet
+	workspaceID                         int
+	workspaceFocus                      tview.Primitive
+	connectionIdentity, pendingIdentity settings.Connection
+	connectionHeader                    *tview.TextView
+	workspaceList                       *tview.List
+	workspaceFocusBefore                tview.Primitive
+	installHandlers                     func()
+	workerClosed                        bool
+
 	aboutText                        *tview.TextView
 	aboutFocus                       tview.Primitive
 	editChange                       oracle.EditChange
@@ -232,9 +245,22 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 	if prefsErr == nil {
 		prefs, prefsErr = settings.Load(path)
 	}
-	s := &screen{app: tview.NewApplication(), jobs: make(chan job, 1), done: make(chan struct{}), demo: demo, prefs: prefs, prefsPath: path}
+	app := tview.NewApplication().SetScreen(terminal)
+	s := newWorkspaceScreen(app, terminal, prefs, path, demo, prefsErr)
+	spaces := &workspaceSet{app: app, active: s}
+	spaces.factory = func(p settings.Config) *screen { return newWorkspaceScreen(app, terminal, p, path, demo, nil) }
+	spaces.adopt(s)
+	if ready != nil {
+		ready(s)
+	}
+	err := app.Run()
+	spaces.shutdown()
+	return err
+}
+
+func newWorkspaceScreen(app *tview.Application, terminal tcell.Screen, prefs settings.Config, path string, demo bool, prefsErr error) *screen {
+	s := &screen{app: app, jobs: make(chan job, 1), done: make(chan struct{}), demo: demo, prefs: prefs, prefsPath: path}
 	s.terminal = terminal
-	s.app.SetScreen(terminal)
 	s.limitedColors = terminal.Colors() > 0 && terminal.Colors() <= 16
 	s.editor = tview.NewTextArea().SetText("SELECT sysdate AS server_time FROM dual;", false)
 	s.editor.SetBorder(true)
@@ -251,11 +277,11 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 	s.table.SetBorder(true)
 	s.table.SetMouseCapture(s.resultMouse)
 	s.editor.SetClipboard(s.sendClipboard, func() string { return s.clipboardText })
-	s.status = tview.NewTextView()
-	s.queryLayout = tview.NewFlex().SetDirection(tview.FlexRow).
+	s.status = s.newTextView(textHint)
+	s.queryLayout = s.newFlex().SetDirection(tview.FlexRow).
 		AddItem(s.editor, 0, 2, true).
 		AddItem(s.resultGrid(), 0, 3, false).AddItem(s.status, 2, 0, false)
-	s.mainLayout = tview.NewFlex().AddItem(s.newBrowser(), 0, 1, false).AddItem(s.queryLayout, 0, 3, true)
+	s.mainLayout = s.newFlex().AddItem(s.newBrowser(), 0, 1, false).AddItem(s.queryLayout, 0, 3, true)
 	s.pages = tview.NewPages().AddPage("main", s.mainLayout, true, true)
 	s.pages.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		page, pageRoot := s.pages.GetFrontPage()
@@ -319,39 +345,45 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 		}
 		return action, event
 	})
-	s.footer = tview.NewTextView().SetWrap(false)
+	s.footer = s.newTextView(textAccent).SetWrap(false)
 	s.styleScreen()
 	s.menuLayout = s.menuBar()
-	layout := tview.NewFlex().SetDirection(tview.FlexRow).
+	layout := s.newFlex().SetDirection(tview.FlexRow).
 		AddItem(s.menuLayout, 1, 0, false).AddItem(s.pages, 0, 1, true).AddItem(s.footer, 1, 0, false).AddItem(s.toolbar(), 1, 0, false)
-	layout.Box = tview.NewBox().SetBackgroundColor(s.colors().background)
+	layout.Box = s.newBox().SetBackgroundColor(s.colors().background)
 	s.rootLayout = layout
-	s.app.SetRoot(layout, true).SetFocus(s.editor).SetInputCapture(s.key).EnableMouse(prefs.Mouse)
-	s.app.SetBeforeDrawFunc(func(tcell.Screen) bool {
-		s.syncChrome()
-		s.refreshFooter()
-		s.refreshBorders()
-		return false
-	})
-	lastClickX, lastClickY := -1, -1
-	s.app.SetMouseCapture(func(event *tcell.EventMouse, action tview.MouseAction) (*tcell.EventMouse, tview.MouseAction) {
-		if s.vaultBusy {
-			return nil, action
-		}
-		if !s.prefs.Mouse {
-			return nil, action
-		}
-		// tview groups quick clicks even when they target different controls.
-		// Preserve double clicks for text selection only at the same position.
-		if action == tview.MouseLeftClick || action == tview.MouseLeftDoubleClick {
-			x, y := event.Position()
-			if x != lastClickX || y != lastClickY {
-				action = tview.MouseLeftClick
+	s.connectionHeader = s.newTextView(textAccent).SetWrap(false).SetTextColor(s.colors().accent)
+	s.connectionHeader.SetBackgroundColor(s.colors().surface)
+	s.installHandlers = func() {
+		s.app.SetInputCapture(s.key).EnableMouse(s.prefs.Mouse)
+		s.app.SetBeforeDrawFunc(func(tcell.Screen) bool {
+			s.syncChrome()
+			s.refreshFooter()
+			s.refreshBorders()
+			return false
+		})
+		lastClickX, lastClickY := -1, -1
+		s.app.SetMouseCapture(func(event *tcell.EventMouse, action tview.MouseAction) (*tcell.EventMouse, tview.MouseAction) {
+			if s.vaultBusy {
+				return nil, action
 			}
-			lastClickX, lastClickY = x, y
-		}
-		return event, action
-	})
+			if !s.prefs.Mouse {
+				return nil, action
+			}
+			// tview groups quick clicks even when they target different controls.
+			// Preserve double clicks for text selection only at the same position.
+			if action == tview.MouseLeftClick || action == tview.MouseLeftDoubleClick {
+				x, y := event.Position()
+				if x != lastClickX || y != lastClickY {
+					action = tview.MouseLeftClick
+				}
+				lastClickX, lastClickY = x, y
+			}
+			return event, action
+		})
+	}
+	s.app.SetRoot(layout, true).SetFocus(s.editor)
+	s.installHandlers()
 	s.refreshLabels()
 	s.initTabs()
 	s.setStatus("disconnected")
@@ -367,23 +399,13 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 	if !demo {
 		s.connectionForm()
 	}
-	if ready != nil {
-		ready(s)
-	}
-	err := s.app.Run()
-	if s.vaultWorkDone != nil {
-		<-s.vaultWorkDone
-	}
-	s.lockPasswords()
-	if s.cancel != nil {
-		s.cancel()
-	}
-	close(s.jobs)
-	<-s.done
-	return err
+	return s
 }
 
 func (s *screen) submit(j job) {
+	if s.workerClosed {
+		return
+	}
 	if s.busy {
 		return
 	}
@@ -499,6 +521,7 @@ func (s *screen) worker() {
 			}
 		case "connect":
 			session, err = oracle.Reconnect(j.ctx, session, j.config, j.resolution)
+			j.config.Password = ""
 		case "execute":
 			result, err = session.ExecutePaged(j.ctx, j.text, j.bindings)
 		case "fetch_more":
@@ -548,11 +571,18 @@ func (s *screen) worker() {
 			s.cancel()
 			s.cancel = nil
 			s.busy = false
+			defer func() {
+				if s.quitting {
+					s.quitting = false
+					s.requestQuitLocal()
+				}
+			}()
 			if session != nil {
 				s.outputEnabled = session.OutputEnabled()
 				s.pendingChanges = session.PendingChanges()
 				s.transactionUncertain = session.TransactionUncertain()
 				s.pendingWork = session.PendingWork()
+				s.refreshConnectionTitles()
 				s.invalidateResultCursors(session.PageID())
 				s.invalidateEditResults(session.EditID())
 			}
@@ -603,7 +633,7 @@ func (s *screen) worker() {
 			}
 			if j.action == "exit_commit" || j.action == "exit_rollback" {
 				if err == nil {
-					s.app.Stop()
+					s.finishExit()
 				} else {
 					s.exitDialog.SetText(s.tr("exit_failed") + "\n" + tview.Escape(err.Error()))
 				}
@@ -677,16 +707,12 @@ func (s *screen) worker() {
 				case "connect":
 					s.clearOutput()
 					s.routineResults = oracle.RoutineResult{}
-					s.clearBindValues()
+					s.clearConnectionResults()
 					s.connected = true
+					s.connectionIdentity = j.identity
+					s.connectionIdentity.Host, s.connectionIdentity.Port, s.connectionIdentity.User, s.connectionIdentity.Mode, s.connectionIdentity.Name = j.config.Host, j.config.Port, j.config.User, j.config.Mode, j.config.Name
+					s.refreshConnectionTitles()
 					s.demo = false
-					s.table.Clear()
-					s.resultRows = nil
-					s.resultHeaders = nil
-					s.resultValues = nil
-					s.resultTruncated = false
-					s.resultSelection = resultSelection{}
-					s.resultBrowser = resultBrowser{}
 					s.resetBrowser()
 					s.setStatus("connected", j.config.User, j.config.Host, j.config.Port, j.config.Name, j.config.Mode)
 					if !s.quitting {
@@ -761,10 +787,6 @@ func (s *screen) worker() {
 				s.setStatus(key)
 			}
 			s.refreshOutput()
-			if s.quitting {
-				s.quitting = false
-				s.requestQuit()
-			}
 		})
 	}
 }

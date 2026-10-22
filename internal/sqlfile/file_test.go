@@ -42,6 +42,26 @@ func TestRoundTripKoreanBOMAndLineEndings(t *testing.T) {
 	}
 }
 
+func TestSavedSnapshotAllowsImmediateResave(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "query.sql")
+	doc, err := Save(path, "original", Format{}, Snapshot{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	current, err := Inspect(path)
+	if err != nil || current != doc.Snapshot {
+		t.Fatalf("saved snapshot differs from filesystem: got %+v, want %+v, error %v", doc.Snapshot, current, err)
+	}
+	updated, err := Save(path, "updated", doc.Format, doc.Snapshot)
+	if err != nil {
+		t.Fatalf("immediate resave rejected its own snapshot: %v", err)
+	}
+	loaded, err := Read(path)
+	if err != nil || loaded.Text != "updated" || loaded.Snapshot != updated.Snapshot {
+		t.Fatalf("resaved document: %+v / %v", loaded, err)
+	}
+}
+
 func TestExternalEditsAndDeletionAreNotOverwritten(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "query.sql")
 	doc, err := Save(path, "original", Format{}, Snapshot{})

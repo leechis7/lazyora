@@ -171,7 +171,7 @@ func TestMouseControlsAndSavedPreference(t *testing.T) {
 		row, _ := s.helpText.GetScrollOffset()
 		return row > 0
 	})
-	click(func() tview.Primitive { _, root := s.pages.GetFrontPage(); return root.(*tview.Flex).GetItem(1) })
+	click(func() tview.Primitive { _, root := s.pages.GetFrontPage(); return root.(*formPopupLayer).GetItem(1) })
 	wait(func() bool { return page("main") })
 	loaded, err := settings.Load(path)
 	if err != nil || loaded.Language != "ko" || !loaded.Mouse {

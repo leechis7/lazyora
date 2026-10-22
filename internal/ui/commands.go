@@ -58,9 +58,9 @@ var commands = []command{
 	{"history", "history", menuView, []binding{{"F8", tcell.KeyF8, 0, 0}}},
 	{"output_view", "output_view", menuView, []binding{{"Alt+P", tcell.KeyRune, tcell.ModAlt, 'p'}}},
 	{"fullscreen_sql", "fullscreen_sql", menuView, []binding{{"F2", tcell.KeyF2, 0, 0}}},
-	{"fullscreen_results", "fullscreen_results", menuView, []binding{{"Shift+F2", tcell.KeyF2, tcell.ModShift, 0}}},
+	{"fullscreen_results", "fullscreen_results", menuView, []binding{{"Shift+F2", tcell.KeyF2, tcell.ModShift, 0}, {"F12", tcell.KeyF12, 0, 0}}},
 	{"focus_toggle", "focus_toggle", menuView, []binding{{"F6", tcell.KeyF6, 0, 0}}},
-	{"context_menu", "context_menu", menuView, []binding{{"F10", tcell.KeyF10, 0, 0}}},
+	{"context_menu", "context_menu", menuView, []binding{{"Shift+F10", tcell.KeyF10, tcell.ModShift, 0}}},
 	{"maximize", "maximize", menuView, nil},
 	{"browser", "schemas", menuView, []binding{{"Alt+B", tcell.KeyRune, tcell.ModAlt, 'b'}}},
 	{"browser_user", "browser_user", menuView, []binding{{"Alt+U", tcell.KeyRune, tcell.ModAlt, 'u'}}},
@@ -68,6 +68,9 @@ var commands = []command{
 	{"browser_refresh", "browser_refresh", menuView, nil},
 	{"describe", "describe", menuView, []binding{{"F4", tcell.KeyF4, 0, 0}}},
 	{"quick_describe", "quick_describe", menuView, []binding{{"Ctrl+D", tcell.KeyCtrlD, 0, 0}}},
+	{"workspaces", "workspaces", menuSession, []binding{{"Alt+J", tcell.KeyRune, tcell.ModAlt, 'j'}}},
+	{"workspace_new", "workspace_new", menuSession, nil},
+	{"workspace_close", "workspace_close", menuSession, nil},
 	{"settings", "settings", menuTools, nil},
 	{"passwords", "passwords", menuTools, []binding{{"Alt+K", tcell.KeyRune, tcell.ModAlt, 'k'}}},
 	{"routine_execute", "routine_execute", menuExecute, nil},
@@ -91,7 +94,11 @@ var commands = []command{
 	{"line_down", "line_down", menuEdit, nil},
 	{"transpose_line", "transpose_line", menuEdit, nil},
 	{"format_code", "format_code", menuEdit, []binding{{"Ctrl+Shift+F", tcell.KeyCtrlF, tcell.ModShift, 0}}},
-	{"help", "help", menuHelp, []binding{{"F1", tcell.KeyF1, 0, 0}}},
+	{"help", "keyboard_help", menuHelp, []binding{{"F1", tcell.KeyF1, 0, 0}}},
+	{"guide", "guide", menuHelp, nil},
+	{"release_history", "release_history", menuHelp, nil},
+	{"diagnostic_info", "diagnostic_info", menuHelp, nil},
+	{"issue_report", "issue_report", menuHelp, nil},
 	{"about", "about", menuHelp, nil},
 }
 
@@ -124,10 +131,15 @@ func shortcut(id string) string {
 
 func (s *screen) commandEnabled(id string) bool {
 	page, _ := s.pages.GetFrontPage()
+	if id == "workspaces" || id == "workspace_new" || id == "workspace_close" {
+		return s.canSwitchWorkspace()
+	}
 	if page != "main" {
 		return false
 	}
 	switch id {
+	case "workspaces", "workspace_new", "workspace_close":
+		return s.workspaces != nil && !s.busy && !s.vaultBusy
 	case "table_edit_load":
 		return !s.busy && s.connected && !s.transactionUncertain && s.editTableTarget().Kind == "TABLE"
 	case "grid_edit":
@@ -155,7 +167,7 @@ func (s *screen) commandEnabled(id string) bool {
 		return true
 	case "output_toggle":
 		return s.connected && !s.busy && !s.transactionUncertain
-	case "quit", "about", "help", "settings", "focus_toggle", "context_menu", "passwords":
+	case "quit", "about", "help", "guide", "release_history", "diagnostic_info", "issue_report", "settings", "focus_toggle", "context_menu", "passwords":
 		return true
 	case "fullscreen_sql", "fullscreen_results":
 		return true
@@ -212,6 +224,20 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "guide":
+		s.showGuide()
+	case "release_history":
+		s.showReleaseHistory()
+	case "diagnostic_info":
+		s.showDiagnostics()
+	case "issue_report":
+		s.showIssueReport()
+	case "workspaces":
+		s.showWorkspaces()
+	case "workspace_new":
+		s.workspaces.addNew()
+	case "workspace_close":
+		s.workspaces.closeOne(s)
 	case "about":
 		s.showAbout()
 	case "table_edit_load":
@@ -356,7 +382,7 @@ func (s *screen) commandKey(event *tcell.EventKey) bool {
 }
 
 func (s *screen) menuBar() *tview.Flex {
-	bar := tview.NewFlex()
+	bar := s.newFlex()
 	for index := range menuGroups {
 		button := s.clickable(tview.NewButton("").SetSelectedFunc(func() { s.showMenu(index) }))
 		button.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {

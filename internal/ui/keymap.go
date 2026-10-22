@@ -220,9 +220,9 @@ func (s *screen) editorBindingLabels(id string, limit int) string {
 
 func (s *screen) sourceKeymapFooter() string {
 	if s.prefs.EditorKeymap == "" {
-		return s.tr("footer_source") + " | Alt+R / Alt+X"
+		return s.tr("footer_source") + " | Alt+R / Alt+X | Shift+F10 " + s.tr("menu_edit")
 	}
-	return s.keymapHint() + " | F9 " + s.tr("compile") + " | Alt+R " + s.tr("reload") + " | Alt+X " + s.tr("close")
+	return s.keymapHint() + " | F9 " + s.tr("compile") + " | Alt+R " + s.tr("reload") + " | Alt+X " + s.tr("close") + " | Shift+F10 " + s.tr("menu_edit")
 }
 func (s *screen) keymapHelpSections() []struct{ title, text string } {
 	return []struct{ title, text string }{
@@ -255,7 +255,7 @@ func (s *screen) showSourceEdit() {
 	e := s.sourceEditor
 	list := tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
 	list.SetBorder(true).SetTitle(s.tr("source_edit"))
-	s.styleBox(list.Box)
+	s.styleList(list)
 	for _, id := range []string{"undo", "redo", "cut", "copy", "paste", "select_all", "find", "replace", "complete", "complete_refresh", "duplicate_line", "copy_line", "cut_line", "delete_line", "line_up", "line_down", "transpose_line", "format_code"} {
 		label := s.tr(commandFor(id).label)
 		if key := s.editorBindingLabels(id, 1); key != "" {

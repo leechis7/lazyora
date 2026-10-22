@@ -1,6 +1,12 @@
 # Oracle Free 시험 환경
 
+Oracle 10g/19c 등 외부 시험 계정용 공통 검사(`compat-test`)와 실제 접속 단절·넓은 결과 보관 검사,
+환경별 검증 범위는 [호환성·장애 회귀 검증](../../docs/compatibility.md)을 참고하세요.
+
 아래 명령은 프로젝트 루트에서 실행합니다.
+
+`python3 test/oracle/tui_terminal_smoke.py`는 DB 없이 데모 실행파일로 TERM 미설정·빈 값·ansi·xterm의 시작과 종료 확인을 검증합니다. 먼저 `make build`로 로컬 ARM64 바이너리를 갱신하세요.
+`python3 test/oracle/tui_fullscreen_smoke.py`는 Linux·ANSI·xterm·256색에서 Shift+F2의 기존/수정 키 전송 방식, 결과 전체화면·복원과 Esc, 구형 Shift+F3/F10 입력을 검증합니다.
 
 Docker Engine/Desktop과 Docker Compose가 설치된 개발 머신에서 실행합니다. ARM64·AMD64를 지원하는 `gvenzl/oracle-free:23.26.3-slim`을 사용하며 이미지가 CPU에 맞춰 선택됩니다. 최초 다운로드와 DB 초기화에는 수 분이 걸릴 수 있습니다. 이미지와 DB 데이터용으로 수 GB의 디스크, DB 실행용으로 약 4GB의 여유 메모리를 확보하는 편이 좋습니다.
 
@@ -103,6 +109,10 @@ make -C test/oracle up
 
 실행파일의 실제 키 바이트·메뉴·범위 복사·전체화면·객체 조회·F5 스크립트·실행 계획·바인드 입력·XLSX 저장·2,507행 전체 CSV 재조회 저장·기본 취소·재접속 실패 시 미커밋 내역 보존·명시적 롤백 후 접속·미저장 확인과 트랜잭션 종료를 Linux PTY로 시험하려면 Python 3가 있는 환경에서 실행합니다. DB가 실행 중이고 browser-fixture가 적용돼 있어야 합니다. 비밀번호는 .env에서 읽으며 출력하지 않습니다.
 
+도움말 메뉴만 시험할 때는 `make build` 후 `python3 test/oracle/tui_help_smoke.py`를 실행합니다.
+DB 없이 데모 실행파일을 저장소 밖 임시 폴더에서 열어 오프라인 가이드·버전 이력,
+한영·다크/라이트·8/256색, 진단/신고 양식 원문 복사와 비밀 환경 변수 제외를 확인합니다.
+
 PTY 시험은 Oracle Free의 `DBMS_SESSION.SLEEP(3)` 실행 중 F1 도움말을 열고 Esc로 닫아도 SQL이 취소되지 않고 완료되는지 확인합니다. 이 시험용 호출은 Oracle Free에서 검증하며 구형 Oracle 지원 여부를 의미하지 않습니다.
 
 ```bash
@@ -121,3 +131,5 @@ Ctrl+Enter는 CSI-u와 modifyOtherKeys 두 형식, Alt+Enter를 검사합니다.
 DBMS_OUTPUT 검사는 출력 켜기·끄기, 한글·빈 줄·30KB 행, 문장별 F5 출력, 최대 행 수와 초과분 정리, SQL 오류 전 출력 보존 및 제어·수집 전후 미커밋 DML의 격리를 검사합니다. 실제 TUI 검사에도 Alt+P 출력 창·켜기·복사·지우기·끄기를 포함합니다. 시험 후 메모리를 반환하려면 `make -C test/oracle down`을 실행하세요.
 
 추가 셀·편집 PTY 검사는 도움말(H) → About과 정보 복사, BLOB 상세·원문 HEX 복사·원래 바이너리 파일 저장, 스키마에서 편집 데이터 열기·변경 전후 기본 취소·명시적 반영·재조회·롤백을 8색 xterm에서 확인합니다. 실제 DB 통합 검사에는 대형 Unicode CLOB/BLOB 원문 비교, ROWID·전체 원래 값 기반 동시 수정 충돌과 NOWAIT 잠금 거부를 포함합니다.
+
+TUI 시험에는 접속 작업 공간 2개의 실제 세션 격리 검사도 포함합니다. 같은 계정으로 서로 다른 행을 변경하여 미커밋 데이터가 다른 공간에서 보이지 않는지, 한 공간의 롤백·닫기가 다른 공간의 트랜잭션을 보존하는지 확인합니다. 시험 변경은 롤백합니다.

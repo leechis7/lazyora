@@ -16,6 +16,34 @@
 
 근거: [VanDyke 키 매핑 안내](https://www.vandyke.com/support/tips/map-keyboard-shortcut-to-perform-menu-toolbar-function-securecrt.html), [Send String 이스케이프 표기](https://www.vandyke.com/support/tips/literal-backslash-character-in-send-string-function.html), [키보드 프로토콜](https://sw.kovidgoyal.net/kitty/keyboard-protocol/). 설치된 tcell 입력 처리 코드에서도 위 두 형식을 확인했습니다. CentOS·SecureCRT 실기에서 매핑 적용 후의 추가 확인은 필요합니다.
 
+## Linux·구형 터미널의 Shift+기능키
+
+`TERM=linux` 등에서 Shift+F2가 `Esc[26~`로 전달되면 키 라이브러리가 F14로 해석합니다.
+LazyOra는 이 입력도 Shift+F2로 처리하여 결과 전체화면·복원을 지원합니다.
+xterm 형식 `Esc[1;2Q`·`Esc[12;2~`도 동일하게 동작하며 일반 F2는 SQL 전체화면으로 유지합니다.
+같은 방식으로 수정 키 없는 F13~F24를 Shift+F1~F12로 처리합니다.
+Shift+F3 이전 찾기, Shift+F9 SQL 실행, Shift+F10 문맥/소스 편집 메뉴도 이 경로를 지원합니다.
+배정되지 않은 Shift 조합에 새 기능을 추가하지는 않습니다.
+
+## MobaXterm에서 Shift+F2가 F12로 전달될 때
+
+일부 MobaXterm 설정에서는 Shift+F2가 `Esc[24~`(일반 F12)로 전달됩니다.
+LazyOra는 결과 전체화면·복원에 Shift+F2와 F12를 함께 배정하므로 두 입력 모두 사용할 수 있습니다.
+실제 F12도 같은 동작을 수행합니다. 클라이언트가 보내는 형식은 터미널 설정마다 다르며
+서버의 `TERM` 값만 바꿔 수정 키 정보를 복원할 수는 없습니다.
+
+## 8색 시험과 마우스
+
+Unix에서 `TERM`이 없거나 빈 값이면 LazyOra가 앱 내부에서 `ansi`를 기본 사용합니다.
+직접 지정한 `TERM`과 셸 환경변수는 바꾸지 않으며 Windows는 기본 콘솔 선택 방식을 유지합니다.
+
+색상 수와 마우스 프로토콜은 별개입니다. `TERM=ansi`는 마우스 기능을 선언하지 않아
+마우스 설정을 켜도 클릭을 받을 수 없습니다. xterm 호환 터미널에서 8색과 마우스를 함께
+시험하려면 `TERM=xterm TCELL_TRUECOLOR=disable ./bin/lazyora-linux-arm64`로 실행하세요.
+SecureCRT를 사용한다면 세션의 Terminal → Emulation도 Xterm으로 맞춥니다.
+실제 터미널이 지원하는 종류를 지정해야 하며 서버의 TERM 값만 바꾸어 기능이 추가되지는 않습니다.
+도움말 → 환경 진단에서 `TERM`, `Colors`, `Terminal mouse support`와 앱의 `Mouse` 설정을 확인할 수 있습니다.
+
 ## 결과 복사
 
 결과에 포커스를 둔 상태에서 Ctrl+C는 현재 셀 또는 선택 범위, Alt+Y는 현재 행 전체를 복사합니다. Shift+방향키 또는 마우스로 셀 사각형 범위를 선택하고 Esc로 범위를 해제합니다. 범위를 드래그한 뒤 Ctrl+C를 누릅니다. 복사 대상은 생략·색상 태그 처리 전의 원본 값입니다. 셀은 탭, 행은 줄바꿈으로 구분하며 값 안의 탭·줄바꿈·따옴표는 TSV 인용 규칙으로 보존합니다. NULL은 표시값 `NULL`로 복사합니다.

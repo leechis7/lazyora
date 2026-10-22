@@ -1,4 +1,4 @@
-.PHONY: env up down status logs shell test tui-test run grant-admin browser-fixture export-bench
+.PHONY: env up down status logs shell test compat-test tui-test run grant-admin browser-fixture export-bench
 
 env:
 	sh env.sh
@@ -18,6 +18,8 @@ browser-fixture:
 	docker compose exec -T oracle sqlplus -L -s / as sysdba < browser.sql
 test:
 	sh test.sh
+compat-test:
+	sh compat-test.sh --local
 run:
 	$(MAKE) -C ../.. build-native
 	sh run.sh

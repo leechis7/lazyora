@@ -94,7 +94,7 @@ func (s *screen) withBinds(text string, next func(map[string]oracle.BindValue)) 
 	for i := 0; i < form.GetButtonCount(); i++ {
 		s.clickable(form.GetButton(i))
 	}
-	info := tview.NewTextView().SetWrap(true).SetText(s.tr("bind_hint"))
+	info := s.newTextView(textHint).SetWrap(true).SetText(s.tr("bind_hint"))
 	info.SetTextColor(s.colors().muted).SetBackgroundColor(s.colors().background)
 	root := s.formDialog(form, info, 88)
 	s.bindForm = form

@@ -44,11 +44,9 @@ func TestHelpResponsiveTopicsKeyboardAndResize(t *testing.T) {
 						t.Fatalf("contents did not adapt to terminal width %v", size)
 					}
 				}
-				// Shift+Tab from the article reaches the contents; arrows change
-				// topics without sending any application command to the worker.
-				deliver(tcell.NewEventKey(tcell.KeyBacktab, 0, 0))
+				// Contents owns initial focus so arrows work immediately.
 				if !s.helpTopics.HasFocus() {
-					t.Fatal("cannot reach contents with the keyboard")
+					t.Fatal("help did not start with contents focused")
 				}
 				deliver(tcell.NewEventKey(tcell.KeyDown, 0, 0))
 				if s.helpTopics.GetCurrentItem() != 1 || !strings.Contains(s.helpText.GetText(true), "Ctrl+Enter") {
@@ -168,7 +166,7 @@ func TestHelpJumpsToSectionsAndBackInBothLanguages(t *testing.T) {
 			terminal.SetSize(80, 24)
 			s.key(tcell.NewEventKey(tcell.KeyF1, 0, 0))
 			_, root := s.pages.GetFrontPage()
-			layout := root.(*tview.Flex)
+			layout := root
 			help := s.helpText
 			draw := func() { layout.SetRect(0, 0, 80, 22); layout.Draw(terminal) }
 			draw()

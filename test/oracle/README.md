@@ -1,5 +1,8 @@
 # Oracle Free 시험 환경
 
+Oracle 10g/19c 등 외부 시험 계정용 공통 검사(`compat-test`)와 실제 접속 단절·넓은 결과 보관 검사,
+환경별 검증 범위는 [호환성·장애 회귀 검증](../../docs/compatibility.md)을 참고하세요.
+
 아래 명령은 프로젝트 루트에서 실행합니다.
 
 Docker Engine/Desktop과 Docker Compose가 설치된 개발 머신에서 실행합니다. ARM64·AMD64를 지원하는 `gvenzl/oracle-free:23.26.3-slim`을 사용하며 이미지가 CPU에 맞춰 선택됩니다. 최초 다운로드와 DB 초기화에는 수 분이 걸릴 수 있습니다. 이미지와 DB 데이터용으로 수 GB의 디스크, DB 실행용으로 약 4GB의 여유 메모리를 확보하는 편이 좋습니다.

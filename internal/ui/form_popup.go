@@ -16,11 +16,10 @@ func (s *screen) formDialog(form *tview.Form, info *tview.TextView, width int) *
 	}
 	fit := formLayout(form)
 	infoHeight := 0
-	content := tview.NewFlex().SetDirection(tview.FlexRow)
+	content := s.newFlex().SetDirection(tview.FlexRow)
 	if info != nil {
 		infoHeight = 5
 		info.SetBackgroundColor(s.colors().surface).SetBorder(true).SetBorderPadding(0, 0, 2, 2)
-		singleLineBorder(info.Box)
 		content.AddItem(info, infoHeight, 0, false)
 	}
 	content.AddItem(form, 0, 1, true)
@@ -37,7 +36,7 @@ func (s *screen) formDialog(form *tview.Form, info *tview.TextView, width int) *
 // Keep the underlying work visible, but route every mouse event through the
 // modal layer. The returned Flex retains normal Form/DropDown event routing.
 func (s *screen) formPopup(content tview.Primitive, preferredWidth, preferredHeight int, layout func(width, height int)) *formPopupLayer {
-	root := tview.NewFlex().AddItem(content, 0, 1, true)
+	root := s.newFlex().AddItem(content, 0, 1, true)
 	root.SetDrawFunc(func(terminal tcell.Screen, x, y, width, height int) (int, int, int, int) {
 		for py := y; py < y+height; py++ {
 			for px := x; px < x+width; px++ {
@@ -61,6 +60,12 @@ func (s *screen) formPopup(content tview.Primitive, preferredWidth, preferredHei
 		}
 		w, h := max(0, min(preferredWidth, width-2*insetX)), max(0, min(preferredHeight, height-2*insetY))
 		left, top := x+(width-w)/2, y+(height-h)/2
+		// Flex leaves padding and spacers untouched. Paint an opaque card first
+		// so the underlying SQL and result borders cannot show through it.
+		card := tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().surface)
+		for py := top; py < top+h; py++ {
+			gridFill(terminal, left, py, w, card)
+		}
 		shadow := tcell.StyleDefault.Background(tcell.ColorBlack)
 		if left+w < x+width {
 			for py := top + 1; py < top+h+1 && py < y+height; py++ {

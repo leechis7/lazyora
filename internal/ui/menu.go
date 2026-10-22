@@ -72,11 +72,10 @@ func (s *screen) openCommandMenu(title string, entries []command, index int) {
 	s.menuIndex = index
 	list := tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
 	list.SetBorder(true).SetTitle(title)
-	s.styleBox(list.Box)
+	s.styleList(list)
 	list.SetBackgroundColor(s.colors().surface)
 	list.SetMainTextStyle(tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().surface))
 	list.SetBorderStyle(tcell.StyleDefault.Foreground(s.colors().button).Background(s.colors().surface))
-	singleLineBorder(list.Box)
 	s.menuList = list
 	count := 0
 	for _, cmd := range entries {
@@ -92,20 +91,15 @@ func (s *screen) openCommandMenu(title string, entries []command, index int) {
 		list.AddItem(label, "", 0, func() { s.closeMenu(); s.invoke(id) })
 		count++
 	}
-	width, height := 80, count+2
-	if s.terminal != nil {
-		width, height = s.terminal.Size()
-	}
-	left := max(0, index) * width / len(menuGroups)
-	popupWidth := min(48, width)
-	left = min(left, max(0, width-popupWidth))
-	row := tview.NewFlex()
-	if left > 0 {
-		row.AddItem(tview.NewBox(), left, 0, false)
-	}
-	row.AddItem(list, popupWidth, 0, true).AddItem(tview.NewBox(), 0, 1, false)
-	// Long menus scroll inside the terminal instead of clipping their last items.
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(row, min(count+2, max(1, height)), 0, true).AddItem(tview.NewBox(), 0, 1, false)
+	// Flex leaves the underlying page untouched. Restrict its inner layout to
+	// the menu instead of painting spacer Boxes over SQL and result panels.
+	root := s.newFlex().AddItem(list, 0, 1, true)
+	root.SetDrawFunc(func(_ tcell.Screen, x, y, width, height int) (int, int, int, int) {
+		popupWidth := min(48, width)
+		left := min(max(0, index)*width/len(menuGroups), max(0, width-popupWidth))
+		// Recalculate on every draw so open menus also follow terminal resizing.
+		return x + left, y, popupWidth, min(count+2, height)
+	})
 	s.pages.AddPage("menu", root, true, true)
 	s.app.SetFocus(list)
 }
@@ -120,7 +114,25 @@ func (s *screen) closeMenu() {
 
 func (s *screen) menuKey(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
-	case tcell.KeyF10, tcell.KeyEscape:
+	case tcell.KeyF10:
+		if event.Modifiers() == 0 {
+			if s.menuIndex < 0 {
+				s.showMenu(menuFile)
+			} else {
+				s.closeMenu()
+			}
+			return nil
+		}
+		if event.Modifiers() == tcell.ModShift {
+			context := s.menuIndex < 0
+			s.closeMenu()
+			if !context {
+				s.showContextMenu()
+			}
+			return nil
+		}
+		return event
+	case tcell.KeyEscape:
 		s.closeMenu()
 		return nil
 	case tcell.KeyLeft:

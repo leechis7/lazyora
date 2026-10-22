@@ -61,6 +61,7 @@ func (s *screen) newBrowser() *tview.Flex {
 	s.browser = tview.NewTreeView().SetTopLevel(1).SetGraphics(false)
 	s.browser.SetBorder(true)
 	s.styleBox(s.browser.Box)
+	s.browser.SetGraphicsColor(s.colors().muted)
 	s.browser.SetSelectedFunc(s.activateBrowser)
 	s.browser.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if action == tview.MouseLeftDoubleClick {
@@ -75,7 +76,7 @@ func (s *screen) newBrowser() *tview.Flex {
 	s.browserForm = tview.NewForm().SetItemPadding(0).AddFormItem(s.browserUsers).AddFormItem(s.browserTypes)
 	s.styleForm(s.browserForm)
 	s.browserForm.SetBorder(true).SetTitle(s.tr("browser_title"))
-	s.browserPanel = tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.browserForm, 6, 0, false).AddItem(s.browser, 0, 1, true)
+	s.browserPanel = s.newFlex().SetDirection(tview.FlexRow).AddItem(s.browserForm, 6, 0, false).AddItem(s.browser, 0, 1, true)
 	s.resetBrowser()
 	return s.browserPanel
 }
@@ -167,9 +168,7 @@ func (s *screen) renderBrowserObjects() {
 }
 
 func (s *screen) treeNode(text string, data *browserNode) *tview.TreeNode {
-	return tview.NewTreeNode(tview.Escape(text)).SetReference(data).
-		SetTextStyle(tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().background)).
-		SetSelectedTextStyle(s.focusStyle())
+	return s.newTreeNode(tview.Escape(text)).SetReference(data)
 }
 
 func (s *screen) treeMessage(key string) *tview.TreeNode {
@@ -283,7 +282,7 @@ func (s *screen) openObject(object oracle.Object) {
 	}
 	s.object = object
 	s.objectColumns = nil
-	s.objectInfo = tview.NewTextView().SetWrap(true)
+	s.objectInfo = s.newTextView().SetWrap(true)
 	s.objectInfo.SetBackgroundColor(s.colors().background)
 	s.objectInfo.SetTextColor(s.colors().text)
 	s.objectTable = tview.NewTable().SetFixed(1, 0).SetSelectable(true, false).SetSelectedStyle(s.focusStyle())
@@ -291,7 +290,7 @@ func (s *screen) openObject(object oracle.Object) {
 	s.styleBox(s.objectTable.Box)
 	s.renderObject(nil)
 	close := s.clickable(tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeObject))
-	buttons := tview.NewFlex()
+	buttons := s.newFlex()
 	for _, item := range []struct{ section, key string }{{"ddl", "Alt+D"}, {"constraints", "Alt+C"}, {"indexes", "Alt+I"}, {"grants", "Alt+G"}} {
 		if item.section == "constraints" && !object.HasColumns() {
 			continue
@@ -309,7 +308,7 @@ func (s *screen) openObject(object oracle.Object) {
 		buttons.AddItem(s.clickable(tview.NewButton(s.tr("routine_button")).SetSelectedFunc(func() { s.showRoutine(s.object, "") })), 0, 1, false)
 	}
 	buttons.AddItem(close, 0, 1, false)
-	root := tview.NewFlex().SetDirection(tview.FlexRow).
+	root := s.newFlex().SetDirection(tview.FlexRow).
 		AddItem(s.objectInfo, 2, 0, false).AddItem(s.objectTable, 0, 1, true).AddItem(buttons, 1, 0, false)
 	s.pages.AddPage("object", root, true, true)
 	s.app.SetFocus(s.objectTable)

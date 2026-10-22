@@ -3,6 +3,7 @@ package ui
 import (
 	"bytes"
 	"io"
+	"os"
 	"runtime"
 
 	"github.com/gdamore/tcell/v2"
@@ -69,10 +70,23 @@ func newCompatibleScreen() (tcell.Screen, error) {
 	if err != nil {
 		return nil, err
 	}
-	screen, err := tcell.NewTerminfoScreenFromTty(&compatibleTTY{Tty: tty})
+	screen, err := newCompatibleScreenFromTTY(&compatibleTTY{Tty: tty})
 	if err != nil {
 		tty.Close()
 		return nil, err
 	}
 	return screen, nil
+}
+
+func newCompatibleScreenFromTTY(tty tcell.Tty) (tcell.Screen, error) {
+	if os.Getenv("TERM") == "" {
+		// Select a conservative fallback locally, without modifying the process
+		// environment or replacing an explicitly configured terminal protocol.
+		info, err := tcell.LookupTerminfo("ansi")
+		if err != nil {
+			return nil, err
+		}
+		return tcell.NewTerminfoScreenFromTtyTerminfo(tty, info)
+	}
+	return tcell.NewTerminfoScreenFromTty(tty)
 }

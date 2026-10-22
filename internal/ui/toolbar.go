@@ -11,7 +11,7 @@ import (
 // tview may report a rapid click on a different button as a double click.
 // Buttons should activate on either kind of click; text selection stays unchanged.
 func (s *screen) clickable(button *tview.Button) *tview.Button {
-	button.SetStyle(s.buttonStyle()).SetActivatedStyle(buttonFocusStyle())
+	button.SetStyle(s.buttonStyle()).SetActivatedStyle(s.buttonFocusStyle())
 	button.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if action == tview.MouseLeftDoubleClick {
 			action = tview.MouseLeftClick
@@ -28,7 +28,7 @@ type footerKey struct {
 }
 
 func (s *screen) toolbar() *tview.Flex {
-	bar := tview.NewFlex()
+	bar := s.newFlex()
 	s.footerBar = bar
 	for index := range 6 {
 		button := s.clickable(tview.NewButton("").SetSelectedFunc(func() {
@@ -80,7 +80,7 @@ func (s *screen) toolbar() *tview.Flex {
 		button.SetStyle(tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().footer))
 		s.buttons = append(s.buttons, button)
 	}
-	version := tview.NewTextView().SetText("v" + appinfo.Version).SetTextAlign(tview.AlignRight).SetWrap(false)
+	version := s.newTextView().SetText("v" + appinfo.Version).SetTextAlign(tview.AlignRight).SetWrap(false)
 	version.SetTextColor(s.colors().accent).SetBackgroundColor(s.colors().footer)
 	s.footerVersion = version
 	return bar
@@ -104,6 +104,9 @@ func (s *screen) refreshFooter() {
 		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
 	case "about":
 		hint = "footer_about"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+C", "copy", tcell.KeyCtrlC, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+	case "reference":
+		hint = "footer_reference"
 		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+C", "copy", tcell.KeyCtrlC, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
 	case "grid_edit":
 		hint = "footer_grid_edit"
@@ -281,7 +284,7 @@ func (s *screen) refreshFooter() {
 		}
 
 	}
-	if s.busy && page != "help" && page != "output" {
+	if s.busy && page != "help" && page != "output" && page != "reference" {
 		text = s.tr("footer_busy") + " | " + text
 	}
 	s.footer.SetText(text)

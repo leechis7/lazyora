@@ -239,10 +239,9 @@ func (s *screen) showWorkspaces() {
 	s.workspaceFocusBefore = s.app.GetFocus()
 	list := tview.NewList().ShowSecondaryText(true).SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetSelectedStyle(s.focusStyle())
 	s.workspaceList = list
-	s.styleBox(list.Box)
+	s.styleList(list)
 	list.SetBackgroundColor(s.colors().surface)
 	list.SetMainTextStyle(tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().surface)).SetSecondaryTextStyle(tcell.StyleDefault.Foreground(s.colors().muted).Background(s.colors().surface))
-	singleLineBorder(list.Box)
 	list.SetBorder(true).SetTitle(s.tr("workspaces"))
 	snapshot := append([]*screen(nil), s.workspaces.screens...)
 	selected := 0
@@ -287,7 +286,7 @@ func (s *screen) showWorkspaces() {
 		s.clickable(controls.GetButton(i))
 	}
 	fit := formLayout(controls)
-	content := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(list, 0, 1, true).AddItem(controls, 5, 0, false)
+	content := s.newFlex().SetDirection(tview.FlexRow).AddItem(list, 0, 1, true).AddItem(controls, 5, 0, false)
 	root := s.formPopup(content, 104, 24, func(w, h int) { fit(w, 5) })
 	s.pages.AddPage("workspaces", root, true, true)
 	s.app.SetFocus(list)
@@ -376,7 +375,7 @@ func (s *screen) canSwitchWorkspace() bool {
 	}
 	page, _ := s.pages.GetFrontPage()
 	switch page {
-	case "main", "source", "object", "definition", "arguments", "output", "plan", "script", "routines", "routine_results", "routine_grid", "copy", "cell", "about", "help":
+	case "main", "source", "object", "definition", "arguments", "output", "plan", "script", "routines", "routine_results", "routine_grid", "copy", "cell", "about", "help", "reference":
 		return true
 	}
 	return false

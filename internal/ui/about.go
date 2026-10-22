@@ -12,14 +12,25 @@ func (s *screen) aboutContent() string {
 }
 func (s *screen) showAbout() {
 	s.aboutFocus = s.app.GetFocus()
-	text := tview.NewTextView().SetWrap(true).SetScrollable(true).SetDynamicColors(false).SetText(s.aboutContent()).SetTextColor(s.colors().text)
-	text.SetBackgroundColor(s.colors().background)
-	text.SetBorder(true).SetTitle(s.tr("about"))
+	text := s.newTextView().SetWrap(true).SetScrollable(true).SetDynamicColors(false).SetText(s.aboutContent()).SetTextColor(s.colors().text)
+	text.SetWordWrap(true)
 	s.styleBox(text.Box)
+	text.SetBackgroundColor(s.colors().surface)
 	s.aboutText = text
-	close := tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeAbout).SetStyle(s.buttonStyle()).SetActivatedStyle(buttonFocusStyle())
+	close := tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeAbout).SetStyle(s.buttonStyle()).SetActivatedStyle(s.buttonFocusStyle())
 	s.clickable(close)
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(text, 0, 1, true).AddItem(tview.NewFlex().AddItem(nil, 0, 1, false).AddItem(close, 20, 0, false).AddItem(nil, 0, 1, false), 1, 0, false)
+	buttons := s.newFlex().AddItem(nil, 0, 1, false).AddItem(close, 20, 0, false).AddItem(nil, 0, 1, false)
+	buttons.SetBackgroundColor(s.colors().surface)
+	content := s.newFlex().SetDirection(tview.FlexRow).AddItem(text, 0, 1, true).AddItem(buttons, 1, 0, false)
+	s.styleBox(content.Box)
+	content.SetBackgroundColor(s.colors().surface).SetBorder(true).SetTitle(s.tr("about"))
+	root := s.formPopup(content, 76, 24, func(width, height int) {
+		if height < 18 {
+			content.SetBorderPadding(0, 0, 1, 1)
+		} else {
+			content.SetBorderPadding(1, 1, 2, 2)
+		}
+	})
 	s.pages.AddPage("about", root, true, true)
 	s.app.SetFocus(text)
 }
@@ -32,6 +43,9 @@ func (s *screen) closeAbout() {
 	s.aboutFocus = nil
 }
 func (s *screen) aboutKey(e *tcell.EventKey) *tcell.EventKey {
+	if s.buttonArrow(e) {
+		return nil
+	}
 	switch e.Key() {
 	case tcell.KeyEscape:
 		s.closeAbout()

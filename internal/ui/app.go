@@ -42,6 +42,8 @@ type job struct {
 }
 
 type screen struct {
+	textRoles                           map[*tview.TextView]textRole
+	reference                           *referenceView
 	workspaces                          *workspaceSet
 	workspaceID                         int
 	workspaceFocus                      tview.Primitive
@@ -275,11 +277,11 @@ func newWorkspaceScreen(app *tview.Application, terminal tcell.Screen, prefs set
 	s.table.SetBorder(true)
 	s.table.SetMouseCapture(s.resultMouse)
 	s.editor.SetClipboard(s.sendClipboard, func() string { return s.clipboardText })
-	s.status = tview.NewTextView()
-	s.queryLayout = tview.NewFlex().SetDirection(tview.FlexRow).
+	s.status = s.newTextView(textHint)
+	s.queryLayout = s.newFlex().SetDirection(tview.FlexRow).
 		AddItem(s.editor, 0, 2, true).
 		AddItem(s.resultGrid(), 0, 3, false).AddItem(s.status, 2, 0, false)
-	s.mainLayout = tview.NewFlex().AddItem(s.newBrowser(), 0, 1, false).AddItem(s.queryLayout, 0, 3, true)
+	s.mainLayout = s.newFlex().AddItem(s.newBrowser(), 0, 1, false).AddItem(s.queryLayout, 0, 3, true)
 	s.pages = tview.NewPages().AddPage("main", s.mainLayout, true, true)
 	s.pages.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		page, pageRoot := s.pages.GetFrontPage()
@@ -343,14 +345,14 @@ func newWorkspaceScreen(app *tview.Application, terminal tcell.Screen, prefs set
 		}
 		return action, event
 	})
-	s.footer = tview.NewTextView().SetWrap(false)
+	s.footer = s.newTextView(textAccent).SetWrap(false)
 	s.styleScreen()
 	s.menuLayout = s.menuBar()
-	layout := tview.NewFlex().SetDirection(tview.FlexRow).
+	layout := s.newFlex().SetDirection(tview.FlexRow).
 		AddItem(s.menuLayout, 1, 0, false).AddItem(s.pages, 0, 1, true).AddItem(s.footer, 1, 0, false).AddItem(s.toolbar(), 1, 0, false)
-	layout.Box = tview.NewBox().SetBackgroundColor(s.colors().background)
+	layout.Box = s.newBox().SetBackgroundColor(s.colors().background)
 	s.rootLayout = layout
-	s.connectionHeader = tview.NewTextView().SetWrap(false).SetTextColor(s.colors().accent)
+	s.connectionHeader = s.newTextView(textAccent).SetWrap(false).SetTextColor(s.colors().accent)
 	s.connectionHeader.SetBackgroundColor(s.colors().surface)
 	s.installHandlers = func() {
 		s.app.SetInputCapture(s.key).EnableMouse(s.prefs.Mouse)

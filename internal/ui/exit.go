@@ -61,7 +61,7 @@ func (s *screen) showExitConfirmation() {
 	}
 	s.exitDialog = tview.NewModal().SetText(s.exitMessage(message)).AddButtons(labels).
 		SetBackgroundColor(s.colors().background).SetTextColor(s.colors().text).
-		SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(buttonFocusStyle())
+		SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(s.buttonFocusStyle())
 	s.exitDialog.SetDoneFunc(func(index int, _ string) {
 		if index < 0 || index == len(labels)-1 {
 			s.cancelExit()

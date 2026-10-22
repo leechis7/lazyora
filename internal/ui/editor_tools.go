@@ -64,7 +64,7 @@ func (s *screen) showHistory() {
 	s.historyFocus = s.app.GetFocus()
 	list := tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
 	list.SetBorder(true).SetTitle(s.tr("history"))
-	s.styleBox(list.Box)
+	s.styleList(list)
 	s.historyList = list
 	for i := len(s.sqlHistory) - 1; i >= 0; i-- {
 		sql := s.sqlHistory[i]

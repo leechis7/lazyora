@@ -13,6 +13,11 @@ func focusForm(s *screen, form *tview.Form, index int) {
 }
 
 func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
+	// Legacy terminal mappings report Shift+F1..F12 as F13..F24. Keep those
+	// aliases equivalent to explicit modifiers; preserve modified higher keys.
+	if event.Key() >= tcell.KeyF13 && event.Key() <= tcell.KeyF24 && event.Modifiers() == 0 {
+		event = tcell.NewEventKey(tcell.KeyF1+event.Key()-tcell.KeyF13, 0, tcell.ModShift)
+	}
 	// tview treats an unchanged Ctrl+C event as an immediate application stop.
 	// Forward a copy for text widgets so dialogs cannot bypass the SQL-file
 	// and DB exit confirmations; explicit exit continues to use Ctrl+Q.
@@ -32,6 +37,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	}
 
 	page, _ := s.pages.GetFrontPage()
+	if page == "reference" {
+		return s.referenceKey(event)
+	}
 	if page == "workspaces" {
 		return s.workspaceKey(event)
 	}
@@ -88,7 +96,7 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return s.definitionKey(event)
 	}
 	if page == "editor_actions" {
-		if event.Key() == tcell.KeyEscape || event.Key() == tcell.KeyF10 {
+		if event.Key() == tcell.KeyEscape || event.Key() == tcell.KeyF10 && event.Modifiers() == tcell.ModShift {
 			s.closeSourceEdit()
 			return nil
 		}
@@ -161,6 +169,10 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		}
 	}
 	if page == "main" || page == "menu" {
+		if page == "main" && event.Key() == tcell.KeyF10 && event.Modifiers() == 0 {
+			s.showMenu(menuFile)
+			return nil
+		}
 		if alt {
 			if letter == 'm' {
 				s.showMenu(0)
@@ -242,6 +254,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	// Help owns its close keys even while a background operation is running.
 	// Closing the overlay must never be mistaken for cancelling that operation.
 	if page == "help" {
+		if s.listDetailArrow(event, s.helpTopics, s.helpText) {
+			return nil
+		}
 		if event.Key() == tcell.KeyRune && event.Modifiers() == 0 && event.Rune() >= '0' && event.Rune() <= '9' {
 			s.helpJump(int(event.Rune() - '0'))
 			return nil
@@ -254,6 +269,12 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	}
 	if s.busy && event.Key() == tcell.KeyEscape && page != "exit" && page != "program_confirm" {
 		s.action("cancel")
+		return nil
+	}
+	// Dialogs and running queries own Escape first. On the idle main page,
+	// restore fullscreen before editor keymaps or result-range clearing handle it.
+	if page == "main" && event.Key() == tcell.KeyEscape && event.Modifiers() == 0 && s.fullscreen && s.maximized != "" {
+		s.toggleFullscreen()
 		return nil
 	}
 	if page == "exit" {
@@ -318,7 +339,7 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return event
 	}
 	if page == "source" {
-		if event.Key() == tcell.KeyF10 {
+		if event.Key() == tcell.KeyF10 && event.Modifiers() == tcell.ModShift {
 			s.showSourceEdit()
 			return nil
 		}

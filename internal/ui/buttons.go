@@ -5,6 +5,23 @@ import (
 	"github.com/rivo/tview"
 )
 
+// A contents list keeps Up/Down for selection. Right enters its detail pane;
+// Left returns from the detail pane without interfering with text inputs.
+func (s *screen) listDetailArrow(event *tcell.EventKey, list *tview.List, detail tview.Primitive) bool {
+	if event.Modifiers() != 0 || list == nil || detail == nil {
+		return false
+	}
+	if event.Key() == tcell.KeyRight && list.HasFocus() {
+		s.app.SetFocus(detail)
+		return true
+	}
+	if event.Key() == tcell.KeyLeft && detail.HasFocus() {
+		s.app.SetFocus(list)
+		return true
+	}
+	return false
+}
+
 // Each form or horizontal button row keeps its own left/right focus cycle.
 // Looking up the actual focused button leaves text cursors and lists untouched.
 func buttonRow(root tview.Primitive, focused *tview.Button) ([]*tview.Button, *tview.Form) {

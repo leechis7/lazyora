@@ -31,7 +31,7 @@ func (c *choiceField) SetFormAttributes(labelWidth int, labelColor, bgColor, _, 
 
 func (s *screen) styleChoice(c *choiceField) {
 	c.background, c.foreground = s.colors().footer, s.colors().text
-	if s.limitedColors {
+	if s.limitedColors && !s.monochrome() {
 		c.background, c.foreground = tcell.ColorNavy, tcell.ColorWhite
 	}
 	normal := tcell.StyleDefault.Foreground(c.foreground).Background(c.background)

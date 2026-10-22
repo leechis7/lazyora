@@ -68,6 +68,109 @@ func TestMaximizeSwitchRestorePreservesPanelState(t *testing.T) {
 	}
 }
 
+func TestEscapeRestoresFullscreenWithoutChangingWork(t *testing.T) {
+	for _, panel := range []string{"sql", "results"} {
+		for _, keymap := range []string{"", "vim", "notepad++"} {
+			t.Run(panel+"/"+keymap, func(t *testing.T) {
+				s, _ := resultScreen(t)
+				s.prefs.EditorKeymap = keymap
+				s.editor.SetText("SELECT '한글' FROM dual;", false).Select(7, 15)
+				s.editor.SetOffset(2, 1)
+				s.table.Select(2, 1).SetOffset(1, 0)
+				rangeSelection := resultSelection{anchorRow: 1, anchorCol: 0, endRow: 2, endCol: 1, active: true}
+				s.resultSelection = rangeSelection
+				s.browserHidden = keymap == "notepad++"
+				hidden := s.browserHidden
+				selection, from, to := s.editor.GetSelection()
+				node := s.browser.GetCurrentNode()
+				rows := fmt.Sprint(s.resultRows)
+				s.pendingChanges = true
+				key := tcell.NewEventKey(tcell.KeyF2, 0, 0)
+				if panel == "results" {
+					key = tcell.NewEventKey(tcell.KeyF2, 0, tcell.ModShift)
+				}
+				s.key(key)
+				if !s.fullscreen || s.maximized != panel {
+					t.Fatal("fullscreen entry failed")
+				}
+				s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+				if s.fullscreen || s.maximized != "" || s.browser.GetCurrentNode() != node || s.browserHidden != hidden {
+					t.Fatal("Escape did not restore split and schema visibility")
+				}
+				selected, start, end := s.editor.GetSelection()
+				row, col := s.table.GetSelection()
+				if s.editor.GetText() != "SELECT '한글' FROM dual;" || selected != selection || start != from || end != to || row != 2 || col != 1 || s.resultSelection != rangeSelection || fmt.Sprint(s.resultRows) != rows || !s.pendingChanges || len(s.jobs) != 0 {
+					t.Fatal("Escape changed SQL, selection, results or transaction")
+				}
+				er, ec := s.editor.GetOffset()
+				rr, rc := s.table.GetOffset()
+				if er != 2 || ec != 1 || rr != 1 || rc != 0 {
+					t.Fatal("Escape lost split scroll positions")
+				}
+				if panel == "sql" && !s.editor.HasFocus() || panel == "results" && !s.table.HasFocus() {
+					t.Fatal("Escape lost the active panel")
+				}
+			})
+		}
+	}
+}
+
+func TestFullscreenEscapeCancelsRunningQueryBeforeRestoringLayout(t *testing.T) {
+	s, _ := resultScreen(t)
+	s.key(tcell.NewEventKey(tcell.KeyF2, 0, 0))
+	cancelled := false
+	s.busy = true
+	s.cancel = func() { cancelled = true }
+	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	if !cancelled || !s.fullscreen || s.maximized != "sql" {
+		t.Fatal("Escape must cancel the query before restoring fullscreen")
+	}
+	s.busy = false
+	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	if s.fullscreen || s.maximized != "" {
+		t.Fatal("Escape did not restore after the query finished")
+	}
+}
+
+func TestResultFullscreenAliasesRestoreAndPreserveModalPriority(t *testing.T) {
+	for _, key := range []tcell.Key{tcell.KeyF14, tcell.KeyF12} {
+		for _, keymap := range []string{"", "vim", "notepad++"} {
+			t.Run(fmt.Sprintf("%v/%s", key, keymap), func(t *testing.T) {
+				s, _ := resultScreen(t)
+				s.prefs.EditorKeymap = keymap
+				s.app.SetFocus(s.editor)
+				text := s.editor.GetText()
+				s.key(tcell.NewEventKey(key, 0, 0))
+				if !s.fullscreen || s.maximized != "results" || !s.table.HasFocus() {
+					t.Fatal("result fullscreen alias did not act as Shift+F2")
+				}
+				s.showHelp()
+				s.key(tcell.NewEventKey(key, 0, 0))
+				if page, _ := s.pages.GetFrontPage(); page != "help" || !s.fullscreen || s.maximized != "results" {
+					t.Fatal("legacy key changed layout behind help")
+				}
+				s.closeHelp()
+				s.key(tcell.NewEventKey(key, 0, 0))
+				if s.fullscreen || s.maximized != "" || s.editor.GetText() != text || len(s.jobs) != 0 {
+					t.Fatal("legacy key failed to restore split or changed work")
+				}
+				s.key(tcell.NewEventKey(tcell.KeyF2, 0, 0))
+				if s.maximized != "sql" {
+					t.Fatal("legacy alias changed normal F2")
+				}
+				s.key(tcell.NewEventKey(key, 0, 0))
+				if s.maximized != "results" || !s.fullscreen {
+					t.Fatal("legacy key did not switch fullscreen SQL to results")
+				}
+				s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+				if s.fullscreen || s.maximized != "" {
+					t.Fatal("Escape no longer restores split")
+				}
+			})
+		}
+	}
+}
+
 func TestFullscreenOccupiesEntireTerminalAndRestoresChrome(t *testing.T) {
 	t.Setenv("LAZYORA_CONFIG", filepath.Join(t.TempDir(), "settings.json"))
 	terminal := tcell.NewSimulationScreen("UTF-8")
@@ -150,6 +253,10 @@ func TestFullscreenOccupiesEntireTerminalAndRestoresChrome(t *testing.T) {
 	wait(func() bool { page, _ := s.pages.GetFrontPage(); return page == "help" && !s.chromeHidden })
 	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
 	wait(func() bool { return s.chromeHidden && fills(s.editor, 100, 30) })
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	wait(func() bool { return !s.chromeHidden && !s.fullscreen && s.maximized == "" })
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF2, 0, 0))
+	wait(func() bool { return s.chromeHidden && fills(s.editor, 100, 30) })
 	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyRune, 'm', tcell.ModAlt))
 	wait(func() bool { return s.menuList != nil && !s.chromeHidden })
 	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
@@ -161,6 +268,11 @@ func TestFullscreenOccupiesEntireTerminalAndRestoresChrome(t *testing.T) {
 	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyCtrlQ, 0, 0))
 	wait(func() bool { return s.exitDialog != nil && !s.chromeHidden })
 	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	wait(func() bool { return s.chromeHidden && fills(s.table, 80, 24) })
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	wait(func() bool { return !s.chromeHidden && !s.fullscreen && s.maximized == "" })
+	// Keep the original toggle-key restoration covered as well.
+	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF2, 0, tcell.ModShift))
 	wait(func() bool { return s.chromeHidden && fills(s.table, 80, 24) })
 	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF2, 0, tcell.ModShift))
 	wait(func() bool {

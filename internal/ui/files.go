@@ -79,7 +79,7 @@ func (s *screen) guardDocument(next func()) {
 	focus := s.app.GetFocus()
 	modal := tview.NewModal().SetText(s.tr("file_unsaved")).AddButtons([]string{s.tr("save"), s.tr("file_discard"), s.tr("cancel")}).SetFocus(2)
 	modal.SetBackgroundColor(s.colors().background)
-	modal.SetTextColor(s.colors().text).SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(buttonFocusStyle())
+	modal.SetTextColor(s.colors().text).SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(s.buttonFocusStyle())
 	s.styleModal(modal)
 	modal.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if action == tview.MouseLeftDoubleClick {
@@ -200,8 +200,8 @@ func (s *screen) showFileDialog(mode string, next func()) {
 	dialog.list.SetBackgroundColor(s.colors().background)
 	dialog.list.SetMainTextColor(s.colors().text)
 	dialog.list.SetBorder(true)
-	s.styleBox(dialog.list.Box)
-	dialog.info = tview.NewTextView().SetWrap(true).SetText(s.tr("file_picker_hint"))
+	s.styleList(dialog.list)
+	dialog.info = s.newTextView().SetWrap(true).SetText(s.tr("file_picker_hint"))
 	dialog.info.SetBackgroundColor(s.colors().background)
 	dialog.info.SetTextColor(s.colors().text)
 	dialog.close = func() { s.pages.RemovePage("file"); s.fileDialog = nil; s.app.SetFocus(dialog.focus) }
@@ -273,9 +273,9 @@ func (s *screen) showFileDialog(mode string, next func()) {
 	}
 	apply := s.clickable(tview.NewButton(s.tr("file_" + mode)).SetSelectedFunc(dialog.apply))
 	cancel := s.clickable(tview.NewButton(s.tr("cancel")).SetSelectedFunc(func() { s.abortWorkspaceExit(); dialog.close() }))
-	row := tview.NewFlex().AddItem(apply, 0, 1, false).AddItem(cancel, 0, 1, false)
+	row := s.newFlex().AddItem(apply, 0, 1, false).AddItem(cancel, 0, 1, false)
 	dialog.form.SetBorder(true)
-	content := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(dialog.form, 5, 0, true).AddItem(dialog.list, 0, 1, false).AddItem(dialog.info, 3, 0, false).AddItem(row, 1, 0, false)
+	content := s.newFlex().SetDirection(tview.FlexRow).AddItem(dialog.form, 5, 0, true).AddItem(dialog.list, 0, 1, false).AddItem(dialog.info, 3, 0, false).AddItem(row, 1, 0, false)
 	root := s.formPopup(content, 96, 30, nil)
 	browse(directory)
 	pathField.SetText(path)

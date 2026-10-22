@@ -346,8 +346,8 @@ func (s *screen) connectionForm() {
 	if loadErr != nil {
 		form.SetTitle(" " + fmt.Sprintf(s.tr("connection_load_error"), loadErr) + " ")
 	}
-	gap := tview.NewBox().SetBackgroundColor(s.colors().surface)
-	content := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(selector, 5, 0, false).AddItem(gap, 1, 0, false).AddItem(form, 0, 1, true)
+	gap := s.newBox().SetBackgroundColor(s.colors().surface)
+	content := s.newFlex().SetDirection(tview.FlexRow).AddItem(selector, 5, 0, false).AddItem(gap, 1, 0, false).AddItem(form, 0, 1, true)
 	root := s.formPopup(content, 90, 30, func(width, height int) {
 		spacing := 1
 		if height < 29 {

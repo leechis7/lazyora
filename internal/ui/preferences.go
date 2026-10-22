@@ -37,10 +37,13 @@ func (s *screen) settingsForm() {
 	}
 	form.AddFormItem(s.newChoice(s.tr("editor_keymap"), []string{s.tr("keymap_default"), "Vim", "Notepad++"}, keymapIndex, nil))
 	themeIndex := 0
-	if s.prefs.Theme == "light" {
-		themeIndex = 1
+	themes := []string{"dark", "light", "blackwhite"}
+	for index, theme := range themes {
+		if s.prefs.Theme == theme {
+			themeIndex = index
+		}
 	}
-	form.AddFormItem(s.newChoice(s.tr("theme"), []string{s.tr("theme_dark"), s.tr("theme_light")}, themeIndex, nil))
+	form.AddFormItem(s.newChoice(s.tr("theme"), []string{s.tr("theme_dark"), s.tr("theme_light"), s.tr("theme_blackwhite")}, themeIndex, nil))
 	s.savePrefs = func() {
 		index, _ := form.GetFormItem(0).(*choiceField).GetCurrentOption()
 		language := "en"
@@ -51,10 +54,7 @@ func (s *screen) settingsForm() {
 		keymapIndex, _ := form.GetFormItem(2).(*choiceField).GetCurrentOption()
 		prefs.EditorKeymap = keymaps[keymapIndex]
 		themeIndex, _ := form.GetFormItem(3).(*choiceField).GetCurrentOption()
-		prefs.Theme = "dark"
-		if themeIndex == 1 {
-			prefs.Theme = "light"
-		}
+		prefs.Theme = themes[themeIndex]
 		if err := settings.Save(s.prefsPath, prefs); err != nil {
 			form.SetTitle(" " + fmt.Sprintf(s.tr("settings_error"), err) + " ")
 			return

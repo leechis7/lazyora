@@ -7,6 +7,49 @@ import (
 	"testing"
 )
 
+func TestPopupCardsEraseUnderlyingBordersAndPadding(t *testing.T) {
+	for _, page := range []string{"connect", "settings", "about"} {
+		for _, theme := range []string{"dark", "light"} {
+			for _, limited := range []bool{false, true} {
+				t.Run(fmt.Sprintf("%s/%s/limited=%v", page, theme, limited), func(t *testing.T) {
+					s, terminal := resultScreen(t)
+					s.prefs.Theme, s.limitedColors = theme, limited
+					switch page {
+					case "connect":
+						s.connectionForm()
+					case "settings":
+						s.settingsForm()
+					case "about":
+						s.showAbout()
+					}
+					_, primitive := s.pages.GetFrontPage()
+					popup := primitive.(*formPopupLayer)
+					for _, size := range [][2]int{{120, 36}, {80, 24}, {40, 16}} {
+						terminal.SetSize(size[0], size[1])
+						for y := 0; y < size[1]; y++ {
+							for x := 0; x < size[0]; x++ {
+								terminal.SetContent(x, y, '╳', nil, tcell.StyleDefault.Background(tcell.ColorRed))
+							}
+						}
+						popup.SetRect(0, 0, size[0], size[1])
+						popup.Draw(terminal)
+						x, y, w, h := popup.content.GetRect()
+						for py := y; py < y+h; py++ {
+							for px := x; px < x+w; px++ {
+								r, _, style, _ := terminal.GetContent(px, py)
+								_, bg, attrs := style.Decompose()
+								if r == '╳' || bg == tcell.ColorRed || attrs&tcell.AttrDim != 0 {
+									t.Fatalf("background leaked inside %v popup at %d,%d", size, px, py)
+								}
+							}
+						}
+					}
+				})
+			}
+		}
+	}
+}
+
 func TestFormPopupsResizeSpacingAndButtonAccess(t *testing.T) {
 	for _, language := range []string{"ko", "en"} {
 		for _, page := range []string{"connect", "settings"} {

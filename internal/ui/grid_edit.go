@@ -51,7 +51,7 @@ func (s *screen) showGridEdit() {
 	if old.Null {
 		value = ""
 	}
-	s.editInfo = tview.NewTextView().SetWrap(true).SetText(fmt.Sprintf("%s · %s (%s)\n%s: %s\n%s", tview.Escape(oracle.QualifiedObject(source.EditObject)), tview.Escape(source.Columns[col]), old.Type, s.tr("edit_old"), tview.Escape(old.Text), s.tr("edit_hint"))).SetDynamicColors(true)
+	s.editInfo = s.newTextView().SetWrap(true).SetText(fmt.Sprintf("%s · %s (%s)\n%s: %s\n%s", tview.Escape(oracle.QualifiedObject(source.EditObject)), tview.Escape(source.Columns[col]), old.Type, s.tr("edit_old"), tview.Escape(old.Text), s.tr("edit_hint"))).SetDynamicColors(true)
 	s.styleBox(s.editInfo.Box)
 	form := tview.NewForm().AddInputField(s.tr("edit_new"), value, 50, nil, nil).AddCheckbox("NULL", old.Null, nil)
 	s.editForm = form

@@ -99,6 +99,9 @@ func (s *screen) refreshFooter() {
 	}
 	hint := "footer_sql"
 	switch page {
+	case "workspaces":
+		hint = "footer_workspaces"
+		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
 	case "about":
 		hint = "footer_about"
 		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+C", "copy", tcell.KeyCtrlC, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
@@ -241,7 +244,9 @@ func (s *screen) refreshFooter() {
 		keys = []footerKey{{"Esc", "exit_cancel", tcell.KeyEscape, tcell.ModNone}}
 		if s.pendingChanges {
 			keys = append(keys, footerKey{"Alt+V", "pending_work", tcell.KeyRune, tcell.ModAlt})
-			keys = append(keys, footerKey{shortcut("commit"), "exit_commit", tcell.KeyRune, tcell.ModAlt}, footerKey{shortcut("rollback"), "exit_rollback", tcell.KeyRune, tcell.ModAlt})
+			if !s.transactionUncertain {
+				keys = append(keys, footerKey{shortcut("commit"), "exit_commit", tcell.KeyRune, tcell.ModAlt}, footerKey{shortcut("rollback"), "exit_rollback", tcell.KeyRune, tcell.ModAlt})
+			}
 		}
 	}
 	text := s.tr(hint)

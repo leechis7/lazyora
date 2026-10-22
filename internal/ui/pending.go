@@ -17,7 +17,10 @@ func sqlSummary(sql string, limit int) string {
 
 func (s *screen) exitMessage(key string) string {
 	message := s.tr(key)
-	if key != "exit_pending" {
+	if badge := s.connectionBadge(); badge != "" {
+		message = tview.Escape(badge) + "\n\n" + message
+	}
+	if key != "exit_pending" && key != "workspace_exit_pending" {
 		return message
 	}
 	records := s.pendingWork.Statements
@@ -97,7 +100,7 @@ func (s *screen) closePendingWork() {
 	s.pendingTable = nil
 	s.pendingSQL = nil
 	if s.exitDialog != nil {
-		s.exitDialog.SetFocus(3)
+		s.exitDialog.SetFocus(s.exitCancelIndex())
 		s.app.SetFocus(s.exitDialog)
 	} else if s.pendingFocus != nil {
 		s.app.SetFocus(s.pendingFocus)

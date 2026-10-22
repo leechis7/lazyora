@@ -22,6 +22,15 @@ func (s *screen) passwordStore() error {
 	return nil
 }
 func (s *screen) lockPasswords() {
+	if s.workspaces != nil {
+		for _, item := range s.workspaces.screens {
+			item.lockWorkspacePasswords()
+		}
+		return
+	}
+	s.lockWorkspacePasswords()
+}
+func (s *screen) lockWorkspacePasswords() {
 	if s.masterForm != nil {
 		for i := 1; i < s.masterForm.GetFormItemCount(); i++ {
 			s.masterForm.GetFormItem(i).(*tview.InputField).SetText("")

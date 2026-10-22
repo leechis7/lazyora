@@ -29,6 +29,7 @@ const (
 	connectionMode
 	connectionName
 	connectionSavePassword
+	connectionEnvironment
 )
 
 var connectionLabels = []string{"alias", "host", "port", "username", "password", "connection_type", "service_name"}
@@ -43,6 +44,10 @@ func (s *screen) localizeConnection() {
 		}
 	}
 	form.GetFormItem(connectionSavePassword).(*tview.Checkbox).SetLabel(s.tr("save_password"))
+	environmentChoice := form.GetFormItem(connectionEnvironment).(*choiceField)
+	environmentIndex, _ := environmentChoice.GetCurrentOption()
+	environmentChoice.SetLabel(s.tr("environment"))
+	environmentChoice.SetOptions([]string{s.tr("environment_none"), s.tr("environment_dev"), s.tr("environment_test"), s.tr("environment_prod")}, nil).SetCurrentOption(environmentIndex)
 	form.GetButton(0).SetLabel(s.tr("connect") + " (Alt+C)")
 	form.GetButton(1).SetLabel(s.tr("cancel") + " (Esc)")
 	form.GetButton(2).SetLabel(s.tr("save") + " (Alt+S)")
@@ -94,6 +99,8 @@ func (s *screen) connectionForm() {
 			}
 		})).AddInputField("", os.Getenv("LAZYORA_NAME"), 40, nil, nil)
 	form.AddCheckbox(s.tr("save_password"), false, nil)
+	environments := []string{"", "dev", "test", "prod"}
+	form.AddFormItem(s.newChoice(s.tr("environment"), []string{s.tr("environment_none"), s.tr("environment_dev"), s.tr("environment_test"), s.tr("environment_prod")}, 0, nil))
 	password := form.GetFormItem(connectionPassword).(*tview.InputField)
 	invalidateSecret = func() {
 		if autofilled {
@@ -119,6 +126,7 @@ func (s *screen) connectionForm() {
 	selectProfile := func(_ string, index int) {
 		// Always discard the previous password, including environment defaults.
 		form.GetFormItem(connectionSavePassword).(*tview.Checkbox).SetChecked(false)
+		form.GetFormItem(connectionEnvironment).(*choiceField).SetCurrentOption(0)
 		form.GetFormItem(connectionPassword).(*tview.InputField).SetText("")
 		if index <= 0 {
 			for i, value := range map[int]string{connectionAlias: "", connectionHost: env("LAZYORA_HOST", "localhost"), connectionPort: env("LAZYORA_PORT", "1521"), connectionUser: os.Getenv("LAZYORA_USER"), connectionName: os.Getenv("LAZYORA_NAME")} {
@@ -128,6 +136,11 @@ func (s *screen) connectionForm() {
 			return
 		}
 		p := profiles[index-1]
+		for i, environment := range environments {
+			if environment == p.Environment {
+				form.GetFormItem(connectionEnvironment).(*choiceField).SetCurrentOption(i)
+			}
+		}
 		for i, value := range map[int]string{connectionHost: p.Host, connectionPort: strconv.Itoa(p.Port), connectionUser: p.User, connectionName: p.Name, connectionAlias: p.Alias} {
 			form.GetFormItem(i).(*tview.InputField).SetText(value)
 		}
@@ -196,6 +209,8 @@ func (s *screen) connectionForm() {
 		if !ok {
 			return
 		}
+		environment, _ := form.GetFormItem(connectionEnvironment).(*choiceField).GetCurrentOption()
+		s.pendingIdentity = settings.Connection{Alias: strings.TrimSpace(form.GetFormItem(connectionAlias).(*tview.InputField).GetText()), Environment: environments[environment]}
 		s.requestReconnect(config)
 	}
 	saveProfile := func() {
@@ -212,7 +227,8 @@ func (s *screen) connectionForm() {
 			form.SetTitle(" " + s.tr("alias_required") + " ")
 			return
 		}
-		profile := settings.Connection{Alias: alias, Host: config.Host, Port: config.Port, User: config.User, Mode: config.Mode, Name: config.Name}
+		environment, _ := form.GetFormItem(connectionEnvironment).(*choiceField).GetCurrentOption()
+		profile := settings.Connection{Environment: environments[environment], Alias: alias, Host: config.Host, Port: config.Port, User: config.User, Mode: config.Mode, Name: config.Name}
 		next := append([]settings.Connection(nil), profiles...)
 		index := len(next)
 		for i, p := range next {
@@ -332,14 +348,14 @@ func (s *screen) connectionForm() {
 	}
 	gap := tview.NewBox().SetBackgroundColor(s.colors().surface)
 	content := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(selector, 5, 0, false).AddItem(gap, 1, 0, false).AddItem(form, 0, 1, true)
-	root := s.formPopup(content, 84, 27, func(width, height int) {
+	root := s.formPopup(content, 90, 30, func(width, height int) {
 		spacing := 1
-		if height < 26 {
+		if height < 29 {
 			spacing = 0
 		}
 		form.SetItemPadding(spacing)
 		profileHeight := 5
-		if height < 18 {
+		if height < 24 {
 			profileHeight = 3
 			selector.SetBorderPadding(0, 0, 2, 2)
 			form.SetBorderPadding(0, 0, 2, 2)
@@ -348,6 +364,11 @@ func (s *screen) connectionForm() {
 			form.SetBorderPadding(1, 1, 2, 2)
 		}
 		content.ResizeItem(selector, profileHeight, 0)
+		gapHeight := 1
+		if height < 20 {
+			gapHeight = 0
+		}
+		content.ResizeItem(gap, gapHeight, 0)
 		if width < 72 {
 			form.GetButton(0).SetLabel(s.tr("connect"))
 			form.GetButton(1).SetLabel(s.tr("cancel"))

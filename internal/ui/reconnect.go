@@ -12,9 +12,10 @@ func (s *screen) requestReconnect(config oracle.Config) {
 	if s.busy || s.reconnectDialog != nil {
 		return
 	}
+	identity := s.pendingIdentity
 	connect := func(resolution oracle.ReconnectResolution) {
 		s.closeConnection()
-		s.submit(job{action: "connect", config: config, resolution: resolution})
+		s.submit(job{action: "connect", config: config, resolution: resolution, identity: identity})
 	}
 	if !s.pendingChanges {
 		connect("")

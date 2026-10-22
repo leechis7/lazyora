@@ -34,6 +34,8 @@ func (s *screen) showProgramConfirm(message string, action func()) {
 		}
 		if index == 0 {
 			action()
+		} else {
+			s.abortWorkspaceExit()
 		}
 	})
 	s.pages.AddPage("program_confirm", s.programModal, true, true)
@@ -98,7 +100,11 @@ func (s *screen) refreshSourceTitle() {
 	if s.sourceDirty() {
 		mark = " *"
 	}
-	s.sourceEditor.SetTitle(" " + s.tr("source") + " " + tview.Escape(s.object.Owner+"."+s.object.Name) + mark + " ")
+	title := " " + s.tr("source") + " " + tview.Escape(s.object.Owner+"."+s.object.Name) + mark + " "
+	if badge := s.connectionTitleBadge(); badge != "" {
+		title = " " + tview.Escape(badge) + " · " + title
+	}
+	s.sourceEditor.SetTitle(title)
 }
 
 func (s *screen) loadSource() {

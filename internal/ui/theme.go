@@ -144,6 +144,9 @@ func (s *screen) refreshBorders() {
 	if s.historyList != nil {
 		apply(s.historyList.Box, s.historyList.HasFocus(), false)
 	}
+	if s.workspaceList != nil {
+		apply(s.workspaceList.Box, s.workspaceList.HasFocus(), false)
+	}
 	if s.menuList != nil {
 		s.menuList.SetBorderStyle(tcell.StyleDefault.Foreground(tcell.ColorTeal).Background(s.menuList.GetBackgroundColor()))
 	}

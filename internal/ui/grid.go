@@ -333,6 +333,9 @@ func (s *screen) refreshResultPosition() {
 			title += " · " + s.tr("grid_readonly")
 		}
 	}
+	if badge := s.connectionTitleBadge(); badge != "" {
+		title = " " + tview.Escape(badge) + " · " + title
+	}
 	s.table.SetTitle(title)
 }
 

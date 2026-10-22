@@ -22,12 +22,19 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if s.vaultBusy {
 		return nil
 	}
+	if s.workspaces != nil && event.Key() == tcell.KeyRune && event.Modifiers()&tcell.ModAlt != 0 && unicode.ToLower(event.Rune()) == 'j' {
+		s.showWorkspaces()
+		return nil
+	}
 	// tcell reports legacy ESC CR as Ctrl+Alt+m rather than KeyEnter+Alt.
 	if event.Key() == tcell.KeyRune && event.Rune() == 'm' && event.Modifiers()&(tcell.ModAlt|tcell.ModCtrl) == tcell.ModAlt|tcell.ModCtrl {
 		event = tcell.NewEventKey(tcell.KeyEnter, 0, event.Modifiers()&^tcell.ModCtrl)
 	}
 
 	page, _ := s.pages.GetFrontPage()
+	if page == "workspaces" {
+		return s.workspaceKey(event)
+	}
 	if page == "about" {
 		return s.aboutKey(event)
 	}
@@ -408,6 +415,10 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 			return nil
 		}
 		if alt {
+			if letter == 'e' {
+				focusForm(s, s.connectForm, connectionEnvironment)
+				return nil
+			}
 			if letter == 'r' {
 				focusForm(s, s.connectProfiles, 0)
 				return nil

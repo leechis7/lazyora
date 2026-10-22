@@ -68,6 +68,9 @@ var commands = []command{
 	{"browser_refresh", "browser_refresh", menuView, nil},
 	{"describe", "describe", menuView, []binding{{"F4", tcell.KeyF4, 0, 0}}},
 	{"quick_describe", "quick_describe", menuView, []binding{{"Ctrl+D", tcell.KeyCtrlD, 0, 0}}},
+	{"workspaces", "workspaces", menuSession, []binding{{"Alt+J", tcell.KeyRune, tcell.ModAlt, 'j'}}},
+	{"workspace_new", "workspace_new", menuSession, nil},
+	{"workspace_close", "workspace_close", menuSession, nil},
 	{"settings", "settings", menuTools, nil},
 	{"passwords", "passwords", menuTools, []binding{{"Alt+K", tcell.KeyRune, tcell.ModAlt, 'k'}}},
 	{"routine_execute", "routine_execute", menuExecute, nil},
@@ -124,10 +127,15 @@ func shortcut(id string) string {
 
 func (s *screen) commandEnabled(id string) bool {
 	page, _ := s.pages.GetFrontPage()
+	if id == "workspaces" || id == "workspace_new" || id == "workspace_close" {
+		return s.canSwitchWorkspace()
+	}
 	if page != "main" {
 		return false
 	}
 	switch id {
+	case "workspaces", "workspace_new", "workspace_close":
+		return s.workspaces != nil && !s.busy && !s.vaultBusy
 	case "table_edit_load":
 		return !s.busy && s.connected && !s.transactionUncertain && s.editTableTarget().Kind == "TABLE"
 	case "grid_edit":
@@ -212,6 +220,12 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "workspaces":
+		s.showWorkspaces()
+	case "workspace_new":
+		s.workspaces.addNew()
+	case "workspace_close":
+		s.workspaces.closeOne(s)
 	case "about":
 		s.showAbout()
 	case "table_edit_load":

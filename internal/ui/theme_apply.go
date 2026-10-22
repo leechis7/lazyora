@@ -93,7 +93,7 @@ func (s *screen) applyTheme(previous string) {
 		case *tview.List:
 			box = w.Box
 			w.SetMainTextColor(to.text).SetSecondaryTextColor(to.muted).SetShortcutColor(to.accent).SetSelectedStyle(s.focusStyle())
-			if w == s.menuList {
+			if w == s.menuList || w == s.workspaceList {
 				w.SetMainTextStyle(tcell.StyleDefault.Foreground(to.text).Background(to.surface))
 			}
 		case *tview.TreeView:

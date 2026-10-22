@@ -67,6 +67,7 @@ func (s *screen) settingsForm() {
 		s.vim = vimState{}
 		s.app.EnableMouse(prefs.Mouse)
 		s.refreshLabels()
+		s.sharePreferences()
 		s.closeSettings()
 		s.setStatus("settings_saved")
 	}

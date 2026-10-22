@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-22
+
 ### 추가
 
 - 결과창 전체화면·복원에 F12를 추가했습니다. 기존 Shift+F2를 유지하며 MobaXterm에서 Shift+F2가 일반 F12로 전달되는 경우에도 사용할 수 있습니다.
@@ -214,7 +216,8 @@ v0.0.1의 F2 접속은 Alt+L, F4 실행은 F9, F5 커밋은 Alt+C, F6 롤백은 
 - 이 릴리스 시점에는 실제 CentOS 7.4, 구형 Oracle 및 SID 접속 검증이 완료되지 않았습니다. 이후 호환성 수정은 `Unreleased`에 기록합니다.
 - 한 번에 SQL 한 문장 또는 BEGIN/DECLARE 블록 하나를 실행합니다. 여러 문장 일괄 실행, SQL*Plus 스크립트, 바인드 입력, DBMS_OUTPUT 출력은 지원하지 않습니다.
 
-[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.7.0...dev
+[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.8.0...dev
+[0.8.0]: https://github.com/leechis7/lazyora/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/leechis7/lazyora/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/leechis7/lazyora/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/leechis7/lazyora/compare/v0.5.0...v0.5.1

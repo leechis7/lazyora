@@ -17,8 +17,8 @@ func (s *screen) showRoutine(object oracle.Object, reference string) {
 	s.routines = nil
 	s.routineList = tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(true).SetSelectedStyle(s.focusStyle())
 	s.routineList.SetBorder(true).SetTitle(s.tr("routine_execute"))
-	s.styleBox(s.routineList.Box)
-	s.routineInfo = tview.NewTextView().SetWrap(true).SetText(s.tr("browser_loading"))
+	s.styleList(s.routineList)
+	s.routineInfo = s.newTextView().SetWrap(true).SetText(s.tr("browser_loading"))
 	s.routineInfo.SetBackgroundColor(s.colors().background)
 	s.routineInfo.SetTextColor(s.colors().text)
 	s.routineList.SetSelectedFunc(func(i int, _, _ string, _ rune) {
@@ -27,7 +27,7 @@ func (s *screen) showRoutine(object oracle.Object, reference string) {
 		}
 	})
 	close := s.clickable(tview.NewButton(s.tr("close")).SetSelectedFunc(s.closeRoutines))
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.routineInfo, 4, 0, false).AddItem(s.routineList, 0, 1, true).AddItem(close, 1, 0, false)
+	root := s.newFlex().SetDirection(tview.FlexRow).AddItem(s.routineInfo, 4, 0, false).AddItem(s.routineList, 0, 1, true).AddItem(close, 1, 0, false)
 	s.pages.AddPage("routines", root, true, true)
 	s.app.SetFocus(s.routineList)
 	s.submit(job{action: "routines", object: object, text: reference})
@@ -124,7 +124,7 @@ func (s *screen) showRoutineInputs(r oracle.Routine) {
 			selected = 2
 		}
 		mode := s.newChoice(name+" · "+a.DataType, modes, selected, nil)
-		value := tview.NewInputField().SetLabel(s.tr("bind_value")).SetFieldWidth(40)
+		value := s.newInputField().SetLabel(s.tr("bind_value")).SetFieldWidth(40)
 		form.AddFormItem(mode).AddFormItem(value)
 		fields = append(fields, field{a, mode, value})
 	}
@@ -152,7 +152,7 @@ func (s *screen) showRoutineInputs(r oracle.Routine) {
 	for i := 0; i < form.GetButtonCount(); i++ {
 		s.clickable(form.GetButton(i))
 	}
-	info := tview.NewTextView().SetWrap(true).SetText(strings.Join(signatures, "\n") + "\n\n" + s.tr("routine_hint"))
+	info := s.newTextView().SetWrap(true).SetText(strings.Join(signatures, "\n") + "\n\n" + s.tr("routine_hint"))
 	info.SetTextColor(s.colors().text).SetBackgroundColor(s.colors().background)
 	root := s.formDialog(form, info, 96)
 	s.routineForm = form
@@ -165,7 +165,7 @@ func (s *screen) showRoutineResults(result oracle.RoutineResult) {
 	s.routineResultList = tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(true).SetSelectedStyle(s.focusStyle())
 	list := s.routineResultList
 	list.SetBorder(true).SetTitle(s.tr("routine_results") + " · " + tview.Escape(result.Routine))
-	s.styleBox(list.Box)
+	s.styleList(list)
 	if len(result.Scalars.Rows) > 0 {
 		list.AddItem(s.tr("routine_scalars"), fmt.Sprintf("%d", len(result.Scalars.Rows)), 0, nil)
 	}
@@ -196,23 +196,23 @@ func (s *screen) showRoutineResults(result oracle.RoutineResult) {
 		// result never has replay SQL: exporting must not call the routine again.
 		s.render(selected)
 		closeGrid := func() { s.pages.RemovePage("routine_grid"); s.app.SetFocus(list) }
-		buttons := tview.NewFlex().AddItem(s.clickable(tview.NewButton(s.tr("export")).SetSelectedFunc(s.showExport)), 0, 1, false).
+		buttons := s.newFlex().AddItem(s.clickable(tview.NewButton(s.tr("export")).SetSelectedFunc(s.showExport)), 0, 1, false).
 			AddItem(s.clickable(tview.NewButton(s.tr("copy_row")).SetSelectedFunc(func() { s.copyResults("row") })), 0, 1, false).
 			AddItem(s.clickable(tview.NewButton(s.tr("close")).SetSelectedFunc(closeGrid)), 0, 1, false)
-		grid := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.resultGrid(), 0, 1, true).AddItem(buttons, 1, 0, false)
+		grid := s.newFlex().SetDirection(tview.FlexRow).AddItem(s.resultGrid(), 0, 1, true).AddItem(buttons, 1, 0, false)
 		s.pages.AddPage("routine_grid", grid, true, true)
 		s.app.SetFocus(s.table)
 	}
 	list.SetSelectedFunc(func(int, string, string, rune) { use() })
-	buttons := tview.NewFlex().AddItem(s.clickable(tview.NewButton(s.tr("script_use_result")).SetSelectedFunc(use)), 0, 1, false).
+	buttons := s.newFlex().AddItem(s.clickable(tview.NewButton(s.tr("script_use_result")).SetSelectedFunc(use)), 0, 1, false).
 		AddItem(s.clickable(tview.NewButton(s.tr("close")).SetSelectedFunc(func() { s.closeRoutineResults() })), 0, 1, false)
 	hint := s.tr("routine_result_hint")
 	if list.GetItemCount() == 0 {
 		hint = s.tr("routine_no_outputs") + "\n" + hint
 	}
-	info := tview.NewTextView().SetText(hint).SetWrap(true)
+	info := s.newTextView().SetText(hint).SetWrap(true)
 	info.SetTextColor(s.colors().text).SetBackgroundColor(s.colors().background)
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(info, 4, 0, false).AddItem(list, 0, 1, true).AddItem(buttons, 1, 0, false)
+	root := s.newFlex().SetDirection(tview.FlexRow).AddItem(info, 4, 0, false).AddItem(list, 0, 1, true).AddItem(buttons, 1, 0, false)
 	s.pages.AddPage("routine_results", root, true, true)
 	s.app.SetFocus(list)
 }

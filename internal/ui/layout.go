@@ -121,16 +121,30 @@ func (s *screen) syncChrome() {
 		return
 	}
 	s.chromeHidden = hidden
+	s.rebuildChrome()
+}
+
+func (s *screen) rebuildChrome() {
+	if s.rootLayout == nil {
+		return
+	}
 	s.rootLayout.Clear()
-	if hidden {
+	if s.chromeHidden {
 		s.menuLayout.SetRect(0, 0, 0, 0)
 		s.footer.SetRect(0, 0, 0, 0)
 		s.footerBar.SetRect(0, 0, 0, 0)
+		if s.connectionHeader != nil {
+			s.connectionHeader.SetRect(0, 0, 0, 0)
+		}
 		s.rootLayout.AddItem(s.pages, 0, 1, true)
 	} else {
-		s.rootLayout.AddItem(s.menuLayout, 1, 0, false).AddItem(s.pages, 0, 1, true).
-			AddItem(s.footer, 1, 0, false).AddItem(s.footerBar, 1, 0, false)
+		s.rootLayout.AddItem(s.menuLayout, 1, 0, false)
+		if s.workspaces != nil && len(s.workspaces.screens) > 1 {
+			s.rootLayout.AddItem(s.connectionHeader, 1, 0, false)
+		}
+		s.rootLayout.AddItem(s.pages, 0, 1, true).AddItem(s.footer, 1, 0, false).AddItem(s.footerBar, 1, 0, false)
 	}
+
 }
 
 func (s *screen) togglePanelFullscreen(panel string) {

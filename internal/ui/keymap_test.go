@@ -239,7 +239,7 @@ func TestSourceEditMenuAlternativeAndCompletionBinding(t *testing.T) {
 	s.prefs.EditorKeymap = "notepad++"
 	sql := s.editor.GetText()
 	before := s.sourceEditor.GetText()
-	s.key(tcell.NewEventKey(tcell.KeyF10, 0, 0))
+	s.key(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModShift))
 	page, root := s.pages.GetFrontPage()
 	if page != "editor_actions" {
 		t.Fatal("source menu did not open")

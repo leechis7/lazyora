@@ -25,9 +25,9 @@ func (s *screen) showCellDetail() {
 	}
 	s.cellValue = s.resultValues[row-1][col]
 	s.cellFocus = s.app.GetFocus()
-	s.cellInfo = tview.NewTextView().SetWrap(true).SetTextColor(s.colors().muted)
+	s.cellInfo = s.newTextView(textHint).SetWrap(true).SetTextColor(s.colors().muted)
 	s.cellInfo.SetBackgroundColor(s.colors().background)
-	s.cellText = tview.NewTextView().SetWrap(false).SetScrollable(true).SetDynamicColors(false).SetTextColor(s.colors().text)
+	s.cellText = s.newTextView().SetWrap(false).SetScrollable(true).SetDynamicColors(false).SetTextColor(s.colors().text)
 	s.cellText.SetBorder(true).SetTitle(fmt.Sprintf("%s · %s", s.tr("cell_detail"), tview.Escape(s.resultHeaders[col])))
 	s.styleBox(s.cellText.Box)
 	name := "cell.txt"
@@ -47,7 +47,7 @@ func (s *screen) showCellDetail() {
 	s.renderCellDetail()
 	form.SetBorder(true)
 	fit := formLayout(form)
-	content := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.cellInfo, 3, 0, false).AddItem(s.cellText, 0, 1, true).AddItem(form, 8, 0, false)
+	content := s.newFlex().SetDirection(tview.FlexRow).AddItem(s.cellInfo, 3, 0, false).AddItem(s.cellText, 0, 1, true).AddItem(form, 8, 0, false)
 	root := s.formPopup(content, 104, 32, func(w, h int) {
 		controls := min(8, max(5, h/3))
 		content.ResizeItem(form, controls, 0)

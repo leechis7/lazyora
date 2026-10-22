@@ -12,9 +12,10 @@ func (s *screen) requestReconnect(config oracle.Config) {
 	if s.busy || s.reconnectDialog != nil {
 		return
 	}
+	identity := s.pendingIdentity
 	connect := func(resolution oracle.ReconnectResolution) {
 		s.closeConnection()
-		s.submit(job{action: "connect", config: config, resolution: resolution})
+		s.submit(job{action: "connect", config: config, resolution: resolution, identity: identity})
 	}
 	if !s.pendingChanges {
 		connect("")
@@ -30,7 +31,7 @@ func (s *screen) requestReconnect(config oracle.Config) {
 	message := fmt.Sprintf(s.tr(messageKey), tview.Escape(config.User), tview.Escape(config.Host), config.Port, tview.Escape(config.Name))
 	s.reconnectDialog = tview.NewModal().SetText(message).AddButtons(labels).
 		SetBackgroundColor(s.colors().background).SetTextColor(s.colors().text).
-		SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(buttonFocusStyle())
+		SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(s.buttonFocusStyle())
 	s.styleModal(s.reconnectDialog)
 	s.reconnectDialog.SetDoneFunc(func(index int, _ string) {
 		if index < 0 || index >= len(labels)-1 {

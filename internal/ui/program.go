@@ -18,7 +18,7 @@ func (s *screen) showProgramConfirm(message string, action func()) {
 	s.programFocus = s.app.GetFocus()
 	s.programModal = tview.NewModal().SetText(message).AddButtons([]string{s.tr("proceed"), s.tr("cancel")}).
 		SetBackgroundColor(s.colors().background).SetTextColor(s.colors().text).
-		SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(buttonFocusStyle()).SetFocus(1)
+		SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(s.buttonFocusStyle()).SetFocus(1)
 	s.styleModal(s.programModal)
 	s.programModal.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if action == tview.MouseLeftDoubleClick {
@@ -34,6 +34,8 @@ func (s *screen) showProgramConfirm(message string, action func()) {
 		}
 		if index == 0 {
 			action()
+		} else {
+			s.abortWorkspaceExit()
 		}
 	})
 	s.pages.AddPage("program_confirm", s.programModal, true, true)
@@ -53,7 +55,7 @@ func (s *screen) showSource() {
 		return
 	}
 	s.sourceBase, s.sourceLoaded = "", false
-	s.sourceInfo = tview.NewTextView().SetWrap(true)
+	s.sourceInfo = s.newTextView().SetWrap(true)
 	s.sourceInfo.SetBackgroundColor(s.colors().background)
 	s.sourceInfo.SetTextColor(s.colors().text)
 	s.sourceInfo.SetText(s.tr("browser_loading"))
@@ -73,7 +75,7 @@ func (s *screen) showSource() {
 	s.sourceDiagnostics.SetBorder(true)
 	s.styleBox(s.sourceDiagnostics.Box)
 	s.renderDiagnostics(nil)
-	buttons := tview.NewFlex()
+	buttons := s.newFlex()
 	for _, item := range []struct {
 		label  string
 		action func()
@@ -82,7 +84,7 @@ func (s *screen) showSource() {
 	} {
 		buttons.AddItem(s.clickable(tview.NewButton(s.tr(item.label)).SetSelectedFunc(item.action)), 0, 1, false)
 	}
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.sourceInfo, 2, 0, false).
+	root := s.newFlex().SetDirection(tview.FlexRow).AddItem(s.sourceInfo, 2, 0, false).
 		AddItem(s.sourceEditor, 0, 3, true).AddItem(s.sourceDiagnostics, 0, 1, false).AddItem(buttons, 1, 0, false)
 	s.pages.AddPage("source", root, true, true)
 	s.app.SetFocus(s.sourceEditor)
@@ -98,7 +100,11 @@ func (s *screen) refreshSourceTitle() {
 	if s.sourceDirty() {
 		mark = " *"
 	}
-	s.sourceEditor.SetTitle(" " + s.tr("source") + " " + tview.Escape(s.object.Owner+"."+s.object.Name) + mark + " ")
+	title := " " + s.tr("source") + " " + tview.Escape(s.object.Owner+"."+s.object.Name) + mark + " "
+	if badge := s.connectionTitleBadge(); badge != "" {
+		title = " " + tview.Escape(badge) + " · " + title
+	}
+	s.sourceEditor.SetTitle(title)
 }
 
 func (s *screen) loadSource() {
@@ -172,7 +178,7 @@ func (s *screen) showArguments() {
 		return
 	}
 	s.argumentFocus = s.app.GetFocus()
-	s.argumentInfo = tview.NewTextView().SetText(s.object.Owner + "." + s.object.Name + " — " + s.tr("browser_loading")).SetWrap(true)
+	s.argumentInfo = s.newTextView().SetText(s.object.Owner + "." + s.object.Name + " — " + s.tr("browser_loading")).SetWrap(true)
 	s.argumentInfo.SetBackgroundColor(s.colors().background)
 	s.argumentInfo.SetTextColor(s.colors().text)
 	s.argumentTable = tview.NewTable().SetFixed(1, 0).SetSelectable(true, true).SetSelectedStyle(s.focusStyle())
@@ -180,8 +186,8 @@ func (s *screen) showArguments() {
 	s.styleBox(s.argumentTable.Box)
 	s.argumentTable.SetTitle(s.tr("arguments"))
 	close := s.clickable(tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeArguments))
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.argumentInfo, 2, 0, false).
-		AddItem(s.argumentTable, 0, 1, true).AddItem(tview.NewFlex().AddItem(s.clickable(tview.NewButton(s.tr("routine_button")).SetSelectedFunc(func() { s.showRoutine(s.object, "") })), 0, 1, false).AddItem(close, 0, 1, false), 1, 0, false)
+	root := s.newFlex().SetDirection(tview.FlexRow).AddItem(s.argumentInfo, 2, 0, false).
+		AddItem(s.argumentTable, 0, 1, true).AddItem(s.newFlex().AddItem(s.clickable(tview.NewButton(s.tr("routine_button")).SetSelectedFunc(func() { s.showRoutine(s.object, "") })), 0, 1, false).AddItem(close, 0, 1, false), 1, 0, false)
 	s.pages.AddPage("arguments", root, true, true)
 	s.app.SetFocus(s.argumentTable)
 	if s.demo && !s.connected {

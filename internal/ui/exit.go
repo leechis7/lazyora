@@ -6,6 +6,13 @@ import (
 )
 
 func (s *screen) requestQuit() {
+	if s.workspaces != nil {
+		s.workspaces.requestQuit(s)
+		return
+	}
+	s.requestQuitLocal()
+}
+func (s *screen) requestQuitLocal() {
 	if s.exitDialog != nil || s.reconnectDialog != nil || s.programModal != nil || s.quitting || s.documentModal != nil || s.fileDialog != nil || s.bindForm != nil || s.exportForm != nil {
 		return
 	}
@@ -29,12 +36,39 @@ func (s *screen) showExitConfirmation() {
 		message = "exit_pending"
 		labels = []string{s.tr("exit_commit"), s.tr("exit_rollback"), s.tr("pending_work"), s.tr("exit_cancel")}
 	}
+	if s.workspaces != nil && len(s.workspaces.screens) > 1 {
+		if s.pendingChanges {
+			message = "workspace_exit_pending"
+			labels = []string{s.tr("workspace_commit_close"), s.tr("workspace_rollback_close"), s.tr("pending_work"), s.tr("exit_cancel")}
+		} else {
+			message = "workspace_exit_clean"
+			labels = []string{s.tr("workspace_close"), s.tr("exit_cancel")}
+		}
+	}
+	if s.transactionUncertain {
+		message = "workspace_exit_uncertain"
+		labels = []string{s.tr("workspace_disconnect"), s.tr("exit_cancel")}
+	}
+	if s.terminal != nil {
+		width, _ := s.terminal.Size()
+		needed := 2
+		for _, label := range labels {
+			needed += tview.TaggedStringWidth(label) + 6
+		}
+		if needed > width && !s.transactionUncertain && s.pendingChanges {
+			labels = []string{s.tr("commit"), s.tr("rollback"), s.tr("pending_work_short"), s.tr("cancel")}
+		}
+	}
 	s.exitDialog = tview.NewModal().SetText(s.exitMessage(message)).AddButtons(labels).
 		SetBackgroundColor(s.colors().background).SetTextColor(s.colors().text).
-		SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(buttonFocusStyle())
+		SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(s.buttonFocusStyle())
 	s.exitDialog.SetDoneFunc(func(index int, _ string) {
 		if index < 0 || index == len(labels)-1 {
 			s.cancelExit()
+			return
+		}
+		if s.transactionUncertain {
+			s.confirmExit("exit_discard_uncertain")
 			return
 		}
 		if s.pendingChanges && index == 2 {
@@ -71,6 +105,7 @@ func (s *screen) cancelExit() {
 	if s.busy {
 		return
 	}
+	s.abortWorkspaceExit()
 	s.pages.RemovePage("exit")
 	s.exitDialog = nil
 	if s.exitFocus != nil {
@@ -83,8 +118,16 @@ func (s *screen) confirmExit(action string) {
 	if s.busy {
 		return
 	}
+	if action == "exit_discard_uncertain" && s.transactionUncertain {
+		s.finishExit()
+		return
+	}
+	if s.transactionUncertain {
+		s.setStatus("workspace_uncertain")
+		return
+	}
 	if action == "exit_now" && !s.pendingChanges {
-		s.app.Stop()
+		s.finishExit()
 		return
 	}
 	if s.pendingChanges && (action == "exit_commit" || action == "exit_rollback") {
@@ -118,4 +161,24 @@ func (s *screen) exitKey(event *tcell.EventKey) *tcell.EventKey {
 
 	}
 	return event
+}
+
+func (s *screen) finishExit() {
+	if s.workspaces != nil {
+		s.workspaces.finished(s)
+		return
+	}
+	s.app.Stop()
+}
+func (s *screen) abortWorkspaceExit() {
+	if s.workspaces != nil {
+		s.workspaces.closingAll = false
+	}
+}
+
+func (s *screen) exitCancelIndex() int {
+	if s.pendingChanges && !s.transactionUncertain {
+		return 3
+	}
+	return 1
 }

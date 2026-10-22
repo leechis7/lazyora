@@ -186,14 +186,14 @@ func (s *screen) copyPreview() {
 		return
 	}
 	s.copyFocus = s.app.GetFocus()
-	text := tview.NewTextView().SetText(s.clipboardText).SetWrap(false)
+	text := s.newTextView().SetText(s.clipboardText).SetWrap(false)
 	text.SetBorder(true).SetTitle(s.tr("copy_preview"))
 	s.styleBox(text.Box)
 	text.SetBackgroundColor(s.colors().field)
 	text.SetTextColor(s.colors().fieldText)
 
 	s.copyText = text
-	root := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(tview.NewTextView().SetText(s.tr("copy_preview_hint")).SetWrap(true), 2, 0, false).AddItem(text, 0, 1, true)
+	root := s.newFlex().SetDirection(tview.FlexRow).AddItem(s.newTextView(textHint).SetText(s.tr("copy_preview_hint")).SetWrap(true), 2, 0, false).AddItem(text, 0, 1, true)
 	s.pages.AddPage("copy", root, true, true)
 	s.app.SetFocus(text)
 	// Terminal selection works on clients without OSC 52.

@@ -14,8 +14,8 @@ func (s *screen) applyTheme(previous string) {
 	from, to := old.colors(), s.colors()
 	oldGrid, newGrid := old.gridColors(), s.gridColors()
 	pairs := [][2]tcell.Color{
-		{from.editor, to.editor}, {from.editorText, to.editorText},
 		{from.background, to.background}, {from.surface, to.surface}, {from.footer, to.footer},
+		{from.editor, to.editor}, {from.editorText, to.editorText},
 		{from.field, to.field}, {from.text, to.text}, {from.muted, to.muted}, {from.accent, to.accent}, {from.button, to.button},
 		{from.placeholder, to.placeholder}, {from.warning, to.warning},
 		{oldGrid.background, newGrid.background}, {oldGrid.stripe, newGrid.stripe}, {oldGrid.header, newGrid.header},
@@ -31,7 +31,11 @@ func (s *screen) applyTheme(previous string) {
 	}
 	style := func(st tcell.Style) tcell.Style {
 		fg, bg, _ := st.Decompose()
-		return st.Foreground(color(fg)).Background(color(bg))
+		translatedFG := color(fg)
+		if fg == from.text {
+			translatedFG = to.text
+		}
+		return st.Foreground(translatedFG).Background(color(bg))
 	}
 	seen := map[tview.Primitive]bool{}
 	var visit func(tview.Primitive)
@@ -76,32 +80,49 @@ func (s *screen) applyTheme(previous string) {
 			s.styleChoice(w)
 		case *tview.InputField:
 			box = w.Box
-			w.SetFieldStyle(s.fieldStyle()).SetLabelStyle(tcell.StyleDefault.Foreground(to.text).Background(to.surface))
+			w.SetFieldStyle(s.fieldStyle()).SetLabelStyle(tcell.StyleDefault.Foreground(to.text).Background(color(previousBG)))
 		case *tview.Checkbox:
 			box = w.Box
-			w.SetActivatedStyle(s.focusStyle())
+			s.styleCheckbox(w)
 		case *tview.TextArea:
 			box = w.Box
 			s.styleEditor(w)
 		case *tview.TextView:
 			box = w.Box
-			fg := to.text
+			fg := s.textColor(s.textRoles[w])
 			if w.GetBackgroundColor() == from.field {
 				fg = to.fieldText
 			}
 			w.SetTextColor(fg)
+			background := color(previousBG)
+			if previousBG == from.field {
+				background = to.field
+			}
+			w.SetBackgroundColor(background)
 		case *tview.List:
 			box = w.Box
-			w.SetMainTextColor(to.text).SetSecondaryTextColor(to.muted).SetShortcutColor(to.accent).SetSelectedStyle(s.focusStyle())
-			if w == s.menuList {
-				w.SetMainTextStyle(tcell.StyleDefault.Foreground(to.text).Background(to.surface))
-			}
+			s.styleList(w)
 		case *tview.TreeView:
 			box = w.Box
 			w.SetGraphicsColor(to.muted)
 			if root := w.GetRoot(); root != nil {
 				root.Walk(func(n, parent *tview.TreeNode) bool {
-					n.SetTextStyle(style(n.GetTextStyle())).SetSelectedTextStyle(s.focusStyle())
+					st := n.GetTextStyle()
+					fg, _, _ := st.Decompose()
+					// Text and input background share a color in the dark palette.
+					// Preserve the tree's semantic foreground instead of treating
+					// that foreground as an input background during translation.
+					if fg == from.text {
+						fg = to.text
+					} else if fg == from.accent {
+						fg = to.accent
+					} else {
+						fg = color(fg)
+					}
+					n.SetTextStyle(st.Foreground(fg).Background(to.background)).SetSelectedTextStyle(s.focusStyle())
+					if w == s.planTree && n == root {
+						n.SetTextStyle(tcell.StyleDefault.Foreground(to.accent).Background(to.background))
+					}
 					return true
 				})
 			}
@@ -111,7 +132,11 @@ func (s *screen) applyTheme(previous string) {
 			for row := 0; row < w.GetRowCount(); row++ {
 				for col := 0; col < w.GetColumnCount(); col++ {
 					cell := w.GetCell(row, col)
-					cell.Color = color(cell.Color)
+					if cell.Color == from.text {
+						cell.Color = to.text
+					} else {
+						cell.Color = color(cell.Color)
+					}
 					cell.BackgroundColor = color(cell.BackgroundColor)
 					cell.Style = style(cell.Style)
 					cell.SelectedStyle = style(cell.SelectedStyle)
@@ -119,11 +144,11 @@ func (s *screen) applyTheme(previous string) {
 			}
 		case *tview.Button:
 			box = w.Box
-			w.SetStyle(s.buttonStyle()).SetActivatedStyle(buttonFocusStyle())
+			w.SetStyle(s.buttonStyle()).SetActivatedStyle(s.buttonFocusStyle())
 		case *tview.Modal:
 			box = w.Box
 			s.styleModal(w)
-			w.SetTextColor(to.text).SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(buttonFocusStyle())
+			w.SetTextColor(to.text).SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(s.buttonFocusStyle())
 		case *tview.Box:
 			box = w
 		}
@@ -133,6 +158,8 @@ func (s *screen) applyTheme(previous string) {
 			case *tview.TextArea:
 				box.SetBackgroundColor(to.editor).SetTitleColor(to.editorText)
 			case *tview.Form, *tview.Modal:
+				box.SetBackgroundColor(to.surface)
+			case *tview.List, *tview.Checkbox:
 				box.SetBackgroundColor(to.surface)
 			case *tview.TextView:
 				if previousBG == from.field {
@@ -150,7 +177,7 @@ func (s *screen) applyTheme(previous string) {
 	for _, tab := range s.tabs {
 		visit(tab.editor)
 		visit(tab.table)
-		if s.limitedColors && tab.table != nil && tab.table != s.table {
+		if (s.limitedColors || s.monochrome() || old.monochrome()) && tab.table != nil && tab.table != s.table {
 			inactive := screen{prefs: s.prefs, limitedColors: s.limitedColors, table: tab.table, resultRows: tab.rows, resultHeaders: tab.headers, resultValues: tab.values, resultSelection: tab.selection}
 			inactive.repaintGridTheme()
 		}
@@ -159,7 +186,7 @@ func (s *screen) applyTheme(previous string) {
 		visit(button)
 	}
 	for _, button := range s.buttons {
-		button.SetStyle(tcell.StyleDefault.Foreground(to.text).Background(to.footer)).SetActivatedStyle(buttonFocusStyle())
+		button.SetStyle(tcell.StyleDefault.Foreground(to.text).Background(to.footer)).SetActivatedStyle(s.buttonFocusStyle())
 	}
 	if s.footerVersion != nil {
 		s.footerVersion.SetTextColor(to.accent).SetBackgroundColor(to.footer)
@@ -174,8 +201,20 @@ func (s *screen) applyTheme(previous string) {
 		row, col := s.helpText.GetScrollOffset()
 		s.helpText.SetText(s.helpArticle(s.helpTopics.GetCurrentItem())).ScrollTo(row, col)
 	}
+	if s.reference != nil {
+		r := s.reference
+		row, col := r.text.GetScrollOffset()
+		r.text.SetBackgroundColor(to.background)
+		r.text.SetText(s.referenceContent(r.articles[r.topics.GetCurrentItem()])).ScrollTo(row, col)
+	}
+	if s.aboutText != nil {
+		s.aboutText.SetBackgroundColor(to.surface)
+	}
+	if s.connectionHeader != nil && s.connectionIdentity.Environment == "prod" {
+		s.connectionHeader.SetTextColor(to.warning)
+	}
 	// ANSI grid colors have shared roles, so regenerate their decorative styles.
-	if s.limitedColors && s.table != nil {
+	if (s.limitedColors || s.monochrome() || old.monochrome()) && s.table != nil {
 		s.repaintGridTheme()
 	}
 	s.refreshBorders()
@@ -187,9 +226,15 @@ func (s *screen) repaintGridTheme() {
 		rows[i] = true
 	}
 	s.paintResultRows(rows)
-	bg := tcell.ColorBlack
-	if s.prefs.Theme == "light" {
-		bg = tcell.ColorWhite
+	bg := s.gridColors().background
+	if s.limitedColors && !s.monochrome() {
+		bg = tcell.ColorBlack
+		if s.prefs.Theme == "light" {
+			bg = tcell.ColorWhite
+		}
 	}
 	s.table.SetBackgroundColor(bg)
+	for col := 0; col < s.table.GetColumnCount(); col++ {
+		s.table.GetCell(0, col).SetStyle(s.gridHeaderStyle(false))
+	}
 }

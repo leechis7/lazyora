@@ -39,7 +39,7 @@ func TestRenderedChoicesStayDistinctFromTextInputs(t *testing.T) {
 			x, y := formFieldCell(s.connectForm, connectionHost)
 			_, _, style, _ := terminal.GetContent(x, y)
 			_, inputBackground, _ := style.Decompose()
-			if inputBackground != palette.field {
+			if inputBackground != s.colors().field {
 				t.Fatal("text input lost white background")
 			}
 			for _, form := range []*tview.Form{s.connectForm, s.connectProfiles} {
@@ -81,7 +81,7 @@ func TestRenderedChoicesStayDistinctFromTextInputs(t *testing.T) {
 		x, y := formFieldCell(s.prefsForm, 0)
 		_, _, style, _ := terminal.GetContent(x, y)
 		_, background, _ := style.Decompose()
-		if background == palette.field {
+		if background == s.colors().field {
 			t.Fatal("language choice resembles text input")
 		}
 		terminal.Fini()

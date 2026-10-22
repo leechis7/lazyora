@@ -8,6 +8,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"lazyora/internal/oracle"
+	"lazyora/internal/settings"
 )
 
 func TestExitPendingDetailsPreserveSQLAndReturnToSafeDefault(t *testing.T) {
@@ -63,5 +64,30 @@ func TestPendingJournalCanOpenFromSessionAndDisplaysOmissions(t *testing.T) {
 	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
 	if !s.editor.HasFocus() || !s.pendingChanges || len(s.jobs) != 0 {
 		t.Fatal("journal close changed session state")
+	}
+}
+
+func TestPendingCountRendersWithConnectionContext(t *testing.T) {
+	for _, width := range []int{80, 120} {
+		m, terminal := workspaceTestSet(t)
+		s := m.active
+		terminal.SetSize(width, 32)
+		s.connected = true
+		s.connectionIdentity = settings.Connection{User: "lazyora", Host: "127.0.0.1", Port: 1521, Name: "FREEPDB1"}
+		s.pendingChanges = true
+		s.pendingWork = oracle.PendingWork{Statements: []oracle.StatementRecord{{SQL: "UPDATE sample_rows SET title=title WHERE id=1", Affected: 1}}}
+		s.showExitConfirmation()
+		s.exitDialog.Draw(terminal)
+		var visible strings.Builder
+		for y := 0; y < 32; y++ {
+			for x := 0; x < width; x++ {
+				r, _, _, _ := terminal.GetContent(x, y)
+				visible.WriteRune(r)
+			}
+			visible.WriteByte('\n')
+		}
+		if !strings.Contains(visible.String(), "Tracked statements: 1") {
+			t.Fatalf("pending count clipped at %d: %s", width, visible.String())
+		}
 	}
 }

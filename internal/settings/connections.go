@@ -15,6 +15,7 @@ import (
 // Connection stores only public connection metadata. Passwords live exclusively
 // in the separate encrypted credentials store, associated by stable IDs.
 type Connection struct {
+	Environment   string `json:"environment,omitempty"`
 	ID            string `json:"id,omitempty"`
 	SavedPassword bool   `json:"saved_password,omitempty"`
 	Alias         string `json:"alias"`
@@ -54,6 +55,9 @@ func (c Connection) Binding() string {
 }
 
 func (c Connection) Validate() error {
+	if c.Environment != "" && c.Environment != "dev" && c.Environment != "test" && c.Environment != "prod" {
+		return errors.New("environment must be dev, test or prod")
+	}
 	if c.ID != "" {
 		id, err := hex.DecodeString(c.ID)
 		if err != nil || len(id) != 16 {

@@ -1,11 +1,58 @@
 package ui
 
 import (
+	"fmt"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"strings"
 	"testing"
 )
+
+func TestMenuOnlyPaintsItsPopupArea(t *testing.T) {
+	for _, theme := range []string{"dark", "light"} {
+		for _, limited := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/limited=%v", theme, limited), func(t *testing.T) {
+				s, terminal := resultScreen(t)
+				s.prefs.Theme, s.limitedColors = theme, limited
+				for _, index := range []int{menuFile, menuHelp, -1} {
+					if index < 0 {
+						s.showContextMenu()
+					} else {
+						s.showMenu(index)
+					}
+					_, root := s.pages.GetFrontPage()
+					for _, size := range [][2]int{{120, 40}, {80, 10}, {40, 12}} {
+						width, height := size[0], size[1]
+						terminal.SetSize(width, height)
+						backdrop := tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().editor)
+						for y := 0; y < height; y++ {
+							for x := 0; x < width; x++ {
+								terminal.SetContent(x, y, 'Q', nil, backdrop)
+							}
+						}
+						root.SetRect(0, 0, width, height)
+						root.Draw(terminal)
+						for y := 0; y < height; y++ {
+							for x := 0; x < width; x++ {
+								if s.menuList.InRect(x, y) {
+									continue
+								}
+								r, _, style, _ := terminal.GetContent(x, y)
+								if r != 'Q' || style != backdrop {
+									t.Fatalf("menu %d at %v erased background at %d,%d", index, size, x, y)
+								}
+							}
+						}
+						if s.menuList.GetBackgroundColor() != s.colors().surface {
+							t.Fatal("menu lost its themed surface")
+						}
+					}
+					s.closeMenu()
+				}
+			})
+		}
+	}
+}
 
 func selectMenuCommand(t *testing.T, s *screen, id string) {
 	t.Helper()
@@ -19,6 +66,56 @@ func selectMenuCommand(t *testing.T, s *screen, id string) {
 		}
 	}
 	t.Fatalf("command %s missing from menu", id)
+}
+
+func TestF10MainMenuAndShiftF10ContextMenu(t *testing.T) {
+	for _, panel := range []string{"sql", "results", "browser"} {
+		for _, keymap := range []string{"", "vim", "notepad++"} {
+			t.Run(panel+"/"+keymap, func(t *testing.T) {
+				s := demoBrowserScreen(t)
+				s.prefs.EditorKeymap = keymap
+				focused := tview.Primitive(s.editor)
+				if panel == "results" {
+					focused = s.table
+				} else if panel == "browser" {
+					focused = s.browser
+				}
+				s.app.SetFocus(focused)
+				before := s.editor.GetText()
+				s.key(tcell.NewEventKey(tcell.KeyF10, 0, 0))
+				if s.menuList == nil || s.menuIndex != menuFile || s.menuFocus != focused {
+					t.Fatal("F10 did not open the main menu with panel focus preserved")
+				}
+				s.key(tcell.NewEventKey(tcell.KeyRight, 0, 0))
+				if s.menuIndex != menuTabs {
+					t.Fatal("main menu navigation failed")
+				}
+				s.key(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModShift))
+				if s.menuList == nil || s.menuIndex != -1 || s.menuFocus != focused {
+					t.Fatal("Shift+F10 did not switch to the panel context menu")
+				}
+				s.key(tcell.NewEventKey(tcell.KeyF10, 0, 0))
+				if s.menuList == nil || s.menuIndex != menuFile {
+					t.Fatal("F10 in a context menu did not open the main menu")
+				}
+				s.key(tcell.NewEventKey(tcell.KeyF10, 0, 0))
+				if s.menuList != nil || !focused.HasFocus() {
+					t.Fatal("F10 did not close the main menu and restore focus")
+				}
+				s.key(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModShift))
+				if s.menuList == nil || s.menuIndex != -1 {
+					t.Fatal("Shift+F10 did not open a context menu from the main page")
+				}
+				s.key(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModShift))
+				if s.menuList != nil || !focused.HasFocus() || s.editor.GetText() != before || len(s.jobs) != 0 {
+					t.Fatal("menu shortcuts changed work or failed to restore focus")
+				}
+				if bindingLabels("context_menu", 1) != "Shift+F10" {
+					t.Fatal("context menu hint retained the old shortcut")
+				}
+			})
+		}
+	}
 }
 
 func TestSQLTabMenuPreservesDocumentsAndProtectsDirtyClose(t *testing.T) {

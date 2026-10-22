@@ -228,6 +228,10 @@ func (s *screen) colorEditor(editor *tview.TextArea, changed func()) {
 		}
 		index := sort.Search(len(spans), func(i int) bool { return spans[i].end > offset })
 		if index < len(spans) && spans[index].start <= offset {
+			if s.monochrome() {
+				kind := spans[index].kind
+				return base.Bold(kind == sqlKeyword || kind == sqlBind).Italic(kind == sqlComment)
+			}
 			return sqlTokenStyle(spans[index].kind, s.limitedColors, base)
 		}
 		return base

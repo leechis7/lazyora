@@ -160,7 +160,7 @@ func TestThemeValidationAndLegacyDefault(t *testing.T) {
 	if err != nil || c.Theme != "" {
 		t.Fatal("legacy settings failed", err)
 	}
-	for _, theme := range []string{"dark", "light"} {
+	for _, theme := range []string{"dark", "light", "blackwhite"} {
 		c.Theme = theme
 		if err := Save(path, c); err != nil {
 			t.Fatal(err)

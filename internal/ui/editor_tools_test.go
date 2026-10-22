@@ -34,9 +34,9 @@ func TestToadPanelAndReservedKeys(t *testing.T) {
 			t.Fatal("reserved key submitted DB work or changed layout")
 		}
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF10, 0, 0))
+	s.key(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModShift))
 	if s.menuList == nil || s.menuIndex != -1 || s.menuFocus != s.editor {
-		t.Fatal("F10 did not open SQL context menu")
+		t.Fatal("Shift+F10 did not open SQL context menu")
 	}
 	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
 	if !s.editor.HasFocus() {

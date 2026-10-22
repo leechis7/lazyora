@@ -3,10 +3,47 @@ package ui
 import (
 	"bytes"
 	"io"
+	"os"
+	"runtime"
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
 )
+
+func TestMissingTermFallsBackWithoutChangingEnvironment(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Unix TERM selection; Windows uses tcell native console selection")
+	}
+	for _, name := range []string{"unset", "empty", "xterm", "invalid"} {
+		t.Run(name, func(t *testing.T) {
+			t.Setenv("TERM", "")
+			if name == "unset" {
+				if err := os.Unsetenv("TERM"); err != nil {
+					t.Fatal(err)
+				}
+			} else if name == "xterm" {
+				t.Setenv("TERM", "xterm")
+			} else if name == "invalid" {
+				t.Setenv("TERM", "lazyora-unknown-terminal-for-test")
+			}
+			before, existed := os.LookupEnv("TERM")
+			screen, err := newCompatibleScreenFromTTY(&recordedTTY{})
+			if name == "invalid" {
+				if err == nil {
+					t.Fatal("an explicitly unsupported terminal was silently replaced")
+				}
+			} else if err != nil {
+				t.Fatal(err)
+			} else if screen.HasMouse() != (name == "xterm") {
+				t.Fatal("fallback or explicit terminal capability was not preserved")
+			}
+			after, exists := os.LookupEnv("TERM")
+			if before != after || existed != exists {
+				t.Fatal("terminal initialization changed TERM")
+			}
+		})
+	}
+}
 
 type recordedTTY struct {
 	tcell.Tty
@@ -49,5 +86,26 @@ func TestTerminalFlushesIncompleteControlOnStop(t *testing.T) {
 	}
 	if tty.String() != "text\x1b[0 " || !tty.stopped {
 		t.Fatalf("incomplete control was lost: %q", tty.String())
+	}
+}
+
+func TestEightColorMouseCapabilityDependsOnTerminalProtocol(t *testing.T) {
+	for _, name := range []string{"ansi", "xterm"} {
+		t.Run(name, func(t *testing.T) {
+			info, err := tcell.LookupTerminfo(name)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if info.Colors != 8 {
+				t.Fatalf("%s no longer describes an 8-color terminal", name)
+			}
+			screen, err := tcell.NewTerminfoScreenFromTtyTerminfo(&recordedTTY{}, info)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if screen.HasMouse() != (name == "xterm") {
+				t.Fatal("mouse capability does not match the terminal protocol")
+			}
+		})
 	}
 }

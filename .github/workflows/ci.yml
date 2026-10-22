@@ -36,7 +36,7 @@ jobs:
       - name: Verify settings, profiles and credentials stay separate
         run: go test ./internal/settings -run '^Test(ConnectionFilesStaySeparate|ConnectionsPathCaseIsolation)$' -v -count=1
       - name: Verify simulated UI and export failure handling
-        run: go test ./internal/ui ./internal/exportdata -count=1
+        run: go test ./internal/ui ./internal/sqlfile ./internal/exportdata -count=1
 
   verify:
     name: Test, vet and build

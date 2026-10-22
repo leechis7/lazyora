@@ -161,6 +161,15 @@ func Save(path, text string, format Format, expected Snapshot) (*Document, error
 	if err == nil {
 		err = file.Sync()
 	}
+	if err == nil {
+		// Use the filesystem's effective mode in the next conflict check.
+		// Windows reports writable files as 0666 even when Chmod used 0600.
+		var info os.FileInfo
+		info, err = file.Stat()
+		if err == nil {
+			mode = info.Mode().Perm()
+		}
+	}
 	closeErr := file.Close()
 	if err == nil {
 		err = closeErr

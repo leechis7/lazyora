@@ -4,12 +4,16 @@ import (
 	"bytes"
 	"io"
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
 )
 
 func TestMissingTermFallsBackWithoutChangingEnvironment(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Unix TERM selection; Windows uses tcell native console selection")
+	}
 	for _, name := range []string{"unset", "empty", "xterm", "invalid"} {
 		t.Run(name, func(t *testing.T) {
 			t.Setenv("TERM", "")

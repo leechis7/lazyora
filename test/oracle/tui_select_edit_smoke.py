@@ -78,7 +78,7 @@ with tempfile.TemporaryDirectory(prefix="lazyora-select-edit-") as folder:
         original = copy_row()
         send(b"\x1b[C")  # CAPTION; ROWID remains read-only.
         output.clear()
-        send(b"\x1b[21;2~\x1b[H" + b"\x1b[B"*16 + b"\r")
+        send(b"\x1be\x1b[H" + b"\x1b[B"*2 + b"\r" + b"\x1b[B"*2 + b"\r")
         wait_for("New value")
         send(b"\x01\x0bPTY ROWID SELECT edit")
         output.clear()

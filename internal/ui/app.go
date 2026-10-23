@@ -160,6 +160,10 @@ type screen struct {
 	menuList                                 *tview.List
 	menuFocus                                tview.Primitive
 	menuIndex                                int
+	menuRows                                 []commandMenuRow
+	menuTitle                                string
+	menuEntries                              []command
+	menuParent                               *commandMenuParent
 	describeForm                             *tview.Form
 	describeFocus                            tview.Primitive
 	describeAction                           func()

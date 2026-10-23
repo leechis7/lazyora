@@ -192,6 +192,7 @@ type screen struct {
 	browserPanel                             *tview.Flex
 	browserForm                              *tview.Form
 	browserUsers, browserTypes               *choiceField
+	browserSearch                            *tview.InputField
 	browserSchemas                           []string
 	browserObjects                           []oracle.Object
 	browserKind                              int

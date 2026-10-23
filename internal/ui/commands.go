@@ -65,6 +65,7 @@ var commands = []command{
 	{"maximize", "maximize", menuView, nil},
 	{"resize_panels", "resize_panels", menuView, []binding{{"Alt+F8", tcell.KeyF8, tcell.ModAlt, 0}}},
 	{"browser", "schemas", menuView, []binding{{"Alt+B", tcell.KeyRune, tcell.ModAlt, 'b'}}},
+	{"browser_search", "browser_search", menuView, []binding{{"Alt+I", tcell.KeyRune, tcell.ModAlt, 'i'}}},
 	{"browser_user", "browser_user", menuView, []binding{{"Alt+U", tcell.KeyRune, tcell.ModAlt, 'u'}}},
 	{"browser_type", "browser_type", menuView, []binding{{"Alt+O", tcell.KeyRune, tcell.ModAlt, 'o'}}},
 	{"browser_refresh", "browser_refresh", menuView, nil},
@@ -192,7 +193,7 @@ func (s *screen) commandEnabled(id string) bool {
 		return !s.busy
 	case "pending_work":
 		return !s.busy && s.pendingChanges
-	case "browser", "browser_user", "browser_type":
+	case "browser", "browser_user", "browser_type", "browser_search":
 		return s.browser != nil
 	case "connect":
 		return !s.busy
@@ -331,6 +332,9 @@ func (s *screen) invoke(id string) {
 		s.toggleQueryResults()
 	case "browser":
 		s.toggleBrowser()
+	case "browser_search":
+		s.showBrowserSelector(false)
+		s.app.SetFocus(s.browserSearch)
 	case "browser_user", "browser_type":
 		s.showBrowserSelector(id == "browser_type")
 	case "context_menu":

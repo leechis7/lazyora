@@ -73,10 +73,30 @@ func (s *screen) newBrowser() *tview.Flex {
 	s.browserTypes = s.newChoice(s.tr("browser_type_label"), nil, -1, func(_ string, index int) { s.selectBrowserType(index) })
 	s.browserUsers.SetFieldWidth(0)
 	s.browserTypes.SetFieldWidth(0)
-	s.browserForm = tview.NewForm().SetItemPadding(0).AddFormItem(s.browserUsers).AddFormItem(s.browserTypes)
+	s.browserSearch = tview.NewInputField().SetLabel(s.tr("browser_search")).SetFieldWidth(0)
+	s.browserSearch.SetChangedFunc(func(string) {
+		if root := s.browser.GetRoot(); root != nil {
+			if data, ok := root.GetReference().(*browserNode); ok && data.loaded {
+				s.renderBrowserObjects()
+			}
+		}
+	})
+	s.browserSearch.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
+		switch e.Key() {
+		case tcell.KeyDown, tcell.KeyEnter:
+			s.app.SetFocus(s.browser)
+			return nil
+		case tcell.KeyEscape:
+			s.browserSearch.SetText("")
+			s.app.SetFocus(s.browser)
+			return nil
+		}
+		return e
+	})
+	s.browserForm = tview.NewForm().SetItemPadding(0).AddFormItem(s.browserUsers).AddFormItem(s.browserTypes).AddFormItem(s.browserSearch)
 	s.styleForm(s.browserForm)
 	s.browserForm.SetBorder(true).SetTitle(s.tr("browser_title"))
-	s.browserPanel = s.newFlex().SetDirection(tview.FlexRow).AddItem(s.browserForm, 6, 0, false).AddItem(s.browser, 0, 1, true)
+	s.browserPanel = s.newFlex().SetDirection(tview.FlexRow).AddItem(s.browserForm, 7, 0, false).AddItem(s.browser, 0, 1, true)
 	s.resetBrowser()
 	return s.browserPanel
 }
@@ -130,6 +150,9 @@ func (s *screen) selectBrowserUser(index int) {
 }
 
 func (s *screen) loadBrowserUser(owner string) {
+	if s.browserOwner != owner && s.browserSearch != nil {
+		s.browserSearch.SetText("")
+	}
 	s.browserOwner = owner
 	s.browserObjects = nil
 	root := s.treeNode(owner, &browserNode{kind: "schema", object: oracle.Object{Owner: owner}}).SetSelectable(false)
@@ -148,20 +171,30 @@ func (s *screen) loadBrowserUser(owner string) {
 
 func (s *screen) renderBrowserObjects() {
 	root := s.browser.GetRoot()
+	selected := oracle.Object{}
+	if node := s.browser.GetCurrentNode(); node != nil {
+		if data, ok := node.GetReference().(*browserNode); ok {
+			selected = data.object
+		}
+	}
 	root.ClearChildren().SetExpanded(true)
 	var first *tview.TreeNode
 	for _, object := range s.browserObjects {
-		if object.Kind != objectGroups[s.browserKind].kind {
+		if object.Kind != objectGroups[s.browserKind].kind || s.browserSearch != nil && !strings.Contains(strings.ToLower(object.Name), strings.ToLower(s.browserSearch.GetText())) {
 			continue
 		}
 		node := s.treeNode(object.Name, &browserNode{kind: "object", object: object})
 		root.AddChild(node)
-		if first == nil {
+		if first == nil || object == selected {
 			first = node
 		}
 	}
 	if first == nil {
-		root.AddChild(s.treeMessage("browser_empty"))
+		key := "browser_empty"
+		if s.browserSearch != nil && s.browserSearch.GetText() != "" {
+			key = "browser_search_empty"
+		}
+		root.AddChild(s.treeMessage(key))
 	}
 	s.browser.SetCurrentNode(first)
 	s.browser.SetTitle(" " + s.tr(objectGroups[s.browserKind].label) + " ")
@@ -183,6 +216,9 @@ func (s *screen) resetBrowser() {
 	}
 	s.browser.SetRoot(root).SetCurrentNode(nil)
 	s.browserOwner = ""
+	if s.browserSearch != nil {
+		s.browserSearch.SetText("")
+	}
 	s.browserSchemas = nil
 	s.browserObjects = nil
 	s.browserKind = 0
@@ -253,6 +289,9 @@ func (s *screen) localizeBrowser() {
 		return
 	}
 	s.browserForm.SetTitle(s.tr("browser_title"))
+	if s.browserSearch != nil {
+		s.browserSearch.SetLabel(s.tr("browser_search"))
+	}
 	s.browserUsers.SetLabel(s.tr("browser_user_label"))
 	s.browserTypes.SetLabel(s.tr("browser_type_label"))
 	var types []string

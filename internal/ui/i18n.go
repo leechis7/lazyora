@@ -138,7 +138,7 @@ var messages = map[string][2]string{
 	"environment_dev":           {"Development (DEV)", "개발 (DEV)"},
 	"environment_test":          {"Test (TEST)", "시험 (TEST)"},
 	"environment_prod":          {"Production (PROD)", "운영 (PROD)"},
-	"footer_workspaces":         {"Enter switch | N new | Del close | Tab buttons | Esc back", "Enter 전환 | N 새 접속 | Del 닫기 | Tab 버튼 | Esc 복귀"},
+	"footer_workspaces":         {"Click selects | Enter/Switch applies | N new | Del close | Tab buttons | Esc back", "클릭 선택 | Enter/전환 적용 | N 새 접속 | Del 닫기 | Tab 버튼 | Esc 복귀"},
 	"theme":                     {"Theme (Alt+T)", "테마 (Alt+T)"},
 	"theme_dark":                {"Dark", "다크"},
 	"theme_light":               {"Light", "라이트"},

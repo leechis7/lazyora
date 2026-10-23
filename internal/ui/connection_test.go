@@ -191,7 +191,7 @@ func TestConnectionSectionsAndTabCycle(t *testing.T) {
 		t.Fatal("forward cycle did not include profiles")
 	}
 	connectionKey(s, tcell.KeyBacktab)
-	if !s.connectForm.GetButton(2).HasFocus() {
+	if !s.connectForm.GetButton(3).HasFocus() {
 		t.Fatal("reverse cycle missed final button")
 	}
 	s.key(tcell.NewEventKey(tcell.KeyRune, 'r', tcell.ModAlt))

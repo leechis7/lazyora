@@ -51,6 +51,7 @@ func (s *screen) localizeConnection() {
 	form.GetButton(0).SetLabel(s.tr("connect") + " (Alt+C)")
 	form.GetButton(1).SetLabel(s.tr("cancel") + " (Esc)")
 	form.GetButton(2).SetLabel(s.tr("save") + " (Alt+S)")
+	form.GetButton(3).SetLabel(s.tr("connection_probe") + " (Alt+V)")
 	if s.connectionOptions != nil {
 		s.connectionOptions()
 	}
@@ -60,6 +61,10 @@ func (s *screen) localizeConnection() {
 }
 
 func (s *screen) closeConnection() {
+	if s.testingConnection {
+		s.action("cancel")
+		return
+	}
 	if s.connectForm != nil {
 		s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).SetText("")
 	}
@@ -67,6 +72,7 @@ func (s *screen) closeConnection() {
 	s.reloadConnectionProfiles = nil
 	s.pages.RemovePage("connect")
 	s.connectForm, s.connectAction, s.saveConnection = nil, nil, nil
+	s.testConnection = nil
 	s.connectionOptions = nil
 	s.connectProfiles = nil
 	if s.connectFocus != nil {
@@ -336,10 +342,23 @@ func (s *screen) connectionForm() {
 			saveProfile()
 		}
 	}
-	form.AddButton("", s.connectAction).AddButton("", s.closeConnection).AddButton("", s.saveConnection)
+	s.testConnection = func() {
+		if s.busy || s.testingConnection {
+			return
+		}
+		config, ok := readConfig()
+		if !ok {
+			return
+		}
+		s.testingConnection = true
+		s.submit(job{action: "test_connect", config: config})
+		form.SetTitle(s.tr("connection_probe_running"))
+	}
+	form.AddButton("", s.connectAction).AddButton("", s.closeConnection).AddButton("", s.saveConnection).AddButton("", s.testConnection)
 	s.clickable(form.GetButton(0))
 	s.clickable(form.GetButton(1))
 	s.clickable(form.GetButton(2))
+	s.clickable(form.GetButton(3))
 	form.SetBorder(true)
 	s.styleForm(form)
 	s.localizeConnection()
@@ -369,14 +388,25 @@ func (s *screen) connectionForm() {
 			gapHeight = 0
 		}
 		content.ResizeItem(gap, gapHeight, 0)
-		if width < 72 {
+		if width < 88 {
 			form.GetButton(0).SetLabel(s.tr("connect"))
 			form.GetButton(1).SetLabel(s.tr("cancel"))
 			form.GetButton(2).SetLabel(s.tr("save"))
+			form.GetButton(3).SetLabel(s.tr("connection_probe_short"))
+			if width < 52 {
+				labels := []string{"C", "X", "S", "T"}
+				if s.prefs.Language == "ko" {
+					labels = []string{"접", "취", "저", "시"}
+				}
+				for i, label := range labels {
+					form.GetButton(i).SetLabel(label)
+				}
+			}
 		} else {
 			form.GetButton(0).SetLabel(s.tr("connect") + " (Alt+C)")
 			form.GetButton(1).SetLabel(s.tr("cancel") + " (Esc)")
 			form.GetButton(2).SetLabel(s.tr("save") + " (Alt+S)")
+			form.GetButton(3).SetLabel(s.tr("connection_probe") + " (Alt+V)")
 		}
 	})
 	s.pages.AddPage("connect", root, true, true)

@@ -207,7 +207,7 @@ func (s *screen) helpContext(page string) string {
 	case "vault":
 		return s.tr("footer_vault") + "\n" + s.tr("vault_hint")
 	case "connect":
-		return s.tr("footer_connect") + "\nCtrl+Enter / Alt+C: " + s.tr("connect") + " | Ctrl+S: " + s.tr("save")
+		return s.tr("footer_connect") + "\nAlt+V: " + s.tr("connection_probe") + " (15s, Esc)\nCtrl+Enter / Alt+C: " + s.tr("connect") + " | Ctrl+S: " + s.tr("save")
 	case "settings":
 		return s.tr("footer_settings") + "\nAlt+T: " + s.tr("theme_dark") + " / " + s.tr("theme_light") + " / " + s.tr("theme_blackwhite") + "\nCtrl+S: " + s.tr("save") + " | Esc: " + s.tr("cancel")
 	case "object":

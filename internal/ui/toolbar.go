@@ -36,6 +36,10 @@ func (s *screen) toolbar() *tview.Flex {
 				return
 			}
 			key := s.footerKeys[index]
+			if key.action == "connection_probe" && s.testConnection != nil {
+				s.testConnection()
+				return
+			}
 			if key.action == "passwords" {
 				s.passwordManager()
 				return
@@ -209,7 +213,7 @@ func (s *screen) refreshFooter() {
 		keys[1] = footerKey{"Ctrl+Enter", "connect", tcell.KeyEnter, tcell.ModCtrl}
 		keys[2] = footerKey{"Ctrl+S", "save", tcell.KeyCtrlS, tcell.ModNone}
 		keys[3] = footerKey{"Esc", "cancel", tcell.KeyEscape, tcell.ModNone}
-		keys = append(keys, footerKey{"Alt+K", "passwords", tcell.KeyRune, tcell.ModAlt})
+		keys = append(keys, footerKey{"Alt+K", "passwords", tcell.KeyRune, tcell.ModAlt}, footerKey{"Alt+V", "connection_probe", tcell.KeyRune, tcell.ModAlt})
 	case "reconnect":
 		hint = "footer_reconnect"
 		keys = []footerKey{{"Esc", "cancel", tcell.KeyEscape, 0}}

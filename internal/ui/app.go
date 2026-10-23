@@ -234,6 +234,8 @@ type screen struct {
 	helpContextText                          string
 	connectForm, connectProfiles, prefsForm  *tview.Form
 	connectAction, saveConnection, savePrefs func()
+	testConnection                           func()
+	testingConnection                        bool
 	connectionOptions                        func()
 	prefs                                    settings.Config
 	prefsPath, statusKey                     string
@@ -380,6 +382,12 @@ func newWorkspaceScreen(app *tview.Application, terminal tcell.Screen, prefs set
 			if !s.prefs.Mouse {
 				return nil, action
 			}
+			if s.testingConnection && s.connectForm != nil {
+				x, y := event.Position()
+				if !s.connectForm.GetButton(1).InRect(x, y) {
+					return nil, action
+				}
+			}
 			if page, _ := s.pages.GetFrontPage(); page == "grid_inline" && s.inlineEdit != nil {
 				x, y := event.Position()
 				if !s.inlineEdit.InRect(x, y) {
@@ -428,12 +436,14 @@ func (s *screen) submit(j job) {
 	if s.busy {
 		return
 	}
-	if j.action != "connect" && j.action != "export" && j.action != "cell_save" && !s.connected {
+	if j.action != "connect" && j.action != "test_connect" && j.action != "export" && j.action != "cell_save" && !s.connected {
 		s.setStatus("connect_first")
 		return
 	}
 	s.busy = true
-	if j.action == "cell_save" || j.action == "export" && j.query != nil {
+	if j.action == "test_connect" {
+		j.ctx, s.cancel = context.WithTimeout(context.Background(), 15*time.Second)
+	} else if j.action == "cell_save" || j.action == "export" && j.query != nil {
 		j.ctx, s.cancel = context.WithCancel(context.Background())
 	} else {
 		j.ctx, s.cancel = context.WithTimeout(context.Background(), 60*time.Second)
@@ -477,6 +487,8 @@ func (s *screen) worker() {
 			session.ClosePage()
 		}
 		switch j.action {
+		case "test_connect":
+			err = oracle.ProbeConnection(j.ctx, j.config)
 		case "edit_load":
 			result, err = session.EditableTable(j.ctx, j.object)
 		case "edit_apply":
@@ -600,6 +612,10 @@ func (s *screen) worker() {
 					s.requestQuitLocal()
 				}
 			}()
+			if j.action == "test_connect" {
+				s.acceptConnectionProbe(err, j.config)
+				return
+			}
 			if session != nil {
 				s.outputEnabled = session.OutputEnabled()
 				s.pendingChanges = session.PendingChanges()

@@ -71,6 +71,8 @@ with tempfile.TemporaryDirectory(prefix="lazyora-select-edit-") as folder:
 
     try:
         wait_for("Load saved connection")
+        send(b"\x1bv")
+        wait_for("Connection test succeeded")
         send(b"\x1b[13;5u")
         wait_for("SAMPLE_ROWS")
         read_for(0.3)

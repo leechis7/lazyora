@@ -428,6 +428,16 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return event
 	}
 	if page == "connect" {
+		if s.testingConnection {
+			if event.Key() == tcell.KeyEscape || alt && letter == 'x' {
+				s.action("cancel")
+			}
+			return nil
+		}
+		if alt && letter == 'v' {
+			s.testConnection()
+			return nil
+		}
 		if alt && letter == 'k' {
 			s.passwordManager()
 			return nil

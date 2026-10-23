@@ -63,6 +63,7 @@ var commands = []command{
 	{"focus_toggle", "focus_toggle", menuView, []binding{{"F6", tcell.KeyF6, 0, 0}}},
 	{"context_menu", "context_menu", menuView, []binding{{"Shift+F10", tcell.KeyF10, tcell.ModShift, 0}}},
 	{"maximize", "maximize", menuView, nil},
+	{"resize_panels", "resize_panels", menuView, []binding{{"Alt+F8", tcell.KeyF8, tcell.ModAlt, 0}}},
 	{"browser", "schemas", menuView, []binding{{"Alt+B", tcell.KeyRune, tcell.ModAlt, 'b'}}},
 	{"browser_user", "browser_user", menuView, []binding{{"Alt+U", tcell.KeyRune, tcell.ModAlt, 'u'}}},
 	{"browser_type", "browser_type", menuView, []binding{{"Alt+O", tcell.KeyRune, tcell.ModAlt, 'o'}}},
@@ -143,6 +144,8 @@ func (s *screen) commandEnabled(id string) bool {
 		return s.workspaces != nil && !s.busy && !s.vaultBusy
 	case "table_edit_load":
 		return !s.busy && s.connected && !s.transactionUncertain && s.editTableTarget().Kind == "TABLE"
+	case "resize_panels":
+		return s.maximized == ""
 	case "grid_edit", "grid_inline":
 		row, col := s.table.GetSelection()
 		return !s.busy && s.connected && !s.transactionUncertain && s.table.HasFocus() && row > 0 && row <= len(s.resultBrowser.visible) && s.resultBrowser.source.CanEditColumn(col)
@@ -244,6 +247,8 @@ func (s *screen) invoke(id string) {
 		s.showAbout()
 	case "table_edit_load":
 		s.loadEditTable()
+	case "resize_panels":
+		s.resizePanelsCommand()
 	case "grid_inline":
 		s.startInlineEdit(nil)
 	case "grid_edit":

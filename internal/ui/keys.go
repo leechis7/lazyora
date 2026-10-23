@@ -41,6 +41,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	}
 
 	page, _ = s.pages.GetFrontPage()
+	if page == "main" && s.resizePanelKey(event) {
+		return nil
+	}
 	if page == "reference" {
 		return s.referenceKey(event)
 	}

@@ -153,6 +153,7 @@ type screen struct {
 	findText, replaceText                    string
 	rootLayout, menuLayout                   *tview.Flex
 	chromeHidden                             bool
+	sizing                                   panelSizing
 	splitOffsets                             panelOffsets
 	menuButtons                              []*tview.Button
 	menuList                                 *tview.List
@@ -378,6 +379,9 @@ func newWorkspaceScreen(app *tview.Application, terminal tcell.Screen, prefs set
 				if !s.inlineEdit.InRect(x, y) {
 					return nil, action
 				}
+			}
+			if s.resizePanelMouse(event, action) {
+				return nil, action
 			}
 			// tview groups quick clicks even when they target different controls.
 			// Preserve double clicks for text selection only at the same position.

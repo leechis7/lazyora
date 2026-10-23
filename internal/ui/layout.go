@@ -13,6 +13,7 @@ func (s *screen) rebuildPanels() {
 	if s.mainLayout == nil || s.queryLayout == nil {
 		return
 	}
+	s.initPanelSizing()
 	s.mainLayout.Clear()
 	s.queryLayout.Clear()
 	s.editor.SetRect(0, 0, 0, 0)
@@ -31,9 +32,10 @@ func (s *screen) rebuildPanels() {
 	case "results":
 		s.queryLayout.AddItem(s.resultGrid(), 0, 1, true)
 	default:
-		s.queryLayout.AddItem(s.editor, 0, 2, true).AddItem(s.resultGrid(), 0, 3, false)
+		s.sizing.result = s.resultGrid()
+		s.queryLayout.AddItem(s.editor, 0, 2, true).AddItem(s.sizing.horizontal, 1, 0, false).AddItem(s.sizing.result, 0, 3, false)
 		if s.browser != nil && !s.browserHidden {
-			s.mainLayout.AddItem(s.browserPanel, 0, 1, false)
+			s.mainLayout.AddItem(s.browserPanel, 0, 1, false).AddItem(s.sizing.vertical, 1, 0, false)
 		}
 	}
 	if !s.fullscreen {

@@ -255,6 +255,10 @@ func (s *screen) refreshFooter() {
 			}
 		}
 	}
+	if page == "main" && s.sizing.keyboard {
+		hint = "resize_panels_hint"
+		keys = nil
+	}
 	text := s.tr(hint)
 	if hint == "footer_source" {
 		text = s.sourceKeymapFooter()

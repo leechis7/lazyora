@@ -87,3 +87,25 @@ func TestRenderedChoicesStayDistinctFromTextInputs(t *testing.T) {
 		terminal.Fini()
 	}
 }
+
+func TestOpenChoiceErasesWideCharacterCrossingItsLeftEdge(t *testing.T) {
+	s, terminal := resultScreen(t)
+	terminal.SetSize(80, 20)
+	c := s.newChoice("", []string{"다크", "라이트", "흑백 (Black / White)"}, 1, nil)
+	c.SetRect(10, 2, 35, 1)
+	s.app.SetFocus(c)
+	c.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	// A button behind the list ends in a two-cell Hangul glyph straddling
+	// the list's left edge. The physical terminal skips the overlaid first
+	// character unless the old glyph's first cell is erased too.
+	terminal.SetContent(9, 5, '취', nil, tcell.StyleDefault)
+	c.Draw(terminal)
+	terminal.Show()
+	cells, width, _ := terminal.GetContents()
+	if len(cells[5*width+10].Runes) == 0 || cells[5*width+10].Runes[0] != '흑' {
+		t.Fatal("the first Hangul character is hidden by the underlying button")
+	}
+	if _, _, _, previousWidth := terminal.GetContent(9, 5); previousWidth > 1 {
+		t.Fatal("a partial wide glyph remains across the popup boundary")
+	}
+}

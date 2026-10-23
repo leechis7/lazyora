@@ -3,6 +3,7 @@ package ui
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"strings"
 	"testing"
 )
 
@@ -48,6 +49,47 @@ func TestPanelResizeMouseKeyboardAndFullscreenPreserveWork(t *testing.T) {
 		rx, ry, rw, rh := s.table.GetRect()
 		if ex < 0 || ey < 0 || rx < 0 || ry < 0 || ew < 0 || eh < 0 || rw < 0 || rh < 0 || ex+ew > size[0] || rx+rw > size[0] || ry+rh > size[1] {
 			t.Fatal("small terminal layout out of bounds")
+		}
+	}
+}
+
+func TestPanelResizeFooterShowsOneHintAndWorkingModeButtons(t *testing.T) {
+	for _, finish := range []int{1, 2} {
+		s, terminal := resultScreen(t)
+		s.app.SetFocus(s.table)
+		s.setStatus("disconnected")
+		before := s.status.GetText(false)
+		s.refreshFooter()
+		normal := append([]footerKey(nil), s.footerKeys...)
+		s.key(tcell.NewEventKey(tcell.KeyF8, 0, tcell.ModAlt))
+		s.refreshFooter()
+		if s.status.GetText(false) != before || strings.Count(s.status.GetText(false)+s.footer.GetText(false), s.tr("resize_panels_hint")) != 1 {
+			t.Fatal("resize hint duplicated or replaced the result status")
+		}
+		if len(s.footerKeys) != 3 || s.footerKeys[0].key != tcell.KeyHome || s.footerKeys[1].key != tcell.KeyEnter || s.footerKeys[2].key != tcell.KeyEscape {
+			t.Fatal("missing resize mode buttons")
+		}
+		s.footerBar.SetRect(0, 0, 120, 1)
+		s.footerBar.Draw(terminal)
+		s.sizing.sql, s.sizing.schema = 65, 45
+		click := func(index int) {
+			button := s.buttons[index]
+			x, y, _, _ := button.GetRect()
+			button.MouseHandler()(tview.MouseLeftClick, tcell.NewEventMouse(x+1, y, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+		}
+		click(0)
+		if !s.sizing.keyboard || s.sizing.sql != 40 || s.sizing.schema != 25 || len(s.jobs) != 0 {
+			t.Fatal("reset button did not reset only the panel sizes")
+		}
+		click(finish)
+		s.refreshFooter()
+		if s.sizing.keyboard || !s.table.HasFocus() || len(s.footerKeys) != len(normal) {
+			t.Fatal("finish did not restore normal toolbar and panel focus")
+		}
+		for i, key := range normal {
+			if s.footerKeys[i].action != key.action {
+				t.Fatal("normal toolbar actions changed")
+			}
 		}
 	}
 }

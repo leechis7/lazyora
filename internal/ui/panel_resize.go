@@ -11,6 +11,7 @@ type panelSizing struct {
 	result               tview.Primitive
 	drag                 string
 	keyboard             bool
+	keyboardFocus        tview.Primitive
 }
 
 func panelSize(total, percent, minimum int) int {
@@ -65,10 +66,21 @@ func (s *screen) resizePanelsCommand() {
 	if s.maximized != "" {
 		return
 	}
-	s.sizing.keyboard = !s.sizing.keyboard
 	if s.sizing.keyboard {
-		s.setStatus("resize_panels_hint")
+		s.finishPanelSizing()
+		return
 	}
+	s.sizing.keyboard = true
+	s.sizing.keyboardFocus = s.app.GetFocus()
+}
+
+func (s *screen) finishPanelSizing() {
+	s.sizing.keyboard = false
+	if s.sizing.keyboardFocus != nil {
+		s.app.SetFocus(s.sizing.keyboardFocus)
+		s.sizing.keyboardFocus = nil
+	}
+	s.setStatus("resize_panels_done")
 }
 func (s *screen) resizePanelKey(e *tcell.EventKey) bool {
 	if !s.sizing.keyboard {
@@ -76,8 +88,7 @@ func (s *screen) resizePanelKey(e *tcell.EventKey) bool {
 	}
 	switch e.Key() {
 	case tcell.KeyEscape, tcell.KeyEnter:
-		s.sizing.keyboard = false
-		s.setStatus("resize_panels_done")
+		s.finishPanelSizing()
 	case tcell.KeyUp:
 		s.sizing.sql = max(10, s.sizing.sql-5)
 	case tcell.KeyDown:

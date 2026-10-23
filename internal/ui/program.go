@@ -12,13 +12,17 @@ func (s *screen) sourceDirty() bool {
 }
 
 func (s *screen) showProgramConfirm(message string, action func()) {
+	s.showProgramConfirmFocused(message, action, 1)
+}
+
+func (s *screen) showProgramConfirmFocused(message string, action func(), button int) {
 	if s.programModal != nil || s.busy {
 		return
 	}
 	s.programFocus = s.app.GetFocus()
 	s.programModal = tview.NewModal().SetText(message).AddButtons([]string{s.tr("proceed"), s.tr("cancel")}).
 		SetBackgroundColor(s.colors().background).SetTextColor(s.colors().text).
-		SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(s.buttonFocusStyle()).SetFocus(1)
+		SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(s.buttonFocusStyle()).SetFocus(button)
 	s.styleModal(s.programModal)
 	s.programModal.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if action == tview.MouseLeftDoubleClick {

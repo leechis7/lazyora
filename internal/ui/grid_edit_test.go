@@ -29,13 +29,13 @@ func TestGridEditMapsSortedFilteredRowsAndRequiresConfirmation(t *testing.T) {
 	if s.programModal == nil || len(s.jobs) != 0 {
 		t.Fatal("preview ran SQL")
 	}
-	// Default cancel must never submit an update.
+	// Explicit cancel must never submit an update; Proceed is the default.
+	s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyRight, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
 	s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
 	if len(s.jobs) != 0 || !s.pages.HasPage("grid_edit") {
-		t.Fatal("default confirmation applied changes")
+		t.Fatal("cancel confirmation applied changes")
 	}
 	s.previewGridEdit()
-	s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyLeft, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
 	s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
 	select {
 	case j := <-s.jobs:
@@ -82,7 +82,6 @@ func TestSelectRowIDEditMasksColumnsAndKeepsOriginalQuery(t *testing.T) {
 	s.showGridEdit()
 	s.editForm.GetFormItem(0).(*tview.InputField).SetText("new")
 	s.previewGridEdit()
-	s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyLeft, 0, 0), func(tview.Primitive) {})
 	s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(tview.Primitive) {})
 	j := <-s.jobs
 	if j.action != "edit_apply" || j.query != query || j.edit.Column != 1 || j.edit.Row != 0 || j.edit.Text != "new" {

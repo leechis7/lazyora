@@ -36,6 +36,12 @@ func (s *screen) toolbar() *tview.Flex {
 				return
 			}
 			key := s.footerKeys[index]
+			if strings.HasPrefix(key.action, "resize_") {
+				if page, _ := s.pages.GetFrontPage(); page == "main" {
+					s.resizePanelKey(tcell.NewEventKey(key.key, 0, key.mod))
+				}
+				return
+			}
 			if key.action == "connection_probe" && s.testConnection != nil {
 				s.testConnection()
 				return
@@ -264,7 +270,7 @@ func (s *screen) refreshFooter() {
 	}
 	if page == "main" && s.sizing.keyboard {
 		hint = "resize_panels_hint"
-		keys = nil
+		keys = []footerKey{{"Home", "resize_reset", tcell.KeyHome, 0}, {"Enter", "resize_finish", tcell.KeyEnter, 0}, {"Esc", "resize_end", tcell.KeyEscape, 0}}
 	}
 	text := s.tr(hint)
 	if hint == "footer_source" {
@@ -289,7 +295,7 @@ func (s *screen) refreshFooter() {
 		}
 	}
 	if hint == "footer_results" {
-		text = fmt.Sprintf(text, shortcut("copy"), shortcut("copy_row"), shortcut("focus_toggle"), viewKeys)
+		text = s.resultNavigationHint(viewKeys)
 	}
 	if page == "main" {
 		if s.maximized != "" {
@@ -316,6 +322,14 @@ func (s *screen) refreshFooter() {
 		s.footerBar.AddItem(s.buttons[i], 0, 1, false)
 	}
 	s.footerBar.AddItem(s.footerVersion, len(appinfo.Version)+3, 0, false)
+}
+
+func (s *screen) resultNavigationHint(viewKeys string) string {
+	text := fmt.Sprintf(s.tr("footer_results"), shortcut("copy"), shortcut("copy_row"), shortcut("focus_toggle"), viewKeys)
+	if s.resultBrowser.source.EditID != 0 {
+		text = shortcut("grid_edit") + " " + s.tr("grid_edit_short") + " | " + text
+	}
+	return text
 }
 
 func (s *screen) action(action string) {

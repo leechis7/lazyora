@@ -38,6 +38,7 @@ var commands = []command{
 	{"copy_preview", "copy_preview", menuEdit, nil},
 	{"table_edit_load", "table_edit_load", menuEdit, nil},
 	{"grid_edit", "grid_edit", menuEdit, nil},
+	{"grid_inline", "grid_inline", menuEdit, nil},
 	{"find", "find", menuEdit, []binding{{"Ctrl+F", tcell.KeyCtrlF, 0, 0}}},
 	{"find_next", "find_next", menuEdit, []binding{{"F3", tcell.KeyF3, 0, 0}}},
 	{"find_previous", "find_previous", menuEdit, []binding{{"Shift+F3", tcell.KeyF3, tcell.ModShift, 0}}},
@@ -142,8 +143,9 @@ func (s *screen) commandEnabled(id string) bool {
 		return s.workspaces != nil && !s.busy && !s.vaultBusy
 	case "table_edit_load":
 		return !s.busy && s.connected && !s.transactionUncertain && s.editTableTarget().Kind == "TABLE"
-	case "grid_edit":
-		return !s.busy && s.connected && !s.transactionUncertain && s.table.HasFocus() && s.resultBrowser.source.EditID != 0 && len(s.resultRows) > 0
+	case "grid_edit", "grid_inline":
+		row, col := s.table.GetSelection()
+		return !s.busy && s.connected && !s.transactionUncertain && s.table.HasFocus() && row > 0 && row <= len(s.resultBrowser.visible) && s.resultBrowser.source.CanEditColumn(col)
 
 	case "cell_detail":
 		return !s.busy && s.table.HasFocus() && len(s.resultRows) > 0
@@ -242,6 +244,8 @@ func (s *screen) invoke(id string) {
 		s.showAbout()
 	case "table_edit_load":
 		s.loadEditTable()
+	case "grid_inline":
+		s.startInlineEdit(nil)
 	case "grid_edit":
 		s.showGridEdit()
 	case "cell_detail":

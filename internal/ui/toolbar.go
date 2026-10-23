@@ -108,6 +108,9 @@ func (s *screen) refreshFooter() {
 	case "reference":
 		hint = "footer_reference"
 		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+C", "copy", tcell.KeyCtrlC, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+	case "grid_inline":
+		hint = "grid_inline_hint"
+		keys = []footerKey{{"Enter", "edit_preview", tcell.KeyEnter, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
 	case "grid_edit":
 		hint = "footer_grid_edit"
 		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+S", "edit_preview", tcell.KeyCtrlS, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}

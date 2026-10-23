@@ -18,6 +18,7 @@ import (
 )
 
 type job struct {
+	editKey       editedCellKey
 	identity      settings.Connection
 	edit          oracle.EditChange
 	cell          oracle.Cell
@@ -56,6 +57,8 @@ type screen struct {
 
 	aboutText                        *tview.TextView
 	aboutFocus                       tview.Primitive
+	inlineEdit                       *inlineCellEditor
+	editedCells                      map[editedCellKey]bool
 	editChange                       oracle.EditChange
 	editForm                         *tview.Form
 	editInfo                         *tview.TextView
@@ -370,6 +373,12 @@ func newWorkspaceScreen(app *tview.Application, terminal tcell.Screen, prefs set
 			if !s.prefs.Mouse {
 				return nil, action
 			}
+			if page, _ := s.pages.GetFrontPage(); page == "grid_inline" && s.inlineEdit != nil {
+				x, y := event.Position()
+				if !s.inlineEdit.InRect(x, y) {
+					return nil, action
+				}
+			}
 			// tview groups quick clicks even when they target different controls.
 			// Preserve double clicks for text selection only at the same position.
 			if action == tview.MouseLeftClick || action == tview.MouseLeftDoubleClick {
@@ -464,7 +473,11 @@ func (s *screen) worker() {
 			err = session.ApplyEdit(j.ctx, j.edit)
 			editApplied = err == nil
 			if err == nil {
-				result, err = session.EditableTable(j.ctx, j.object)
+				if j.query != nil {
+					result, err = session.ExecutePaged(j.ctx, j.query.Text, j.query.Bindings)
+				} else {
+					result, err = session.EditableTable(j.ctx, j.object)
+				}
 			}
 		case "cell_preview":
 			cell, err = session.PreviewCell(j.ctx, j.cell)
@@ -582,9 +595,15 @@ func (s *screen) worker() {
 				s.pendingChanges = session.PendingChanges()
 				s.transactionUncertain = session.TransactionUncertain()
 				s.pendingWork = session.PendingWork()
+				if !s.pendingChanges && !s.transactionUncertain {
+					s.clearEditedCells()
+				}
 				s.refreshConnectionTitles()
 				s.invalidateResultCursors(session.PageID())
 				s.invalidateEditResults(session.EditID())
+			}
+			if j.action == "edit_apply" && editApplied {
+				s.markEditedCell(j.editKey)
 			}
 			if j.action == "edit_load" || j.action == "edit_apply" {
 				if err != nil && editApplied {
@@ -714,6 +733,7 @@ func (s *screen) worker() {
 					s.refreshConnectionTitles()
 					s.demo = false
 					s.resetBrowser()
+					s.clearEditedCells()
 					s.setStatus("connected", j.config.User, j.config.Host, j.config.Port, j.config.Name, j.config.Mode)
 					if !s.quitting {
 						s.submit(job{action: "schemas"})
@@ -733,8 +753,10 @@ func (s *screen) worker() {
 						s.setStatus("executed", result.Affected, result.Elapsed.Round(time.Millisecond))
 					}
 				case "commit":
+					s.clearEditedCells()
 					s.setStatus("committed")
 				case "rollback":
+					s.clearEditedCells()
 					s.setStatus("rolled_back")
 				case "schemas":
 					s.setStatus("schemas_loaded", len(catalog.Schemas))
@@ -856,6 +878,9 @@ func (s *screen) renderGrid(result oracle.Result) {
 		s.refreshGridHeader(col)
 	}
 	s.table.SetSelectionChangedFunc(func(_, _ int) { s.highlightResults(); s.refreshResultPosition() })
+	if len(s.editedCells) > 0 {
+		s.repaintEditedCells()
+	}
 	s.highlightResults()
 	s.refreshResultPosition()
 }

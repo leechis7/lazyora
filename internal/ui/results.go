@@ -62,7 +62,10 @@ func (s *screen) resultMouse(action tview.MouseAction, event *tcell.EventMouse) 
 	case tview.MouseLeftDoubleClick:
 		if valid {
 			s.table.Select(row, col)
-			s.showCellDetail()
+			s.app.SetFocus(s.table)
+			if page != "main" || !s.startInlineEdit(nil) {
+				s.showCellDetail()
+			}
 			return tview.MouseConsumed, nil
 		}
 	case tview.MouseRightClick:

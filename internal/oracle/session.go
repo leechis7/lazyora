@@ -11,18 +11,21 @@ import (
 const MaxRows = 1000
 
 type Result struct {
-	EditID      uint64
-	EditObject  Object
-	PageID      uint64
-	PageLimited bool
-	Output      Output
-	Query       *QuerySpec
-	Values      [][]Cell
-	Columns     []string
-	Rows        [][]string
-	Affected    int64
-	Truncated   bool
-	Elapsed     time.Duration
+	EditID          uint64
+	EditObject      Object
+	EditColumns     []bool   // nil: all columns in the explicit table-edit snapshot.
+	EditRowIDs      []string // Physical identity, independent of display order.
+	EditColumnNames []string // Original column names, independent of SELECT aliases.
+	PageID          uint64
+	PageLimited     bool
+	Output          Output
+	Query           *QuerySpec
+	Values          [][]Cell
+	Columns         []string
+	Rows            [][]string
+	Affected        int64
+	Truncated       bool
+	Elapsed         time.Duration
 }
 
 // Cell retains NULL and database type separately from the display text.
@@ -125,6 +128,14 @@ func (s *Session) execute(ctx context.Context, text string, keepPage bool, bindi
 	if s.outputEnabled {
 		defer func() { result.Output = s.collectOutput() }()
 	}
+	if query && keepPage {
+		s.edit = s.prepareSelectEdit(ctx, originalStatement)
+		defer func() {
+			if err != nil {
+				s.edit = nil
+			}
+		}()
+	}
 	if !query {
 		// A failed/cancelled statement or PL/SQL block may have executed part
 		// of its work. Keep a conservative warning until explicit resolution.
@@ -173,7 +184,7 @@ func (s *Session) execute(ctx context.Context, text string, keepPage bool, bindi
 	result.Query, _ = NewQuerySpec(originalStatement, values)
 	if keepPage {
 		s.pageSequence++
-		s.page = &queryPage{rows: rows, types: columnTypes, columns: result.Columns, cancel: pageCancel, id: s.pageSequence}
+		s.page = &queryPage{rows: rows, types: columnTypes, columns: result.Columns, cancel: pageCancel, id: s.pageSequence, edit: s.edit}
 		page, pageErr := s.readPage(ctx)
 		page.Query = result.Query
 		page.Elapsed = time.Since(start)

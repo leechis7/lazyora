@@ -41,11 +41,12 @@ func (s *screen) invalidateEditResults(active uint64) {
 func (s *screen) showGridEdit() {
 	source := s.resultBrowser.source
 	row, col := s.table.GetSelection()
-	if s.busy || source.EditID == 0 || row < 1 || row > len(s.resultBrowser.visible) || col < 0 || col >= len(source.Columns) {
+	if s.busy || !source.CanEditColumn(col) || row < 1 || row > len(s.resultBrowser.visible) {
 		return
 	}
 	index := s.resultBrowser.visible[row-1]
 	old := source.Values[index][col]
+	old.Text = editInputText(old)
 	s.editChange = oracle.EditChange{ID: source.EditID, Row: index, Column: col, Text: old.Text, Null: old.Null}
 	value := old.Text
 	if old.Null {
@@ -71,6 +72,10 @@ func (s *screen) previewGridEdit() {
 	change := s.editChange
 	change.Text = s.editForm.GetFormItem(0).(*tview.InputField).GetText()
 	change.Null = s.editForm.GetFormItem(1).(*tview.Checkbox).IsChecked()
+	s.previewCellChange(change)
+}
+
+func (s *screen) previewCellChange(change oracle.EditChange) {
 	source := s.resultBrowser.source
 	if source.EditID != change.ID {
 		return
@@ -82,7 +87,11 @@ func (s *screen) previewGridEdit() {
 	}
 	message := fmt.Sprintf("%s\n%s · %s\n%s: %s\n%s: %s\n\n%s", s.tr("edit_preview"), tview.Escape(oracle.QualifiedObject(source.EditObject)), tview.Escape(source.Columns[change.Column]), s.tr("edit_old"), tview.Escape(old.Text), s.tr("edit_new"), tview.Escape(next), s.tr("edit_confirm"))
 	object := source.EditObject
-	s.showProgramConfirm(message, func() { s.submit(job{action: "edit_apply", edit: change, object: object}) })
+	key := s.editedCellIdentity(source, change.Row, change.Column)
+	s.showProgramConfirm(message, func() {
+		s.closeInlineEdit()
+		s.submit(job{action: "edit_apply", edit: change, object: object, query: source.Query, editKey: key})
+	})
 }
 func (s *screen) closeGridEdit() {
 	if s.busy {

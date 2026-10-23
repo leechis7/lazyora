@@ -56,9 +56,12 @@ F6 switches SQL/results. Use arrows and PgUp/PgDn in the result grid.
 Click, drag or Shift+arrows selects cells; Ctrl+C copies and Alt+Y copies a row.
 View/Shift+F10 provides the next 1,000 rows, local sorting/filtering and column widths.
 One F9 query retains at most 10,000 rows / estimated 64 MiB; loaded rows are not the full database result.
-Enter opens cell details for long values, NULL and binary content, including original-value file saving.
-Editing requires an explicitly loaded table from the browser and does not auto-commit.
+For read-only cells, Enter opens cell details for long values, NULL and binary content, including original-value file saving.
+Editing supports explicit browser table loads and verified single-table ROWID SELECT results; commit remains manual.
+Editable cells: Enter/double-click edits the existing value; typing replaces it. Enter reviews before applying, Esc cancels input, Ctrl+U clears, Alt+Delete sets NULL. Edit > Edit cell in dialog remains available; the context menu opens cell details. Applied cells have a distinct background until commit/rollback; requery after rollback.
 If clipboard delivery fails, use Edit → Copy preview and your terminal's selection/copy command.
+
+Execute `SELECT t.ROWID, t.* FROM table_name t WHERE ...` with F9 to edit verified original columns. ROWID stays read-only; commit or roll back explicitly. Joins, expressions and ambiguous results stay read-only.
 
 ## Export, explain plans and output
 

@@ -73,6 +73,7 @@ func (s *screen) switchTab(index int) {
 	s.resultRows, s.resultHeaders, s.resultSelection = tab.rows, tab.headers, tab.selection
 	s.grid = tab.grid
 	s.resultBrowser = tab.browser
+	s.repaintEditedCells()
 	s.setStatus(tab.status, tab.statusArgs...)
 	s.rebuildPanels()
 	s.refreshDocumentTitle()

@@ -24,6 +24,10 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if event.Key() == tcell.KeyCtrlC {
 		event = tcell.NewEventKey(event.Key(), event.Rune(), event.Modifiers())
 	}
+	page, _ := s.pages.GetFrontPage()
+	if page == "grid_inline" {
+		return s.inlineEditKey(event)
+	}
 	if s.vaultBusy {
 		return nil
 	}
@@ -36,7 +40,7 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		event = tcell.NewEventKey(tcell.KeyEnter, 0, event.Modifiers()&^tcell.ModCtrl)
 	}
 
-	page, _ := s.pages.GetFrontPage()
+	page, _ = s.pages.GetFrontPage()
 	if page == "reference" {
 		return s.referenceKey(event)
 	}
@@ -53,7 +57,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return s.cellKey(event)
 	}
 	if page == "main" && s.table.HasFocus() && event.Key() == tcell.KeyEnter && event.Modifiers() == 0 {
-		s.showCellDetail()
+		if !s.startInlineEdit(nil) {
+			s.showCellDetail()
+		}
 		return nil
 	}
 	if page == "result_filter" {
@@ -474,6 +480,12 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		}
 	}
 
+	if page == "main" && s.table.HasFocus() && event.Key() == tcell.KeyRune && event.Modifiers() & ^tcell.ModShift == 0 {
+		r := event.Rune()
+		if s.startInlineEdit(&r) {
+			return nil
+		}
+	}
 	if s.table.HasFocus() {
 		switch event.Key() {
 		case tcell.KeyUp, tcell.KeyDown, tcell.KeyLeft, tcell.KeyRight:

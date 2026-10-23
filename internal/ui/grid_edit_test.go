@@ -59,6 +59,48 @@ func TestGridEditMapsSortedFilteredRowsAndRequiresConfirmation(t *testing.T) {
 	}
 	_ = terminal
 }
+func TestSelectRowIDEditMasksColumnsAndKeepsOriginalQuery(t *testing.T) {
+	s, _ := resultScreen(t)
+	s.initDocument()
+	s.connected = true
+	query := &oracle.QuerySpec{Text: "SELECT t.ROWID rid,t.title caption FROM items t WHERE id=:id", Bindings: map[string]oracle.BindValue{"ID": {Kind: "number", Text: "1"}}}
+	s.render(oracle.Result{EditID: 81, EditObject: oracle.Object{Owner: "APP", Name: "ITEMS", Kind: "TABLE"}, EditColumns: []bool{false, true}, Query: query,
+		Columns: []string{"RID", "CAPTION"}, Rows: [][]string{{"AAAAAAAABAAAAA0001", "old"}}, Values: [][]oracle.Cell{{{Text: "AAAAAAAABAAAAA0001", Type: "ROWID"}, {Text: "old", Type: "VARCHAR2"}}}})
+	s.app.SetFocus(s.table)
+	s.table.Select(1, 0)
+	if s.commandEnabled("grid_edit") {
+		t.Fatal("ROWID edit command enabled")
+	}
+	s.showGridEdit()
+	if s.editForm != nil {
+		t.Fatal("ROWID edit form opened")
+	}
+	s.table.Select(1, 1)
+	if !s.commandEnabled("grid_edit") {
+		t.Fatal("original column edit command disabled")
+	}
+	s.showGridEdit()
+	s.editForm.GetFormItem(0).(*tview.InputField).SetText("new")
+	s.previewGridEdit()
+	s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyLeft, 0, 0), func(tview.Primitive) {})
+	s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(tview.Primitive) {})
+	j := <-s.jobs
+	if j.action != "edit_apply" || j.query != query || j.edit.Column != 1 || j.edit.Row != 0 || j.edit.Text != "new" {
+		t.Fatal("SELECT edit did not retain the query, bind values and source cell")
+	}
+	s.cancel()
+	s.cancel = nil
+	// A SQL tab keeps its read-only mask along with the result.
+	s.busy = false
+	s.closeGridEdit()
+	s.initTabs()
+	s.newTab()
+	s.switchTab(0)
+	if s.resultBrowser.source.CanEditColumn(0) || !s.resultBrowser.source.CanEditColumn(1) {
+		t.Fatal("SQL tab lost column mask")
+	}
+}
+
 func TestGridEditModalNarrowDrawAndButtonArrows(t *testing.T) {
 	s, terminal := resultScreen(t)
 	s.render(oracle.Result{EditID: 1, EditObject: oracle.Object{Owner: "A", Name: "B", Kind: "TABLE"}, Columns: []string{"VALUE"}, Rows: [][]string{{"old"}}, Values: [][]oracle.Cell{{{Type: "VARCHAR2", Text: "old"}}}})

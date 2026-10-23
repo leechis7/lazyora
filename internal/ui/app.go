@@ -131,6 +131,7 @@ type screen struct {
 	tabBar                 *tview.Flex
 	document               *sqlfile.Document
 	fileDialog             *fileDialog
+	renameForm             *tview.Form
 	documentModal          *tview.Modal
 
 	sqlConfirmText  *tview.TextView

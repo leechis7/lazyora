@@ -13,6 +13,7 @@ import (
 // Tabs share one DB connection/transaction. Executions lock tab switching and
 // closing, so a result always belongs to the editor which submitted the job.
 type sqlTab struct {
+	name       string
 	query      *oracle.QuerySpec
 	values     [][]oracle.Cell
 	truncated  bool
@@ -219,7 +220,10 @@ func (s *screen) refreshTabs() {
 		if i == s.activeTab {
 			doc = s.document
 		}
-		name := s.tr("file_untitled")
+		name := tab.name
+		if name == "" {
+			name = s.tr("file_untitled")
+		}
 		if doc.Path != "" {
 			name = filepath.Base(doc.Path)
 		}
@@ -227,7 +231,7 @@ func (s *screen) refreshTabs() {
 		if doc.Dirty(tab.editor.GetText()) {
 			mark = "*"
 		}
-		label := fmt.Sprintf("%d %s%s", i+1, name, mark)
+		label := fmt.Sprintf("%d %s%s", i+1, tview.Escape(name), mark)
 		if i == s.activeTab {
 			label = "> " + label
 		}

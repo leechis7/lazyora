@@ -126,7 +126,7 @@ func TestSQLTabMenuPreservesDocumentsAndProtectsDirtyClose(t *testing.T) {
 			s.initTabs()
 			first := s.editor
 			s.key(tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModAlt))
-			if s.menuIndex != menuTabs || s.menuList.GetItemCount() != 4 {
+			if s.menuIndex != menuTabs || s.menuList.GetItemCount() != 5 {
 				t.Fatal("SQL tabs menu not available")
 			}
 			selectMenuCommand(t, s, "file_new")

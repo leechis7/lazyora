@@ -24,6 +24,7 @@ var commands = []command{
 	{"file_save", "file_save", menuFile, []binding{{"Ctrl+S", tcell.KeyCtrlS, 0, 0}}},
 	{"file_save_as", "file_save_as", menuFile, []binding{{"Ctrl+Shift+S", tcell.KeyCtrlS, tcell.ModShift, 0}}},
 	{"file_close", "file_close", menuTabs, []binding{{"Ctrl+W", tcell.KeyCtrlW, 0, 0}}},
+	{"tab_rename", "tab_rename", menuTabs, nil},
 	{"tab_next", "tab_next", menuTabs, []binding{{"Ctrl+Tab", tcell.KeyTab, tcell.ModCtrl, 0}, {"Alt+PgDn", tcell.KeyPgDn, tcell.ModAlt, 0}}},
 	{"tab_previous", "tab_previous", menuTabs, []binding{{"Ctrl+Shift+Tab", tcell.KeyBacktab, tcell.ModCtrl, 0}, {"Alt+PgUp", tcell.KeyPgUp, tcell.ModAlt, 0}}},
 	{"quit", "quit", menuFile, []binding{{"Ctrl+Q", tcell.KeyCtrlQ, 0, 0}}},
@@ -145,6 +146,8 @@ func (s *screen) commandEnabled(id string) bool {
 		return s.workspaces != nil && !s.busy && !s.vaultBusy
 	case "table_edit_load":
 		return !s.busy && s.connected && !s.transactionUncertain && s.editTableTarget().Kind == "TABLE"
+	case "tab_rename":
+		return !s.busy && s.document != nil && s.document.Path == "" && len(s.tabs) > 0
 	case "resize_panels":
 		return s.maximized == ""
 	case "grid_edit", "grid_inline":
@@ -306,6 +309,8 @@ func (s *screen) invoke(id string) {
 		s.executeScript()
 	case "script_report":
 		s.showScriptReport()
+	case "tab_rename":
+		s.showTabRename()
 	case "file_new":
 		s.newDocument()
 	case "file_close":

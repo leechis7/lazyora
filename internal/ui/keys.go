@@ -44,6 +44,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if page == "main" && s.resizePanelKey(event) {
 		return nil
 	}
+	if page == "tab_rename" {
+		return event
+	}
 	if page == "reference" {
 		return s.referenceKey(event)
 	}

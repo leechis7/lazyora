@@ -192,8 +192,7 @@ func (s *screen) copyPreview() {
 	text := s.newTextView().SetText(s.clipboardText).SetWrap(false)
 	text.SetBorder(true).SetTitle(s.tr("copy_preview"))
 	s.styleBox(text.Box)
-	text.SetBackgroundColor(s.colors().field)
-	text.SetTextColor(s.colors().fieldText)
+	s.textSurface(text, surfaceField)
 
 	s.copyText = text
 	root := s.newFlex().SetDirection(tview.FlexRow).AddItem(s.newTextView(textHint).SetText(s.tr("copy_preview_hint")).SetWrap(true), 2, 0, false).AddItem(text, 0, 1, true)

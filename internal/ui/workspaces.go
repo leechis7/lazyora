@@ -231,7 +231,8 @@ func (s *screen) refreshConnectionTitles() {
 		if s.connectionIdentity.Environment == "prod" {
 			color = s.colors().warning
 		}
-		s.connectionHeader.SetTextColor(color).SetBackgroundColor(s.colors().surface)
+		s.textSurface(s.connectionHeader, surfacePanel)
+		s.connectionHeader.SetTextColor(color)
 	}
 	if s.table != nil {
 		s.refreshResultPosition()

@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-10-23
+
+### 수정
+
+- LORA-69: 테마와 8/16/256색·True Color 프로필을 구분하고 공통 선택·버튼·폼·문법색을 정비했습니다. 검정 글자에 굵게 속성이 적용되어 대비가 낮아지는 조합을 줄였습니다.
+- LORA-69: 마스터 암호·암호 관리 안내문과 흑백 복사창 제목이 배경과 같은 색이 되는 문제를 수정했습니다. 테마 왕복 시 색상 값을 치환하지 않고 의미별 스타일을 다시 적용해 탭·상세 표·팝업의 색상과 입력 상태·포커스를 유지합니다.
+- LORA-69: 미커밋 셀의 행 번호에 `*`, 선택 셀 상태에 안내 문구를 표시해 색상 외에도 변경을 확인할 수 있게 했습니다.
+
 ## [0.10.0] - 2026-10-23
 
 ### 추가
@@ -267,7 +275,8 @@ v0.0.1의 F2 접속은 Alt+L, F4 실행은 F9, F5 커밋은 Alt+C, F6 롤백은 
 - 이 릴리스 시점에는 실제 CentOS 7.4, 구형 Oracle 및 SID 접속 검증이 완료되지 않았습니다. 이후 호환성 수정은 `Unreleased`에 기록합니다.
 - 한 번에 SQL 한 문장 또는 BEGIN/DECLARE 블록 하나를 실행합니다. 여러 문장 일괄 실행, SQL*Plus 스크립트, 바인드 입력, DBMS_OUTPUT 출력은 지원하지 않습니다.
 
-[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.10.0...dev
+[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.10.1...dev
+[0.10.1]: https://github.com/leechis7/lazyora/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/leechis7/lazyora/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/leechis7/lazyora/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/leechis7/lazyora/compare/v0.7.0...v0.8.0

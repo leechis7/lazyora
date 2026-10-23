@@ -69,6 +69,7 @@ func selectMenuCommand(t *testing.T, s *screen, id string) {
 	label := s.tr(commandFor(id).label)
 	for i := 0; i < s.menuList.GetItemCount(); i++ {
 		text, _ := s.menuList.GetItemText(i)
+		text = strings.ReplaceAll(strings.ReplaceAll(text, "["+s.tokens().disabled.String()+"]", ""), "[-:-:-]", "")
 		if text == label || strings.HasPrefix(text, label+"  ") || strings.HasPrefix(text, "[gray]"+label) {
 			s.menuList.SetCurrentItem(i)
 			s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })

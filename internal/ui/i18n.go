@@ -71,6 +71,7 @@ var messages = map[string][2]string{
 	"grid_edit":                 {"Edit cell in dialog", "별도 창에서 셀 편집"},
 	"grid_edit_short":           {"Dialog", "편집창"},
 	"grid_inline":               {"Edit cell inline", "그리드에서 셀 직접 편집"},
+	"grid_uncommitted_cell":     {"Uncommitted cell change", "미커밋 셀 변경"},
 	"grid_inline_hint":          {"Enter Review | Esc Cancel | Ctrl+U Clear | Alt+Delete NULL. Colored cells: applied, uncommitted edits.", "Enter 변경 확인 | Esc 취소 | Ctrl+U 입력 지우기 | Alt+Delete NULL. 배경색 표시: 미커밋 셀 변경."},
 	"edit_readonly":             {"Read-only · reload to edit", "읽기 전용 · 편집하려면 재조회"},
 	"edit_old":                  {"Original", "변경 전"},

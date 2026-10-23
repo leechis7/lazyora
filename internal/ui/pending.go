@@ -40,7 +40,7 @@ func (s *screen) showPendingWork() {
 	s.pendingSQL.SetBorder(true).SetTitle(s.tr("pending_sql"))
 	s.styleBox(s.pendingSQL.Box)
 	s.pendingSQL.SetTextColor(s.colors().text)
-	s.pendingTable = tview.NewTable().SetFixed(1, 0).SetSelectable(true, false).SetSelectedStyle(s.focusStyle())
+	s.pendingTable = s.newDataTable().SetFixed(1, 0).SetSelectable(true, false).SetSelectedStyle(s.focusStyle())
 	s.pendingTable.SetBorder(true).SetTitle(s.tr("pending_work"))
 	s.styleBox(s.pendingTable.Box)
 	for col, key := range []string{"pending_number", "pending_time", "pending_outcome", "pending_rows", "pending_sql"} {

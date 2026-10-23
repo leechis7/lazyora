@@ -98,7 +98,7 @@ func TestLightGridAndSyntaxContrast(t *testing.T) {
 				t.Fatal("grid cell invisible", row)
 			}
 		}
-		if !limited && s.table.GetBackgroundColor() != lightGridPalette.background {
+		if !limited && s.table.GetBackgroundColor() != s.gridColors().background {
 			t.Fatal("grid still dark")
 		}
 		s.table.Select(1, 1)

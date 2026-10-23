@@ -193,7 +193,7 @@ func colorSQL(text string, spans []sqlColorSpan) []sqlColorSpan {
 }
 
 var sqlRichColors = [...]tcell.Color{0, tcell.GetColor("#204a87"), tcell.GetColor("#006b73"), tcell.GetColor("#5951a0"), tcell.GetColor("#a3273a"), tcell.GetColor("#6945a3"), tcell.GetColor("#526a43"), tcell.GetColor("#8b4f00")}
-var sqlANSIColors = [...]tcell.Color{0, tcell.ColorNavy, tcell.ColorTeal, tcell.ColorPurple, tcell.ColorMaroon, tcell.ColorPurple, tcell.ColorGreen, tcell.ColorOlive}
+var sqlANSIColors = [...]tcell.Color{0, tcell.ColorNavy, tcell.ColorTeal, tcell.ColorPurple, tcell.ColorMaroon, tcell.ColorPurple, tcell.ColorGreen, tcell.ColorMaroon}
 
 var sqlDarkColors = [...]tcell.Color{0, tcell.GetColor("#8db8ff"), tcell.GetColor("#73d7ce"), tcell.GetColor("#c7adff"), tcell.GetColor("#efa3aa"), tcell.GetColor("#ebcd79"), tcell.GetColor("#a2bb98"), tcell.GetColor("#f2bc84")}
 var sqlDarkANSIColors = [...]tcell.Color{0, tcell.ColorAqua, tcell.ColorWhite, tcell.ColorFuchsia, tcell.ColorYellow, tcell.ColorYellow, tcell.ColorLime, tcell.ColorWhite}
@@ -212,7 +212,7 @@ func sqlTokenStyle(kind sqlColorKind, limited bool, base tcell.Style) tcell.Styl
 		}
 	}
 	style := base.Foreground(colors[kind])
-	if kind == sqlKeyword || kind == sqlBind {
+	if !limited && (kind == sqlKeyword || kind == sqlBind) {
 		style = style.Bold(true)
 	}
 	return style
@@ -230,9 +230,9 @@ func (s *screen) colorEditor(editor *tview.TextArea, changed func()) {
 		if index < len(spans) && spans[index].start <= offset {
 			if s.monochrome() {
 				kind := spans[index].kind
-				return base.Bold(kind == sqlKeyword || kind == sqlBind).Italic(kind == sqlComment)
+				return base.Bold(false).Underline(kind == sqlKeyword || kind == sqlBind).Italic(kind == sqlComment)
 			}
-			return sqlTokenStyle(spans[index].kind, s.limitedColors, base)
+			return s.profileSQLStyle(spans[index].kind, base)
 		}
 		return base
 	}).SetChangedFunc(func() {
@@ -241,4 +241,38 @@ func (s *screen) colorEditor(editor *tview.TextArea, changed func()) {
 			changed()
 		}
 	})
+}
+
+func (s *screen) profileSQLStyle(kind sqlColorKind, base tcell.Style) tcell.Style {
+	if s.monochrome() {
+		return base.Bold(false).Underline(kind == sqlKeyword || kind == sqlBind).Italic(kind == sqlComment)
+	}
+	p := s.colorProfile()
+	_, bg, _ := base.Decompose()
+	r, g, b := bg.RGB()
+	dark := r >= 0 && 299*r+587*g+114*b < 128000
+	if p == profileANSI8 {
+		fg := indexed(7)
+		if !dark {
+			fg = indexed(0)
+		}
+		if kind == sqlKeyword && !dark {
+			fg = indexed(4)
+		}
+		if kind == sqlBind {
+			fg = indexed(3)
+			if !dark {
+				fg = indexed(1)
+			}
+		}
+		return base.Foreground(fg).Bold(false).Underline(kind == sqlKeyword)
+	}
+	if p == profile256 {
+		values := [...]int{0, 25, 23, 54, 124, 54, 22, 94}
+		if dark {
+			values = [...]int{0, 117, 117, 183, 217, 222, 114, 222}
+		}
+		return base.Foreground(indexed(values[kind])).Bold(false)
+	}
+	return sqlTokenStyle(kind, p == profileANSI16, base)
 }

@@ -15,15 +15,16 @@ func (s *screen) showAbout() {
 	text := s.newTextView().SetWrap(true).SetScrollable(true).SetDynamicColors(false).SetText(s.aboutContent()).SetTextColor(s.colors().text)
 	text.SetWordWrap(true)
 	s.styleBox(text.Box)
-	text.SetBackgroundColor(s.colors().surface)
+	s.textSurface(text, surfacePanel)
 	s.aboutText = text
 	close := tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeAbout).SetStyle(s.buttonStyle()).SetActivatedStyle(s.buttonFocusStyle())
 	s.clickable(close)
 	buttons := s.newFlex().AddItem(nil, 0, 1, false).AddItem(close, 20, 0, false).AddItem(nil, 0, 1, false)
-	buttons.SetBackgroundColor(s.colors().surface)
+	s.setSurface(buttons.Box, surfacePanel)
 	content := s.newFlex().SetDirection(tview.FlexRow).AddItem(text, 0, 1, true).AddItem(buttons, 1, 0, false)
 	s.styleBox(content.Box)
-	content.SetBackgroundColor(s.colors().surface).SetBorder(true).SetTitle(s.tr("about"))
+	s.setSurface(content.Box, surfacePanel)
+	content.SetBorder(true).SetTitle(s.tr("about"))
 	root := s.formPopup(content, 76, 24, func(width, height int) {
 		if height < 18 {
 			content.SetBorderPadding(0, 0, 1, 1)

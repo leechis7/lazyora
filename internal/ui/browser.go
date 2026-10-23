@@ -324,7 +324,7 @@ func (s *screen) openObject(object oracle.Object) {
 	s.objectInfo = s.newTextView().SetWrap(true)
 	s.objectInfo.SetBackgroundColor(s.colors().background)
 	s.objectInfo.SetTextColor(s.colors().text)
-	s.objectTable = tview.NewTable().SetFixed(1, 0).SetSelectable(true, false).SetSelectedStyle(s.focusStyle())
+	s.objectTable = s.newDataTable().SetFixed(1, 0).SetSelectable(true, false).SetSelectedStyle(s.focusStyle())
 	s.objectTable.SetBorder(true)
 	s.styleBox(s.objectTable.Box)
 	s.renderObject(nil)

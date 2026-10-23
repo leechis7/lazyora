@@ -45,6 +45,8 @@ type job struct {
 
 type screen struct {
 	textRoles                           map[*tview.TextView]textRole
+	surfaceRoles                        map[*tview.Box]surfaceRole
+	treeRoles                           map[*tview.TreeNode]textRole
 	comparison                          *keymapComparison
 	reference                           *referenceView
 	workspaces                          *workspaceSet
@@ -367,7 +369,7 @@ func newWorkspaceScreen(app *tview.Application, terminal tcell.Screen, prefs set
 	layout.Box = s.newBox().SetBackgroundColor(s.colors().background)
 	s.rootLayout = layout
 	s.connectionHeader = s.newTextView(textAccent).SetWrap(false).SetTextColor(s.colors().accent)
-	s.connectionHeader.SetBackgroundColor(s.colors().surface)
+	s.textSurface(s.connectionHeader, surfacePanel)
 	s.installHandlers = func() {
 		s.app.SetInputCapture(s.key).EnableMouse(s.prefs.Mouse)
 		s.app.SetBeforeDrawFunc(func(tcell.Screen) bool {
@@ -885,12 +887,6 @@ func (s *screen) renderGrid(result oracle.Result) {
 	s.table.Clear()
 	s.table.SetSeparator('│').SetEvaluateAllRows(false)
 	s.table.SetBackgroundColor(s.gridColors().background)
-	if s.limitedColors {
-		s.table.SetBackgroundColor(tcell.ColorBlack)
-		if s.prefs.Theme == "light" {
-			s.table.SetBackgroundColor(tcell.ColorWhite)
-		}
-	}
 	s.table.ScrollToBeginning()
 	for col, name := range result.Columns {
 		s.table.SetCell(0, col, tview.NewTableCell(tview.Escape(" "+name+" ")).SetStyle(s.gridHeaderStyle(false)).SetTransparency(false).SetSelectable(false))

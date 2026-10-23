@@ -75,7 +75,7 @@ func (s *screen) showSource() {
 		}
 		return event
 	})
-	s.sourceDiagnostics = tview.NewTable().SetFixed(1, 0).SetSelectable(true, false).SetSelectedStyle(s.focusStyle())
+	s.sourceDiagnostics = s.newDataTable().SetFixed(1, 0).SetSelectable(true, false).SetSelectedStyle(s.focusStyle())
 	s.sourceDiagnostics.SetBorder(true)
 	s.styleBox(s.sourceDiagnostics.Box)
 	s.renderDiagnostics(nil)
@@ -185,7 +185,7 @@ func (s *screen) showArguments() {
 	s.argumentInfo = s.newTextView().SetText(s.object.Owner + "." + s.object.Name + " — " + s.tr("browser_loading")).SetWrap(true)
 	s.argumentInfo.SetBackgroundColor(s.colors().background)
 	s.argumentInfo.SetTextColor(s.colors().text)
-	s.argumentTable = tview.NewTable().SetFixed(1, 0).SetSelectable(true, true).SetSelectedStyle(s.focusStyle())
+	s.argumentTable = s.newDataTable().SetFixed(1, 0).SetSelectable(true, true).SetSelectedStyle(s.focusStyle())
 	s.argumentTable.SetBorder(true)
 	s.styleBox(s.argumentTable.Box)
 	s.argumentTable.SetTitle(s.tr("arguments"))

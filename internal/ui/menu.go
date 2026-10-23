@@ -102,7 +102,7 @@ func (s *screen) renderCommandMenu(title string, entries []command, index int) {
 			enabled := s.commandEnabled(cmd.id)
 			s.app.SetFocus(current)
 			if !enabled {
-				label = "[gray]" + label + "[-]"
+				label = "[" + s.tokens().disabled.String() + "]" + label + "[-:-:-]"
 			}
 		}
 		at := i

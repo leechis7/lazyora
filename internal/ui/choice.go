@@ -40,7 +40,7 @@ func (s *screen) newChoice(label string, options []string, selected int, changed
 	normal := tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().footer)
 	dropdown := tview.NewDropDown().SetLabel(label).SetOptions(options, changed).SetCurrentOption(selected).
 		SetFieldWidth(40).SetTextOptions("", "", " ", " ▾", " ▾").
-		SetFieldStyle(normal).SetFocusedStyle(s.focusStyle()).SetListStyles(normal, s.focusStyle()).
+		SetFieldStyle(normal).SetFocusedStyle(s.focusStyle().Underline(true)).SetListStyles(normal, s.focusStyle()).
 		SetPrefixStyle(normal)
 	choice := &choiceField{DropDown: dropdown}
 	s.styleChoice(choice)
@@ -54,9 +54,9 @@ func (c *choiceField) SetFormAttributes(labelWidth int, labelColor, bgColor, _, 
 
 func (s *screen) styleChoice(c *choiceField) {
 	c.background, c.foreground = s.colors().footer, s.colors().text
-	if s.limitedColors && !s.monochrome() {
-		c.background, c.foreground = tcell.ColorNavy, tcell.ColorWhite
+	if s.ansiColors() && !s.monochrome() {
+		c.background, c.foreground = s.tokens().selection, s.tokens().selectionFG
 	}
 	normal := tcell.StyleDefault.Foreground(c.foreground).Background(c.background)
-	c.SetFieldStyle(normal).SetFocusedStyle(s.focusStyle()).SetListStyles(normal, s.focusStyle()).SetPrefixStyle(normal)
+	c.SetFieldStyle(normal).SetFocusedStyle(s.focusStyle().Underline(true)).SetListStyles(normal, s.focusStyle()).SetPrefixStyle(normal)
 }

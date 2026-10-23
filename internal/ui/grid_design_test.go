@@ -31,7 +31,7 @@ func TestGridVisibleStatesAndColumnSeparators(t *testing.T) {
 				return bg
 			}
 			active, selection, current, regular := background(2, 2), background(1, 1), background(2, 0), background(3, 0)
-			if active == selection || active == current || selection == regular || current == regular {
+			if active == selection || active == current || selection == regular || (!s.ansiColors() && current == regular) {
 				t.Fatalf("active/range/current/regular colors: %v %v %v %v", active, selection, current, regular)
 			}
 			if s.table.GetCell(1, 0).Align != tview.AlignRight {

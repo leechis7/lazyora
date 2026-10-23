@@ -34,6 +34,7 @@ func (s *screen) newTextView(roles ...textRole) *tview.TextView {
 		role = roles[0]
 	}
 	view := tview.NewTextView().SetTextColor(s.textColor(role))
+	s.styleBox(view.Box)
 	view.SetBackgroundColor(s.colors().background)
 	if s.textRoles == nil {
 		s.textRoles = make(map[*tview.TextView]textRole)
@@ -56,7 +57,7 @@ func (s *screen) newFlex() *tview.Flex {
 
 func (s *screen) newInputField() *tview.InputField {
 	field := tview.NewInputField().SetFieldStyle(s.fieldStyle()).SetLabelStyle(tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().background))
-	field.SetBackgroundColor(s.colors().background)
+	s.setSurface(field.Box, surfaceCanvas)
 	return field
 }
 
@@ -65,15 +66,20 @@ func (s *screen) newTreeNode(text string, roles ...textRole) *tview.TreeNode {
 	if len(roles) > 0 {
 		role = roles[0]
 	}
-	return tview.NewTreeNode(text).
+	node := tview.NewTreeNode(text).
 		SetTextStyle(tcell.StyleDefault.Foreground(s.textColor(role)).Background(s.colors().background)).
 		SetSelectedTextStyle(s.focusStyle())
+	if s.treeRoles == nil {
+		s.treeRoles = map[*tview.TreeNode]textRole{}
+	}
+	s.treeRoles[node] = role
+	return node
 }
 
 func (s *screen) styleList(list *tview.List) {
 	p := s.colors()
 	s.styleBox(list.Box)
-	list.SetBackgroundColor(p.surface)
+	s.setSurface(list.Box, surfacePanel)
 	list.SetMainTextStyle(tcell.StyleDefault.Foreground(p.text).Background(p.surface)).
 		SetSecondaryTextStyle(tcell.StyleDefault.Foreground(p.muted).Background(p.surface)).
 		SetShortcutStyle(tcell.StyleDefault.Foreground(p.accent).Background(p.surface)).
@@ -81,7 +87,7 @@ func (s *screen) styleList(list *tview.List) {
 }
 
 func (s *screen) styleCheckbox(box *tview.Checkbox) {
-	box.SetBackgroundColor(s.colors().surface)
+	s.setSurface(box.Box, surfacePanel)
 	box.SetLabelStyle(tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().surface)).
 		SetCheckedStyle(s.fieldStyle()).SetUncheckedStyle(s.fieldStyle()).SetActivatedStyle(s.focusStyle()).
 		SetCheckedString(tview.Escape("[x]")).SetUncheckedString(tview.Escape("[ ]"))

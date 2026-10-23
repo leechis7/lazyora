@@ -36,7 +36,7 @@ func (s *screen) confirmActionPreview(text, message, title, button string, submi
 	}))
 	cancel := s.clickable(tview.NewButton(s.tr("cancel")).SetSelectedFunc(s.closeSQLConfirmation))
 	buttons := s.newFlex().AddItem(execute, 0, 1, false).AddItem(cancel, 0, 1, true)
-	reason.SetBackgroundColor(s.colors().surface)
+	s.textSurface(reason, surfacePanel)
 	content := s.newFlex().SetDirection(tview.FlexRow).AddItem(reason, 8, 0, false).AddItem(preview, 0, 1, false).AddItem(buttons, 1, 0, true)
 	root := s.formPopup(content, 104, 32, func(w, h int) {
 		content.ResizeItem(reason, min(8, max(3, h/3)), 0)

@@ -39,7 +39,7 @@ func (s *screen) showScriptReport() {
 	list := tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
 	list.SetBorder(true).SetTitle(s.tr("script_report"))
 	s.styleList(list)
-	table := tview.NewTable().SetFixed(1, 0).SetSelectable(true, true).SetSelectedStyle(s.focusStyle())
+	table := s.newDataTable().SetFixed(1, 0).SetSelectable(true, true).SetSelectedStyle(s.focusStyle())
 	table.SetBorder(true).SetTitle(s.tr("results_title"))
 	s.styleBox(table.Box)
 	preview := s.newTextView().SetWrap(false).SetScrollable(true)

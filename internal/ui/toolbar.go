@@ -11,7 +11,7 @@ import (
 // tview may report a rapid click on a different button as a double click.
 // Buttons should activate on either kind of click; text selection stays unchanged.
 func (s *screen) clickable(button *tview.Button) *tview.Button {
-	button.SetStyle(s.buttonStyle()).SetActivatedStyle(s.buttonFocusStyle())
+	button.SetStyle(s.buttonStyle()).SetActivatedStyle(s.buttonFocusStyle()).SetDisabledStyle(s.disabledStyle())
 	button.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		if action == tview.MouseLeftDoubleClick {
 			action = tview.MouseLeftClick
@@ -91,7 +91,8 @@ func (s *screen) toolbar() *tview.Flex {
 		s.buttons = append(s.buttons, button)
 	}
 	version := s.newTextView().SetText("v" + appinfo.Version).SetTextAlign(tview.AlignRight).SetWrap(false)
-	version.SetTextColor(s.colors().accent).SetBackgroundColor(s.colors().footer)
+	s.textRoles[version] = textBody
+	s.textSurface(version, surfaceFooter)
 	s.footerVersion = version
 	return bar
 }

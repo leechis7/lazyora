@@ -99,7 +99,7 @@ func (s *screen) showKeymapComparison() {
 	c.detail = s.newTextView().SetWrap(true).SetWordWrap(true)
 	c.detail.SetBorder(true).SetTitle(s.tr("comparison_detail"))
 	s.styleBox(c.detail.Box)
-	c.detail.SetBackgroundColor(s.colors().surface)
+	s.textSurface(c.detail, surfacePanel)
 	table.SetSelectionChangedFunc(s.updateComparisonDetail)
 	table.Select(2, selected)
 	info := s.newTextView(textHint).SetText(s.tr("comparison_note")).SetWrap(true)
@@ -133,14 +133,12 @@ func (s *screen) styleKeymapComparison() {
 		return
 	}
 	table := s.comparison.table
-	table.SetBackgroundColor(s.colors().surface)
+	s.setSurface(table.Box, surfacePanel)
 	table.SetBordersColor(s.colors().muted).SetSelectedStyle(s.focusStyle())
-	header := s.gridHeaderStyle(false)
-	current := s.focusStyle().Bold(true).Underline(true)
+	header := s.focusStyle().Underline(true)
+	current := s.fieldStyle().Underline(true)
 	if s.monochrome() {
-		header = tcell.StyleDefault.Foreground(tcell.ColorBlack).Background(tcell.ColorSilver).Bold(true)
-	} else if s.limitedColors {
-		current = tcell.StyleDefault.Foreground(tcell.ColorBlack).Background(tcell.ColorYellow).Bold(true).Underline(true)
+		header = tcell.StyleDefault.Foreground(tcell.ColorBlack).Background(tcell.ColorSilver)
 	}
 	for row := range table.GetRowCount() {
 		for col := range table.GetColumnCount() {

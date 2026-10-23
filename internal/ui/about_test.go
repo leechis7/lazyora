@@ -21,7 +21,7 @@ func TestAboutMenuSharedMetadataAndStatePreserved(t *testing.T) {
 				s.pendingChanges = true
 				s.connected = true
 				s.showMenu(menuHelp)
-				if s.menuList.GetItemCount() != 8 {
+				if s.menuList.GetItemCount() != 10 {
 					t.Fatal("Help/About menu missing")
 				}
 				s.menuList.SetCurrentItem(s.menuList.GetItemCount() - 1)

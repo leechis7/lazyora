@@ -103,6 +103,7 @@ var commands = []command{
 	{"release_history", "release_history", menuHelp, nil},
 	{"diagnostic_info", "diagnostic_info", menuHelp, nil},
 	{"issue_report", "issue_report", menuHelp, nil},
+	{"keymap_compare", "keymap_compare", menuHelp, nil},
 	{"about", "about", menuHelp, nil},
 }
 
@@ -176,7 +177,7 @@ func (s *screen) commandEnabled(id string) bool {
 		return true
 	case "output_toggle":
 		return s.connected && !s.busy && !s.transactionUncertain
-	case "quit", "about", "help", "guide", "release_history", "diagnostic_info", "issue_report", "settings", "focus_toggle", "context_menu", "passwords":
+	case "quit", "about", "keymap_compare", "help", "guide", "release_history", "diagnostic_info", "issue_report", "settings", "focus_toggle", "context_menu", "passwords":
 		return true
 	case "fullscreen_sql", "fullscreen_results":
 		return true
@@ -247,6 +248,8 @@ func (s *screen) invoke(id string) {
 		s.workspaces.addNew()
 	case "workspace_close":
 		s.workspaces.closeOne(s)
+	case "keymap_compare":
+		s.showKeymapComparison()
 	case "about":
 		s.showAbout()
 	case "table_edit_load":

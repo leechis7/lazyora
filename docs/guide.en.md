@@ -29,6 +29,7 @@ F5 executes a script in order and stops at the first error or cancellation.
 Separate PL/SQL blocks with a standalone / line. SQL*Plus commands are unsupported.
 
 Tools → Settings selects Toad (default), Vim, Notepad++, VS Code or IntelliJ IDEA keymaps, language, Dark/Light/Black-White theme and mouse support.
+Help → Editor keymap comparison, or Alt+K in F1 help, compares the assigned keys. Arrows scroll; Ctrl+C copies the table and Esc returns.
 Check F1 → Editor keymaps for completion, formatting and editing shortcuts.
 
 ## Commit, rollback and exit

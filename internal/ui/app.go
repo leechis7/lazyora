@@ -44,6 +44,7 @@ type job struct {
 
 type screen struct {
 	textRoles                           map[*tview.TextView]textRole
+	comparison                          *keymapComparison
 	reference                           *referenceView
 	workspaces                          *workspaceSet
 	workspaceID                         int

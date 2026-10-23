@@ -57,7 +57,7 @@ for language, theme, term in [("en", "dark", "xterm"), ("ko", "light", "xterm-25
 
         def menu(index):
             output.clear()
-            send(b"\x1b[21~" + b"\x1b[C" * 7 + b"\x1b[H" + b"\x1b[B" * index + b"\r")
+            send(b"\x1bh\x1b[H" + b"\x1b[B" * index + b"\r")
 
         def copy():
             output.clear()
@@ -71,8 +71,8 @@ for language, theme, term in [("en", "dark", "xterm"), ("ko", "light", "xterm-25
         try:
             read_for(0.8)
             # Shift+F10 opens the context menu; F10 switches to the main menu.
-            # Navigate from File to Help and open the guide using native keys.
-            send(b"\x1b[21;2~\x1b[21~" + b"\x1b[C" * 7 + b"\x1b[H\x1b[B\r")
+            # Use the Help mnemonic to cross menus with nested groups.
+            send(b"\x1b[21;2~\x1b[21~\x1bh\x1b[H\x1b[B\r")
             guide = copy()
             assert "SELECT sysdate" in guide and ("Connect and run" if language == "en" else "처음 접속") in guide
             # Contents receives initial focus; no preliminary Tab is needed.
@@ -107,6 +107,10 @@ for language, theme, term in [("en", "dark", "xterm"), ("ko", "light", "xterm-25
             assert "/issues" in copy() and "OS/CPU:" in copy()
             send(b"\x1b")
             menu(5)
+            comparison = copy()
+            assert "Toad" in comparison and "IntelliJ IDEA" in comparison and "Ctrl+Space" in comparison
+            send(b"\x1b")
+            menu(6)
             wait_for("AGPL-3.0-only")
             assert "Chaekang Lee" in copy()
             # Close the centered About card by mouse (including xterm 8-color).

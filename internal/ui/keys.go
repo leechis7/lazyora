@@ -25,6 +25,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		event = tcell.NewEventKey(event.Key(), event.Rune(), event.Modifiers())
 	}
 	page, _ := s.pages.GetFrontPage()
+	if page == "keymap_compare" {
+		return s.keymapComparisonKey(event)
+	}
 	if page == "grid_inline" {
 		return s.inlineEditKey(event)
 	}
@@ -269,6 +272,10 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	// Help owns its close keys even while a background operation is running.
 	// Closing the overlay must never be mistaken for cancelling that operation.
 	if page == "help" {
+		if alt && letter == 'k' {
+			s.showKeymapComparison()
+			return nil
+		}
 		if s.listDetailArrow(event, s.helpTopics, s.helpText) {
 			return nil
 		}

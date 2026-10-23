@@ -19,7 +19,7 @@ func TestReferenceMenuAndOfflineVersionHistory(t *testing.T) {
 			ids = append(ids, cmd.id)
 		}
 	}
-	if strings.Join(ids, ",") != "help,guide,release_history,diagnostic_info,issue_report,about" {
+	if strings.Join(ids, ",") != "help,guide,release_history,diagnostic_info,issue_report,keymap_compare,about" {
 		t.Fatalf("help order: %v", ids)
 	}
 	s.invoke("release_history")

@@ -7,6 +7,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"lazyora/internal/credentials"
 	"lazyora/internal/oracle"
 	"lazyora/internal/settings"
 )
@@ -23,6 +24,7 @@ type workspaceSet struct {
 	sequence   int
 	closingAll bool
 	retired    []<-chan struct{}
+	vaults     map[string]*credentials.Store
 }
 
 func (m *workspaceSet) adopt(s *screen) {
@@ -139,6 +141,9 @@ func (s *screen) stopWorker() {
 	if s.cancel != nil {
 		s.cancel()
 	}
+	if s.workspaces != nil && s.workspaces.retainsVault(s.vault) {
+		s.vault = nil
+	}
 	s.lockWorkspacePasswords()
 	close(s.jobs)
 }
@@ -155,6 +160,7 @@ func (m *workspaceSet) shutdown() {
 	for _, done := range m.retired {
 		<-done
 	}
+	m.clearVaultCache()
 }
 func (s *screen) sharePreferences() {
 	if s.workspaces == nil {

@@ -116,8 +116,8 @@ func TestSelectedButtonHasDistinctRenderedStyleAndModalArrowsWork(t *testing.T) 
 	normal := styleAt(s.prefsForm.GetButton(1))
 	fg, bg, attrs := selected.Decompose()
 	_, otherBG, _ := normal.Decompose()
-	if fg != tcell.ColorWhite || bg != tcell.ColorNavy || bg == otherBG || attrs&tcell.AttrBold == 0 || attrs&tcell.AttrUnderline == 0 {
-		t.Fatal("selected button lacks distinct dark background, white bold underlined text")
+	if fg != s.tokens().selectionFG || bg != s.tokens().selection || bg == otherBG || attrs&tcell.AttrUnderline == 0 {
+		t.Fatal("selected button lacks the contrasting focus palette and underline")
 	}
 	s.key(tcell.NewEventKey(tcell.KeyRight, 0, 0))
 	s.prefsForm.Draw(terminal)

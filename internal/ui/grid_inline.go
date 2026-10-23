@@ -48,14 +48,8 @@ func (s *screen) isEditedCell(row, col int) bool {
 	return s.editedCells[s.editedCellIdentity(s.resultBrowser.source, s.resultBrowser.visible[row-1], s.resultSourceColumn(col))]
 }
 func (s *screen) editedCellStyle() tcell.Style {
-	fg, bg := tcell.ColorBlack, tcell.GetColor("#e8c56a")
-	if s.limitedColors {
-		bg = tcell.ColorOlive
-	}
-	if s.monochrome() {
-		bg = tcell.ColorSilver
-	}
-	return tcell.StyleDefault.Foreground(fg).Background(bg).Bold(true)
+	t := s.tokens()
+	return tcell.StyleDefault.Foreground(t.editedFG).Background(t.edited)
 }
 
 // The page covers the input routing area, while Draw places the real input

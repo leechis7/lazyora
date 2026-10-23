@@ -19,7 +19,8 @@ func (s *screen) formDialog(form *tview.Form, info *tview.TextView, width int) *
 	content := s.newFlex().SetDirection(tview.FlexRow)
 	if info != nil {
 		infoHeight = 5
-		info.SetBackgroundColor(s.colors().surface).SetBorder(true).SetBorderPadding(0, 0, 2, 2)
+		s.textSurface(info, surfacePanel)
+		info.SetBorder(true).SetBorderPadding(0, 0, 2, 2)
 		content.AddItem(info, infoHeight, 0, false)
 	}
 	content.AddItem(form, 0, 1, true)

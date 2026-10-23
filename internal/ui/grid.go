@@ -38,42 +38,16 @@ var gridPalette = gridColors{
 }
 
 func (s *screen) gridHeaderStyle(active bool) tcell.Style {
-	if s.monochrome() {
-		if active {
-			return s.focusStyle().Underline(true)
-		}
-		return s.editorStyle().Bold(true)
-	}
-	fg, bg := s.colors().text, s.gridColors().header
 	if active {
-		bg = s.colors().button
+		return s.focusStyle().Underline(true)
 	}
-	if s.limitedColors && !s.monochrome() {
-		fg, bg = tcell.ColorWhite, tcell.ColorNavy
-		if active {
-			fg, bg = tcell.ColorBlack, tcell.ColorTeal
-		}
-	}
-	return tcell.StyleDefault.Foreground(fg).Background(bg).Bold(true)
+	return tcell.StyleDefault.Foreground(s.colors().text).Background(s.gridColors().header).Underline(true)
 }
 func (s *screen) gridActiveStyle(focused bool) tcell.Style {
-	if s.monochrome() {
-		if focused {
-			return s.focusStyle().Underline(true)
-		}
-		return s.editorStyle().Bold(true).Underline(true)
+	if focused {
+		return s.focusStyle().Underline(true)
 	}
-	fg, bg := s.colors().selectionText, s.colors().accent
-	if !focused {
-		fg, bg = s.colors().text, s.gridColors().header
-	}
-	if s.limitedColors && !s.monochrome() {
-		fg, bg = tcell.ColorBlack, tcell.ColorTeal
-		if !focused {
-			bg = tcell.ColorSilver
-		}
-	}
-	return tcell.StyleDefault.Foreground(fg).Background(bg).Bold(true)
+	return tcell.StyleDefault.Foreground(s.colors().text).Background(s.gridColors().header).Underline(true)
 }
 func gridFill(terminal tcell.Screen, x, y, width int, style tcell.Style) {
 	for px := x; px < x+width; px++ {
@@ -119,10 +93,10 @@ func (g *resultGrid) Draw(terminal tcell.Screen) {
 	for py := y; py < y+h; py++ {
 		row, _ := g.CellAt(x, py)
 		style := tcell.StyleDefault.Foreground(s.gridColors().muted).Background(s.gridColors().background)
-		if s.limitedColors && !s.monochrome() {
+		if s.ansiColors() && !s.monochrome() {
 			style = tcell.StyleDefault.Foreground(tcell.ColorSilver).Background(tcell.ColorBlack)
 			if s.prefs.Theme == "light" {
-				style = style.Foreground(tcell.ColorNavy).Background(tcell.ColorWhite)
+				style = style.Foreground(s.colors().muted).Background(s.colors().background)
 			}
 		}
 		label := ""
@@ -131,6 +105,12 @@ func (g *resultGrid) Draw(terminal tcell.Screen) {
 			style = s.gridHeaderStyle(false)
 		} else if row > 0 && row <= rows {
 			label = strconv.Itoa(row)
+			for col := 0; col < s.table.GetColumnCount(); col++ {
+				if s.isEditedCell(row, col) {
+					label = "*" + label
+					break
+				}
+			}
 			style = s.gridBaseStyle(row, 0)
 		}
 		if last < x+w {
@@ -140,7 +120,7 @@ func (g *resultGrid) Draw(terminal tcell.Screen) {
 		fg, _, _ := style.Decompose()
 		tview.Print(terminal, label, x-gutter+1, py, gutter-2, tview.AlignRight, fg)
 		divider := s.gridColors().divider
-		if s.limitedColors && !s.monochrome() {
+		if s.ansiColors() && !s.monochrome() {
 			divider = tcell.ColorTeal
 		}
 		terminal.SetContent(x-1, py, '│', nil, style.Foreground(divider))
@@ -152,8 +132,8 @@ func (g *resultGrid) Draw(terminal tcell.Screen) {
 		}
 	}
 	bar := tcell.StyleDefault.Foreground(s.colors().muted).Background(s.colors().surface)
-	if s.limitedColors && !s.monochrome() {
-		bar = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorNavy)
+	if s.ansiColors() && !s.monochrome() {
+		bar = tcell.StyleDefault.Foreground(s.tokens().selectionFG).Background(s.tokens().selection)
 		if s.prefs.Theme == "light" {
 			bar = bar.Foreground(tcell.ColorBlack).Background(tcell.ColorSilver)
 		}
@@ -170,6 +150,9 @@ func (s *screen) gridStatusText() string {
 	if row > 0 && row <= len(s.resultRows) && col >= 0 && col < len(s.resultHeaders) {
 		text = strings.TrimPrefix(strings.TrimSpace(fmt.Sprintf(s.tr("grid_position"), row, len(s.resultRows), col+1, len(s.resultHeaders))), "· ")
 		text += " · " + s.resultHeaders[col] + " · " + s.resultValues[row-1][col].Type
+		if s.isEditedCell(row, col) {
+			text += " · * " + s.tr("grid_uncommitted_cell")
+		}
 	}
 	if s.resultSelection.active {
 		r1, c1, r2, c2 := s.resultBounds()
@@ -253,30 +236,13 @@ func (s *screen) gridBaseStyle(row, col int) tcell.Style {
 	if row == current && row > 0 {
 		bg = s.gridColors().current
 	}
-	if s.limitedColors && !s.monochrome() {
-		fg, bg = tcell.ColorWhite, tcell.ColorBlack
-		if row == current && row > 0 {
-			bg = tcell.ColorNavy
-		}
-		if s.prefs.Theme == "light" {
-			fg, bg = tcell.ColorBlack, tcell.ColorWhite
-			if row == current && row > 0 {
-				bg = tcell.ColorSilver
-			}
-		}
-	}
+
 	style := tcell.StyleDefault
 	if row > 0 && row <= len(s.resultValues) && col < len(s.resultValues[row-1]) {
 		cell := s.resultValues[row-1][col]
 		if cell.Null {
 			fg = s.gridColors().muted
 			style = style.Italic(true)
-			if s.limitedColors && !s.monochrome() {
-				fg = tcell.ColorSilver
-				if s.prefs.Theme == "light" {
-					fg = tcell.ColorNavy
-				}
-			}
 		}
 	}
 	return style.Foreground(fg).Background(bg)
@@ -284,27 +250,17 @@ func (s *screen) gridBaseStyle(row, col int) tcell.Style {
 
 func (s *screen) paintResultRows(rows map[int]bool) {
 	r1, c1, r2, c2 := s.resultBounds()
-	current, _ := s.table.GetSelection()
 	for row := range rows {
 		if row < 1 || row >= s.table.GetRowCount() {
 			continue
 		}
 		for col := 0; col < s.table.GetColumnCount(); col++ {
 			style := s.gridBaseStyle(row, col)
-			if row == current {
-				style = style.Bold(true)
-			}
-			if s.resultSelection.active && row >= r1 && row <= r2 && col >= c1 && col <= c2 {
-				style = style.Foreground(s.colors().text).Background(s.gridColors().rangeBG)
-				if s.monochrome() {
-					style = style.Foreground(tcell.ColorBlack).Background(tcell.ColorSilver).Bold(true)
-				}
-				if s.limitedColors && !s.monochrome() {
-					style = style.Foreground(tcell.ColorBlack).Background(tcell.ColorSilver).Bold(true)
-				}
-			}
 			if s.isEditedCell(row, col) {
 				style = s.editedCellStyle()
+			}
+			if s.resultSelection.active && row >= r1 && row <= r2 && col >= c1 && col <= c2 {
+				style = s.fieldStyle().Underline(true)
 			}
 			s.table.GetCell(row, col).SetStyle(style).SetTransparency(false)
 		}
@@ -366,11 +322,23 @@ var lightGridPalette = gridColors{
 }
 
 func (s *screen) gridColors() gridColors {
-	if s.monochrome() {
-		return gridColors{tcell.ColorBlack, tcell.ColorBlack, tcell.ColorBlack, tcell.ColorBlack, tcell.ColorSilver, tcell.ColorSilver, tcell.ColorSilver}
+	p := s.colors()
+	if s.monochrome() || s.ansiColors() {
+		return gridColors{p.background, p.background, p.surface, p.background, s.tokens().selection, p.muted, p.text}
+	}
+	if s.colorProfile() == profile256 {
+		stripe := indexed(237)
+		if s.prefs.Theme == "light" {
+			stripe = indexed(254)
+		}
+		return gridColors{p.background, stripe, p.surface, p.surface, s.tokens().selection, p.muted, p.muted}
 	}
 	if s.prefs.Theme == "light" {
-		return lightGridPalette
+		c := lightGridPalette
+		c.muted = p.muted
+		return c
 	}
-	return gridPalette
+	c := gridPalette
+	c.muted = p.muted
+	return c
 }

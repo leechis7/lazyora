@@ -114,7 +114,7 @@ func (s *screen) renderDefinition(data oracle.ObjectDefinition, err error) {
 	s.styleBox(s.definitionText.Box)
 	s.definitionText.SetTextColor(s.colors().text)
 	if s.definitionTable == nil {
-		s.definitionTable = tview.NewTable().SetFixed(1, 0).SetSelectable(true, false).SetSelectedStyle(s.focusStyle())
+		s.definitionTable = s.newDataTable().SetFixed(1, 0).SetSelectable(true, false).SetSelectedStyle(s.focusStyle())
 	}
 	s.definitionTable.SetFocusFunc(func() { s.definitionCopyDetail = false })
 	s.definitionTable.Clear()

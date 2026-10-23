@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -244,5 +245,21 @@ func (s *screen) refreshTabs() {
 	}
 	if len(s.tabs) > 4 {
 		s.tabBar.AddItem(s.clickable(tview.NewButton(">").SetSelectedFunc(func() { s.cycleTab(1) })), 3, 0, false)
+	}
+}
+
+// Restyle existing tab buttons so keyboard focus is not lost to replacement.
+func (s *screen) styleTabs() {
+	if s.tabBar == nil {
+		return
+	}
+	for i := 0; i < s.tabBar.GetItemCount(); i++ {
+		if b, ok := s.tabBar.GetItem(i).(*tview.Button); ok {
+			st := s.buttonStyle()
+			if strings.HasPrefix(b.GetLabel(), "> ") {
+				st = s.buttonFocusStyle()
+			}
+			b.SetStyle(st).SetActivatedStyle(s.buttonFocusStyle()).SetDisabledStyle(s.disabledStyle())
+		}
 	}
 }

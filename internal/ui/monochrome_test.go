@@ -83,7 +83,7 @@ func TestLightEditorUsesExplicitWhite(t *testing.T) {
 	_, _, style, _ := terminal.GetContent(x, y)
 	_, bg, _ := style.Decompose()
 	r, g, b := bg.RGB()
-	if !bg.IsRGB() || r != 255 || g != 255 || b != 255 {
+	if r != 255 || g != 255 || b != 255 || (!bg.IsRGB() && bg != indexed(231)) {
 		t.Fatal("rich-color light editor relies on the terminal's gray/white palette")
 	}
 }

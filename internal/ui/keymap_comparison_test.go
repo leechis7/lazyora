@@ -168,7 +168,7 @@ func TestKeymapComparisonPaintsReadableHeadersAcrossThemes(t *testing.T) {
 						if bg == bodyBG {
 							t.Fatalf("header merges into body in %s col=%d", theme, col)
 						}
-						if col == current+1 && (!strings.Contains(cell.Text, "*") || attrs&tcell.AttrBold == 0 || attrs&tcell.AttrUnderline == 0) {
+						if col == current+1 && (!strings.Contains(cell.Text, "*") || attrs&tcell.AttrUnderline == 0) {
 							t.Fatal("current keymap lost its visible marker")
 						}
 					}

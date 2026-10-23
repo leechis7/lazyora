@@ -55,7 +55,7 @@ func (s *screen) showContextMenu() {
 	}
 	ids := []string{"file_new", "file_close", "execute", "script", "plan", "undo", "redo", "cut", "copy", "paste", "select_all", "find", "replace", "clear_sql", "history", "describe", "complete", "format_code", "duplicate_line", "line_up", "line_down", "fullscreen_sql", "maximize"}
 	if s.table.HasFocus() {
-		ids = []string{"copy", "copy_row", "export", "copy_preview", "grid_widen", "grid_narrow", "grid_auto", "fetch_more", "result_sort_asc", "result_sort_desc", "result_filter", "result_view_reset", "fullscreen_results", "maximize", "focus_toggle", "cell_detail", "grid_edit", "table_edit_load"}
+		ids = []string{"copy", "copy_row", "export", "copy_preview", "grid_widen", "grid_narrow", "grid_auto", "fetch_more", "result_sort_asc", "result_sort_desc", "result_filter", "result_view_reset", "fullscreen_results", "maximize", "focus_toggle", "cell_detail", "grid_edit", "table_edit_load", "grid_inline"}
 	}
 	if s.browserHasFocus() {
 		ids = []string{"describe", "browser_refresh", "browser_user", "browser_type", "browser", "focus_toggle", "table_edit_load"}

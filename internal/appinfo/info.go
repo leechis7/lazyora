@@ -4,7 +4,7 @@ package appinfo
 const (
 	ProjectURL = "https://github.com/leechis7/lazyora"
 	Name       = "LazyOra"
-	Version    = "0.8.0"
+	Version    = "0.9.0"
 	Developer  = "이채강 (Chaekang Lee)"
 	Email      = "leechis7@gmail.com"
 	License    = "AGPL-3.0-only"

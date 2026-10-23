@@ -71,8 +71,9 @@ for language, theme, term in [("en", "dark", "xterm"), ("ko", "light", "xterm-25
         try:
             read_for(0.8)
             # Shift+F10 opens the context menu; F10 switches to the main menu.
-            # Use the Help mnemonic to cross menus with nested groups.
-            send(b"\x1b[21;2~\x1b[21~\x1bh\x1b[H\x1b[B\r")
+            # Cross every top-level menu, including grouped Edit and View,
+            # without Right unexpectedly entering a subgroup.
+            send(b"\x1b[21;2~\x1b[21~" + b"\x1b[C" * 7 + b"\x1b[H\x1b[B\r")
             guide = copy()
             assert "SELECT sysdate" in guide and ("Connect and run" if language == "en" else "처음 접속") in guide
             # Contents receives initial focus; no preliminary Tab is needed.
@@ -109,6 +110,8 @@ for language, theme, term in [("en", "dark", "xterm"), ("ko", "light", "xterm-25
             menu(5)
             comparison = copy()
             assert "Toad" in comparison and "IntelliJ IDEA" in comparison and "Ctrl+Space" in comparison
+            send(b"\r\x1b[F\r")  # Enter detail, scroll to end, return to table.
+            assert copy() == comparison
             send(b"\x1b")
             menu(6)
             wait_for("AGPL-3.0-only")

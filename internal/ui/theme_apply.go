@@ -217,6 +217,7 @@ func (s *screen) applyTheme(previous string) {
 	if (s.limitedColors || s.monochrome() || old.monochrome()) && s.table != nil {
 		s.repaintGridTheme()
 	}
+	s.styleKeymapComparison()
 	s.refreshBorders()
 }
 

@@ -34,7 +34,7 @@ func TestDefaultMapAndSettingsSwitchKeepTextAndUndo(t *testing.T) {
 	if s.editor.GetText() != "i한글 SELECT" {
 		t.Fatal("default mode swallowed Vim letter")
 	}
-	for index, keymap := range []string{"", "vim", "notepad++"} {
+	for index, keymap := range []string{"", "vim", "notepad++", "vscode", "intellij"} {
 		original := s.editor.GetText()
 		s.settingsForm()
 		s.prefsForm.GetFormItem(2).(*choiceField).SetCurrentOption(index)

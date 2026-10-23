@@ -25,6 +25,9 @@ func (s *screen) nativeEditorKey(e *tview.TextArea, key tcell.Key) {
 
 func (s *screen) editorKey(event *tcell.EventKey) bool {
 	e := s.activeEditor()
+	if s.editorPresetKey(e, event) {
+		return true
+	}
 	if e == nil || event.Modifiers()&tcell.ModAlt != 0 {
 		return false
 	}
@@ -114,6 +117,10 @@ func selectedLines(text string, a, b int) (int, int) {
 
 // One Replace per operation retains the editor's undo history and original text.
 func (s *screen) editorLineAction(e *tview.TextArea, action string) {
+	if action == "duplicate_line" && s.prefs.EditorKeymap == "vscode" {
+		s.copyEditorLines(e, false)
+		return
+	}
 	text := e.GetText()
 	selected, a, b := e.GetSelection()
 	start, end := selectedLines(text, a, b)
@@ -182,11 +189,23 @@ func (s *screen) keymapHint() string {
 		return "Vim " + s.vimMode() + " | " + s.tr("vim_hint")
 	case "notepad++":
 		return "Notepad++ | " + s.tr("npp_hint")
+	case "vscode":
+		return "VS Code | Ctrl+Space | Alt+↑↓ | Alt+Shift+↓"
+	case "intellij":
+		return "IntelliJ IDEA | Ctrl+Space | Ctrl+D | Ctrl+Alt+L"
 	}
 	return s.tr("default_keymap_hint")
 }
 
 func (s *screen) editorBindingLabels(id string, limit int) string {
+	if ideKeymap(s.prefs.EditorKeymap) {
+		if label := presetBindingLabels(s.prefs.EditorKeymap, id, limit); label != "" {
+			return label
+		}
+		if id == "quick_describe" {
+			return ""
+		}
+	}
 	if s.prefs.EditorKeymap == "notepad++" {
 		switch id {
 		case "select_all":
@@ -230,6 +249,8 @@ func (s *screen) keymapHelpSections() []struct{ title, text string } {
 		{s.tr("keymap_default"), s.tr("default_commands")},
 		{"Vim", s.tr("vim_commands")},
 		{"Notepad++", s.tr("npp_commands")},
+		{"VS Code", s.presetKeymapHelp("vscode")},
+		{"IntelliJ IDEA", s.presetKeymapHelp("intellij")},
 	}
 }
 func (s *screen) keymapHelp() string {
@@ -265,14 +286,14 @@ func (s *screen) showSourceEdit() {
 			s.closeSourceEdit()
 			switch id {
 			case "undo", "redo", "cut", "paste", "select_all":
-				if id == "cut" && s.prefs.EditorKeymap == "notepad++" && !e.HasSelection() {
+				if id == "cut" && lineClipboardKeymap(s.prefs.EditorKeymap) && !e.HasSelection() {
 					s.editorLineAction(e, "cut_line")
 					break
 				}
 				s.nativeEditorKey(e, commandFor(id).bindings[0].key)
 			case "copy":
 				selected, _, _ := e.GetSelection()
-				if selected == "" && s.prefs.EditorKeymap == "notepad++" {
+				if selected == "" && lineClipboardKeymap(s.prefs.EditorKeymap) {
 					s.editorLineAction(e, "copy_line")
 				} else {
 					s.sendClipboard(selected)

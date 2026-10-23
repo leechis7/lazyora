@@ -48,8 +48,8 @@ func (c Config) Validate() error {
 	if c.Language != "en" && c.Language != "ko" {
 		return errors.New("language must be en or ko")
 	}
-	if c.EditorKeymap != "" && c.EditorKeymap != "vim" && c.EditorKeymap != "notepad++" {
-		return errors.New("editor_keymap must be empty (default), vim or notepad++")
+	if c.EditorKeymap != "" && c.EditorKeymap != "vim" && c.EditorKeymap != "notepad++" && c.EditorKeymap != "vscode" && c.EditorKeymap != "intellij" {
+		return errors.New("editor_keymap must be empty (Toad), vim, notepad++, vscode or intellij")
 	}
 	return nil
 }

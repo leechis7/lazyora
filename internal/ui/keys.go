@@ -161,6 +161,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if page == "master" || page == "vault" {
 		return s.vaultKey(event, page)
 	}
+	if s.editorPresetKey(s.activeEditor(), event) {
+		return nil
+	}
 	if event.Key() == tcell.KeyTab || event.Key() == tcell.KeyBacktab {
 		switch page {
 		case "help":

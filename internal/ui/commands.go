@@ -189,7 +189,7 @@ func (s *screen) commandEnabled(id string) bool {
 	case "undo", "redo", "paste", "select_all":
 		return !s.busy && s.editor.HasFocus()
 	case "cut":
-		return !s.busy && s.editor.HasFocus() && (s.editor.HasSelection() || s.prefs.EditorKeymap == "notepad++")
+		return !s.busy && s.editor.HasFocus() && (s.editor.HasSelection() || lineClipboardKeymap(s.prefs.EditorKeymap))
 	case "browser_refresh":
 		return !s.busy && s.browser != nil && (s.connected || s.demo)
 	case "history":
@@ -209,7 +209,7 @@ func (s *screen) commandEnabled(id string) bool {
 	case "describe", "quick_describe":
 		return !s.busy && (s.connected || s.demo)
 	case "copy":
-		return (s.table.HasFocus() && len(s.resultRows) > 0) || (s.editor.HasFocus() && (s.editor.HasSelection() || s.prefs.EditorKeymap == "notepad++"))
+		return (s.table.HasFocus() && len(s.resultRows) > 0) || (s.editor.HasFocus() && (s.editor.HasSelection() || lineClipboardKeymap(s.prefs.EditorKeymap)))
 	case "copy_row":
 		return s.table.HasFocus() && len(s.resultRows) > 0
 	case "export":
@@ -292,7 +292,7 @@ func (s *screen) invoke(id string) {
 	case "output_toggle":
 		s.requestOutputToggle()
 	case "undo", "redo", "cut", "paste", "select_all":
-		if id == "cut" && s.prefs.EditorKeymap == "notepad++" && !s.editor.HasSelection() {
+		if id == "cut" && lineClipboardKeymap(s.prefs.EditorKeymap) && !s.editor.HasSelection() {
 			s.editorLineAction(s.editor, "cut_line")
 			return
 		}
@@ -369,7 +369,7 @@ func (s *screen) invoke(id string) {
 			s.copyResults("selection")
 		} else {
 			text, _, _ := s.editor.GetSelection()
-			if text == "" && s.prefs.EditorKeymap == "notepad++" {
+			if text == "" && lineClipboardKeymap(s.prefs.EditorKeymap) {
 				s.editorLineAction(s.editor, "copy_line")
 			} else {
 				s.sendClipboard(text)

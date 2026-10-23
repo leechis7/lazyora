@@ -232,7 +232,7 @@ func (s *screen) helpContext(page string) string {
 		return s.mainNavigationHint(fmt.Sprintf(s.tr("footer_results"), shortcut("copy"), shortcut("copy_row"), shortcut("focus_toggle"), "F2 / Shift+F2·F12"))
 	}
 	hint := s.mainNavigationHint(fmt.Sprintf(s.tr("footer_sql"), bindingLabels("execute", 2), shortcut("describe"), shortcut("focus_toggle"), "F2 / Shift+F2·F12"))
-	if s.prefs.EditorKeymap == "notepad++" {
+	if lineClipboardKeymap(s.prefs.EditorKeymap) {
 		hint = strings.ReplaceAll(hint, "Ctrl+T", "Ctrl+Space")
 	}
 	return s.keymapHint() + "\n" + hint + "\n" + s.tr("syntax_colors")

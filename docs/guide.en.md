@@ -28,7 +28,7 @@ F9 executes the selection, or the statement at the cursor when nothing is select
 F5 executes a script in order and stops at the first error or cancellation.
 Separate PL/SQL blocks with a standalone / line. SQL*Plus commands are unsupported.
 
-Tools → Settings selects Default, Vim or Notepad++ keymaps, language, Dark/Light/Black-White theme and mouse support.
+Tools → Settings selects Toad (default), Vim, Notepad++, VS Code or IntelliJ IDEA keymaps, language, Dark/Light/Black-White theme and mouse support.
 Check F1 → Editor keymaps for completion, formatting and editing shortcuts.
 
 ## Commit, rollback and exit

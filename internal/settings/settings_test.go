@@ -124,7 +124,7 @@ func TestUnsetSavedLanguageUsesLocaleWithoutError(t *testing.T) {
 
 func TestEditorKeymapValidationAndLegacyConfig(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "settings.json")
-	for _, keymap := range []string{"", "vim", "notepad++"} {
+	for _, keymap := range []string{"", "vim", "notepad++", "vscode", "intellij"} {
 		want := Config{Language: "en", Mouse: true, EditorKeymap: keymap}
 		if err := Save(path, want); err != nil {
 			t.Fatal(err)

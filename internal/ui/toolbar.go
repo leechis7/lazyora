@@ -272,8 +272,11 @@ func (s *screen) refreshFooter() {
 		text = fmt.Sprintf(text, bindingLabels("execute", 2), shortcut("describe"), shortcut("focus_toggle"), viewKeys)
 	}
 	if hint == "footer_sql" && s.activeEditor() != nil {
-		if s.prefs.EditorKeymap == "notepad++" {
+		if lineClipboardKeymap(s.prefs.EditorKeymap) {
 			text = strings.ReplaceAll(text, "Ctrl+T", "Ctrl+Space")
+		}
+		if ideKeymap(s.prefs.EditorKeymap) {
+			text = s.keymapHint() + " | " + text
 		}
 		if s.prefs.EditorKeymap == "vim" {
 			text = "Vim " + s.vimMode() + " | " + text

@@ -409,3 +409,13 @@ SQL·결과 사이 가로선과 스키마·오른쪽 영역 사이 세로선을 
 ## 접속 테스트
 
 접속창의 **접속 테스트 / Alt+V**는 현재 입력값으로 별도 임시 접속을 열고 인증·기본 SELECT를 확인합니다. 15초 제한이며 Esc/취소 버튼은 진행 중 테스트를 취소합니다. 테스트 동안 입력·저장·연속 실행을 막고 완료 후 기존 입력을 유지합니다. 작업용 접속·미커밋 트랜잭션·프로필 저장은 바꾸지 않고 임시 세션은 성공·실패·취소 후 닫습니다. 실제 접속과 저장은 각 버튼으로 따로 실행하세요.
+
+## VS Code·IntelliJ IDEA 편집 키맵
+
+기존 ‘기본’ 키맵은 이제 **Toad (기본)**로 표시합니다. 설정이 없거나 기존 `editor_keymap`이 비어 있으면 그대로 Toad이며 기존 키 동작을 유지합니다. 설정 → 편집기 키맵에서 Toad·Vim·Notepad++·VS Code·IntelliJ IDEA를 선택하고 저장합니다. 설정 값은 각각 빈 값·`vim`·`notepad++`·`vscode`·`intellij`입니다.
+
+VS Code는 Ctrl+A 전체 선택, Ctrl+Space 자동완성, Alt+↑↓ 줄 이동, Alt+Shift+↑↓(Ctrl+Alt+Shift+↑↓도 지원) 줄 복제, Ctrl+Shift+K 줄 삭제, Ctrl+Shift+Z/Ctrl+Y 다시 실행, Ctrl+Shift+I 또는 Alt+Shift+F 정렬을 제공합니다. IntelliJ IDEA는 Ctrl+A·Ctrl+Space 외에 Ctrl+D 줄/선택 복제, Ctrl+Y 줄 삭제, Ctrl+Shift+Z 다시 실행, Ctrl+Alt+L 정렬과 Ctrl+Alt+Shift+↑↓ 줄 이동을 제공합니다. 두 키맵은 선택 없이 Ctrl+C/Ctrl+X를 누르면 현재 줄을 복사/잘라냅니다.
+
+이 키맵은 Windows/Linux 편집 동작의 일부이며 IDE 전체 호환이 아닙니다. 줄 이동은 SQL 구문 블록을 분석해 이동하는 기능이 아닙니다. macOS Command 조합·다중 커서·IDE 프로젝트 검색 등은 지원하지 않습니다. Ctrl+H는 구형 터미널의 Backspace와 같아 배정하지 않으므로 바꾸기는 Ctrl+R 또는 편집 메뉴를 사용합니다. VS Code Ctrl+D는 미지원 안내를 표시하며 객체 조회·문자 삭제로 처리하지 않습니다. SQL 실행·커밋·롤백·종료·F2 전체화면 등 앱 공통 키가 우선 유지됩니다. 터미널이 Ctrl+Shift·Alt 조합을 보내지 못하면 편집/소스 편집 메뉴를 사용하세요.
+
+기준 문서: [VS Code 기본 키](https://code.visualstudio.com/docs/reference/default-keybindings), [IntelliJ IDEA 기본 키](https://www.jetbrains.com/help/idea/reference-keymap-win-default.html). SQL·소스 편집기에만 적용하고 접속 폼·결과창에는 전파하지 않습니다.

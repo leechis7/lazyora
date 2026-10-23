@@ -86,7 +86,10 @@ func (g *resultGrid) Draw(terminal tcell.Screen) {
 	gutter := max(4, len(strconv.Itoa(rows))+3)
 	g.SetBorderPadding(0, 1, gutter, 0)
 	g.SetSelectedStyle(s.gridActiveStyle(g.HasFocus()))
-	_, selectedCol := g.GetSelection()
+	selectedRow, selectedCol := g.GetSelection()
+	if s.isEditedCell(selectedRow, selectedCol) {
+		g.SetSelectedStyle(s.editedCellStyle().Underline(g.HasFocus()))
+	}
 	for col := 0; col < g.GetColumnCount(); col++ {
 		g.GetCell(0, col).SetStyle(s.gridHeaderStyle(col == selectedCol))
 	}
@@ -299,6 +302,9 @@ func (s *screen) paintResultRows(rows map[int]bool) {
 				if s.limitedColors && !s.monochrome() {
 					style = style.Foreground(tcell.ColorBlack).Background(tcell.ColorSilver).Bold(true)
 				}
+			}
+			if s.isEditedCell(row, col) {
+				style = s.editedCellStyle()
 			}
 			s.table.GetCell(row, col).SetStyle(style).SetTransparency(false)
 		}

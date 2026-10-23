@@ -21,6 +21,7 @@ type queryPage struct {
 	id           uint64
 	pending      []Cell
 	count, bytes int
+	edit         *editSnapshot
 }
 
 func (s *Session) ClosePage() {
@@ -59,6 +60,11 @@ func (s *Session) readPage(ctx context.Context) (result Result, err error) {
 	defer func() {
 		if err != nil {
 			s.ClosePage()
+			if page.edit != nil && s.edit == page.edit {
+				s.edit = nil
+			}
+		} else if page.edit != nil && s.edit == page.edit {
+			page.edit.markSelectResult(&result)
 		}
 	}()
 	stop, err := s.pageFetchContext(ctx)
@@ -107,6 +113,10 @@ func (s *Session) readPage(ctx context.Context) (result Result, err error) {
 		}
 		result.Rows = append(result.Rows, row)
 		result.Values = append(result.Values, cells)
+		if page.edit != nil && s.edit == page.edit && !page.edit.appendSelectRow(cells) {
+			s.edit = nil
+			page.edit = nil
+		}
 		page.count++
 		page.bytes += cost
 	}

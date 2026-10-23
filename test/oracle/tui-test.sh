@@ -14,4 +14,5 @@ python3 test/oracle/tui_fullscreen_smoke.py
 python3 test/oracle/tui_help_smoke.py
 python3 test/oracle/tui_smoke.py
 python3 test/oracle/tui_cells_smoke.py
+python3 test/oracle/tui_select_edit_smoke.py
 python3 test/oracle/tui_workspaces_smoke.py

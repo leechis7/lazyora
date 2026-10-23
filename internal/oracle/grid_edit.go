@@ -20,15 +20,17 @@ type EditChange struct {
 	Null        bool
 }
 type editSnapshot struct {
-	id      uint64
-	object  Object
-	columns []Column
-	rows    [][]Cell
-	rowIDs  []string
+	id          uint64
+	object      Object
+	columns     []Column
+	rows        [][]Cell
+	rowIDs      []string
+	rowIDColumn int
 }
 
 // EditableTable creates its own unambiguous single-table query. Arbitrary SQL,
 // views, joins, synonyms and result column labels never grant edit capability.
+// Direct SELECT editing is validated separately by prepareSelectEdit.
 func (s *Session) EditableTable(ctx context.Context, object Object) (Result, error) {
 	if s.finishErr != nil {
 		return Result{}, s.finishErr
@@ -98,6 +100,10 @@ func (s *Session) EditableTable(ctx context.Context, object Object) (Result, err
 	s.edit = snapshot
 	result.EditID = snapshot.id
 	result.EditObject = object
+	result.EditRowIDs = append([]string(nil), snapshot.rowIDs...)
+	for _, column := range columns {
+		result.EditColumnNames = append(result.EditColumnNames, column.Name)
+	}
 	return result, nil
 }
 func editableType(kind string) bool {
@@ -173,7 +179,7 @@ func (s *Session) EditID() uint64 {
 	return s.edit.id
 }
 
-// ApplyEdit binds all values and compares every original column plus ROWID.
+// ApplyEdit binds all values and compares the captured editable columns plus ROWID.
 // A savepoint undoes this attempt on error/conflict, preserving earlier work.
 // Success remains uncommitted and invalidates the snapshot (triggers may run).
 func (s *Session) ApplyEdit(ctx context.Context, change EditChange) (err error) {
@@ -185,6 +191,10 @@ func (s *Session) ApplyEdit(ctx context.Context, change EditChange) (err error) 
 		return errors.New("editable result expired; reload table data")
 	}
 	column := snap.columns[change.Column]
+	if column.Name == "" {
+		return errors.New("this result column is read-only")
+	}
+	s.ClosePage()
 	value, err := editValue(column.DataType, change.Text, change.Null)
 	if err != nil {
 		return err
@@ -195,6 +205,9 @@ func (s *Session) ApplyEdit(ctx context.Context, change EditChange) (err error) 
 	args := []any{sql.Named("new_value", value), sql.Named("row_id", snap.rowIDs[change.Row])}
 	conditions := []string{"ROWID = CHARTOROWID(:row_id)"}
 	for i, c := range snap.columns {
+		if c.Name == "" {
+			continue
+		}
 		old := snap.rows[change.Row][i]
 		arg, e := editValue(c.DataType, old.Text, old.Null)
 		if e != nil {

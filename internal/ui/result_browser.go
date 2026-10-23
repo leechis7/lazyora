@@ -161,6 +161,7 @@ func (s *screen) acceptResultPage(page oracle.Result, err error) {
 		}
 		source.Values = append(source.Values, cells)
 	}
+	source.EditRowIDs = append(source.EditRowIDs, page.EditRowIDs...)
 	source.Rows = append(source.Rows, page.Rows...)
 	source.Values = append(source.Values, page.Values...)
 	source.PageID, source.PageLimited, source.Truncated = page.PageID, page.PageLimited, page.Truncated

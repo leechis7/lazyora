@@ -16,6 +16,7 @@ type Result struct {
 	EditColumns     []bool   // nil: all columns in the explicit table-edit snapshot.
 	EditRowIDs      []string // Physical identity, independent of display order.
 	EditColumnNames []string // Original column names, independent of SELECT aliases.
+	EditRowIDColumn int      // 1-based verified physical ROWID projection; zero means none.
 	PageID          uint64
 	PageLimited     bool
 	Output          Output

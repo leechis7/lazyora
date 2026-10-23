@@ -12,6 +12,29 @@ type choiceField struct {
 	background, foreground tcell.Color
 }
 
+// A list can begin halfway through a wide glyph drawn by a button behind it.
+// Clear the old glyph's leading cell, or terminal rendering skips the first
+// overlaid character even though its cell contains the correct new text.
+type choiceOverlayScreen struct{ tcell.Screen }
+
+func (s choiceOverlayScreen) SetContent(x, y int, main rune, combining []rune, style tcell.Style) {
+	if x > 0 {
+		_, _, previous, width := s.Screen.GetContent(x-1, y)
+		if width > 1 {
+			s.Screen.SetContent(x-1, y, ' ', nil, previous)
+		}
+	}
+	s.Screen.SetContent(x, y, main, combining, style)
+}
+
+func (c *choiceField) Draw(screen tcell.Screen) {
+	if c.IsOpen() {
+		c.DropDown.Draw(choiceOverlayScreen{Screen: screen})
+		return
+	}
+	c.DropDown.Draw(screen)
+}
+
 func (s *screen) newChoice(label string, options []string, selected int, changed func(string, int)) *choiceField {
 
 	normal := tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().footer)

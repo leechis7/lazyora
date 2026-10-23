@@ -1,18 +1,25 @@
 # LazyOra
 
+LazyOra is a Go-based terminal UI for Oracle, bringing Toad-like workflows to your terminal.
+Write and execute SQL and PL/SQL, browse schema objects, and explore and export query results—all in a single executable.
+
 **Toad처럼 Oracle을 다루는 터미널 도구**를 만듭니다.
 
 Toad를 설치하고 상용 라이선스를 구매하는 부담 없이, 터미널에서도 Oracle 개발·조회·관리 작업을 충분히 할 수 있다는 생각에서 출발했습니다. 익숙한 Toad의 작업 흐름과 단축키를 TUI에 맞게 구현하는 것이 목표입니다.
 
 SQL·PL/SQL 편집부터 스키마 탐색, 실행 결과 확인과 내보내기까지 하나의 화면에서 이어가고, SSH로 접속한 서버에서도 실행파일 하나로 사용할 수 있도록 개발합니다. Toad의 모든 기능을 갖춘 단계는 아니며, 실제 Oracle 작업에 필요한 기능을 차근차근 확장하고 있습니다.
 
-현재 버전: **0.9.0** · **Linux / Windows / macOS · AMD64 / ARM64**
+현재 버전: **0.10.0** · **Linux / Windows / macOS · AMD64 / ARM64**
 
 - Oracle SQL·PL/SQL 구문 색상, SQL 파일·여러 편집 탭, 커서 문장·F5 스크립트 실행과 IN 바인드 입력
 - 예상 실행 계획, 결과 조회·복사와 CSV·TSV·Excel·INSERT 내보내기, 수동 커밋·롤백
 - 스키마 객체 탐색, 컬럼·코멘트·소스·인자 조회와 소스 편집·컴파일
 - DBMS_OUTPUT·루틴 실행, 객체 DDL·권한·의존 관계 조회, 결과 추가 가져오기·정렬·필터와 셀 상세·안전 편집
-- 기본·Vim·Notepad++ 키맵, 자동완성·SQL 정렬, 다크·라이트·흑백 테마와 한국어·영어 UI
+- Toad·Vim 등 5종 편집기 키맵, 자동완성·SQL 정렬, 다크·라이트·흑백 테마와 한국어·영어 UI
+
+![LazyOra 전체 화면: 상단 메뉴, 스키마 브라우저, SQL 편집기, 결과 그리드와 하단 단축키](docs/images/lazyora-overview.png)
+
+*다크 테마 · 영어 UI · DB 연결 없는 데모 화면 (`--demo`). / Dark theme · English UI · demo mode without a database connection.*
 
 ## 빠른 시작
 

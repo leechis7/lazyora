@@ -56,6 +56,16 @@ func TestMenuOnlyPaintsItsPopupArea(t *testing.T) {
 
 func selectMenuCommand(t *testing.T, s *screen, id string) {
 	t.Helper()
+	for i, row := range s.menuRows {
+		for _, child := range row.children {
+			if child.id == id {
+				s.menuList.SetCurrentItem(i)
+				s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+				selectMenuCommand(t, s, id)
+				return
+			}
+		}
+	}
 	label := s.tr(commandFor(id).label)
 	for i := 0; i < s.menuList.GetItemCount(); i++ {
 		text, _ := s.menuList.GetItemText(i)
@@ -126,7 +136,7 @@ func TestSQLTabMenuPreservesDocumentsAndProtectsDirtyClose(t *testing.T) {
 			s.initTabs()
 			first := s.editor
 			s.key(tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModAlt))
-			if s.menuIndex != menuTabs || s.menuList.GetItemCount() != 4 {
+			if s.menuIndex != menuTabs || s.menuList.GetItemCount() != 6 {
 				t.Fatal("SQL tabs menu not available")
 			}
 			selectMenuCommand(t, s, "file_new")
@@ -211,6 +221,20 @@ func TestLongMenuScrollsWithinSmallTerminal(t *testing.T) {
 	if y < 0 || y+height > 10 {
 		t.Fatal("menu extends beyond terminal")
 	}
+	for i, row := range s.menuRows {
+		for _, cmd := range row.children {
+			if cmd.id == "format_code" {
+				s.menuList.SetCurrentItem(i)
+				s.menuRowAction(i)
+				break
+			}
+		}
+		if s.menuParent != nil {
+			break
+		}
+	}
+	_, root = s.pages.GetFrontPage()
+	root.SetRect(0, 0, 80, 10)
 	for i := 1; i < s.menuList.GetItemCount(); i++ {
 		s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyDown, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
 	}
@@ -248,7 +272,7 @@ func TestMenuCommandsRespectContextAndNeverAliasScriptToCommit(t *testing.T) {
 	s := demoBrowserScreen(t)
 	s.connected = true
 	s.key(tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModAlt))
-	if s.menuList == nil || s.menuList.GetItemCount() != 7 {
+	if s.menuList == nil || s.menuList.GetItemCount() != 9 {
 		t.Fatal("execute menu not opened")
 	}
 	text, _ := s.menuList.GetItemText(1)
@@ -271,8 +295,7 @@ func TestMenuCommandsRespectContextAndNeverAliasScriptToCommit(t *testing.T) {
 		t.Fatal("F6 rolled back instead of toggling SQL/results")
 	}
 	s.key(tcell.NewEventKey(tcell.KeyRune, 's', tcell.ModAlt))
-	s.menuList.SetCurrentItem(1)
-	s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	selectMenuCommand(t, s, "commit")
 	if j := <-s.jobs; j.action != "commit" {
 		t.Fatal("session menu did not commit")
 	}

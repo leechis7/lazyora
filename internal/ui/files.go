@@ -31,7 +31,7 @@ func (s *screen) initDocument() {
 func (s *screen) refreshDocumentTitle() {
 	title := s.tr("sql_title")
 	if s.document != nil {
-		name := s.tr("file_untitled")
+		name := s.currentTabName()
 		if s.document.Path != "" {
 			name = filepath.Base(s.document.Path)
 		}

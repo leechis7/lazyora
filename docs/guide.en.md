@@ -28,7 +28,8 @@ F9 executes the selection, or the statement at the cursor when nothing is select
 F5 executes a script in order and stops at the first error or cancellation.
 Separate PL/SQL blocks with a standalone / line. SQL*Plus commands are unsupported.
 
-Tools → Settings selects Default, Vim or Notepad++ keymaps, language, Dark/Light/Black-White theme and mouse support.
+Tools → Settings selects Toad (default), Vim, Notepad++, VS Code or IntelliJ IDEA keymaps, language, Dark/Light/Black-White theme and mouse support.
+Help → Editor keymap comparison, or Alt+K in F1 help, compares the assigned keys. Arrows navigate; full selected-cell text appears below. Enter switches table/detail; scroll detail with arrows or PgUp/PgDn. Tab cycles table/detail/Close. Ctrl+C copies the table and Esc returns.
 Check F1 → Editor keymaps for completion, formatting and editing shortcuts.
 
 ## Commit, rollback and exit
@@ -58,10 +59,10 @@ View/Shift+F10 provides the next 1,000 rows, local sorting/filtering and column 
 One F9 query retains at most 10,000 rows / estimated 64 MiB; loaded rows are not the full database result.
 For read-only cells, Enter opens cell details for long values, NULL and binary content, including original-value file saving.
 Editing supports explicit browser table loads and verified single-table ROWID SELECT results; commit remains manual.
-Editable cells: Enter/double-click edits the existing value; typing replaces it. Enter reviews before applying, Esc cancels input, Ctrl+U clears, Alt+Delete sets NULL. Edit > Edit cell in dialog remains available; the context menu opens cell details. Applied cells have a distinct background until commit/rollback; requery after rollback.
+Editable cells: Enter/double-click edits the existing value; typing replaces it. Enter reviews before applying, Esc cancels input, Ctrl+U clears, Alt+Delete sets NULL. Alt+D / Edit > Edit cell in dialog opens the separate editor; review defaults to Proceed and Cancel returns to the draft; the context menu opens cell details. Applied cells have a distinct background until commit/rollback. Successful commit/rollback automatically refreshes the current replayable result using its original query/binds, preserving sorting, filter and widths. Reload failure is reported separately from transaction completion.
 If clipboard delivery fails, use Edit → Copy preview and your terminal's selection/copy command.
 
-Execute `SELECT t.ROWID, t.* FROM table_name t WHERE ...` with F9 to edit verified original columns. ROWID stays read-only; commit or roll back explicitly. Joins, expressions and ambiguous results stay read-only.
+Execute `SELECT t.ROWID, t.* FROM table_name t WHERE ...` with F9 to edit verified original columns. The verified physical ROWID is hidden in the grid and retained internally; commit or roll back explicitly. Joins, expressions and ambiguous results stay read-only.
 
 ## Export, explain plans and output
 

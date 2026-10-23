@@ -24,6 +24,7 @@ var commands = []command{
 	{"file_save", "file_save", menuFile, []binding{{"Ctrl+S", tcell.KeyCtrlS, 0, 0}}},
 	{"file_save_as", "file_save_as", menuFile, []binding{{"Ctrl+Shift+S", tcell.KeyCtrlS, tcell.ModShift, 0}}},
 	{"file_close", "file_close", menuTabs, []binding{{"Ctrl+W", tcell.KeyCtrlW, 0, 0}}},
+	{"tab_rename", "tab_rename", menuTabs, nil},
 	{"tab_next", "tab_next", menuTabs, []binding{{"Ctrl+Tab", tcell.KeyTab, tcell.ModCtrl, 0}, {"Alt+PgDn", tcell.KeyPgDn, tcell.ModAlt, 0}}},
 	{"tab_previous", "tab_previous", menuTabs, []binding{{"Ctrl+Shift+Tab", tcell.KeyBacktab, tcell.ModCtrl, 0}, {"Alt+PgUp", tcell.KeyPgUp, tcell.ModAlt, 0}}},
 	{"quit", "quit", menuFile, []binding{{"Ctrl+Q", tcell.KeyCtrlQ, 0, 0}}},
@@ -37,7 +38,7 @@ var commands = []command{
 	{"export", "export", menuEdit, []binding{{"Ctrl+Shift+E", tcell.KeyCtrlE, tcell.ModShift, 0}, {"Alt+W", tcell.KeyRune, tcell.ModAlt, 'w'}}},
 	{"copy_preview", "copy_preview", menuEdit, nil},
 	{"table_edit_load", "table_edit_load", menuEdit, nil},
-	{"grid_edit", "grid_edit", menuEdit, nil},
+	{"grid_edit", "grid_edit", menuEdit, []binding{{"Alt+D", tcell.KeyRune, tcell.ModAlt, 'd'}}},
 	{"grid_inline", "grid_inline", menuEdit, nil},
 	{"find", "find", menuEdit, []binding{{"Ctrl+F", tcell.KeyCtrlF, 0, 0}}},
 	{"find_next", "find_next", menuEdit, []binding{{"F3", tcell.KeyF3, 0, 0}}},
@@ -63,7 +64,9 @@ var commands = []command{
 	{"focus_toggle", "focus_toggle", menuView, []binding{{"F6", tcell.KeyF6, 0, 0}}},
 	{"context_menu", "context_menu", menuView, []binding{{"Shift+F10", tcell.KeyF10, tcell.ModShift, 0}}},
 	{"maximize", "maximize", menuView, nil},
+	{"resize_panels", "resize_panels", menuView, []binding{{"Alt+F8", tcell.KeyF8, tcell.ModAlt, 0}}},
 	{"browser", "schemas", menuView, []binding{{"Alt+B", tcell.KeyRune, tcell.ModAlt, 'b'}}},
+	{"browser_search", "browser_search", menuView, []binding{{"Alt+I", tcell.KeyRune, tcell.ModAlt, 'i'}}},
 	{"browser_user", "browser_user", menuView, []binding{{"Alt+U", tcell.KeyRune, tcell.ModAlt, 'u'}}},
 	{"browser_type", "browser_type", menuView, []binding{{"Alt+O", tcell.KeyRune, tcell.ModAlt, 'o'}}},
 	{"browser_refresh", "browser_refresh", menuView, nil},
@@ -100,6 +103,7 @@ var commands = []command{
 	{"release_history", "release_history", menuHelp, nil},
 	{"diagnostic_info", "diagnostic_info", menuHelp, nil},
 	{"issue_report", "issue_report", menuHelp, nil},
+	{"keymap_compare", "keymap_compare", menuHelp, nil},
 	{"about", "about", menuHelp, nil},
 }
 
@@ -143,9 +147,13 @@ func (s *screen) commandEnabled(id string) bool {
 		return s.workspaces != nil && !s.busy && !s.vaultBusy
 	case "table_edit_load":
 		return !s.busy && s.connected && !s.transactionUncertain && s.editTableTarget().Kind == "TABLE"
+	case "tab_rename":
+		return !s.busy && s.document != nil && s.document.Path == "" && len(s.tabs) > 0
+	case "resize_panels":
+		return s.maximized == ""
 	case "grid_edit", "grid_inline":
 		row, col := s.table.GetSelection()
-		return !s.busy && s.connected && !s.transactionUncertain && s.table.HasFocus() && row > 0 && row <= len(s.resultBrowser.visible) && s.resultBrowser.source.CanEditColumn(col)
+		return !s.busy && s.connected && !s.transactionUncertain && s.table.HasFocus() && row > 0 && row <= len(s.resultBrowser.visible) && s.resultBrowser.source.CanEditColumn(s.resultSourceColumn(col))
 
 	case "cell_detail":
 		return !s.busy && s.table.HasFocus() && len(s.resultRows) > 0
@@ -169,7 +177,7 @@ func (s *screen) commandEnabled(id string) bool {
 		return true
 	case "output_toggle":
 		return s.connected && !s.busy && !s.transactionUncertain
-	case "quit", "about", "help", "guide", "release_history", "diagnostic_info", "issue_report", "settings", "focus_toggle", "context_menu", "passwords":
+	case "quit", "about", "keymap_compare", "help", "guide", "release_history", "diagnostic_info", "issue_report", "settings", "focus_toggle", "context_menu", "passwords":
 		return true
 	case "fullscreen_sql", "fullscreen_results":
 		return true
@@ -182,14 +190,14 @@ func (s *screen) commandEnabled(id string) bool {
 	case "undo", "redo", "paste", "select_all":
 		return !s.busy && s.editor.HasFocus()
 	case "cut":
-		return !s.busy && s.editor.HasFocus() && (s.editor.HasSelection() || s.prefs.EditorKeymap == "notepad++")
+		return !s.busy && s.editor.HasFocus() && (s.editor.HasSelection() || lineClipboardKeymap(s.prefs.EditorKeymap))
 	case "browser_refresh":
 		return !s.busy && s.browser != nil && (s.connected || s.demo)
 	case "history":
 		return !s.busy
 	case "pending_work":
 		return !s.busy && s.pendingChanges
-	case "browser", "browser_user", "browser_type":
+	case "browser", "browser_user", "browser_type", "browser_search":
 		return s.browser != nil
 	case "connect":
 		return !s.busy
@@ -202,7 +210,7 @@ func (s *screen) commandEnabled(id string) bool {
 	case "describe", "quick_describe":
 		return !s.busy && (s.connected || s.demo)
 	case "copy":
-		return (s.table.HasFocus() && len(s.resultRows) > 0) || (s.editor.HasFocus() && (s.editor.HasSelection() || s.prefs.EditorKeymap == "notepad++"))
+		return (s.table.HasFocus() && len(s.resultRows) > 0) || (s.editor.HasFocus() && (s.editor.HasSelection() || lineClipboardKeymap(s.prefs.EditorKeymap)))
 	case "copy_row":
 		return s.table.HasFocus() && len(s.resultRows) > 0
 	case "export":
@@ -240,10 +248,14 @@ func (s *screen) invoke(id string) {
 		s.workspaces.addNew()
 	case "workspace_close":
 		s.workspaces.closeOne(s)
+	case "keymap_compare":
+		s.showKeymapComparison()
 	case "about":
 		s.showAbout()
 	case "table_edit_load":
 		s.loadEditTable()
+	case "resize_panels":
+		s.resizePanelsCommand()
 	case "grid_inline":
 		s.startInlineEdit(nil)
 	case "grid_edit":
@@ -283,7 +295,7 @@ func (s *screen) invoke(id string) {
 	case "output_toggle":
 		s.requestOutputToggle()
 	case "undo", "redo", "cut", "paste", "select_all":
-		if id == "cut" && s.prefs.EditorKeymap == "notepad++" && !s.editor.HasSelection() {
+		if id == "cut" && lineClipboardKeymap(s.prefs.EditorKeymap) && !s.editor.HasSelection() {
 			s.editorLineAction(s.editor, "cut_line")
 			return
 		}
@@ -300,6 +312,8 @@ func (s *screen) invoke(id string) {
 		s.executeScript()
 	case "script_report":
 		s.showScriptReport()
+	case "tab_rename":
+		s.showTabRename()
 	case "file_new":
 		s.newDocument()
 	case "file_close":
@@ -326,6 +340,9 @@ func (s *screen) invoke(id string) {
 		s.toggleQueryResults()
 	case "browser":
 		s.toggleBrowser()
+	case "browser_search":
+		s.showBrowserSelector(false)
+		s.app.SetFocus(s.browserSearch)
 	case "browser_user", "browser_type":
 		s.showBrowserSelector(id == "browser_type")
 	case "context_menu":
@@ -355,7 +372,7 @@ func (s *screen) invoke(id string) {
 			s.copyResults("selection")
 		} else {
 			text, _, _ := s.editor.GetSelection()
-			if text == "" && s.prefs.EditorKeymap == "notepad++" {
+			if text == "" && lineClipboardKeymap(s.prefs.EditorKeymap) {
 				s.editorLineAction(s.editor, "copy_line")
 			} else {
 				s.sendClipboard(text)

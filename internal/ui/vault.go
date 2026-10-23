@@ -11,18 +11,36 @@ import (
 )
 
 func (s *screen) passwordStore() error {
+	path := credentials.Path(s.prefsPath, settings.ConnectionsPath(s.prefsPath))
+	cacheKey := vaultCachePath(path)
+	if s.workspaces != nil {
+		if s.workspaces.vaults == nil {
+			s.workspaces.vaults = make(map[string]*credentials.Store)
+		}
+		if cached := s.workspaces.vaults[cacheKey]; cached != nil {
+			s.vault = cached
+		}
+	}
 	if s.vault != nil {
-		return nil
+		if err := s.vault.ValidateCurrent(); err != nil {
+			s.invalidateVaultCache(cacheKey)
+			return err
+		}
+	} else {
+		store, err := credentials.Open(path)
+		if err != nil {
+			return err
+		}
+		s.vault = store
 	}
-	store, err := credentials.Open(credentials.Path(s.prefsPath, settings.ConnectionsPath(s.prefsPath)))
-	if err != nil {
-		return err
+	if s.workspaces != nil {
+		s.workspaces.vaults[cacheKey] = s.vault
 	}
-	s.vault = store
 	return nil
 }
 func (s *screen) lockPasswords() {
 	if s.workspaces != nil {
+		s.workspaces.clearVaultCache()
 		for _, item := range s.workspaces.screens {
 			item.lockWorkspacePasswords()
 		}

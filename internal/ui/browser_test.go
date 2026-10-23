@@ -25,7 +25,7 @@ func demoBrowserScreen(t *testing.T) *screen {
 
 func TestBrowserFocusCycleAndContext(t *testing.T) {
 	s := demoBrowserScreen(t)
-	for _, panel := range []tview.Primitive{s.table, s.browserUsers, s.browserTypes, s.browser, s.editor} {
+	for _, panel := range []tview.Primitive{s.table, s.browserUsers, s.browserTypes, s.browserSearch, s.browser, s.editor} {
 		s.key(tcell.NewEventKey(tcell.KeyTab, 0, tcell.ModNone))
 		if s.app.GetFocus() != panel {
 			t.Fatal("Tab did not cycle SQL/results/schemas")

@@ -41,6 +41,7 @@ func (s *screen) invalidateEditResults(active uint64) {
 func (s *screen) showGridEdit() {
 	source := s.resultBrowser.source
 	row, col := s.table.GetSelection()
+	col = s.resultSourceColumn(col)
 	if s.busy || !source.CanEditColumn(col) || row < 1 || row > len(s.resultBrowser.visible) {
 		return
 	}
@@ -77,7 +78,7 @@ func (s *screen) previewGridEdit() {
 
 func (s *screen) previewCellChange(change oracle.EditChange) {
 	source := s.resultBrowser.source
-	if source.EditID != change.ID {
+	if s.busy || s.programModal != nil || source.EditID != change.ID || !source.CanEditColumn(change.Column) || change.Row < 0 || change.Row >= len(source.Values) {
 		return
 	}
 	old := source.Values[change.Row][change.Column]
@@ -88,10 +89,10 @@ func (s *screen) previewCellChange(change oracle.EditChange) {
 	message := fmt.Sprintf("%s\n%s · %s\n%s: %s\n%s: %s\n\n%s", s.tr("edit_preview"), tview.Escape(oracle.QualifiedObject(source.EditObject)), tview.Escape(source.Columns[change.Column]), s.tr("edit_old"), tview.Escape(old.Text), s.tr("edit_new"), tview.Escape(next), s.tr("edit_confirm"))
 	object := source.EditObject
 	key := s.editedCellIdentity(source, change.Row, change.Column)
-	s.showProgramConfirm(message, func() {
+	s.showProgramConfirmFocused(message, func() {
 		s.closeInlineEdit()
 		s.submit(job{action: "edit_apply", edit: change, object: object, query: source.Query, editKey: key})
-	})
+	}, 0)
 }
 func (s *screen) closeGridEdit() {
 	if s.busy {

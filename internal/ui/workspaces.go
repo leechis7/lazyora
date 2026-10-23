@@ -7,6 +7,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"lazyora/internal/credentials"
 	"lazyora/internal/oracle"
 	"lazyora/internal/settings"
 )
@@ -23,6 +24,7 @@ type workspaceSet struct {
 	sequence   int
 	closingAll bool
 	retired    []<-chan struct{}
+	vaults     map[string]*credentials.Store
 }
 
 func (m *workspaceSet) adopt(s *screen) {
@@ -139,6 +141,9 @@ func (s *screen) stopWorker() {
 	if s.cancel != nil {
 		s.cancel()
 	}
+	if s.workspaces != nil && s.workspaces.retainsVault(s.vault) {
+		s.vault = nil
+	}
 	s.lockWorkspacePasswords()
 	close(s.jobs)
 }
@@ -155,6 +160,7 @@ func (m *workspaceSet) shutdown() {
 	for _, done := range m.retired {
 		<-done
 	}
+	m.clearVaultCache()
 }
 func (s *screen) sharePreferences() {
 	if s.workspaces == nil {
@@ -251,7 +257,7 @@ func (s *screen) showWorkspaces() {
 			label = "› " + label
 			selected = i
 		}
-		note := s.tr("workspace_shared_tabs")
+		note := ""
 		if item.pendingChanges {
 			note = s.tr("workspace_pending")
 		}
@@ -277,7 +283,19 @@ func (s *screen) showWorkspaces() {
 		s.closeWorkspaces()
 		s.workspaces.closeOne(snapshot[index])
 	}
-	list.SetSelectedFunc(func(int, string, string, rune) { activate() })
+	list.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
+		if e.Key() == tcell.KeyEnter && e.Modifiers() == 0 {
+			activate()
+			return nil
+		}
+		return e
+	})
+	list.SetMouseCapture(func(action tview.MouseAction, e *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
+		if action == tview.MouseLeftDoubleClick {
+			action = tview.MouseLeftClick
+		}
+		return action, e
+	})
 	controls := tview.NewForm().AddButton(s.tr("workspace_activate"), activate).
 		AddButton(s.tr("workspace_new"), func() { s.closeWorkspaces(); s.workspaces.addNew() }).
 		AddButton(s.tr("workspace_close"), closeSelected).AddButton(s.tr("cancel"), s.closeWorkspaces)
@@ -286,7 +304,7 @@ func (s *screen) showWorkspaces() {
 		s.clickable(controls.GetButton(i))
 	}
 	fit := formLayout(controls)
-	content := s.newFlex().SetDirection(tview.FlexRow).AddItem(list, 0, 1, true).AddItem(controls, 5, 0, false)
+	content := s.newFlex().SetDirection(tview.FlexRow).AddItem(list, 0, 1, true).AddItem(s.newTextView(textHint).SetText(s.tr("workspace_shared_tabs")).SetWrap(true), 2, 0, false).AddItem(controls, 5, 0, false)
 	root := s.formPopup(content, 104, 24, func(w, h int) { fit(w, 5) })
 	s.pages.AddPage("workspaces", root, true, true)
 	s.app.SetFocus(list)
@@ -313,7 +331,7 @@ func (s *screen) workspaceKey(e *tcell.EventKey) *tcell.EventKey {
 		_, root := s.pages.GetFrontPage()
 		popup := root.(*formPopupLayer)
 		content := popup.content.(*tview.Flex)
-		form := content.GetItem(1).(*tview.Form)
+		form := content.GetItem(2).(*tview.Form)
 		if s.workspaceList.HasFocus() {
 			index := 0
 			if e.Key() == tcell.KeyBacktab {

@@ -71,59 +71,63 @@ with tempfile.TemporaryDirectory(prefix="lazyora-select-edit-") as folder:
 
     try:
         wait_for("Load saved connection")
+        send(b"\x1bv")
+        wait_for("Connection test succeeded")
         send(b"\x1b[13;5u")
         wait_for("SAMPLE_ROWS")
         read_for(0.3)
         execute()
         original = copy_row()
-        send(b"\x1b[C")  # CAPTION; ROWID remains read-only.
+        assert len(original.split("\t")) == 1, "ROWID leaked into visible row copy"
         output.clear()
-        send(b"\x1b[21;2~\x1b[H" + b"\x1b[B"*16 + b"\r")
+        send(b"\x1bd")  # Alt+D opens the separate cell editor.
         wait_for("New value")
         send(b"\x01\x0bPTY ROWID SELECT edit")
         output.clear()
         send(b"\x13")
         wait_for("Apply one bound UPDATE")
-        send(b"\r")  # Default cancel must return to the editing form.
+        send(b"\x1b[C\r")  # Explicit Cancel returns to the form.
         output.clear()
         send(b"\x13")
         wait_for("Apply one bound UPDATE")
-        send(b"\x1b[D\r")
+        send(b"\r")  # Proceed is selected by default.
         wait_for("One cell update applied")
         changed = copy_row().split("\t")
-        assert len(changed) == 2 and changed[1] == "PTY ROWID SELECT edit", "reload lost original projection or value"
+        assert len(changed) == 1 and changed[0] == "PTY ROWID SELECT edit", "reload lost original projection or value"
         # The original popup remains available; now edit inside the grid.
-        send(b"\x1b[C")  # CAPTION after the original-query reload selected RID.
         output.clear()
         send(b"\r")
         wait_for("Enter Review")
         send(b"\x15INLINE discarded")  # Ctrl+U clears InputField text.
         send(b"\x1b")  # Esc cancels input without applying SQL.
         read_for(0.15)
-        assert copy_row().split("\t")[1] == "PTY ROWID SELECT edit", "Esc applied an inline draft"
+        assert copy_row().split("\t")[0] == "PTY ROWID SELECT edit", "Esc applied an inline draft"
         output.clear()
         send(b"INLINE ROWID value")  # Printable text starts replacement.
         wait_for("Enter Review")
         output.clear()
         send(b"\r")
         wait_for("Apply one bound UPDATE")
-        send(b"\r")  # Default cancel returns to the inline draft.
+        send(b"\x1b[C\r")  # Explicit Cancel returns to the inline draft.
         output.clear()
         send(b"\r")
         wait_for("Apply one bound UPDATE")
-        send(b"\x1b[D\r")
+        send(b"\r")  # Proceed is selected by default.
         wait_for("One cell update applied")
-        assert copy_row().split("\t")[1] == "INLINE ROWID value", "inline edit or original-query reload failed"
+        assert copy_row().split("\t")[0] == "INLINE ROWID value", "inline edit or original-query reload failed"
         # Select the changed cell: its distinct 8-color background survives focus.
         output.clear()
-        send(b"\x1b[C")
+        send(b"\x1b[17~\x1b[17~")  # Switch focus away and back to repaint.
         assert re.search(rb"\x1b\[[0-9;]*43[0-9;]*m", output), "changed cell lost ANSI yellow background"
         output.clear()
         send(b"\x1br")
-        wait_for("Rollback completed")
-        execute()
-        assert copy_row() == original, "rollback/requery did not restore original row"
-        print("ROWID SELECT: popup and inline editing, confirmation/cancel, cell color, original query reload and rollback passed")
+        wait_for("Rollback completed. Grid refreshed.")
+        assert copy_row() == original, "rollback did not automatically restore the grid"
+        output.clear()
+        send(b"\x1bc")
+        wait_for("Commit completed. Grid refreshed.")
+        assert copy_row() == original, "commit refresh changed the current result"
+        print("ROWID SELECT: popup and inline editing, confirmation/cancel, cell color, original query reload and automatic rollback/commit refresh passed")
     finally:
         os.kill(pid, signal.SIGTERM)
         os.waitpid(pid, 0)

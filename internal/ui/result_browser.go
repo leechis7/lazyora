@@ -17,6 +17,17 @@ type resultBrowser struct {
 	sortColumn         int
 	sorted, descending bool
 	visible            []int
+	columns            []int // Display column -> original query/snapshot column.
+}
+
+func (s *screen) resultSourceColumn(column int) int {
+	if s.resultBrowser.columns == nil {
+		return column
+	}
+	if column < 0 || column >= len(s.resultBrowser.columns) {
+		return -1
+	}
+	return s.resultBrowser.columns[column]
 }
 
 func (s *screen) invalidateResultCursors(active uint64) {
@@ -56,11 +67,22 @@ func gridNumber(cell oracle.Cell) *big.Rat {
 
 func (s *screen) applyResultBrowser(preserveWidths bool) {
 	view := &s.resultBrowser
+	view.columns = make([]int, 0, len(view.source.Columns))
+	for col := range view.source.Columns {
+		if view.source.EditObject.Kind == "TABLE" && col+1 == view.source.EditRowIDColumn {
+			continue
+		}
+		view.columns = append(view.columns, col)
+	}
 	indices := make([]int, 0, len(view.source.Rows))
 	filter := strings.ToLower(view.filter)
-	for i, row := range view.source.Rows {
+	for i := range view.source.Rows {
 		match := filter == ""
-		for _, value := range row {
+		for _, col := range view.columns {
+			value := browserCell(view.source, i, col).Text
+			if col < len(view.source.Rows[i]) {
+				value = view.source.Rows[i][col]
+			}
 			if !match && strings.Contains(strings.ToLower(value), filter) {
 				match = true
 				break
@@ -70,8 +92,8 @@ func (s *screen) applyResultBrowser(preserveWidths bool) {
 			indices = append(indices, i)
 		}
 	}
-	if view.sorted && view.sortColumn >= 0 && view.sortColumn < len(view.source.Columns) {
-		col := view.sortColumn
+	if view.sorted && view.sortColumn >= 0 && view.sortColumn < len(view.columns) {
+		col := view.columns[view.sortColumn]
 		numbers := make(map[int]*big.Rat, len(indices))
 		numeric := true
 		for _, row := range indices {
@@ -97,15 +119,24 @@ func (s *screen) applyResultBrowser(preserveWidths bool) {
 		})
 	}
 	result := view.source
+	result.Columns = make([]string, len(view.columns))
+	for col, sourceCol := range view.columns {
+		result.Columns[col] = view.source.Columns[sourceCol]
+	}
 	view.visible = indices
 	result.Rows = nil
 	result.Values = nil
 	for _, row := range indices {
-		result.Rows = append(result.Rows, view.source.Rows[row])
-		cells := make([]oracle.Cell, len(view.source.Columns))
-		for col := range cells {
-			cells[col] = browserCell(view.source, row, col)
+		values := make([]string, len(view.columns))
+		cells := make([]oracle.Cell, len(view.columns))
+		for col, sourceCol := range view.columns {
+			cells[col] = browserCell(view.source, row, sourceCol)
+			values[col] = cells[col].Text
+			if sourceCol < len(view.source.Rows[row]) {
+				values[col] = view.source.Rows[row][sourceCol]
+			}
 		}
+		result.Rows = append(result.Rows, values)
 		result.Values = append(result.Values, cells)
 	}
 	widths := append([]int(nil), s.grid.widths...)

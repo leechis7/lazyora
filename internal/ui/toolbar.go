@@ -36,6 +36,16 @@ func (s *screen) toolbar() *tview.Flex {
 				return
 			}
 			key := s.footerKeys[index]
+			if strings.HasPrefix(key.action, "resize_") {
+				if page, _ := s.pages.GetFrontPage(); page == "main" {
+					s.resizePanelKey(tcell.NewEventKey(key.key, 0, key.mod))
+				}
+				return
+			}
+			if key.action == "connection_probe" && s.testConnection != nil {
+				s.testConnection()
+				return
+			}
 			if key.action == "passwords" {
 				s.passwordManager()
 				return
@@ -108,6 +118,9 @@ func (s *screen) refreshFooter() {
 	case "reference":
 		hint = "footer_reference"
 		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+C", "copy", tcell.KeyCtrlC, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+	case "keymap_compare":
+		hint = "comparison_keys"
+		keys = []footerKey{{"Ctrl+C", "copy", tcell.KeyCtrlC, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
 	case "grid_inline":
 		hint = "grid_inline_hint"
 		keys = []footerKey{{"Enter", "edit_preview", tcell.KeyEnter, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
@@ -209,7 +222,7 @@ func (s *screen) refreshFooter() {
 		keys[1] = footerKey{"Ctrl+Enter", "connect", tcell.KeyEnter, tcell.ModCtrl}
 		keys[2] = footerKey{"Ctrl+S", "save", tcell.KeyCtrlS, tcell.ModNone}
 		keys[3] = footerKey{"Esc", "cancel", tcell.KeyEscape, tcell.ModNone}
-		keys = append(keys, footerKey{"Alt+K", "passwords", tcell.KeyRune, tcell.ModAlt})
+		keys = append(keys, footerKey{"Alt+K", "passwords", tcell.KeyRune, tcell.ModAlt}, footerKey{"Alt+V", "connection_probe", tcell.KeyRune, tcell.ModAlt})
 	case "reconnect":
 		hint = "footer_reconnect"
 		keys = []footerKey{{"Esc", "cancel", tcell.KeyEscape, 0}}
@@ -255,6 +268,10 @@ func (s *screen) refreshFooter() {
 			}
 		}
 	}
+	if page == "main" && s.sizing.keyboard {
+		hint = "resize_panels_hint"
+		keys = []footerKey{{"Home", "resize_reset", tcell.KeyHome, 0}, {"Enter", "resize_finish", tcell.KeyEnter, 0}, {"Esc", "resize_end", tcell.KeyEscape, 0}}
+	}
 	text := s.tr(hint)
 	if hint == "footer_source" {
 		text = s.sourceKeymapFooter()
@@ -264,8 +281,11 @@ func (s *screen) refreshFooter() {
 		text = fmt.Sprintf(text, bindingLabels("execute", 2), shortcut("describe"), shortcut("focus_toggle"), viewKeys)
 	}
 	if hint == "footer_sql" && s.activeEditor() != nil {
-		if s.prefs.EditorKeymap == "notepad++" {
+		if lineClipboardKeymap(s.prefs.EditorKeymap) {
 			text = strings.ReplaceAll(text, "Ctrl+T", "Ctrl+Space")
+		}
+		if ideKeymap(s.prefs.EditorKeymap) {
+			text = s.keymapHint() + " | " + text
 		}
 		if s.prefs.EditorKeymap == "vim" {
 			text = "Vim " + s.vimMode() + " | " + text
@@ -275,7 +295,7 @@ func (s *screen) refreshFooter() {
 		}
 	}
 	if hint == "footer_results" {
-		text = fmt.Sprintf(text, shortcut("copy"), shortcut("copy_row"), shortcut("focus_toggle"), viewKeys)
+		text = s.resultNavigationHint(viewKeys)
 	}
 	if page == "main" {
 		if s.maximized != "" {
@@ -302,6 +322,14 @@ func (s *screen) refreshFooter() {
 		s.footerBar.AddItem(s.buttons[i], 0, 1, false)
 	}
 	s.footerBar.AddItem(s.footerVersion, len(appinfo.Version)+3, 0, false)
+}
+
+func (s *screen) resultNavigationHint(viewKeys string) string {
+	text := fmt.Sprintf(s.tr("footer_results"), shortcut("copy"), shortcut("copy_row"), shortcut("focus_toggle"), viewKeys)
+	if s.resultBrowser.source.EditID != 0 {
+		text = shortcut("grid_edit") + " " + s.tr("grid_edit_short") + " | " + text
+	}
+	return text
 }
 
 func (s *screen) action(action string) {

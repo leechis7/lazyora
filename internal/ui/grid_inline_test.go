@@ -23,8 +23,8 @@ func confirmInline(t *testing.T, s *screen, proceed bool) {
 		t.Fatal("missing confirmation or premature UPDATE")
 	}
 	delegate := func(p tview.Primitive) { s.app.SetFocus(p) }
-	if proceed {
-		s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyLeft, 0, 0), delegate)
+	if !proceed {
+		s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyRight, 0, 0), delegate)
 	}
 	s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), delegate)
 }

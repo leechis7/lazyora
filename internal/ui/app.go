@@ -18,6 +18,7 @@ import (
 )
 
 type job struct {
+	gridRefresh   *gridRefreshState
 	editKey       editedCellKey
 	identity      settings.Connection
 	edit          oracle.EditChange
@@ -44,6 +45,7 @@ type job struct {
 
 type screen struct {
 	textRoles                           map[*tview.TextView]textRole
+	comparison                          *keymapComparison
 	reference                           *referenceView
 	workspaces                          *workspaceSet
 	workspaceID                         int
@@ -131,6 +133,7 @@ type screen struct {
 	tabBar                 *tview.Flex
 	document               *sqlfile.Document
 	fileDialog             *fileDialog
+	renameForm             *tview.Form
 	documentModal          *tview.Modal
 
 	sqlConfirmText  *tview.TextView
@@ -153,11 +156,16 @@ type screen struct {
 	findText, replaceText                    string
 	rootLayout, menuLayout                   *tview.Flex
 	chromeHidden                             bool
+	sizing                                   panelSizing
 	splitOffsets                             panelOffsets
 	menuButtons                              []*tview.Button
 	menuList                                 *tview.List
 	menuFocus                                tview.Primitive
 	menuIndex                                int
+	menuRows                                 []commandMenuRow
+	menuTitle                                string
+	menuEntries                              []command
+	menuParent                               *commandMenuParent
 	describeForm                             *tview.Form
 	describeFocus                            tview.Primitive
 	describeAction                           func()
@@ -191,6 +199,7 @@ type screen struct {
 	browserPanel                             *tview.Flex
 	browserForm                              *tview.Form
 	browserUsers, browserTypes               *choiceField
+	browserSearch                            *tview.InputField
 	browserSchemas                           []string
 	browserObjects                           []oracle.Object
 	browserKind                              int
@@ -227,6 +236,8 @@ type screen struct {
 	helpContextText                          string
 	connectForm, connectProfiles, prefsForm  *tview.Form
 	connectAction, saveConnection, savePrefs func()
+	testConnection                           func()
+	testingConnection                        bool
 	connectionOptions                        func()
 	prefs                                    settings.Config
 	prefsPath, statusKey                     string
@@ -373,11 +384,20 @@ func newWorkspaceScreen(app *tview.Application, terminal tcell.Screen, prefs set
 			if !s.prefs.Mouse {
 				return nil, action
 			}
+			if s.testingConnection && s.connectForm != nil {
+				x, y := event.Position()
+				if !s.connectForm.GetButton(1).InRect(x, y) {
+					return nil, action
+				}
+			}
 			if page, _ := s.pages.GetFrontPage(); page == "grid_inline" && s.inlineEdit != nil {
 				x, y := event.Position()
 				if !s.inlineEdit.InRect(x, y) {
 					return nil, action
 				}
+			}
+			if s.resizePanelMouse(event, action) {
+				return nil, action
 			}
 			// tview groups quick clicks even when they target different controls.
 			// Preserve double clicks for text selection only at the same position.
@@ -418,12 +438,14 @@ func (s *screen) submit(j job) {
 	if s.busy {
 		return
 	}
-	if j.action != "connect" && j.action != "export" && j.action != "cell_save" && !s.connected {
+	if j.action != "connect" && j.action != "test_connect" && j.action != "export" && j.action != "cell_save" && !s.connected {
 		s.setStatus("connect_first")
 		return
 	}
 	s.busy = true
-	if j.action == "cell_save" || j.action == "export" && j.query != nil {
+	if j.action == "test_connect" {
+		j.ctx, s.cancel = context.WithTimeout(context.Background(), 15*time.Second)
+	} else if j.action == "cell_save" || j.action == "export" && j.query != nil {
 		j.ctx, s.cancel = context.WithCancel(context.Background())
 	} else {
 		j.ctx, s.cancel = context.WithTimeout(context.Background(), 60*time.Second)
@@ -467,8 +489,16 @@ func (s *screen) worker() {
 			session.ClosePage()
 		}
 		switch j.action {
+		case "test_connect":
+			err = oracle.ProbeConnection(j.ctx, j.config)
 		case "edit_load":
 			result, err = session.EditableTable(j.ctx, j.object)
+		case "result_refresh":
+			if j.query != nil {
+				result, err = session.ExecutePaged(j.ctx, j.query.Text, j.query.Bindings)
+			} else {
+				result, err = session.EditableTable(j.ctx, j.object)
+			}
 		case "edit_apply":
 			err = session.ApplyEdit(j.ctx, j.edit)
 			editApplied = err == nil
@@ -590,6 +620,10 @@ func (s *screen) worker() {
 					s.requestQuitLocal()
 				}
 			}()
+			if j.action == "test_connect" {
+				s.acceptConnectionProbe(err, j.config)
+				return
+			}
 			if session != nil {
 				s.outputEnabled = session.OutputEnabled()
 				s.pendingChanges = session.PendingChanges()
@@ -604,6 +638,10 @@ func (s *screen) worker() {
 			}
 			if j.action == "edit_apply" && editApplied {
 				s.markEditedCell(j.editKey)
+			}
+			if j.action == "result_refresh" {
+				s.acceptTransactionGridRefresh(j, result, err)
+				return
 			}
 			if j.action == "edit_load" || j.action == "edit_apply" {
 				if err != nil && editApplied {
@@ -754,10 +792,14 @@ func (s *screen) worker() {
 					}
 				case "commit":
 					s.clearEditedCells()
-					s.setStatus("committed")
+					if !s.refreshTransactionGrid("commit") {
+						s.setStatus("committed")
+					}
 				case "rollback":
 					s.clearEditedCells()
-					s.setStatus("rolled_back")
+					if !s.refreshTransactionGrid("rollback") {
+						s.setStatus("rolled_back")
+					}
 				case "schemas":
 					s.setStatus("schemas_loaded", len(catalog.Schemas))
 					if !s.quitting {

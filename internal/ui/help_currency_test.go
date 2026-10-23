@@ -16,7 +16,7 @@ func TestHelpCoversEveryMenuCommandAndCurrentBinding(t *testing.T) {
 		}
 	}
 	for _, language := range []string{"en", "ko"} {
-		for _, keymap := range []string{"", "vim", "notepad++"} {
+		for _, keymap := range []string{"", "vim", "notepad++", "vscode", "intellij"} {
 			s := &screen{}
 			s.prefs.Language, s.prefs.EditorKeymap = language, keymap
 			for _, command := range commands {

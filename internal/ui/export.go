@@ -89,7 +89,8 @@ func (s *screen) showExport() {
 			return
 		}
 		if index == exportFullScope {
-			index = 0
+			form.GetFormItem(8).(*tview.InputField).SetText(csvColumns(s.resultBrowser.source.Columns))
+			return
 		}
 		if data, err := s.exportDataset(index); err == nil {
 			form.GetFormItem(8).(*tview.InputField).SetText(csvColumns(data.Columns))
@@ -130,6 +131,10 @@ func (s *screen) showExport() {
 		if err != nil {
 			info.SetText(err.Error())
 			return
+		}
+		if query != nil {
+			// Full DB export replays the unmodified query, including its ROWID.
+			data.Columns = append([]string(nil), s.resultBrowser.source.Columns...)
 		}
 		path, err := sqlfile.Resolve(form.GetFormItem(1).(*tview.InputField).GetText(), directory)
 		if err != nil {

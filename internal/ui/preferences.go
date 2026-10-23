@@ -28,14 +28,14 @@ func (s *screen) settingsForm() {
 	}
 	form.AddFormItem(s.newChoice(s.tr("language"), []string{"English", "한국어"}, selected, nil)).
 		AddCheckbox(s.tr("mouse")+" — "+s.tr("mouse_label"), s.prefs.Mouse, nil)
-	keymaps := []string{"", "vim", "notepad++"}
+	keymaps := []string{"", "vim", "notepad++", "vscode", "intellij"}
 	keymapIndex := 0
 	for i, keymap := range keymaps {
 		if keymap == s.prefs.EditorKeymap {
 			keymapIndex = i
 		}
 	}
-	form.AddFormItem(s.newChoice(s.tr("editor_keymap"), []string{s.tr("keymap_default"), "Vim", "Notepad++"}, keymapIndex, nil))
+	form.AddFormItem(s.newChoice(s.tr("editor_keymap"), []string{s.tr("keymap_default"), "Vim", "Notepad++", "VS Code", "IntelliJ IDEA"}, keymapIndex, nil))
 	themeIndex := 0
 	themes := []string{"dark", "light", "blackwhite"}
 	for index, theme := range themes {

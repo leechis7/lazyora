@@ -25,6 +25,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		event = tcell.NewEventKey(event.Key(), event.Rune(), event.Modifiers())
 	}
 	page, _ := s.pages.GetFrontPage()
+	if page == "keymap_compare" {
+		return s.keymapComparisonKey(event)
+	}
 	if page == "grid_inline" {
 		return s.inlineEditKey(event)
 	}
@@ -41,6 +44,12 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	}
 
 	page, _ = s.pages.GetFrontPage()
+	if page == "main" && s.resizePanelKey(event) {
+		return nil
+	}
+	if page == "tab_rename" {
+		return event
+	}
 	if page == "reference" {
 		return s.referenceKey(event)
 	}
@@ -155,6 +164,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if page == "master" || page == "vault" {
 		return s.vaultKey(event, page)
 	}
+	if s.editorPresetKey(s.activeEditor(), event) {
+		return nil
+	}
 	if event.Key() == tcell.KeyTab || event.Key() == tcell.KeyBacktab {
 		switch page {
 		case "help":
@@ -260,6 +272,10 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	// Help owns its close keys even while a background operation is running.
 	// Closing the overlay must never be mistaken for cancelling that operation.
 	if page == "help" {
+		if alt && letter == 'k' {
+			s.showKeymapComparison()
+			return nil
+		}
 		if s.listDetailArrow(event, s.helpTopics, s.helpText) {
 			return nil
 		}
@@ -422,6 +438,16 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return event
 	}
 	if page == "connect" {
+		if s.testingConnection {
+			if event.Key() == tcell.KeyEscape || alt && letter == 'x' {
+				s.action("cancel")
+			}
+			return nil
+		}
+		if alt && letter == 'v' {
+			s.testConnection()
+			return nil
+		}
 		if alt && letter == 'k' {
 			s.passwordManager()
 			return nil

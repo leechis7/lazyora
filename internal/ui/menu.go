@@ -69,7 +69,14 @@ func (s *screen) showContextMenu() {
 
 func (s *screen) openCommandMenu(title string, entries []command, index int) {
 	s.menuFocus = s.app.GetFocus()
+	s.menuParent = nil
+	s.renderCommandMenu(title, entries, index)
+}
+func (s *screen) renderCommandMenu(title string, entries []command, index int) {
+	s.pages.RemovePage("menu")
 	s.menuIndex = index
+	s.menuTitle = title
+	s.menuEntries = entries
 	list := tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
 	list.SetBorder(true).SetTitle(title)
 	s.styleList(list)
@@ -77,20 +84,32 @@ func (s *screen) openCommandMenu(title string, entries []command, index int) {
 	list.SetMainTextStyle(tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().surface))
 	list.SetBorderStyle(tcell.StyleDefault.Foreground(s.colors().button).Background(s.colors().surface))
 	s.menuList = list
-	count := 0
-	for _, cmd := range entries {
-		enabled := s.commandEnabled(cmd.id)
-		label := s.tr(cmd.label)
-		if key := s.editorBindingLabels(cmd.id, 1); key != "" {
-			label += "  " + key
+	s.menuRows = s.commandMenuRows(entries, index)
+	for i, row := range s.menuRows {
+		label := row.label
+		if row.divider {
+			label = "────────────────────────────────────────────"
 		}
-		if !enabled {
-			label = "[gray]" + label + "[-]"
+		if row.id != "" {
+			cmd := commandFor(row.id)
+			label = s.tr(cmd.label)
+			if key := s.editorBindingLabels(cmd.id, 1); key != "" {
+				label += "  " + key
+			}
+			// Evaluate against the original panel focus, not the menu widget.
+			current := s.app.GetFocus()
+			s.app.SetFocus(s.menuFocus)
+			enabled := s.commandEnabled(cmd.id)
+			s.app.SetFocus(current)
+			if !enabled {
+				label = "[gray]" + label + "[-]"
+			}
 		}
-		id := cmd.id
-		list.AddItem(label, "", 0, func() { s.closeMenu(); s.invoke(id) })
-		count++
+		at := i
+		list.AddItem(label, "", 0, func() { s.menuRowAction(at) })
 	}
+	count := len(s.menuRows)
+	list.SetInputCapture(s.menuListKey).SetMouseCapture(s.menuListMouse)
 	// Flex leaves the underlying page untouched. Restrict its inner layout to
 	// the menu instead of painting spacer Boxes over SQL and result panels.
 	root := s.newFlex().AddItem(list, 0, 1, true)
@@ -107,6 +126,9 @@ func (s *screen) openCommandMenu(title string, entries []command, index int) {
 func (s *screen) closeMenu() {
 	s.pages.RemovePage("menu")
 	s.menuList = nil
+	s.menuRows = nil
+	s.menuParent = nil
+	s.menuEntries = nil
 	if s.menuFocus != nil {
 		s.app.SetFocus(s.menuFocus)
 	}
@@ -133,9 +155,15 @@ func (s *screen) menuKey(event *tcell.EventKey) *tcell.EventKey {
 		}
 		return event
 	case tcell.KeyEscape:
+		if s.backCommandMenu() {
+			return nil
+		}
 		s.closeMenu()
 		return nil
 	case tcell.KeyLeft:
+		if s.backCommandMenu() {
+			return nil
+		}
 		if s.menuIndex < 0 {
 			return nil
 		}

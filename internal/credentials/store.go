@@ -113,6 +113,15 @@ func read(path string) ([]byte, error) {
 	return data, err
 }
 
+// ValidateCurrent invalidates cached key material if another process replaced
+// the encrypted store. No master password or key is exported to the UI.
+func (s *Store) ValidateCurrent() error {
+	if err := s.checkCurrent(); err != nil {
+		s.Lock()
+		return err
+	}
+	return nil
+}
 func (s *Store) Exists() bool   { return s != nil && s.exists }
 func (s *Store) Unlocked() bool { return s != nil && len(s.key) == 32 }
 func (s *Store) Lock() {

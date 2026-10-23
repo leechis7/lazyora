@@ -14,6 +14,12 @@ import (
 // cursor shape: LazyOra only needs to show, hide and position the cursor.
 var defaultCursorSequence = []byte("\x1b[0 q")
 
+// Win32-input-mode reports key releases as CSI ... _. On SSH terminals these
+// may arrive after cooked input is restored, leaking into the shell. Keep
+// CSI-u/modifyOtherKeys for modified keys without opting into Win32 reports.
+var win32InputEnable = []byte("\x1b[?9001h")
+var win32InputDisable = []byte("\x1b[?9001l")
+
 type compatibleTTY struct {
 	tcell.Tty
 	pending []byte
@@ -22,11 +28,14 @@ type compatibleTTY struct {
 func (t *compatibleTTY) Write(data []byte) (int, error) {
 	buffer := append(t.pending, data...)
 	buffer = bytes.ReplaceAll(buffer, defaultCursorSequence, nil)
+	buffer = bytes.ReplaceAll(buffer, win32InputEnable, win32InputDisable)
 	// A control sequence may straddle writes. Hold only a possible prefix.
 	keep := 0
-	for size := 1; size < len(defaultCursorSequence) && size <= len(buffer); size++ {
-		if bytes.Equal(buffer[len(buffer)-size:], defaultCursorSequence[:size]) {
-			keep = size
+	for _, sequence := range [][]byte{defaultCursorSequence, win32InputEnable} {
+		for size := 1; size < len(sequence) && size <= len(buffer); size++ {
+			if bytes.Equal(buffer[len(buffer)-size:], sequence[:size]) {
+				keep = max(keep, size)
+			}
 		}
 	}
 	t.pending = append([]byte(nil), buffer[len(buffer)-keep:]...)

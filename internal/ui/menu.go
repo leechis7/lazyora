@@ -170,13 +170,6 @@ func (s *screen) menuKey(event *tcell.EventKey) *tcell.EventKey {
 		s.showMenu((s.menuIndex + len(menuGroups) - 1) % len(menuGroups))
 		return nil
 	case tcell.KeyRight:
-		if at := s.menuList.GetCurrentItem(); at >= 0 && at < len(s.menuRows) && len(s.menuRows[at].children) > 0 {
-			s.menuRowAction(at)
-			return nil
-		}
-		if s.menuParent != nil {
-			return nil
-		}
 		if s.menuIndex < 0 {
 			return nil
 		}

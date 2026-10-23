@@ -53,3 +53,11 @@ SecureCRT를 사용한다면 세션의 Terminal → Emulation도 Xterm으로 맞
 미지원 환경에서는 복사한 다음 **편집 → 복사 내용 보기**를 엽니다. 이 화면에서는 마우스 보고를 잠시 꺼 터미널 자체 텍스트 선택을 사용할 수 있습니다. 방향키·PgUp/PgDn으로 이동하고 SecureCRT의 Ctrl+Shift+C 등 터미널 복사를 사용합니다. Esc로 닫으면 기존 마우스 설정과 포커스로 돌아옵니다. 긴 행은 가로 스크롤해 선택하거나 TSV를 나눠 복사하세요.
 
 근거: [tcell 클립보드 API](https://pkg.go.dev/github.com/gdamore/tcell/v2#Screen), [SecureCRT 복사 키](https://www.vandyke.com/support/tips/nl102004.html). Windows 콘솔의 클립보드 전달 지원은 선택된 tcell 백엔드에 따라 달라지며, 전달되지 않으면 복사 내용 보기에서 터미널 기본 복사를 사용합니다.
+
+## 키보드로 패널 크기 조절
+
+Alt+F8 또는 보기 → 패널 크기 조절로 시작합니다. 위·아래는 SQL/결과 높이, 좌·우는 스키마/오른쪽 영역 너비를 바꾸며 Home은 초기 비율, Enter/Esc는 조절 종료입니다. 터미널이 Alt+F8을 전달하지 못하면 보기 메뉴를 사용하세요.
+
+## 종료 후 입력 보고 문자열
+
+`ESC [ 13;28;13;0;0;1 _` 형태는 Win32 입력 모드의 키 해제 보고입니다. Unix TTY에서는 이 모드를 요청하지 않고 CSI-u·modifyOtherKeys를 유지해 종료 시 셸로 보고가 넘어가는 것을 방지합니다. Windows 네이티브 콘솔 선택은 유지합니다.

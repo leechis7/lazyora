@@ -38,7 +38,7 @@ var commands = []command{
 	{"export", "export", menuEdit, []binding{{"Ctrl+Shift+E", tcell.KeyCtrlE, tcell.ModShift, 0}, {"Alt+W", tcell.KeyRune, tcell.ModAlt, 'w'}}},
 	{"copy_preview", "copy_preview", menuEdit, nil},
 	{"table_edit_load", "table_edit_load", menuEdit, nil},
-	{"grid_edit", "grid_edit", menuEdit, nil},
+	{"grid_edit", "grid_edit", menuEdit, []binding{{"Alt+D", tcell.KeyRune, tcell.ModAlt, 'd'}}},
 	{"grid_inline", "grid_inline", menuEdit, nil},
 	{"find", "find", menuEdit, []binding{{"Ctrl+F", tcell.KeyCtrlF, 0, 0}}},
 	{"find_next", "find_next", menuEdit, []binding{{"F3", tcell.KeyF3, 0, 0}}},
@@ -153,7 +153,7 @@ func (s *screen) commandEnabled(id string) bool {
 		return s.maximized == ""
 	case "grid_edit", "grid_inline":
 		row, col := s.table.GetSelection()
-		return !s.busy && s.connected && !s.transactionUncertain && s.table.HasFocus() && row > 0 && row <= len(s.resultBrowser.visible) && s.resultBrowser.source.CanEditColumn(col)
+		return !s.busy && s.connected && !s.transactionUncertain && s.table.HasFocus() && row > 0 && row <= len(s.resultBrowser.visible) && s.resultBrowser.source.CanEditColumn(s.resultSourceColumn(col))
 
 	case "cell_detail":
 		return !s.busy && s.table.HasFocus() && len(s.resultRows) > 0

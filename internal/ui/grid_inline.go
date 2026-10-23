@@ -45,7 +45,7 @@ func (s *screen) isEditedCell(row, col int) bool {
 	if row < 1 || row > len(s.resultBrowser.visible) {
 		return false
 	}
-	return s.editedCells[s.editedCellIdentity(s.resultBrowser.source, s.resultBrowser.visible[row-1], col)]
+	return s.editedCells[s.editedCellIdentity(s.resultBrowser.source, s.resultBrowser.visible[row-1], s.resultSourceColumn(col))]
 }
 func (s *screen) editedCellStyle() tcell.Style {
 	fg, bg := tcell.ColorBlack, tcell.GetColor("#e8c56a")
@@ -107,9 +107,10 @@ func (s *screen) startInlineEdit(first *rune) bool {
 	}
 	row, col := s.table.GetSelection()
 	index := s.resultBrowser.visible[row-1]
-	old := browserCell(s.resultBrowser.source, index, col)
+	sourceCol := s.resultSourceColumn(col)
+	old := browserCell(s.resultBrowser.source, index, sourceCol)
 	value := editInputText(old)
-	change := oracle.EditChange{ID: s.resultBrowser.source.EditID, Row: index, Column: col, Text: value, Null: old.Null}
+	change := oracle.EditChange{ID: s.resultBrowser.source.EditID, Row: index, Column: sourceCol, Text: value, Null: old.Null}
 	if first != nil {
 		value = string(*first)
 		change.Null = false

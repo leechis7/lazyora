@@ -310,6 +310,7 @@ func (snap *editSnapshot) markSelectResult(result *Result) {
 		return
 	}
 	result.EditID, result.EditObject = snap.id, snap.object
+	result.EditRowIDColumn = snap.rowIDColumn + 1
 	result.EditRowIDs = append([]string(nil), snap.rowIDs[len(snap.rowIDs)-len(result.Rows):]...)
 	result.EditColumnNames = make([]string, len(snap.columns))
 	result.EditColumns = make([]bool, len(snap.columns))

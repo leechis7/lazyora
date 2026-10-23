@@ -18,6 +18,7 @@ import (
 )
 
 type job struct {
+	gridRefresh   *gridRefreshState
 	editKey       editedCellKey
 	identity      settings.Connection
 	edit          oracle.EditChange
@@ -492,6 +493,12 @@ func (s *screen) worker() {
 			err = oracle.ProbeConnection(j.ctx, j.config)
 		case "edit_load":
 			result, err = session.EditableTable(j.ctx, j.object)
+		case "result_refresh":
+			if j.query != nil {
+				result, err = session.ExecutePaged(j.ctx, j.query.Text, j.query.Bindings)
+			} else {
+				result, err = session.EditableTable(j.ctx, j.object)
+			}
 		case "edit_apply":
 			err = session.ApplyEdit(j.ctx, j.edit)
 			editApplied = err == nil
@@ -631,6 +638,10 @@ func (s *screen) worker() {
 			}
 			if j.action == "edit_apply" && editApplied {
 				s.markEditedCell(j.editKey)
+			}
+			if j.action == "result_refresh" {
+				s.acceptTransactionGridRefresh(j, result, err)
+				return
 			}
 			if j.action == "edit_load" || j.action == "edit_apply" {
 				if err != nil && editApplied {
@@ -781,10 +792,14 @@ func (s *screen) worker() {
 					}
 				case "commit":
 					s.clearEditedCells()
-					s.setStatus("committed")
+					if !s.refreshTransactionGrid("commit") {
+						s.setStatus("committed")
+					}
 				case "rollback":
 					s.clearEditedCells()
-					s.setStatus("rolled_back")
+					if !s.refreshTransactionGrid("rollback") {
+						s.setStatus("rolled_back")
+					}
 				case "schemas":
 					s.setStatus("schemas_loaded", len(catalog.Schemas))
 					if !s.quitting {

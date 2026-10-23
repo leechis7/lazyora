@@ -44,6 +44,7 @@ for term in (None, "", "ansi", "xterm"):
 
         try:
             read_for(0.8)
+            assert b"\x1b[?9001h" not in output, "Win32 release reports enabled for TERM=" + repr(term)
             output.clear()
             os.write(fd, b"\x11")  # Ctrl+Q opens the confirmation dialog.
             deadline = time.monotonic() + 8

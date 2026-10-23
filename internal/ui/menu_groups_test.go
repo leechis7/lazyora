@@ -45,15 +45,15 @@ func TestNestedMenuKeyboardMouseBackAndCommand(t *testing.T) {
 		t.Fatal("long menu not grouped")
 	}
 	parent := s.menuList
-	s.key(tcell.NewEventKey(tcell.KeyRight, 0, 0))
+	s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
 	if s.menuParent == nil || s.menuList == parent {
-		t.Fatal("right did not enter submenu")
+		t.Fatal("Enter did not enter submenu")
 	}
 	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
 	if s.menuParent != nil || !s.pages.HasPage("menu") {
 		t.Fatal("Escape did not return")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyRight, 0, 0))
+	s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
 	s.menuRowAction(0)
 	if s.menuParent != nil {
 		t.Fatal("mouse Back item failed")
@@ -61,5 +61,62 @@ func TestNestedMenuKeyboardMouseBackAndCommand(t *testing.T) {
 	s.closeMenu()
 	if !s.editor.HasFocus() {
 		t.Fatal("lost panel focus")
+	}
+}
+
+func TestMenuArrowsTraverseAllTopLevelMenus(t *testing.T) {
+	s, _ := resultScreen(t)
+	s.app.SetFocus(s.editor)
+	s.showMenu(menuFile)
+	for _, direction := range []struct {
+		key  tcell.Key
+		step int
+	}{{tcell.KeyRight, 1}, {tcell.KeyLeft, -1}} {
+		for range len(menuGroups) {
+			want := (s.menuIndex + direction.step + len(menuGroups)) % len(menuGroups)
+			s.key(tcell.NewEventKey(direction.key, 0, 0))
+			if s.menuIndex != want || s.menuParent != nil || !s.menuList.HasFocus() {
+				t.Fatalf("arrow %v did not reach top-level menu %d", direction.key, want)
+			}
+		}
+	}
+	s.closeMenu()
+	if !s.editor.HasFocus() || len(s.jobs) != 0 {
+		t.Fatal("menu traversal lost focus or started work")
+	}
+}
+
+func TestSubmenuArrowsReturnOrAdvanceAndContextStaysLocal(t *testing.T) {
+	s, _ := resultScreen(t)
+	s.app.SetFocus(s.editor)
+	for _, menu := range []int{menuEdit, menuView} {
+		s.showMenu(menu)
+		selected := s.menuList.GetCurrentItem()
+		s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+		if s.menuParent == nil {
+			t.Fatal("Enter did not open submenu")
+		}
+		s.key(tcell.NewEventKey(tcell.KeyLeft, 0, 0))
+		if s.menuParent != nil || s.menuIndex != menu || s.menuList.GetCurrentItem() != selected {
+			t.Fatal("Left did not restore parent selection")
+		}
+		s.menuRowAction(selected)
+		s.key(tcell.NewEventKey(tcell.KeyRight, 0, 0))
+		if s.menuParent != nil || s.menuIndex != menu+1 {
+			t.Fatal("Right did not advance from submenu to next top-level menu")
+		}
+	}
+	s.closeMenu()
+	s.showContextMenu()
+	list := s.menuList
+	for _, key := range []tcell.Key{tcell.KeyLeft, tcell.KeyRight} {
+		s.key(tcell.NewEventKey(key, 0, 0))
+		if s.menuIndex != -1 || s.menuList != list || s.menuParent != nil {
+			t.Fatal("context menu arrow opened a top-level menu")
+		}
+	}
+	s.closeMenu()
+	if !s.editor.HasFocus() {
+		t.Fatal("lost original editor focus")
 	}
 }

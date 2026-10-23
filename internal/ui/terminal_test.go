@@ -89,6 +89,23 @@ func TestTerminalFlushesIncompleteControlOnStop(t *testing.T) {
 	}
 }
 
+func TestTerminalAvoidsWin32KeyReleaseReportsWithoutDisablingModifiedKeys(t *testing.T) {
+	input := "\x1b[>4;2m\x1b[>1u\x1b[?9001hSELECT 'q'\x1b[0 q\x1b[?9001l\x1b[<u\x1b[>4;0m"
+	want := "\x1b[>4;2m\x1b[>1u\x1b[?9001lSELECT 'q'\x1b[?9001l\x1b[<u\x1b[>4;0m"
+	for split := 0; split <= len(input); split++ {
+		tty := &recordedTTY{}
+		filtered := &compatibleTTY{Tty: tty}
+		for _, part := range []string{input[:split], input[split:]} {
+			if _, err := filtered.Write([]byte(part)); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if err := filtered.Stop(); err != nil || tty.String() != want {
+			t.Fatalf("split %d: output=%q err=%v", split, tty.String(), err)
+		}
+	}
+}
+
 func TestEightColorMouseCapabilityDependsOnTerminalProtocol(t *testing.T) {
 	for _, name := range []string{"ansi", "xterm"} {
 		t.Run(name, func(t *testing.T) {

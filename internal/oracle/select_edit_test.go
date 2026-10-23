@@ -93,14 +93,14 @@ func TestSelectRowIDPagesMapAliasesAndConflictCheckOriginalValues(t *testing.T) 
 	}
 	m.ExpectQuery("SELECT t.ROWID AS rid").WithArgs("0").WillReturnRows(rows).RowsWillBeClosed()
 	r, err := s.ExecutePaged(context.Background(), "SELECT t.ROWID AS rid, t.id AS key, t.title AS caption FROM items t WHERE id>=:n ORDER BY id", map[string]BindValue{"N": {Kind: "number", Text: "0"}})
-	if err != nil || r.EditID == 0 || r.PageID == 0 || r.CanEditColumn(0) || !r.CanEditColumn(2) {
+	if err != nil || r.EditID == 0 || r.PageID == 0 || r.EditRowIDColumn != 1 || r.CanEditColumn(0) || !r.CanEditColumn(2) {
 		t.Fatalf("first page: %+v %v", r, err)
 	}
 	if len(r.EditRowIDs) != 1000 || r.EditRowIDs[999] != "AAAAAAAABAAAAA0999" || r.EditColumnNames[2] != "TITLE" {
 		t.Fatal("first page physical identities missing")
 	}
 	page, err := s.FetchPage(context.Background(), r.PageID)
-	if err != nil || page.EditID != r.EditID || len(s.edit.rows) != 1002 || len(page.Rows) != 2 || page.PageID != 0 {
+	if err != nil || page.EditID != r.EditID || page.EditRowIDColumn != 1 || len(s.edit.rows) != 1002 || len(page.Rows) != 2 || page.PageID != 0 {
 		t.Fatalf("last page: %+v %v", page, err)
 	}
 	if len(page.EditRowIDs) != 2 || page.EditRowIDs[0] != "AAAAAAAABAAAAA1000" || page.EditRowIDs[1] != "AAAAAAAABAAAAA1001" {

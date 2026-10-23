@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-23
+
 ### 추가
 
 - LORA-66: 실제 키 배정에서 생성하는 5종 편집기 키맵 비교표를 도움말 메뉴와 F1/Alt+K에서 엽니다.
@@ -14,8 +16,6 @@
 
 - LORA-64: 메뉴에 기능별 구분선과 긴 편집·보기 메뉴의 2단계 하위 메뉴를 추가합니다.
 
-- LORA-63: 접속 작업 공간의 공통 안내 중복과 목록 클릭 시 즉시 전환·닫힘을 수정합니다.
-
 - LORA-62: 같은 프로세스의 접속 작업 공간에서 마스터 잠금 해제 상태를 재사용하고 명시적 잠금·종료 시 키를 정리합니다.
 
 - LORA-61: 파일 없는 SQL 탭에 사용자 지정 이름을 붙일 수 있습니다.
@@ -23,6 +23,14 @@
 - LORA-60: 스키마 객체명의 실시간 부분 일치 검색과 Alt+I 검색 이동을 추가합니다.
 
 - LORA-59: 분할선 드래그와 Alt+F8 키보드 모드로 SQL·결과·스키마 패널 크기를 조절합니다.
+
+### 수정
+
+- LORA-63: 접속 작업 공간의 공통 안내 중복과 목록 클릭 시 즉시 전환·닫힘을 수정합니다. 한 번 클릭은 선택만 하고 전환 버튼 또는 Enter로 확정합니다.
+
+### 문서
+
+- LORA-41: README 상단에 외국인 독자를 위한 영어 요약을 추가하고 프로젝트 소개를 정리했습니다.
 
 ## [0.9.0] - 2026-10-23
 
@@ -246,7 +254,8 @@ v0.0.1의 F2 접속은 Alt+L, F4 실행은 F9, F5 커밋은 Alt+C, F6 롤백은 
 - 이 릴리스 시점에는 실제 CentOS 7.4, 구형 Oracle 및 SID 접속 검증이 완료되지 않았습니다. 이후 호환성 수정은 `Unreleased`에 기록합니다.
 - 한 번에 SQL 한 문장 또는 BEGIN/DECLARE 블록 하나를 실행합니다. 여러 문장 일괄 실행, SQL*Plus 스크립트, 바인드 입력, DBMS_OUTPUT 출력은 지원하지 않습니다.
 
-[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.9.0...dev
+[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.10.0...dev
+[0.10.0]: https://github.com/leechis7/lazyora/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/leechis7/lazyora/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/leechis7/lazyora/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/leechis7/lazyora/compare/v0.6.0...v0.7.0

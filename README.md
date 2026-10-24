@@ -1,5 +1,7 @@
 # LazyOra
 
+[한국어 (기본)](README.md) | [English](README.en.md)
+
 LazyOra is a Go-based terminal UI for Oracle, bringing Toad-like workflows to your terminal.
 Write and execute SQL and PL/SQL, browse schema objects, and explore and export query results—all in a single executable.
 

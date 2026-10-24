@@ -1,5 +1,7 @@
 # 사용 문의와 문제 해결
 
+[한국어](SUPPORT.md) | [English](docs/en/support.md)
+
 - 설치·실행: [README](README.md)
 - 접속·설정·전체 단축키: [사용 안내](docs/usage.md)
 - 버전별 변경과 제한: [변경 이력](CHANGELOG.md)

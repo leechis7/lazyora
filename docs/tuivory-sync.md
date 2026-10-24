@@ -1,5 +1,7 @@
 # Tuivory 패키지 적용 기록
 
+[한국어](tuivory-sync.md) | [English](en/tuivory-sync.md)
+
 LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 원칙을 제품 UI에 적용합니다. Tuivory의 가이드·견본·도구 개발은 별도 저장소와 Tuivory Jira에서 관리하고, LazyOra의 적용 작업은 LORA Jira에서 관리합니다.
 
 ## 반영 절차
@@ -15,6 +17,24 @@ LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 �
 
 현재 사용 패키지는 **`github.com/leechis7/tuivory/go v0.0.1`**입니다. 아래 TUIS 관련 항목은 이전 적용 이력이며 현행 의존성이 아닙니다.
 
+## LORA-70: Tuivory 전환 (2026-10-24)
+
+- 사용자 요청으로 TUIS 소비를 종료하고 [Tuivory go/v0.0.1](https://github.com/leechis7/tuivory/releases/tag/go/v0.0.1)로 교체합니다.
+- 실제 Go 모듈: `github.com/leechis7/tuivory/go v0.0.1`. 공개 패키지 이름은 `tuivory`이며 모든 소비 코드가 이 경로 하나를 import합니다. 기존 두 하위 패키지 import와 TUIS 모듈은 제거합니다.
+- 릴리스 커밋: `cf06d95f4334f65436197ae4f12faf35783f5b7a`. `go/` 하위 모듈이므로 태그는 `go/v0.0.1`, Go 의존 버전은 `v0.0.1`입니다. 로컬 replace 없이 공개 모듈을 사용합니다.
+- 구조 변경: 저장소 루트의 언어 중립 설계 자료와 Go 하위 모듈 분리, 단일 공개 API와 internal 구현, 토큰 형식 식별자 변경. LazyOra는 후보 JSON 토큰을 직접 읽지 않으므로 형식 식별자 변경의 영향은 없습니다.
+- 실제 다운로드한 모듈의 `internal/style`·`internal/widgets` 구현을 이전 `packages/go/tcell`·`packages/go/tview`와 비교했습니다. 패키지 선언·내부 import 경로·설명 이외에 기존 스타일/위젯 런타임 로직의 차이는 없습니다. 신규 공개 진입점에서 타입·함수·상수를 제공합니다. 릴리스 이후 공개 main의 추가 1개 커밋도 추적/검증 문서만 변경합니다.
+- Go·tcell·tview 버전과 AGPL-3.0-only 라이선스는 호환됩니다. LazyOra의 tview 로컬 포크는 유지합니다. Tuivory 저장소 자체는 변경하지 않습니다.
+- 소비 API: `tuivory.NewStyles`, `ProfileForColors`, `Styles`, `Styler`, `NewChoice`, `Choice`, `Surface`, `TextRole`, `CellState`, `SyntaxKind`, `BorderColor`와 스타일 메서드.
+- 이후 갱신: `go get github.com/leechis7/tuivory/go@<버전>` 및 `go mod tidy` 후 LORA 일감에서 검증합니다.
+
+이 전환의 전체 회귀 및 12프로필 화면 검사는 완료했고 v0.10.2로 배포했습니다. [검증 기록](audits/lora-70.md)에 이전 결과와 구분해 기록했습니다. 현재 문서 게시 후 main/dev CI도 통과했으며, 현행 동작은 현재 의존성과 이 Tuivory 항목을 기준으로 확인합니다.
+
+
+## 이전 단계 보관 기록 / Previous migration stages
+
+다음은 당시의 TUIS 적용 이력입니다. 현재 패키지 선택·갱신 지침이 아닙니다.
+
 ## 2026-10-24 기준 확인
 
 | 항목 | 내용 |
@@ -27,7 +47,7 @@ LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 �
 | 이번 적용 | 작업 범위·출처·반영 절차 문서화. 새 UI/색상 값 변경 없음 |
 | 관련 일감 | [LORA-69](https://leechis7.atlassian.net/browse/LORA-69) |
 
-기존 공통 스타일의 구현·검증 근거는 [LORA-69 적용 기록](audits/lora-69-implementation.md), 현행 규칙은 [UI 스타일 규칙](ui-style.md)에 있습니다. 이후 TUIS 변경을 반영할 때는 새 기준과 차이를 별도 기록으로 추가합니다.
+기존 공통 스타일의 구현·검증 근거는 [LORA-69 적용 기록](audits/lora-69-implementation.md), 현행 규칙은 [UI 스타일 규칙](ui-style.md)에 있습니다. 이후 Tuivory 변경을 반영할 때는 새 기준과 차이를 별도 기록으로 추가합니다.
 
 
 ## LORA-70: Go 패키지 적용 (2026-10-24)
@@ -50,7 +70,7 @@ LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 �
 
 `themeColors`와 `gridColors`의 소문자 필드는 기존 제품 렌더러를 위한 값 어댑터입니다. 별도 팔레트 값을 소유하지 않습니다. 테마 변경 시 기존 위젯과 숨겨진 탭을 순회하는 수명 관리, 화면별 의미 역할, 포커스, 팝업 입력 차단, SQL lexer·Oracle 실행·미커밋 상태·그리드 좌표 및 복사는 LazyOra 책임으로 유지합니다. `Styler.Apply`로 앱의 순회 전체를 교체하지 않는 이유는 이러한 제품 상태를 정확히 재적용하기 위해서입니다.
 
-향후 갱신은 검토한 공개 버전으로 `go get github.com/leechis7/tuis@<버전 또는 커밋>` 후 `go mod tidy`를 실행하고, 이 기록과 화면 회귀 검증을 갱신합니다. 로컬 TUIS 작업 트리를 의존성으로 사용하지 않습니다.
+이전 TUIS 단계에서는 `go get github.com/leechis7/tuis@<버전 또는 커밋>`을 사용했습니다. 이 명령은 현재 적용 절차가 아닙니다. 현행 갱신은 위 Tuivory 항목을 따릅니다.
 
 검증 결과는 [LORA-70 검증 기록](audits/lora-70.md)에 기록합니다. 커밋·GitHub CI·게시·릴리스는 이번 구현 요청에 포함되지 않습니다.
 
@@ -61,17 +81,3 @@ LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 �
 - Go 모듈 다운로드의 Origin은 `refs/tags/v0.1.0`, 커밋 `ea155a284e80f7d45c5dbaf054ba070c35b9425f`입니다. GitHub compare와 다운로드한 두 모듈 디렉터리의 `diff -qr` 모두 소스 동일성을 확인했습니다.
 - API·팔레트·위젯 동작 변경이 없어 소비 코드 수정은 필요하지 않습니다. `go.mod`와 `go.sum`만 정식 버전으로 갱신했습니다. 앞서 수행한 3,216프레임 비교는 동일한 소스에 대한 결과로 유지하며 이번 갱신으로 재생성한 결과라고 기록하지 않습니다.
 - 갱신 후 검사와 실행파일 의존성 확인은 [LORA-70 검증 기록](audits/lora-70.md)의 정식 버전 항목을 참조합니다.
-
-
-## LORA-70: Tuivory 전환 (2026-10-24)
-
-- 사용자 요청으로 TUIS 소비를 종료하고 [Tuivory go/v0.0.1](https://github.com/leechis7/tuivory/releases/tag/go/v0.0.1)로 교체합니다.
-- 실제 Go 모듈: `github.com/leechis7/tuivory/go v0.0.1`. 공개 패키지 이름은 `tuivory`이며 모든 소비 코드가 이 경로 하나를 import합니다. 기존 두 하위 패키지 import와 TUIS 모듈은 제거합니다.
-- 릴리스 커밋: `cf06d95f4334f65436197ae4f12faf35783f5b7a`. `go/` 하위 모듈이므로 태그는 `go/v0.0.1`, Go 의존 버전은 `v0.0.1`입니다. 로컬 replace 없이 공개 모듈을 사용합니다.
-- 구조 변경: 저장소 루트의 언어 중립 설계 자료와 Go 하위 모듈 분리, 단일 공개 API와 internal 구현, 토큰 형식 식별자 변경. LazyOra는 후보 JSON 토큰을 직접 읽지 않으므로 형식 식별자 변경의 영향은 없습니다.
-- 실제 다운로드한 모듈의 `internal/style`·`internal/widgets` 구현을 이전 `packages/go/tcell`·`packages/go/tview`와 비교했습니다. 패키지 선언·내부 import 경로·설명 이외에 기존 스타일/위젯 런타임 로직의 차이는 없습니다. 신규 공개 진입점에서 타입·함수·상수를 제공합니다. 릴리스 이후 공개 main의 추가 1개 커밋도 추적/검증 문서만 변경합니다.
-- Go·tcell·tview 버전과 AGPL-3.0-only 라이선스는 호환됩니다. LazyOra의 tview 로컬 포크는 유지합니다. Tuivory 저장소 자체는 변경하지 않습니다.
-- 소비 API: `tuivory.NewStyles`, `ProfileForColors`, `Styles`, `Styler`, `NewChoice`, `Choice`, `Surface`, `TextRole`, `CellState`, `SyntaxKind`, `BorderColor`와 스타일 메서드.
-- 이후 갱신: `go get github.com/leechis7/tuivory/go@<버전>` 및 `go mod tidy` 후 LORA 일감에서 검증합니다.
-
-이번 전환은 전체 회귀 및 12프로필 화면 검사를 새로 수행하며 [검증 기록](audits/lora-70.md)에 이전 결과와 구분해 기록합니다.

@@ -1,5 +1,9 @@
 # PL/SQL 디버거 지원 타당성 검토
 
+[한국어](plsql-debugger.md) | [English summary](en/plsql-debugger.md)
+
+> 설계 보관 자료입니다. 현재 v0.10.2에도 중단점·스텝 디버거는 구현되지 않았습니다. / Design record only; v0.10.2 has no breakpoint/step debugger.
+
 검토일: 2026-10-22 · Jira: LORA-53 · 상태: 조사·설계 제안.
 이 문서는 구현 여부를 결정하기 위한 자료입니다. 현재 LazyOra에는 중단점·스텝 실행 디버거가 없습니다.
 

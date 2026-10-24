@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### 문서 / Documentation
+
+- LORA-71: 한국어·영어 README와 사용·개발·Tuivory UI·호환성·Oracle 시험 안내를 현행화하고 문서 색인을 추가했습니다. F5 DBMS_OUTPUT 지원과 접속별 트랜잭션 설명을 바로잡고 보관 설계/검증 기록을 구분했습니다.
+- LORA-71: Refreshed Korean/English guides and added a documentation index. Corrected script-output and workspace-transaction guidance, documented Tuivory integration, and distinguished current instructions from dated design/verification records. Published v0.10.2 binaries remain unchanged.
+
 ## [0.10.2] - 2026-10-24
 
 ### 개선

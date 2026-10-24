@@ -4,7 +4,7 @@
 
 The connection dialog opens at startup; Alt+L opens it again.
 Enter an alias, host, port, user, password, and Service Name or SID, then choose Connect.
-White fields accept text; fields marked ▾ are choices operated with arrows/Enter or the mouse.
+Light input fields accept text; fields marked ▾ are choices operated with arrows/Enter or the mouse.
 
 In the SQL editor, enter this statement and press F9 or Ctrl+Enter:
 
@@ -28,6 +28,8 @@ F9 executes the selection, or the statement at the cursor when nothing is select
 F5 executes a script in order and stops at the first error or cancellation.
 Separate PL/SQL blocks with a standalone / line. SQL*Plus commands are unsupported.
 
+Since v0.10.2, Tuivory v0.0.1 supplies common theme, input, choice, button, grid and syntax styles. It is included in the executable; no separate installation is needed. Dark/Light/Black-White themes and 8/16/256/True Color terminal profiles are distinct.
+
 Tools → Settings selects Toad (default), Vim, Notepad++, VS Code or IntelliJ IDEA keymaps, language, Dark/Light/Black-White theme and mouse support.
 Help → Editor keymap comparison, or Alt+K in F1 help, compares the assigned keys. Arrows navigate; full selected-cell text appears below. Enter switches table/detail; scroll detail with arrows or PgUp/PgDn. Tab cycles table/detail/Close. Ctrl+C copies the table and Esc returns.
 Check F1 → Editor keymaps for completion, formatting and editing shortcuts.
@@ -48,12 +50,13 @@ SQL tabs, results and transactions are separate between connections. Check the e
 Closing one workspace preserves the other connections' transactions.
 
 Choose a user and object type above the schema list. Alt+U selects User, Alt+O Type, and Alt+B toggles the browser.
+Type in Alt+I object search to filter names immediately within the selected user/type. Down/Enter enters the list; Esc clears the search.
 Enter opens details; F4 describes the object at the cursor. Applying or compiling source is DDL.
 Execute → Run procedure/function supports routine arguments. Step debugging is not implemented.
 
 ## Browse, copy and inspect results
 
-F6 switches SQL/results. Use arrows and PgUp/PgDn in the result grid.
+F6 switches SQL/results. Alt+F8 or View opens panel sizing: Up/Down changes SQL height, Left/Right changes schema width, Home resets, and Enter/Esc finishes. Splitters can also be dragged with the mouse. Use arrows and PgUp/PgDn in the result grid.
 Click, drag or Shift+arrows selects cells; Ctrl+C copies and Alt+Y copies a row.
 View/Shift+F10 provides the next 1,000 rows, local sorting/filtering and column widths.
 One F9 query retains at most 10,000 rows / estimated 64 MiB; loaded rows are not the full database result.

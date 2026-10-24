@@ -4,7 +4,7 @@
 
 ## Help and issue reports
 
-Start with the [user guide](../guide.en.md), [terminal troubleshooting](terminal.md), [build notes](build.md) and [credential management](credentials.md). F1 in the app lists controls for the current screen and editor keymap. The Help menu also contains environment diagnostics and version history.
+Start with the [documentation index](index.md), [detailed usage](usage.md), [offline user guide](../guide.en.md), [terminal troubleshooting](terminal.md), [build notes](build.md) and [credential management](credentials.md). F1 in the app lists controls for the current screen and editor keymap. The Help menu also contains environment diagnostics and version history.
 
 For bugs, feature proposals and usage questions, use [GitHub Issues](https://github.com/leechis7/lazyora/issues). Korean and English reports are welcome. Include:
 
@@ -21,4 +21,4 @@ Do not post vulnerability details or credentials in public issues or PRs. Email 
 
 Email is not guaranteed to be end-to-end encrypted. Do not send passwords or production data. Coordinate public disclosure with the maintainer while a fix and guidance are prepared.
 
-Security fixes prioritize current development and subsequent releases. The project does not guarantee long-term support for every older version or a response deadline. Connection profiles contain no database passwords; optional encrypted passwords live in a separate vault. SQL text, Oracle errors and query results can still contain sensitive information.
+Security fixes prioritize current development and subsequent releases. The project does not guarantee long-term support for every older version or a response deadline. Connection profiles contain no database passwords; optional encrypted passwords live in a separate vault unlocked with a master password. Sharing an OS account/configuration directory also shares that vault; see [credential protection and limits](credentials.md). SQL text, Oracle errors and query results can still contain sensitive information.

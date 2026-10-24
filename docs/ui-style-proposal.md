@@ -1,5 +1,7 @@
 # LazyOra TUI 스타일 가이드 제안
 
+> 보관 설계 자료 / Archived design record. 작성 당시의 제안·이관 계획을 보존합니다. 현재는 Tuivory v0.0.1 패키지 도입을 완료했습니다. 현행 기준: [한국어](ui-style.md) · [English](en/ui-style.md). 아래 ‘예정/독립 전’ 표현은 당시 상태입니다. / Future-work wording below reflects the original date, not current implementation.
+
 2026-10-23 · LORA-69 · v0.10.0 기준 조사·설계안
 
 이 문서는 최초 조사·설계안을 보존한 자료입니다. 후속 사용자 승인으로 공통 스타일의 로컬 적용을 진행했으며, 현행 동작은 [UI 스타일 규칙](ui-style.md)과 [구현·검증 기록](audits/lora-69-implementation.md)을 기준으로 확인하세요. 키맵은 변경하지 않았습니다. 현행 [UI 스타일 규칙](ui-style.md)을 기반으로, 기존 [색상 조사](audits/lora-69.md)에서 확인한 문제를 공통 토큰·컴포넌트·검증 규칙으로 해결하는 것이 목적입니다.

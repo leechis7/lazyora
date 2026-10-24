@@ -1,5 +1,7 @@
 # 보안 안내
 
+[한국어](SECURITY.md) | [English](docs/en/support.md#security-reports)
+
 ## 보안 수정
 
 LazyOra는 초기 개발 단계입니다. 보안 수정은 최신 개발 코드와 후속 릴리스에 우선 적용하며, 과거 버전별 장기 지원이나 대응 기한을 보장하지 않습니다. 사용 중인 버전은 `lazyora --version` 또는 화면 우측하단에서 확인할 수 있습니다.

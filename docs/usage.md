@@ -1,5 +1,7 @@
 # 사용 안내
 
+[한국어](usage.md) | [English](guide.en.md)
+
 [처음으로](../README.md) · [빌드와 검증](build.md) · [터미널 문제 해결](terminal.md)
 
 ## 도움말 메뉴

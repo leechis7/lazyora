@@ -28,7 +28,7 @@ func (s *screen) initPanelSizing() {
 	divider := func(horizontal bool) *tview.Box {
 		box := s.newBox()
 		box.SetDrawFunc(func(screen tcell.Screen, x, y, w, h int) (int, int, int, int) {
-			style := tcell.StyleDefault.Foreground(s.colors().button).Background(s.colors().background)
+			style := s.tuivoryStyles().SplitterStyle()
 			char := '│'
 			if horizontal {
 				char = '─'

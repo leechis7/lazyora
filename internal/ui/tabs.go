@@ -255,11 +255,7 @@ func (s *screen) styleTabs() {
 	}
 	for i := 0; i < s.tabBar.GetItemCount(); i++ {
 		if b, ok := s.tabBar.GetItem(i).(*tview.Button); ok {
-			st := s.buttonStyle()
-			if strings.HasPrefix(b.GetLabel(), "> ") {
-				st = s.buttonFocusStyle()
-			}
-			b.SetStyle(st).SetActivatedStyle(s.buttonFocusStyle()).SetDisabledStyle(s.disabledStyle())
+			s.tuivoryWidgets().Tab(b, strings.HasPrefix(b.GetLabel(), "> "))
 		}
 	}
 }

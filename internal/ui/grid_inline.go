@@ -48,8 +48,7 @@ func (s *screen) isEditedCell(row, col int) bool {
 	return s.editedCells[s.editedCellIdentity(s.resultBrowser.source, s.resultBrowser.visible[row-1], s.resultSourceColumn(col))]
 }
 func (s *screen) editedCellStyle() tcell.Style {
-	t := s.tokens()
-	return tcell.StyleDefault.Foreground(t.editedFG).Background(t.edited)
+	return s.tuivoryStyles().EditedStyle()
 }
 
 // The page covers the input routing area, while Draw places the real input

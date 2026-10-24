@@ -1,6 +1,8 @@
 # UI 스타일 규칙
 
-공통 스타일은 `internal/ui/style_tokens.go`의 테마/단말 프로필 토큰, `theme.go`의 적용 함수와 `widgets.go`의 공통 위젯을 사용합니다.
+공통 설계 원칙의 상위 출처는 [Tuivory](https://github.com/leechis7/tuivory)입니다. LazyOra 적용 기준과 마지막 확인 커밋은 [Tuivory 가이드 반영 기록](tuivory-sync.md)에 남깁니다. 아래 문서는 LazyOra의 실제 컴포넌트·단축키·상태 처리에 맞춘 적용 규칙입니다.
+
+공통 스타일의 원본은 `github.com/leechis7/tuivory/go`입니다. `internal/ui/style_tokens.go`는 패키지 값과 제품 역할을 연결하고, `theme.go`·`widgets.go`는 공통 API를 기존 위젯에 적용합니다. 실제 의존 버전은 `go.mod`와 [적용 기록](tuivory-sync.md)에 고정합니다.
 새 화면을 추가할 때 기본 tview 색상에 맡기지 않고 생성 시점부터 현재 테마를 적용합니다.
 
 | 역할 | 공통 표시 |
@@ -49,6 +51,6 @@ SQL 편집기는 편집용 배경과 문법 강조, 결과 그리드는 헤더·
 
 LORA-69의 추가 조사로 [공식 자료를 반영한 스타일 가이드 제안](ui-style-proposal.md)과 [색상 후보표](ui-style-palette-candidate.csv)를 준비했습니다. 설계안의 공통 프로필·폼/버튼·배경 역할·표·SQL 문법색·테마 재적용을 로컬 코드에 반영했습니다. 후보 CSV는 초기 검토 자료이며 실제 구현값의 기준은 style_tokens.go와 검증 후 역할별 산출물입니다. 독립 프로젝트 추출과 실제 사용자 단말 확인은 별도 단계입니다.
 
-향후 독립 가이드 프로젝트의 자료 구조와 이관 계획은 [TUI 스타일 가이드 준비 자료](tui-style-guide/README.md)에 정리합니다.
+독립 Tuivory 프로젝트의 개발과 가이드는 [Tuivory 저장소](https://github.com/leechis7/tuivory)에서 관리합니다. 이 저장소의 [초기 준비 자료](tui-style-guide/README.md)는 유래 기록으로 보존하며, 현재 반영 상태는 [가이드 반영 기록](tuivory-sync.md)을 기준으로 확인합니다.
 
 미커밋 셀은 배경색 외에 행 번호의 `*`와 선택 셀 상태 문구로 식별합니다. 선택 범위가 수정 배경을 덮더라도 변경 사실을 확인할 수 있고, 복사/내보내기 값에는 표식을 넣지 않습니다.

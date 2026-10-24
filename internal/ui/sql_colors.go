@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/leechis7/tuivory/go"
 	"sort"
 	"strings"
 	"unicode"
@@ -192,32 +193,6 @@ func colorSQL(text string, spans []sqlColorSpan) []sqlColorSpan {
 	return spans
 }
 
-var sqlRichColors = [...]tcell.Color{0, tcell.GetColor("#204a87"), tcell.GetColor("#006b73"), tcell.GetColor("#5951a0"), tcell.GetColor("#a3273a"), tcell.GetColor("#6945a3"), tcell.GetColor("#526a43"), tcell.GetColor("#8b4f00")}
-var sqlANSIColors = [...]tcell.Color{0, tcell.ColorNavy, tcell.ColorTeal, tcell.ColorPurple, tcell.ColorMaroon, tcell.ColorPurple, tcell.ColorGreen, tcell.ColorMaroon}
-
-var sqlDarkColors = [...]tcell.Color{0, tcell.GetColor("#8db8ff"), tcell.GetColor("#73d7ce"), tcell.GetColor("#c7adff"), tcell.GetColor("#efa3aa"), tcell.GetColor("#ebcd79"), tcell.GetColor("#a2bb98"), tcell.GetColor("#f2bc84")}
-var sqlDarkANSIColors = [...]tcell.Color{0, tcell.ColorAqua, tcell.ColorWhite, tcell.ColorFuchsia, tcell.ColorYellow, tcell.ColorYellow, tcell.ColorLime, tcell.ColorWhite}
-
-func sqlTokenStyle(kind sqlColorKind, limited bool, base tcell.Style) tcell.Style {
-	colors := sqlRichColors
-	if limited {
-		colors = sqlANSIColors
-	}
-	_, bg, _ := base.Decompose()
-	r, g, b := bg.RGB()
-	if r >= 0 && 299*r+587*g+114*b < 128000 {
-		colors = sqlDarkColors
-		if limited {
-			colors = sqlDarkANSIColors
-		}
-	}
-	style := base.Foreground(colors[kind])
-	if !limited && (kind == sqlKeyword || kind == sqlBind) {
-		style = style.Bold(true)
-	}
-	return style
-}
-
 func (s *screen) colorEditor(editor *tview.TextArea, changed func()) {
 	dirty := true
 	var spans []sqlColorSpan
@@ -228,10 +203,6 @@ func (s *screen) colorEditor(editor *tview.TextArea, changed func()) {
 		}
 		index := sort.Search(len(spans), func(i int) bool { return spans[i].end > offset })
 		if index < len(spans) && spans[index].start <= offset {
-			if s.monochrome() {
-				kind := spans[index].kind
-				return base.Bold(false).Underline(kind == sqlKeyword || kind == sqlBind).Italic(kind == sqlComment)
-			}
 			return s.profileSQLStyle(spans[index].kind, base)
 		}
 		return base
@@ -244,35 +215,5 @@ func (s *screen) colorEditor(editor *tview.TextArea, changed func()) {
 }
 
 func (s *screen) profileSQLStyle(kind sqlColorKind, base tcell.Style) tcell.Style {
-	if s.monochrome() {
-		return base.Bold(false).Underline(kind == sqlKeyword || kind == sqlBind).Italic(kind == sqlComment)
-	}
-	p := s.colorProfile()
-	_, bg, _ := base.Decompose()
-	r, g, b := bg.RGB()
-	dark := r >= 0 && 299*r+587*g+114*b < 128000
-	if p == profileANSI8 {
-		fg := indexed(7)
-		if !dark {
-			fg = indexed(0)
-		}
-		if kind == sqlKeyword && !dark {
-			fg = indexed(4)
-		}
-		if kind == sqlBind {
-			fg = indexed(3)
-			if !dark {
-				fg = indexed(1)
-			}
-		}
-		return base.Foreground(fg).Bold(false).Underline(kind == sqlKeyword)
-	}
-	if p == profile256 {
-		values := [...]int{0, 25, 23, 54, 124, 54, 22, 94}
-		if dark {
-			values = [...]int{0, 117, 117, 183, 217, 222, 114, 222}
-		}
-		return base.Foreground(indexed(values[kind])).Bold(false)
-	}
-	return sqlTokenStyle(kind, p == profileANSI16, base)
+	return s.tuivoryStyles().SyntaxStyle(tuivory.SyntaxKind(kind), base)
 }

@@ -42,10 +42,7 @@ func (s *screen) formPopup(content tview.Primitive, preferredWidth, preferredHei
 		for py := y; py < y+height; py++ {
 			for px := x; px < x+width; px++ {
 				r, comb, style, cellWidth := terminal.GetContent(px, py)
-				backdrop := style.Foreground(s.colors().muted).Background(s.colors().background).Dim(true)
-				if s.limitedColors {
-					backdrop = backdrop.Foreground(tcell.ColorSilver).Background(tcell.ColorBlack)
-				}
+				backdrop := s.tuivoryStyles().PopupBackdrop(style, s.limitedColors)
 				terminal.SetContent(px, py, r, comb, backdrop)
 				if cellWidth > 1 {
 					px += cellWidth - 1
@@ -63,11 +60,11 @@ func (s *screen) formPopup(content tview.Primitive, preferredWidth, preferredHei
 		left, top := x+(width-w)/2, y+(height-h)/2
 		// Flex leaves padding and spacers untouched. Paint an opaque card first
 		// so the underlying SQL and result borders cannot show through it.
-		card := tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().surface)
+		card := s.tuivoryStyles().PopupCardStyle()
 		for py := top; py < top+h; py++ {
 			gridFill(terminal, left, py, w, card)
 		}
-		shadow := tcell.StyleDefault.Background(tcell.ColorBlack)
+		shadow := s.tuivoryStyles().PopupShadowStyle()
 		if left+w < x+width {
 			for py := top + 1; py < top+h+1 && py < y+height; py++ {
 				terminal.SetContent(left+w, py, ' ', nil, shadow)

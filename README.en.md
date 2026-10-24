@@ -16,7 +16,7 @@ Current version: **0.10.2** · **Linux / Windows / macOS · AMD64 / ARM64**
 
 ![LazyOra: menus, schema browser, SQL editor, result grid and context-sensitive shortcuts](docs/images/lazyora-overview.png)
 
-*Dark theme, English UI, demo mode without a database connection (`--demo`).*
+*Dark theme · English UI · DB-free demo widgets rendered in a simulated terminal.*
 
 ## Quick start
 

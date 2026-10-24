@@ -19,9 +19,9 @@ SQL·PL/SQL 편집부터 스키마 탐색, 실행 결과 확인과 내보내기�
 - DBMS_OUTPUT·루틴 실행, 객체 DDL·권한·의존 관계 조회, 결과 추가 가져오기·정렬·필터와 셀 상세·안전 편집
 - Toad·Vim 등 5종 편집기 키맵, 자동완성·SQL 정렬, 다크·라이트·흑백 테마와 한국어·영어 UI
 
-![LazyOra 전체 화면: 상단 메뉴, 스키마 브라우저, SQL 편집기, 결과 그리드와 하단 단축키](docs/images/lazyora-overview.png)
+![LazyOra 한국어 UI 전체 화면: 상단 메뉴, 스키마 브라우저, SQL 편집기, 결과 그리드와 하단 단축키](docs/images/lazyora-overview-ko.png)
 
-*다크 테마 · 영어 UI · DB 연결 없는 데모 화면 (`--demo`). / Dark theme · English UI · demo mode without a database connection.*
+*다크 테마 · 한국어 UI · DB 연결 없는 데모 위젯의 모의 터미널 캡처.*
 
 ## 빠른 시작
 

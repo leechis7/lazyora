@@ -4,6 +4,12 @@
 
 To run a prebuilt release, follow the README. This page covers source builds and the scope of verification.
 
+## Current stack and release
+
+The current release is **v0.10.2**. tview/tcell provide terminal rendering/input, go-ora provides Oracle communication, and **Tuivory v0.0.1** (`github.com/leechis7/tuivory/go`) provides common UI styles. Exact versions are pinned in `go.mod`; the SQL-highlighting tview fork remains local. Tuivory itself is downloaded as a public module, not copied or replaced by a local checkout. See [Tuivory integration](tuivory-sync.md).
+
+The v0.10.2 release and subsequent main/dev CI passed race/vet, six-target builds, Windows CLI execution and Windows/macOS simulated UI/settings checks. The 12-profile comparison covered 3,216 simulated frames. These checks do not constitute a fresh real-terminal or Oracle 10g/19c/CentOS certification. See [current compatibility](compatibility.md) for the distinction from dated historical evidence.
+
 ## Build from source
 
 Install Go **1.24 or newer** and `make`; run these commands in the repository root. The first build needs network access to download dependencies. You can install Go normally; the version in `mise.toml` is an optional way to match the development toolchain.
@@ -56,6 +62,6 @@ A successful cross-build is not proof of complete interactive support. GitHub CI
 
 CentOS 7.4/SecureCRT connection, cursor and 8-color issues were previously tested by the user. This does not certify every subsequent feature on that environment. Linux containers share the host kernel and cannot validate an older CentOS kernel. Oracle Free Service Name tests do not establish full Oracle 10g/19c or SID coverage. The driver contains the short TNS ACCEPT packet fix prompted by the reported Oracle 10g panic; broader 10g behavior requires server testing.
 
-See [detailed compatibility records (Korean)](../compatibility.md), [build history (Korean)](../build.md) and [Tuivory migration verification (Korean)](../audits/lora-70.md) for dated evidence and remaining checks.
+See [compatibility summary](compatibility.md) and [dated records (Korean)](../compatibility.md), [build history (Korean)](../build.md) and [Tuivory migration verification (Korean)](../audits/lora-70.md) for dated evidence and remaining checks.
 
 For contributions, use the workflow in [Contributing](contributing.md). Maintainers update `internal/appinfo/info.go`, both README versions and the changelog when preparing a release.

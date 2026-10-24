@@ -1,5 +1,7 @@
 # LORA-69 공통 스타일 적용 기록
 
+> 날짜별 검증 보관 기록 / Dated verification record. 아래 수치와 커밋·게시 상태는 해당 검사 시점의 기록입니다. 현재 v0.10.2에는 Tuivory v0.0.1이 배포되어 있습니다. / Tuivory v0.0.1 is now shipped in v0.10.2. [현행 문서 / Current documentation](../index.md).
+
 2026-10-23 · v0.10.0 이후 로컬 변경 · feature/LORA-69-theme-audit
 
 [최초 조사](lora-69.md)와 [설계 제안](../ui-style-proposal.md)을 바탕으로 LazyOra의 공통 스타일을 적용했습니다. 동작 기준은 [UI 스타일 규칙](../ui-style.md), 독립 프로젝트 준비 자료는 [가이드 색인](../tui-style-guide/README.md)에 있습니다.

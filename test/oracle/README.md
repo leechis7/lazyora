@@ -1,9 +1,11 @@
 # Oracle Free 시험 환경
 
+[한국어](README.md) | [English](../../docs/en/oracle-testing.md)
+
 Oracle 10g/19c 등 외부 시험 계정용 공통 검사(`compat-test`)와 실제 접속 단절·넓은 결과 보관 검사,
 환경별 검증 범위는 [호환성·장애 회귀 검증](../../docs/compatibility.md)을 참고하세요.
 
-아래 명령은 프로젝트 루트에서 실행합니다.
+아래 명령은 프로젝트 루트에서 실행합니다. 환경 파일·샘플 SQL·실DB/PTY 검사는 이 폴더에 모읍니다. `make build` 기본 바이너리는 Linux ARM64이며, `make -C test/oracle run`과 `tui-test`는 명시적으로 현재 머신용 `build-native`를 사용합니다.
 
 `python3 test/oracle/tui_terminal_smoke.py`는 DB 없이 데모 실행파일로 TERM 미설정·빈 값·ansi·xterm의 시작과 종료 확인을 검증합니다. 먼저 `make build`로 로컬 ARM64 바이너리를 갱신하세요.
 `python3 test/oracle/tui_fullscreen_smoke.py`는 Linux·ANSI·xterm·256색에서 Shift+F2의 기존/수정 키 전송 방식, 결과 전체화면·복원과 Esc, 구형 Shift+F3/F10 입력을 검증합니다.

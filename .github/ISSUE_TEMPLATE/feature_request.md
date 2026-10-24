@@ -1,17 +1,17 @@
 ---
-name: 기능 제안
-about: 필요한 기능과 사용 상황을 알려 주세요.
+name: 기능 제안 / Feature request
+about: 필요한 기능과 사용 상황 / Requested feature and use case
 title: ''
 labels: ''
 assignees: ''
 ---
 
-## 해결하려는 문제
+## 해결하려는 문제 / Problem to solve
 
-## 원하는 동작과 사용 예
+## 원하는 동작과 사용 예 / Desired behavior and example
 
-## 고려한 대안
+## 고려한 대안 / Alternatives considered
 
-## 관련 환경·자료
+## 관련 환경·자료 / Relevant environment and references
 
-<!-- Oracle 버전·터미널 제약이나 참고 화면 등이 있다면 적어 주세요. 인증정보와 실제 업무 데이터는 제외해 주세요. -->
+<!-- Oracle 버전·터미널 제약·참고 화면을 적고 인증정보와 실제 데이터를 제외하세요. Include Oracle version, terminal constraints or references; exclude credentials and real business data. -->

@@ -22,6 +22,10 @@ With some `TERM=linux` clients, Shift+F2 arrives as `Esc[26~`, which the key lib
 
 Some MobaXterm configurations send Shift+F2 as `Esc[24~`, the same input as ordinary F12. **F12 and Shift+F2 both maximize/restore results**; F2 controls the SQL editor. Esc restores the layout when no higher-priority dialog or running query needs it. The app cannot recover modifier information the client did not send.
 
+## Themes and color profiles
+
+v0.10.2 uses Tuivory v0.0.1 for shared styling. Dark/Light/Black-White themes are independent from the 8/16/256/True Color profile reported by the terminal. Reference-palette contrast checks do not guarantee the appearance of a customized ANSI palette. See [UI style rules](ui-style.md).
+
 ## Color, mouse and missing TERM
 
 On Unix, an absent or empty `TERM` makes LazyOra use `ansi` internally. It does not rewrite a configured `TERM` or the parent shell environment. Windows keeps its native console selection.
@@ -43,3 +47,12 @@ Copied values come from the original data, before display truncation and color m
 LazyOra requests clipboard delivery through tcell's OSC 52 support. The terminal, SSH multiplexer or security policy may block or limit it. There is no clipboard-success acknowledgment, so sending a request does not prove that the desktop clipboard received it.
 
 For reports, include the terminal application and emulation settings, app version, OS/CPU, `TERM`, `locale charmap` and `tput colors`. Remove credentials, private hostnames and business data before sharing output. See [Support](support.md).
+
+
+## Keyboard panel sizing and exit reports
+
+Use Alt+F8 or View → Panel sizing. Up/Down adjusts SQL/result height; Left/Right adjusts schema/right-panel width. Home restores defaults; Enter/Esc finishes. The menu provides the same action when the terminal does not deliver Alt+F8.
+
+An `ESC [ 13;28;13;0;0;1 _`-like string after exit is a Win32 key-release input report. Unix TTY startup no longer requests that mode; CSI-u/modifyOtherKeys remain available. Native Windows console selection is unchanged.
+
+If OSC 52 copying is unavailable, copy inside the app, then use Edit → View copied content. Mouse reporting is temporarily disabled there so the terminal can select text. Use arrows/PgUp/PgDn and the terminal's own copy shortcut; Esc restores the prior mouse setting and focus. Long lines may require horizontal scrolling or copying smaller TSV ranges.

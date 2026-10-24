@@ -1,5 +1,7 @@
 # LORA-70 스타일 패키지 전환 검증
 
+> 날짜별 검증 보관 기록 / Dated verification record. 아래 수치와 커밋·게시 상태는 해당 검사 시점의 기록입니다. 현재 v0.10.2에는 Tuivory v0.0.1이 배포되어 있습니다. / Tuivory v0.0.1 is now shipped in v0.10.2. [현행 문서 / Current documentation](../index.md).
+
 2026-10-24 · `feature/LORA-70-tuis-package` · 커밋·게시 전 로컬 검증
 
 현재 적용 대상은 **Tuivory v0.0.1**입니다. 아래 TUIS 초기 적용과 정식 태그 갱신은 이전 검증 이력이며, Tuivory 후속 검증은 별도 항목으로 기록합니다.

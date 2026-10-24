@@ -1,8 +1,10 @@
 # UI 스타일 규칙
 
+[한국어](ui-style.md) | [English](en/ui-style.md)
+
 공통 설계 원칙의 상위 출처는 [Tuivory](https://github.com/leechis7/tuivory)입니다. LazyOra 적용 기준과 마지막 확인 커밋은 [Tuivory 가이드 반영 기록](tuivory-sync.md)에 남깁니다. 아래 문서는 LazyOra의 실제 컴포넌트·단축키·상태 처리에 맞춘 적용 규칙입니다.
 
-공통 스타일의 원본은 `github.com/leechis7/tuivory/go`입니다. `internal/ui/style_tokens.go`는 패키지 값과 제품 역할을 연결하고, `theme.go`·`widgets.go`는 공통 API를 기존 위젯에 적용합니다. 실제 의존 버전은 `go.mod`와 [적용 기록](tuivory-sync.md)에 고정합니다.
+v0.10.2부터 공통 스타일의 원본은 **Tuivory v0.0.1** (`github.com/leechis7/tuivory/go`)입니다. 단일 공개 패키지 `tuivory`의 `Styles`, `Styler`, `Choice`와 상태 스타일 메서드를 import합니다. `internal/ui/style_tokens.go`는 패키지 값과 제품 역할을 연결하고, `theme.go`·`widgets.go`는 공통 API를 기존 위젯에 적용합니다. 실제 의존 버전은 `go.mod`와 [적용 기록](tuivory-sync.md)에 고정합니다.
 새 화면을 추가할 때 기본 tview 색상에 맡기지 않고 생성 시점부터 현재 테마를 적용합니다.
 
 | 역할 | 공통 표시 |
@@ -43,13 +45,13 @@ SQL 편집기는 편집용 배경과 문법 강조, 결과 그리드는 헤더·
 텍스트 배경은 Box와 TextView 렌더러를 함께 갱신합니다. 본문·안내문·강조문 역할도 유지합니다.
 닫힌 화면의 텍스트 역할 정보는 다음 그리기 전에 정리하여 화면을 계속 보관하지 않습니다.
 
-검증은 다크·라이트·흑백 × 8/16색·풍부한 색상, 새 화면·테마 변경 후 화면,
+검증은 다크·라이트·흑백 × 8/16/256색·True Color의 12조합, 새 화면·테마 변경 후 화면,
 키보드·마우스·작은 터미널을 포함합니다. 공통 규칙 수정 시 도움말뿐 아니라
 접속·설정·출력·이력·계획·스크립트·객체·편집·확인창도 회귀 검사합니다.
 
-## 스타일 통합 제안
+## 적용 완료와 설계 기록
 
-LORA-69의 추가 조사로 [공식 자료를 반영한 스타일 가이드 제안](ui-style-proposal.md)과 [색상 후보표](ui-style-palette-candidate.csv)를 준비했습니다. 설계안의 공통 프로필·폼/버튼·배경 역할·표·SQL 문법색·테마 재적용을 로컬 코드에 반영했습니다. 후보 CSV는 초기 검토 자료이며 실제 구현값의 기준은 style_tokens.go와 검증 후 역할별 산출물입니다. 독립 프로젝트 추출과 실제 사용자 단말 확인은 별도 단계입니다.
+LORA-69의 추가 조사로 [공식 자료를 반영한 스타일 가이드 제안](ui-style-proposal.md)과 [색상 후보표](ui-style-palette-candidate.csv)를 준비했습니다. 설계안의 공통 프로필·폼/버튼·배경 역할·표·SQL 문법색·테마 재적용을 로컬 코드에 반영했습니다. 후보 CSV는 초기 검토 자료이며 실제 팔레트의 기준은 고정한 Tuivory 패키지입니다. `style_tokens.go`는 값·역할 어댑터이며 팔레트 원본이 아닙니다. 독립 패키지 추출·공개·LazyOra import 전환은 완료했고, 실제 사용자 단말의 확대 확인은 별도입니다.
 
 독립 Tuivory 프로젝트의 개발과 가이드는 [Tuivory 저장소](https://github.com/leechis7/tuivory)에서 관리합니다. 이 저장소의 [초기 준비 자료](tui-style-guide/README.md)는 유래 기록으로 보존하며, 현재 반영 상태는 [가이드 반영 기록](tuivory-sync.md)을 기준으로 확인합니다.
 

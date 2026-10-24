@@ -1,5 +1,7 @@
 # 프레임워크에 독립적인 TUI 설계 원칙
 
+> 보관 설계 자료 / Archived design record. 작성 당시의 제안·이관 계획을 보존합니다. 현재는 Tuivory v0.0.1 패키지 도입을 완료했습니다. 현행 기준: [한국어](../ui-style.md) · [English](../en/ui-style.md). 아래 ‘예정/독립 전’ 표현은 당시 상태입니다. / Future-work wording below reflects the original date, not current implementation.
+
 상태: 제안. 아래 규칙은 LazyOra 조사에서 일반화한 프로젝트 내부 기준이며, 외부에서 승인된 범용 TUI 표준은 아닙니다. 출처와 제품 적용 사례는 [준비 계획](project-plan.md) 및 [LazyOra 제안서](../ui-style-proposal.md)를 참고하세요.
 
 ## 1. 스타일은 의미에서 결정한다

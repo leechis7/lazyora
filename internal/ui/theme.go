@@ -2,94 +2,51 @@ package ui
 
 import (
 	"github.com/gdamore/tcell/v2"
+	"github.com/leechis7/tuivory/go"
 	"github.com/rivo/tview"
 	"reflect"
 )
 
-// Nord-inspired neutral surfaces and cyan accents, with light input fields.
-// https://www.nordtheme.com/docs/colors-and-palettes/
+// Product adapters retain the existing field names; palette resolution lives in Tuivory.
 type themeColors struct {
 	background, surface, footer, field, text, muted, accent, button    tcell.Color
 	editor, editorText, fieldText, selectionText, placeholder, warning tcell.Color
 }
 
-var palette = themeColors{
-	editor: tcell.GetColor("#242d3a"), editorText: tcell.GetColor("#e5edf5"),
-	background: tcell.GetColor("#2e3440"),
-	surface:    tcell.GetColor("#3b4252"),
-	footer:     tcell.GetColor("#434c5e"),
-	field:      tcell.GetColor("#eceff4"),
-	text:       tcell.GetColor("#eceff4"),
-	muted:      tcell.GetColor("#d8dee9"),
-	accent:     tcell.GetColor("#88c0d0"),
-	button:     tcell.GetColor("#81a1c1"),
-	fieldText:  tcell.GetColor("#2e3440"), selectionText: tcell.GetColor("#2e3440"), placeholder: tcell.GetColor("#485869"), warning: tcell.ColorYellow,
-}
-
 func (s *screen) fieldStyle() tcell.Style {
-	return tcell.StyleDefault.Foreground(s.colors().fieldText).Background(s.colors().field)
+	return s.tuivoryStyles().FieldStyle()
 }
 
 func (s *screen) focusStyle() tcell.Style {
-	t := s.tokens()
-	return tcell.StyleDefault.Foreground(t.selectionFG).Background(t.selection)
+	return s.tuivoryStyles().SelectionStyle()
 }
 
-// A separate button focus palette stays distinct even when pale RGB colors
-// map to the same color on an 8/16-color terminal.
+// Standalone helpers share the same Tuivory defaults as application tuivory.
 func buttonFocusStyle() tcell.Style {
-	return tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorNavy).Bold(true).Underline(true)
+	return (&screen{}).buttonFocusStyle()
 }
 
 func (s *screen) monochrome() bool { return s.prefs.Theme == "blackwhite" }
 
-func (s *screen) buttonFocusStyle() tcell.Style { return s.focusStyle().Underline(true) }
+func (s *screen) buttonFocusStyle() tcell.Style {
+	return s.tuivoryStyles().ButtonFocusStyle()
+}
 
 func (s *screen) buttonStyle() tcell.Style {
-	return tcell.StyleDefault.Foreground(s.colors().fieldText).Background(s.colors().button)
+	return s.tuivoryStyles().ButtonStyle()
 }
 
 func (s *screen) styleBox(box *tview.Box) {
 	s.setSurface(box, s.surfaceRoles[box])
-	box.SetBorderColor(s.colors().button).SetTitleColor(s.surfaceText(s.surfaceRoles[box]))
+	s.tuivoryWidgets().Box(box, s.surfaceColor(s.surfaceRoles[box]), s.surfaceText(s.surfaceRoles[box]))
 }
 
 func (s *screen) styleForm(form *tview.Form) {
-	s.styleBox(form.Box)
 	s.setSurface(form.Box, surfacePanel)
-	form.SetBorderPadding(1, 1, 2, 2)
-	form.SetButtonsAlign(tview.AlignCenter)
-	form.SetLabelColor(s.colors().muted).SetFieldStyle(s.fieldStyle()).
-		SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(s.buttonFocusStyle()).SetButtonDisabledStyle(s.disabledStyle())
-	for index := 0; index < form.GetFormItemCount(); index++ {
-		switch item := form.GetFormItem(index).(type) {
-		case *tview.InputField:
-			s.setSurface(item.Box, surfacePanel)
-			item.SetPlaceholderStyle(tcell.StyleDefault.Foreground(s.colors().placeholder).Background(s.colors().field))
-			// Form reapplies field attributes before Draw. Set the focused input's
-			// contrast here without replacing InputField or disturbing its caret.
-			item.SetDrawFunc(func(_ tcell.Screen, x, y, width, height int) (int, int, int, int) {
-				label := tcell.StyleDefault.Foreground(s.colors().muted).Background(s.colors().surface)
-				input := s.fieldStyle()
-				if item.HasFocus() {
-					label = label.Foreground(s.colors().accent).Bold(true)
-					input = input.Underline(true)
-				}
-				item.SetLabelStyle(label).SetFieldStyle(input)
-				return x, y, width, height
-			})
-		case *tview.TextView:
-			// Form supplies input text colors even for read-only items before Draw.
-			// Reapply the description role after those attributes, without changing data.
-			s.textSurface(item, surfacePanel)
-			item.SetDrawFunc(func(_ tcell.Screen, x, y, w, h int) (int, int, int, int) {
-				item.SetTextColor(s.colors().text)
-				return x, y, w, h
-			})
-		case *choiceField:
-			item.SetFocusedStyle(s.focusStyle().Underline(true))
-		case *tview.Checkbox:
-			s.styleCheckbox(item)
+	s.tuivoryWidgets().Form(form)
+	for i := 0; i < form.GetFormItemCount(); i++ {
+		if box := widgetBox(form.GetFormItem(i)); box != nil {
+			s.setSurface(box, surfacePanel)
 		}
 	}
 }
@@ -199,81 +156,16 @@ func (s *screen) refreshBorders() {
 }
 
 func (s *screen) borderColor(focused bool, background tcell.Color) tcell.Color {
-	r, g, b := background.RGB()
-	light := r >= 0 && 299*r+587*g+114*b >= 128000
-	if s.monochrome() {
-		if light {
-			return tcell.ColorBlack
-		}
-		return tcell.ColorSilver
-	}
-	if focused {
-		if light {
-			if s.ansiColors() {
-				return tcell.ColorNavy
-			}
-			if s.colorProfile() == profile256 {
-				return indexed(25)
-			}
-			return tcell.GetColor("#005fcc")
-		}
-		if s.ansiColors() {
-			if s.colorProfile() == profileANSI8 {
-				return indexed(3)
-			}
-			return tcell.ColorWhite
-		}
-		return s.tokens().focus
-	}
-	if s.ansiColors() {
-		if light {
-			return tcell.ColorBlack
-		}
-		return tcell.ColorSilver
-	}
-	if s.colorProfile() == profile256 {
-		return indexed(244)
-	}
-	if light {
-		return tcell.GetColor("#66758a")
-	}
-	return tcell.GetColor("#8190a4")
+	return tuivory.BorderColor(s.tuivoryStyles().Theme(), s.tuivoryProfile(), s.tuivoryStyles(), focused, background)
 }
 
 // Confirmation cards share the form surface while retaining their safe default.
 func (s *screen) styleModal(modal *tview.Modal) {
-	s.styleBox(modal.Box)
 	s.setSurface(modal.Box, surfacePanel)
-	modal.SetBackgroundColor(s.colors().surface).SetTextColor(s.colors().text).
-		SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(s.buttonFocusStyle())
-}
-
-var lightPalette = themeColors{
-	editor: tcell.GetColor("#ffffff"), editorText: tcell.GetColor("#202a36"),
-	background: tcell.GetColor("#f3f5f7"), surface: tcell.GetColor("#e4eaf0"), footer: tcell.GetColor("#ccd7e2"),
-	field: tcell.GetColor("#ffffff"), text: tcell.GetColor("#202a36"), muted: tcell.GetColor("#485869"),
-	accent: tcell.GetColor("#276a8e"), button: tcell.GetColor("#bbd4e5"), fieldText: tcell.GetColor("#202a36"),
-	selectionText: tcell.ColorWhite, placeholder: tcell.GetColor("#485869"), warning: tcell.GetColor("#8b4f00"),
+	s.tuivoryWidgets().Modal(modal)
 }
 
 func (s *screen) colors() themeColors { return s.tokens().themeColors }
-
-var blackWhitePalette = themeColors{
-	editor: tcell.ColorBlack, editorText: tcell.ColorWhite,
-	background: tcell.ColorBlack, surface: tcell.ColorBlack, footer: tcell.ColorBlack,
-	field: tcell.ColorWhite, text: tcell.ColorWhite, muted: tcell.ColorSilver,
-	accent: tcell.ColorWhite, button: tcell.ColorSilver, fieldText: tcell.ColorBlack,
-	selectionText: tcell.ColorBlack, placeholder: tcell.ColorGray, warning: tcell.ColorWhite,
-}
-
-// Neutral ANSI surfaces avoid RGB grays being approximated as cyan.
-var darkANSI = themeColors{
-	editor: tcell.ColorBlack, editorText: tcell.ColorSilver,
-	background: tcell.ColorBlack, surface: tcell.ColorBlack, footer: tcell.ColorBlack,
-	field: tcell.ColorSilver, text: tcell.ColorSilver, muted: tcell.ColorSilver,
-	accent: tcell.ColorYellow, button: tcell.ColorSilver, fieldText: tcell.ColorBlack,
-	selectionText: tcell.ColorBlack, placeholder: tcell.ColorNavy, warning: tcell.ColorYellow,
-}
 
 // Defaults retained for small standalone widgets and tests; application widgets
 // always use their screen's theme, with no process-wide mutable theme state.
@@ -283,18 +175,10 @@ func fieldStyle() tcell.Style  { return (&screen{}).fieldStyle() }
 func focusStyle() tcell.Style  { return (&screen{}).focusStyle() }
 func buttonStyle() tcell.Style { return (&screen{}).buttonStyle() }
 
-var lightANSI = themeColors{
-	editor: tcell.ColorWhite, editorText: tcell.ColorBlack,
-	background: tcell.ColorSilver, surface: tcell.ColorSilver, footer: tcell.ColorWhite, field: tcell.ColorWhite,
-	text: tcell.ColorBlack, muted: tcell.ColorNavy, accent: tcell.ColorNavy, button: tcell.ColorSilver,
-	fieldText: tcell.ColorBlack, selectionText: tcell.ColorWhite, placeholder: tcell.ColorGray, warning: tcell.ColorMaroon,
-}
-
 func (s *screen) editorStyle() tcell.Style {
-	return tcell.StyleDefault.Foreground(s.colors().editorText).Background(s.colors().editor)
+	return s.tuivoryStyles().EditorStyle()
 }
 func (s *screen) styleEditor(editor *tview.TextArea) {
 	s.setSurface(editor.Box, surfaceEditor)
-	editor.SetTitleColor(s.colors().editorText)
-	editor.SetTextStyle(s.editorStyle()).SetSelectedStyle(s.focusStyle())
+	s.tuivoryWidgets().Editor(editor)
 }

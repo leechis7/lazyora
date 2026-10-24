@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"github.com/leechis7/tuivory/go"
 	"reflect"
 	"strings"
 	"testing"
@@ -116,19 +117,19 @@ func TestSQLColorsFollowScrolledEditedPieceOffsets(t *testing.T) {
 	editor.Draw(terminal)
 	r, _, style, _ := terminal.GetContent(0, 0)
 	fg, _, _ := style.Decompose()
-	if r != 'S' || fg != sqlRichColors[sqlKeyword] {
+	if r != 'S' || fg != tcell.GetColor("#204a87") {
 		t.Fatalf("scrolled SELECT lost its absolute source style: %q %v", r, fg)
 	}
 	_, _, style, _ = terminal.GetContent(7, 0)
 	fg, _, _ = style.Decompose()
-	if fg != sqlRichColors[sqlBind] {
+	if fg != tcell.GetColor("#8b4f00") {
 		t.Fatal("scrolled bind variable lost its style")
 	}
 	editor.SetOffset(2, 8)
 	editor.Draw(terminal)
 	r, _, style, _ = terminal.GetContent(0, 0)
 	fg, _, _ = style.Decompose()
-	if r != 'i' || fg != sqlRichColors[sqlBind] {
+	if r != 'i' || fg != tcell.GetColor("#8b4f00") {
 		t.Fatalf("horizontal scroll lost bind style: %q %v", r, fg)
 	}
 }
@@ -284,4 +285,22 @@ func TestDarkEditorTokensAndSelectionContrast(t *testing.T) {
 			t.Fatal("theme coloring changed selection or SQL")
 		}
 	}
+}
+
+var palette = (&screen{}).colors()
+
+// Compatibility helper for display-lexer tests; the running editor uses its
+// screen's theme/profile through profileSQLStyle.
+func sqlTokenStyle(kind sqlColorKind, limited bool, base tcell.Style) tcell.Style {
+	theme, profile := "light", "truecolor"
+	_, bg, _ := base.Decompose()
+	r, g, b := bg.RGB()
+	if r >= 0 && 299*r+587*g+114*b < 128000 {
+		theme = "dark"
+	}
+	if limited {
+		profile = "16"
+	}
+	p, _ := tuivory.NewStyles(theme, profile)
+	return p.SyntaxStyle(tuivory.SyntaxKind(kind), base)
 }

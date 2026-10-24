@@ -1,0 +1,312 @@
+{
+  "documents": 60,
+  "local_links": 340,
+  "kinds": {
+    "current": 36,
+    "dated-record": 18,
+    "design-record": 6
+  },
+  "errors": [],
+  "inventory": [
+    {
+      "path": ".github/ISSUE_TEMPLATE/bug_report.md",
+      "kind": "current",
+      "title": "---"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/feature_request.md",
+      "kind": "current",
+      "title": "---"
+    },
+    {
+      "path": ".github/PULL_REQUEST_TEMPLATE.md",
+      "kind": "current",
+      "title": "## 문제와 변경 후 동작 / Problem and resulting behavior"
+    },
+    {
+      "path": "AGENTS.md",
+      "kind": "current",
+      "title": "# 작업 규칙"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "kind": "current",
+      "title": "# 변경 이력"
+    },
+    {
+      "path": "CODE_OF_CONDUCT.en.md",
+      "kind": "current",
+      "title": "# Code of conduct"
+    },
+    {
+      "path": "CODE_OF_CONDUCT.md",
+      "kind": "current",
+      "title": "# 행동 규칙"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "kind": "current",
+      "title": "# 기여 안내"
+    },
+    {
+      "path": "README.en.md",
+      "kind": "current",
+      "title": "# LazyOra"
+    },
+    {
+      "path": "README.md",
+      "kind": "current",
+      "title": "# LazyOra"
+    },
+    {
+      "path": "SECURITY.md",
+      "kind": "current",
+      "title": "# 보안 안내"
+    },
+    {
+      "path": "SUPPORT.md",
+      "kind": "current",
+      "title": "# 사용 문의와 문제 해결"
+    },
+    {
+      "path": "docs/audits/lora-69-implementation.md",
+      "kind": "dated-record",
+      "title": "# LORA-69 공통 스타일 적용 기록"
+    },
+    {
+      "path": "docs/audits/lora-69.md",
+      "kind": "dated-record",
+      "title": "# LORA-69 색상·테마 조사"
+    },
+    {
+      "path": "docs/audits/lora-70.md",
+      "kind": "dated-record",
+      "title": "# LORA-70 스타일 패키지 전환 검증"
+    },
+    {
+      "path": "docs/audits/lora-71-docs.md",
+      "kind": "dated-record",
+      "title": "# LORA-71 문서 전수 점검 / Documentation review"
+    },
+    {
+      "path": "docs/build.md",
+      "kind": "current",
+      "title": "# 빌드와 검증"
+    },
+    {
+      "path": "docs/compatibility.md",
+      "kind": "current",
+      "title": "# 호환성·장애 회귀 검증"
+    },
+    {
+      "path": "docs/credentials.md",
+      "kind": "current",
+      "title": "# 암호 관리"
+    },
+    {
+      "path": "docs/development.md",
+      "kind": "current",
+      "title": "# 개발과 릴리스"
+    },
+    {
+      "path": "docs/en/build.md",
+      "kind": "current",
+      "title": "# Build and verification"
+    },
+    {
+      "path": "docs/en/compatibility.md",
+      "kind": "current",
+      "title": "# Compatibility and verification scope"
+    },
+    {
+      "path": "docs/en/contributing.md",
+      "kind": "current",
+      "title": "# Contributing"
+    },
+    {
+      "path": "docs/en/credentials.md",
+      "kind": "current",
+      "title": "# Credential management"
+    },
+    {
+      "path": "docs/en/development.md",
+      "kind": "current",
+      "title": "# Development and publishing"
+    },
+    {
+      "path": "docs/en/index.md",
+      "kind": "current",
+      "title": "# Documentation index"
+    },
+    {
+      "path": "docs/en/oracle-testing.md",
+      "kind": "current",
+      "title": "# Oracle Free test environment"
+    },
+    {
+      "path": "docs/en/plsql-debugger.md",
+      "kind": "design-record",
+      "title": "# PL/SQL debugger: design status"
+    },
+    {
+      "path": "docs/en/releases/v0.10.2.md",
+      "kind": "dated-record",
+      "title": "# LazyOra v0.10.2"
+    },
+    {
+      "path": "docs/en/support.md",
+      "kind": "current",
+      "title": "# Support and security reports"
+    },
+    {
+      "path": "docs/en/terminal.md",
+      "kind": "current",
+      "title": "# Terminal troubleshooting"
+    },
+    {
+      "path": "docs/en/tuivory-sync.md",
+      "kind": "current",
+      "title": "# Tuivory integration and updates"
+    },
+    {
+      "path": "docs/en/ui-style.md",
+      "kind": "current",
+      "title": "# UI style rules"
+    },
+    {
+      "path": "docs/en/usage.md",
+      "kind": "current",
+      "title": "# Usage"
+    },
+    {
+      "path": "docs/guide.en.md",
+      "kind": "current",
+      "title": "# User guide"
+    },
+    {
+      "path": "docs/guide.ko.md",
+      "kind": "current",
+      "title": "# 사용 가이드"
+    },
+    {
+      "path": "docs/index.md",
+      "kind": "current",
+      "title": "# 문서 색인"
+    },
+    {
+      "path": "docs/plsql-debugger.md",
+      "kind": "design-record",
+      "title": "# PL/SQL 디버거 지원 타당성 검토"
+    },
+    {
+      "path": "docs/releases/v0.1.0.md",
+      "kind": "dated-record",
+      "title": "LazyOra v0.1.0은 스키마·객체 탐색과 Toad 기준 키 조작, 소스 편집·컴파일, 결과 복사 및 미커밋 실행 내역 확인을 제공합니다."
+    },
+    {
+      "path": "docs/releases/v0.1.1.md",
+      "kind": "dated-record",
+      "title": "LazyOra v0.1.1은 macOS 실행파일을 추가하고 README를 빠른 시작 중심으로 정리한 릴리스입니다. SQL·트랜잭션 동작과 단축키는 v0.1.0과 같습니다."
+    },
+    {
+      "path": "docs/releases/v0.1.2.md",
+      "kind": "dated-record",
+      "title": "LazyOra v0.1.2는 위험 SQL 실행 확인, 선택적 DB 비밀번호 암호화 저장, 언어 미설정 시 로캘 적용을 제공합니다. 기존 실행·커밋·롤백 단축키는 유지합니다."
+    },
+    {
+      "path": "docs/releases/v0.10.0.md",
+      "kind": "dated-record",
+      "title": "LazyOra v0.10.0은 패널 배치·스키마 탐색·접속 관리와 편집기 키맵을 확장한 기능 릴리스입니다."
+    },
+    {
+      "path": "docs/releases/v0.10.1.md",
+      "kind": "dated-record",
+      "title": "LazyOra v0.10.1은 테마·색상 수별 공통 스타일과 가독성, 테마 변경 후 상태 복원을 개선한 수정 릴리스입니다."
+    },
+    {
+      "path": "docs/releases/v0.10.2.md",
+      "kind": "dated-record",
+      "title": "[한국어](v0.10.2.md) | [English](../en/releases/v0.10.2.md)"
+    },
+    {
+      "path": "docs/releases/v0.5.0.md",
+      "kind": "dated-record",
+      "title": "LazyOra v0.5.0은 SQL 파일·여러 편집 탭·커서 문장 실행부터 F5 스크립트·IN 바인드·예상 실행 계획·결과 내보내기까지 기본 Oracle 작업 흐름을 확장합니다."
+    },
+    {
+      "path": "docs/releases/v0.5.1.md",
+      "kind": "dated-record",
+      "title": "LazyOra v0.5.1은 화면의 1,000행 조회 제한과 별개로 DB 전체 결과를 파일로 저장합니다. 대용량 출력 버퍼와 재현 가능한 성능 측정 도구를 추가했습니다."
+    },
+    {
+      "path": "docs/releases/v0.6.0.md",
+      "kind": "dated-record",
+      "title": "LazyOra v0.6.0은 Oracle SQL·PL/SQL 구문 색상과 SQL 탭·편집 메뉴를 추가하고, 접속·설정 저장·긴 SQL 처리의 안정성을 개선합니다."
+    },
+    {
+      "path": "docs/releases/v0.7.0.md",
+      "kind": "dated-record",
+      "title": "LazyOra v0.7.0은 Oracle 개발·조회 흐름을 확장하고, 편집기·결과 그리드·대화상자의 디자인과 테마를 정리한 기능 릴리스입니다."
+    },
+    {
+      "path": "docs/releases/v0.8.0.md",
+      "kind": "dated-record",
+      "title": "LazyOra v0.8.0은 여러 Oracle 접속을 작업 공간으로 나누고, 도움말·테마·터미널 조작을 개선한 기능 릴리스입니다."
+    },
+    {
+      "path": "docs/releases/v0.9.0.md",
+      "kind": "dated-record",
+      "title": "LazyOra v0.9.0은 실제 ROWID가 포함된 단일 테이블 조회 결과의 안전 편집과 그리드 직접 편집을 추가한 기능 릴리스입니다."
+    },
+    {
+      "path": "docs/terminal.md",
+      "kind": "current",
+      "title": "# 터미널 키와 복사"
+    },
+    {
+      "path": "docs/tui-style-guide/README.md",
+      "kind": "design-record",
+      "title": "# TUI 스타일 가이드 — 독립 프로젝트 준비 자료"
+    },
+    {
+      "path": "docs/tui-style-guide/principles.md",
+      "kind": "design-record",
+      "title": "# 프레임워크에 독립적인 TUI 설계 원칙"
+    },
+    {
+      "path": "docs/tui-style-guide/project-plan.md",
+      "kind": "design-record",
+      "title": "# 독립 TUI 스타일 가이드 프로젝트 준비 계획"
+    },
+    {
+      "path": "docs/tuivory-sync.md",
+      "kind": "current",
+      "title": "# Tuivory 패키지 적용 기록"
+    },
+    {
+      "path": "docs/ui-style-proposal.md",
+      "kind": "design-record",
+      "title": "# LazyOra TUI 스타일 가이드 제안"
+    },
+    {
+      "path": "docs/ui-style.md",
+      "kind": "current",
+      "title": "# UI 스타일 규칙"
+    },
+    {
+      "path": "docs/usage.md",
+      "kind": "current",
+      "title": "# 사용 안내"
+    },
+    {
+      "path": "test/oracle/README.md",
+      "kind": "current",
+      "title": "# Oracle Free 시험 환경"
+    },
+    {
+      "path": "test/oracle/benchmarks/export-2026-10-20.md",
+      "kind": "dated-record",
+      "title": "# 대용량 내보내기 측정 — 2026-10-20"
+    }
+  ]
+}

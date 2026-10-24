@@ -1,5 +1,7 @@
 # TUI 스타일 가이드 — 독립 프로젝트 준비 자료
 
+> 보관 설계 자료 / Archived design record. 작성 당시의 제안·이관 계획을 보존합니다. 현재는 Tuivory v0.0.1 패키지 도입을 완료했습니다. 현행 기준: [한국어](../ui-style.md) · [English](../en/ui-style.md). 아래 ‘예정/독립 전’ 표현은 당시 상태입니다. / Future-work wording below reflects the original date, not current implementation.
+
 Reusable design principles for terminal user interfaces, with explicit color profiles and verifiable component states.
 Developed from LazyOra findings; framework adapters and application-specific examples remain separate.
 

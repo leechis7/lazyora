@@ -8,7 +8,7 @@ Database passwords are **not saved by default**. In the connection dialog, selec
 
 1. Enter the connection details, database password and alias.
 2. Enable encrypted password storage and save.
-3. On first use, enter the master password twice. It must contain at least eight characters; prefer a long passphrase.
+3. On first use, enter the master password twice. It must contain at least eight characters and at most 1,024 bytes; prefer a long passphrase.
 4. Selecting a saved connection can unlock its stored password. Once unlocked, the vault is reused during the current application process until you explicitly lock it or exit.
 
 Use Ctrl+Enter or the dialog's proceed button to submit the master password, or Esc to cancel. **If you forget the master password, cancel unlocking, enter the database password manually, and connect.** You do not need to reset or save the vault just to connect. Changing the host, port, user, connection mode or service clears an automatically loaded password so it is not sent to another target.

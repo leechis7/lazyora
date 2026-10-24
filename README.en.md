@@ -70,7 +70,9 @@ DML requires an explicit commit. **Oracle DDL can commit implicitly.** Exit conf
 
 ## Documentation
 
-- [User guide](docs/guide.en.md): connections, SQL tabs, scripts, transactions, schema browsing, grid editing and export. Also available inside the app.
+Start with the [documentation index](docs/en/index.md), which separates current guidance from historical evidence and design proposals.
+
+- [Detailed usage](docs/en/usage.md) and the [offline user guide](docs/guide.en.md): connections, SQL tabs, scripts, transactions, schema browsing, grid editing and export. Also available inside the app.
 - [Build and verification](docs/en/build.md): source builds, optional Oracle Free tests and compatibility limits.
 - [Terminal troubleshooting](docs/en/terminal.md): Ctrl+Enter, function keys, 8-color mode, mouse and copying.
 - [Credential management](docs/en/credentials.md): encrypted storage, master passwords and recovery options.
@@ -78,6 +80,12 @@ DML requires an explicit commit. **Oracle DDL can commit implicitly.** Exit conf
 - [Release history](https://github.com/leechis7/lazyora/releases) and [detailed changelog (Korean)](CHANGELOG.md).
 
 Korean remains the primary documentation language. Historical audits, detailed development records and older release notes are currently in Korean. The current English guides summarize practical use and preserve the documented verification limits.
+
+## Implementation and shared UI
+
+**Since v0.10.2, [Tuivory](https://github.com/leechis7/tuivory) v0.0.1** provides common themes, color profiles, input/choice/button/table/popup styles, grid states and syntax colors through `github.com/leechis7/tuivory/go`. Release users do not install a separate package.
+
+tview/tcell handle terminal rendering and input; go-ora handles Oracle communication. LazyOra retains SQL parsing for display, database execution and transactions, Toad keymaps, grid data and application state. See [UI style rules](docs/en/ui-style.md) and [Tuivory integration](docs/en/tuivory-sync.md).
 
 ## Project and license
 

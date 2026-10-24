@@ -45,6 +45,8 @@ chmod +x lazyora-linux-arm64
 
 Windows에서는 PowerShell에서 `.\lazyora-windows-amd64.exe`처럼 실행합니다. DB 없이 화면만 둘러보려면 `--demo`, 버전을 확인하려면 `--version`을 붙입니다.
 
+언어를 저장하지 않았다면 `LC_ALL` → `LC_MESSAGES` → `LANG`의 첫 설정값이 한국어일 때 한국어, 그 외에는 영어로 시작합니다. 저장한 언어가 우선하며 **도구 → 설정**에서 바꿀 수 있습니다.
+
 실행하면 접속 화면이 열립니다. Host·Port·계정·암호를 입력하고 **Service Name 또는 SID**를 선택한 뒤 접속 버튼을 누르세요. 별칭을 지정해 접속 정보를 저장할 수 있습니다. 비밀번호는 기본적으로 저장하지 않으며, **암호화 저장을 선택하면 마스터 비밀번호로 보호**합니다. [암호 관리 안내](docs/credentials.md)를 참고하세요.
 
 ## 자주 쓰는 키
@@ -69,12 +71,21 @@ F9는 커서 문장을, F5는 스크립트를 실행합니다. F9 SELECT 결과�
 
 ## 문서
 
+[전체 문서 색인과 현행/보관 구분](docs/index.md)에서 필요한 안내를 찾을 수 있습니다.
+
+- [UI 스타일·Tuivory 적용](docs/ui-style.md) — 공통 패키지와 테마/색상 프로필
 - [사용 안내](docs/usage.md) — 접속 저장, 설정, 스키마 탐색, 전체 단축키와 트랜잭션
 - [터미널 문제 해결](docs/terminal.md) — SecureCRT 키 매핑과 결과 복사
 - [빌드와 검증](docs/build.md) — 소스 빌드, CentOS 호환성과 검증 범위
 - [시험용 Oracle Free](test/oracle/README.md) — Docker Compose로 테스트 DB 실행
 - [개발과 릴리스](docs/development.md) · [변경 이력](CHANGELOG.md) · [기여 안내](CONTRIBUTING.md)
 - [사용 문의](SUPPORT.md) · [보안 제보](SECURITY.md) · [참여 규칙](CODE_OF_CONDUCT.md)
+
+## 구현과 공통 UI
+
+**v0.10.2부터 [Tuivory](https://github.com/leechis7/tuivory) v0.0.1**을 가져와 테마·색상 프로필·입력·선택·버튼·표·팝업·그리드·SQL 문법색을 공통 패키지로 적용합니다. Go 모듈은 `github.com/leechis7/tuivory/go`이며, 실행파일 사용자에게 별도 설치는 필요하지 않습니다.
+
+tview/tcell이 화면·입력을, go-ora가 Oracle 통신을 담당합니다. Oracle 실행·트랜잭션·SQL lexer·Toad 키맵·그리드 데이터와 화면별 상태는 LazyOra에서 관리합니다. [UI 스타일 규칙](docs/ui-style.md) · [Tuivory 적용·갱신 기록](docs/tuivory-sync.md)을 참고하세요.
 
 ## 참고 프로젝트
 

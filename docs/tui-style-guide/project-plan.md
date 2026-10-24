@@ -1,5 +1,7 @@
 # 독립 TUI 스타일 가이드 프로젝트 준비 계획
 
+> 보관 설계 자료 / Archived design record. 작성 당시의 제안·이관 계획을 보존합니다. 현재는 Tuivory v0.0.1 패키지 도입을 완료했습니다. 현행 기준: [한국어](../ui-style.md) · [English](../en/ui-style.md). 아래 ‘예정/독립 전’ 표현은 당시 상태입니다. / Future-work wording below reflects the original date, not current implementation.
+
 상태: 향후 프로젝트 설계 메모. 별도 저장소·패키지·사이트는 아직 만들지 않았습니다.
 
 ## 목표와 첫 산출물

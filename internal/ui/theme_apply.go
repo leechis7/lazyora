@@ -2,6 +2,7 @@ package ui
 
 import (
 	"github.com/gdamore/tcell/v2"
+	"github.com/leechis7/tuivory/go"
 	"github.com/rivo/tview"
 	"reflect"
 )
@@ -61,30 +62,17 @@ func (s *screen) applyTheme(previous string) {
 			s.styleList(w)
 		case *tview.TreeView:
 			box = w.Box
-			w.SetGraphicsColor(to.muted)
-			if root := w.GetRoot(); root != nil {
-				root.Walk(func(n, parent *tview.TreeNode) bool {
-					fg := s.textColor(s.treeRoles[n])
-					n.SetTextStyle(tcell.StyleDefault.Foreground(fg).Background(to.background)).SetSelectedTextStyle(s.focusStyle())
-					return true
-				})
+			roles := make(map[*tview.TreeNode]tuivory.TextRole, len(s.treeRoles))
+			for node, role := range s.treeRoles {
+				roles[node] = tuivory.TextRole(role)
 			}
+			s.tuivoryWidgets().Tree(w, roles)
 		case *tview.Table:
 			box = w.Box
-			w.SetSelectedStyle(s.focusStyle()).SetBordersColor(to.muted)
-			for row := 0; row < w.GetRowCount(); row++ {
-				for col := 0; col < w.GetColumnCount(); col++ {
-					cell := w.GetCell(row, col)
-					st := tcell.StyleDefault.Foreground(to.text).Background(s.surfaceColor(s.surfaceRoles[w.Box]))
-					if row == 0 && cell.NotSelectable {
-						st = st.Foreground(to.accent).Underline(true)
-					}
-					cell.SetStyle(st).SetTransparency(false)
-				}
-			}
+			s.styleDataTable(w)
 		case *tview.Button:
 			box = w.Box
-			w.SetStyle(s.buttonStyle()).SetActivatedStyle(s.buttonFocusStyle()).SetDisabledStyle(s.disabledStyle())
+			s.tuivoryWidgets().Button(w)
 		case *tview.Modal:
 			box = w.Box
 			s.styleModal(w)
@@ -124,7 +112,7 @@ func (s *screen) applyTheme(previous string) {
 		visit(button)
 	}
 	for _, button := range s.buttons {
-		button.SetStyle(tcell.StyleDefault.Foreground(to.text).Background(to.footer)).SetActivatedStyle(s.buttonFocusStyle())
+		s.tuivoryWidgets().FooterButton(button)
 	}
 	if s.footerVersion != nil {
 		s.footerVersion.SetTextColor(to.text).SetBackgroundColor(to.footer)
@@ -151,7 +139,7 @@ func (s *screen) applyTheme(previous string) {
 	if s.connectionHeader != nil && s.connectionIdentity.Environment == "prod" {
 		s.connectionHeader.SetTextColor(to.warning)
 	}
-	// ANSI grid colors have shared roles, so regenerate their decorative styles.
+	// ANSI grid colors have shared roles, so regenerate their decorative tuivory.
 	if s.table != nil {
 		s.repaintGridTheme()
 	}

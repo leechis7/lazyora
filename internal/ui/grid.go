@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"github.com/leechis7/tuivory/go"
 	"strconv"
 	"strings"
 	"unicode"
@@ -32,22 +33,11 @@ func (s *screen) resultGrid() tview.Primitive              { return &resultGrid{
 // distinguishing header, row, range and active cell without bright row stripes.
 type gridColors struct{ background, stripe, header, current, rangeBG, divider, muted tcell.Color }
 
-var gridPalette = gridColors{
-	tcell.GetColor("#232b38"), tcell.GetColor("#293342"), tcell.GetColor("#3b4e67"),
-	tcell.GetColor("#35485f"), tcell.GetColor("#496b82"), tcell.GetColor("#52647a"), tcell.GetColor("#95a5b9"),
-}
-
 func (s *screen) gridHeaderStyle(active bool) tcell.Style {
-	if active {
-		return s.focusStyle().Underline(true)
-	}
-	return tcell.StyleDefault.Foreground(s.colors().text).Background(s.gridColors().header).Underline(true)
+	return s.tuivoryStyles().GridHeaderStyle(active)
 }
 func (s *screen) gridActiveStyle(focused bool) tcell.Style {
-	if focused {
-		return s.focusStyle().Underline(true)
-	}
-	return tcell.StyleDefault.Foreground(s.colors().text).Background(s.gridColors().header).Underline(true)
+	return s.tuivoryStyles().GridActiveStyle(focused, false)
 }
 func gridFill(terminal tcell.Screen, x, y, width int, style tcell.Style) {
 	for px := x; px < x+width; px++ {
@@ -92,13 +82,7 @@ func (g *resultGrid) Draw(terminal tcell.Screen) {
 	}
 	for py := y; py < y+h; py++ {
 		row, _ := g.CellAt(x, py)
-		style := tcell.StyleDefault.Foreground(s.gridColors().muted).Background(s.gridColors().background)
-		if s.ansiColors() && !s.monochrome() {
-			style = tcell.StyleDefault.Foreground(tcell.ColorSilver).Background(tcell.ColorBlack)
-			if s.prefs.Theme == "light" {
-				style = style.Foreground(s.colors().muted).Background(s.colors().background)
-			}
-		}
+		style := s.tuivoryStyles().GridGutterStyle()
 		label := ""
 		if row == 0 {
 			label = "#"
@@ -119,10 +103,7 @@ func (g *resultGrid) Draw(terminal tcell.Screen) {
 		gridFill(terminal, x-gutter, py, gutter, style)
 		fg, _, _ := style.Decompose()
 		tview.Print(terminal, label, x-gutter+1, py, gutter-2, tview.AlignRight, fg)
-		divider := s.gridColors().divider
-		if s.ansiColors() && !s.monochrome() {
-			divider = tcell.ColorTeal
-		}
+		divider := s.tuivoryStyles().GridDividerColor()
 		terminal.SetContent(x-1, py, '│', nil, style.Foreground(divider))
 		for _, e := range edges {
 			terminal.SetContent(e.x, py, '│', nil, style.Foreground(divider))
@@ -131,13 +112,7 @@ func (g *resultGrid) Draw(terminal tcell.Screen) {
 			terminal.SetContent(x-gutter, py, '›', nil, s.gridActiveStyle(g.HasFocus()))
 		}
 	}
-	bar := tcell.StyleDefault.Foreground(s.colors().muted).Background(s.colors().surface)
-	if s.ansiColors() && !s.monochrome() {
-		bar = tcell.StyleDefault.Foreground(s.tokens().selectionFG).Background(s.tokens().selection)
-		if s.prefs.Theme == "light" {
-			bar = bar.Foreground(tcell.ColorBlack).Background(tcell.ColorSilver)
-		}
-	}
+	bar := s.tuivoryStyles().GridStatusStyle()
 	gridFill(terminal, x-gutter, y+h, w+gutter, bar)
 	text := s.gridStatusText()
 	fg, _, _ := bar.Decompose()
@@ -228,24 +203,9 @@ func gridNumeric(cell oracle.Cell) bool {
 	return false
 }
 func (s *screen) gridBaseStyle(row, col int) tcell.Style {
-	fg, bg := s.colors().text, s.gridColors().background
-	if row%2 == 0 {
-		bg = s.gridColors().stripe
-	}
 	current, _ := s.table.GetSelection()
-	if row == current && row > 0 {
-		bg = s.gridColors().current
-	}
-
-	style := tcell.StyleDefault
-	if row > 0 && row <= len(s.resultValues) && col < len(s.resultValues[row-1]) {
-		cell := s.resultValues[row-1][col]
-		if cell.Null {
-			fg = s.gridColors().muted
-			style = style.Italic(true)
-		}
-	}
-	return style.Foreground(fg).Background(bg)
+	null := row > 0 && row <= len(s.resultValues) && col >= 0 && col < len(s.resultValues[row-1]) && s.resultValues[row-1][col].Null
+	return s.tuivoryStyles().GridCellStyle(tuivory.CellState{Row: row, CurrentRow: row == current, Null: null})
 }
 
 func (s *screen) paintResultRows(rows map[int]bool) {
@@ -316,29 +276,7 @@ func (s *screen) refreshResultPosition() {
 	s.table.SetTitle(title)
 }
 
-var lightGridPalette = gridColors{
-	tcell.GetColor("#ffffff"), tcell.GetColor("#f0f4f8"), tcell.GetColor("#d4e0eb"),
-	tcell.GetColor("#dce9f4"), tcell.GetColor("#bdd9ea"), tcell.GetColor("#91a6b8"), tcell.GetColor("#526579"),
-}
-
 func (s *screen) gridColors() gridColors {
-	p := s.colors()
-	if s.monochrome() || s.ansiColors() {
-		return gridColors{p.background, p.background, p.surface, p.background, s.tokens().selection, p.muted, p.text}
-	}
-	if s.colorProfile() == profile256 {
-		stripe := indexed(237)
-		if s.prefs.Theme == "light" {
-			stripe = indexed(254)
-		}
-		return gridColors{p.background, stripe, p.surface, p.surface, s.tokens().selection, p.muted, p.muted}
-	}
-	if s.prefs.Theme == "light" {
-		c := lightGridPalette
-		c.muted = p.muted
-		return c
-	}
-	c := gridPalette
-	c.muted = p.muted
-	return c
+	p := s.tuivoryStyles().GridColors()
+	return gridColors{p.Background, p.Stripe, p.Header, p.Current, p.RangeBG, p.Divider, p.Muted}
 }

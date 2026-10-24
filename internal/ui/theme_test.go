@@ -44,7 +44,16 @@ func TestThemeSwitchPreservesWorkspaceAndCredentials(t *testing.T) {
 				if s.prefs.Theme != theme || s.connectForm.GetBackgroundColor() != s.colors().surface {
 					t.Fatal("theme not applied to open form")
 				}
-				if profile.background != s.colors().footer && !limited {
+				if profile != s.connectProfiles.GetFormItem(0) {
+					t.Fatal("theme switch replaced existing choice")
+				}
+
+				s.connectProfiles.SetRect(0, 0, 100, 8)
+				s.connectProfiles.Draw(terminal)
+				x, y := formFieldCell(s.connectProfiles, 0)
+				_, _, style, _ := terminal.GetContent(x, y)
+				_, background, _ := style.Decompose()
+				if !limited && background != s.colors().footer {
 					t.Fatal("existing choice retained old palette")
 				}
 				if input.GetText() != "not-for-config" || s.editor.GetText() != text || s.resultRows[0][0] != "original value" || !s.pendingChanges || len(s.jobs) != 0 {

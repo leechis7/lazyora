@@ -134,28 +134,13 @@ func (s *screen) styleKeymapComparison() {
 	}
 	table := s.comparison.table
 	s.setSurface(table.Box, surfacePanel)
-	table.SetBordersColor(s.colors().muted).SetSelectedStyle(s.focusStyle())
-	header := s.focusStyle().Underline(true)
-	current := s.fieldStyle().Underline(true)
-	if s.monochrome() {
-		header = tcell.StyleDefault.Foreground(tcell.ColorBlack).Background(tcell.ColorSilver)
-	}
-	for row := range table.GetRowCount() {
-		for col := range table.GetColumnCount() {
-			style := tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().surface)
-			if row == 0 {
-				style = header
-				if col > 0 && comparisonMaps[col-1].id == s.prefs.EditorKeymap {
-					style = current
-				}
-			} else if len(s.comparison.rows[row]) == 1 {
-				style = s.gridHeaderStyle(false)
-			}
-			// TableCell.SetStyle does not turn off its default transparency.
-			// Paint the declared background, especially for dark header text.
-			table.GetCell(row, col).SetStyle(style).SetTransparency(false)
+	column := 0
+	for i, keymap := range comparisonMaps {
+		if keymap.id == s.prefs.EditorKeymap {
+			column = i + 1
 		}
 	}
+	s.tuivoryWidgets().Comparison(table, column, func(row int) bool { return len(s.comparison.rows[row]) == 1 })
 }
 
 func (s *screen) closeKeymapComparison() {

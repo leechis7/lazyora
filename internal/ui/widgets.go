@@ -2,6 +2,7 @@ package ui
 
 import (
 	"github.com/gdamore/tcell/v2"
+	"github.com/leechis7/tuivory/go"
 	"github.com/rivo/tview"
 )
 
@@ -15,15 +16,7 @@ const (
 )
 
 func (s *screen) textColor(role textRole) tcell.Color {
-	switch role {
-	case textHint:
-		return s.colors().muted
-	case textAccent:
-		return s.colors().accent
-	case textWarning:
-		return s.colors().warning
-	}
-	return s.colors().text
+	return s.tuivoryStyles().TextColor(tuivory.TextRole(role))
 }
 
 // Constructors initialize both the widget box and the text renderer. Styling
@@ -77,18 +70,11 @@ func (s *screen) newTreeNode(text string, roles ...textRole) *tview.TreeNode {
 }
 
 func (s *screen) styleList(list *tview.List) {
-	p := s.colors()
-	s.styleBox(list.Box)
 	s.setSurface(list.Box, surfacePanel)
-	list.SetMainTextStyle(tcell.StyleDefault.Foreground(p.text).Background(p.surface)).
-		SetSecondaryTextStyle(tcell.StyleDefault.Foreground(p.muted).Background(p.surface)).
-		SetShortcutStyle(tcell.StyleDefault.Foreground(p.accent).Background(p.surface)).
-		SetSelectedStyle(s.focusStyle()).SetHighlightFullLine(true)
+	s.tuivoryWidgets().List(list)
 }
 
 func (s *screen) styleCheckbox(box *tview.Checkbox) {
 	s.setSurface(box.Box, surfacePanel)
-	box.SetLabelStyle(tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().surface)).
-		SetCheckedStyle(s.fieldStyle()).SetUncheckedStyle(s.fieldStyle()).SetActivatedStyle(s.focusStyle()).
-		SetCheckedString(tview.Escape("[x]")).SetUncheckedString(tview.Escape("[ ]"))
+	s.tuivoryWidgets().Checkbox(box)
 }

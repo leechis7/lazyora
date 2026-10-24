@@ -1,0 +1,94 @@
+{
+  "issue": "LORA-70",
+  "baseline_commit": "4530a1156853fa8629a16f654f87680fe2b52e01",
+  "tuivory_version": "v0.0.1",
+  "tuivory_commit": "cf06d95f4334f65436197ae4f12faf35783f5b7a",
+  "baseline_sha256": "f5834f431f1c0e7f64c96a00e4ab22e376bad20b321608b45503d2e53954fd8f",
+  "applied_sha256": "4c09259ee59936a56a173671d9ebc10bdafc2c532e2195834eeeab1b31d16b7f",
+  "compared_fields": [
+    "Rows",
+    "Styles",
+    "W",
+    "H",
+    "Page"
+  ],
+  "scenes": 67,
+  "languages": [
+    "ko",
+    "en"
+  ],
+  "baseline_frames": 3216,
+  "applied_frames": 3216,
+  "raw_changed_frames": 96,
+  "normalization": "Only /tmp/TestThemeAudit[0-9]+/ text is normalized; positions and all captured style fields are compared unchanged. Role records are sorted by theme/colors/role.",
+  "changed_frames": 0,
+  "missing_frames": 0,
+  "roundtrip_pairs": 1608,
+  "roundtrip_changes": 0,
+  "role_data_equal": true,
+  "profiles": [
+    {
+      "theme": "dark",
+      "colors": 8,
+      "frames": 268
+    },
+    {
+      "theme": "light",
+      "colors": 8,
+      "frames": 268
+    },
+    {
+      "theme": "blackwhite",
+      "colors": 8,
+      "frames": 268
+    },
+    {
+      "theme": "dark",
+      "colors": 16,
+      "frames": 268
+    },
+    {
+      "theme": "light",
+      "colors": 16,
+      "frames": 268
+    },
+    {
+      "theme": "blackwhite",
+      "colors": 16,
+      "frames": 268
+    },
+    {
+      "theme": "dark",
+      "colors": 256,
+      "frames": 268
+    },
+    {
+      "theme": "light",
+      "colors": 256,
+      "frames": 268
+    },
+    {
+      "theme": "blackwhite",
+      "colors": 256,
+      "frames": 268
+    },
+    {
+      "theme": "dark",
+      "colors": 16777216,
+      "frames": 268
+    },
+    {
+      "theme": "light",
+      "colors": 16777216,
+      "frames": 268
+    },
+    {
+      "theme": "blackwhite",
+      "colors": 16777216,
+      "frames": 268
+    }
+  ],
+  "differences": [],
+  "missing": [],
+  "roundtrip_differences": []
+}

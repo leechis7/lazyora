@@ -1,5 +1,7 @@
 # 터미널 키와 복사
 
+[한국어](terminal.md) | [English](en/terminal.md)
+
 메인 SQL 실행은 F9, Ctrl+Enter, Alt+Enter입니다. 일반 Enter는 줄바꿈입니다. 접속 화면에서도 Ctrl+Enter·Alt+Enter·Alt+C로 접속할 수 있습니다.
 
 ## SecureCRT에서 Ctrl+Enter가 줄바꿈으로 들어올 때

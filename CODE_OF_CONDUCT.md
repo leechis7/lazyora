@@ -1,5 +1,7 @@
 # 행동 규칙
 
+[한국어](CODE_OF_CONDUCT.md) | [English](CODE_OF_CONDUCT.en.md)
+
 LazyOra의 이슈, Pull Request, 리뷰와 프로젝트 관련 대화에서 서로를 존중합니다. 경험, 국적, 언어, 성별, 장애 여부 등 개인의 배경과 관계없이 참여할 수 있어야 합니다.
 
 ## 기대하는 행동

@@ -110,6 +110,10 @@ func (s *screen) refreshBorders() {
 			for i := 0; i < w.GetItemCount(); i++ {
 				visit(w.GetItem(i))
 			}
+		case *browserTree:
+			if root := w.GetRoot(); root != nil {
+				root.Walk(func(n, parent *tview.TreeNode) bool { liveNodes[n] = true; return true })
+			}
 		case *tview.TreeView:
 			if root := w.GetRoot(); root != nil {
 				root.Walk(func(n, parent *tview.TreeNode) bool { liveNodes[n] = true; return true })

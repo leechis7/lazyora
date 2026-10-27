@@ -13,6 +13,7 @@ type browserNode struct {
 	kind, label string
 	object      oracle.Object
 	loaded      bool
+	column      oracle.Column
 }
 
 var objectGroups = []struct{ kind, label string }{
@@ -58,17 +59,7 @@ func (s *screen) toggleBrowser() {
 }
 
 func (s *screen) newBrowser() *tview.Flex {
-	s.browser = tview.NewTreeView().SetTopLevel(1).SetGraphics(false)
-	s.browser.SetBorder(true)
-	s.styleBox(s.browser.Box)
-	s.browser.SetGraphicsColor(s.colors().muted)
-	s.browser.SetSelectedFunc(s.activateBrowser)
-	s.browser.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
-		if action == tview.MouseLeftDoubleClick {
-			action = tview.MouseLeftClick
-		}
-		return action, event
-	})
+	s.browser = s.newBrowserTree()
 	s.browserUsers = s.newChoice(s.tr("browser_user_label"), nil, -1, func(_ string, index int) { s.selectBrowserUser(index) })
 	s.browserTypes = s.newChoice(s.tr("browser_type_label"), nil, -1, func(_ string, index int) { s.selectBrowserType(index) })
 	s.browserUsers.SetFieldWidth(0)
@@ -155,6 +146,7 @@ func (s *screen) loadBrowserUser(owner string) {
 	}
 	s.browserOwner = owner
 	s.browserObjects = nil
+	s.browserNodes = map[oracle.Object]*tview.TreeNode{}
 	root := s.treeNode(owner, &browserNode{kind: "schema", object: oracle.Object{Owner: owner}}).SetSelectable(false)
 	root.AddChild(s.treeMessage("browser_loading"))
 	s.browser.SetRoot(root).SetCurrentNode(nil)
@@ -183,7 +175,14 @@ func (s *screen) renderBrowserObjects() {
 		if object.Kind != objectGroups[s.browserKind].kind || s.browserSearch != nil && !strings.Contains(strings.ToLower(object.Name), strings.ToLower(s.browserSearch.GetText())) {
 			continue
 		}
-		node := s.treeNode(object.Name, &browserNode{kind: "object", object: object})
+		if s.browserNodes == nil {
+			s.browserNodes = map[oracle.Object]*tview.TreeNode{}
+		}
+		node := s.browserNodes[object]
+		if node == nil {
+			node = s.treeNode(object.Name, &browserNode{kind: "object", object: object}).SetExpanded(false)
+			s.browserNodes[object] = node
+		}
 		root.AddChild(node)
 		if first == nil || object == selected {
 			first = node
@@ -197,7 +196,7 @@ func (s *screen) renderBrowserObjects() {
 		root.AddChild(s.treeMessage(key))
 	}
 	s.browser.SetCurrentNode(first)
-	s.browser.SetTitle(" " + s.tr(objectGroups[s.browserKind].label) + " ")
+	s.browser.SetTitle(fmt.Sprintf(" %s (%d) ", s.tr(objectGroups[s.browserKind].label), s.browserObjectCount()))
 }
 
 func (s *screen) treeNode(text string, data *browserNode) *tview.TreeNode {
@@ -221,6 +220,7 @@ func (s *screen) resetBrowser() {
 	}
 	s.browserSchemas = nil
 	s.browserObjects = nil
+	s.browserNodes = map[oracle.Object]*tview.TreeNode{}
 	s.browserKind = 0
 	s.browserUsers.SetSelectedFunc(nil).SetOptions(nil, nil).SetCurrentOption(-1).SetSelectedFunc(func(_ string, i int) { s.selectBrowserUser(i) })
 	s.localizeBrowser()
@@ -266,7 +266,7 @@ func (s *screen) populateSchemas(catalog oracle.Catalog) {
 }
 
 func (s *screen) populateObjects(node *tview.TreeNode, objects []oracle.Object) {
-	if node.GetReference().(*browserNode).object.Owner != s.browserOwner {
+	if node != s.browser.GetRoot() || node.GetReference().(*browserNode).object.Owner != s.browserOwner {
 		return
 	}
 	node.GetReference().(*browserNode).loaded = true
@@ -275,7 +275,10 @@ func (s *screen) populateObjects(node *tview.TreeNode, objects []oracle.Object) 
 }
 
 func (s *screen) activateBrowser(node *tview.TreeNode) {
-	if data, ok := node.GetReference().(*browserNode); ok && data.kind == "object" {
+	if node == nil {
+		return
+	}
+	if data, ok := node.GetReference().(*browserNode); ok && (data.kind == "object" || data.kind == "column") {
 		s.openObject(data.object)
 	}
 }
@@ -299,13 +302,14 @@ func (s *screen) localizeBrowser() {
 		types = append(types, s.tr(group.label))
 	}
 	s.browserTypes.SetSelectedFunc(nil).SetOptions(types, nil).SetCurrentOption(s.browserKind).SetSelectedFunc(func(_ string, i int) { s.selectBrowserType(i) })
-	s.browser.SetTitle(" " + s.tr(objectGroups[s.browserKind].label) + " ")
+	s.browser.SetTitle(fmt.Sprintf(" %s (%d) ", s.tr(objectGroups[s.browserKind].label), s.browserObjectCount()))
 	s.browser.GetRoot().Walk(func(node, parent *tview.TreeNode) bool {
 		if data, ok := node.GetReference().(*browserNode); ok && data.label != "" {
 			node.SetText(tview.Escape(s.tr(data.label)))
 		}
 		return true
 	})
+	s.browser.Refresh()
 	if s.objectTable != nil {
 		s.renderObject(s.objectColumns)
 	}

@@ -2,7 +2,7 @@
 
 [한국어](../ui-style.md) | **English** · [Documentation](index.md)
 
-Since **v0.10.2**, common styles come from **Tuivory v0.0.1**, the public Go module `github.com/leechis7/tuivory/go`. Its single `tuivory` package supplies `Styles`, `Styler`, `Choice` and state-style methods. The pinned version is in `go.mod`; see [integration and updates](tuivory-sync.md).
+In released **v0.10.2**, common styles come from **Tuivory v0.0.1**, the public Go module `github.com/leechis7/tuivory/go`. Its single `tuivory` package supplies `Styles`, `Styler`, `Choice` and state-style methods. The pinned version is in `go.mod`; see [integration and updates](tuivory-sync.md).
 
 LazyOra's `internal/ui/style_tokens.go` adapts package values to product roles. It does not own a second palette. `theme.go` and `widgets.go` apply styles to existing widgets. Oracle execution, transactions, SQL display lexing, Toad keymaps, grid data, focus and modal input routing remain application responsibilities.
 
@@ -47,3 +47,7 @@ SQL syntax and result-grid header/current cell/range/NULL/edited states use Tuiv
 The 12-profile comparison covers connection/settings, output/history/plan/script, objects/editors and confirmation dialogs, not just Help. Keyboard, mouse, narrow windows and real terminal palettes require appropriate checks too.
 
 Tuivory extraction, publication and LazyOra consumption are complete. The original [proposal](../ui-style-proposal.md) and candidate CSV are archived design input, not the live palette. [The integration record](tuivory-sync.md) points to dated automated evidence and its limitations. Tuivory itself is developed in its separate repository.
+
+## New tree integration (development)
+
+The development branch uses public Tuivory v0.1.0 `Tree`, `TreeState` and `TreeView`. Adapt existing `NewStyles` values to body/hint/surface/selection/focus.border roles instead of mixing in the separate candidate palette. LazyOra owns Oracle metadata, identities, lazy fetching, details actions and its existing focused double borders. Published v0.10.2 styles and binaries remain unchanged.

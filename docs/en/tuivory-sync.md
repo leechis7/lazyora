@@ -6,7 +6,7 @@
 
 **LazyOra v0.10.2 ships Tuivory v0.0.1**, module `github.com/leechis7/tuivory/go`, release tag `go/v0.0.1`, source commit `cf06d95f4334f65436197ae4f12faf35783f5b7a`. It uses the single public `tuivory` package. TUIS is no longer a dependency; earlier TUIS entries in the Korean record document the migration history.
 
-The Go module lives under the upstream repository's `go/` directory. Consumers specify `@v0.0.1`; the repository tag includes the `go/` prefix. Do not import upstream `internal` packages or replace the module with a local checkout.
+The Go module lives under the upstream repository's `go/` directory. Current development consumers specify `@v0.1.0` (released LazyOra v0.10.2 used `@v0.0.1`); the repository tag includes the `go/` prefix. Do not import upstream `internal` packages or replace the module with a local checkout.
 
 | LazyOra area | Tuivory responsibility |
 | --- | --- |
@@ -28,6 +28,16 @@ Both sides use compatible Go/tcell/tview requirements. The main module's tview r
 4. Adjust application adapters rather than copying shared style implementation or changing Oracle behavior incidentally.
 5. Check all 12 theme/profile combinations, focus/selection/input/popup states and theme round trips. Check SQL/password values, scroll, pending-edit markers and copying. Run appropriate regression/race/vet and default Linux ARM64 build checks.
 6. Record the version, affected areas, evidence and remaining real-terminal checks in both language guides. Commit/publish/release only within the user's authorization.
+
+## LORA-72: public v0.1.0 tree (2026-10-28, unreleased)
+
+The development branch pins `github.com/leechis7/tuivory/go v0.1.0`, tag [go/v0.1.0](https://github.com/leechis7/tuivory/releases/tag/go/v0.1.0), source `c034a00b1db92ee7ad4abd1ea5956907f1c1a124`. Module Origin and checksums were verified; no source copying or local replacement is used. Published LazyOra v0.10.2 still contains v0.0.1.
+
+`browser_tree.go` delegates rendering/navigation/scroll to public Tree/TreeState/TreeView while preserving Oracle identities and asynchronous job references. `browser_columns.go` fetches table/view columns on expansion and caches them within the current list. Filtering/type changes retain cached branches; refresh, owner changes and reconnects replace them. Late responses require the original node instance to remain in the current cache. Preserve selectors, filtering, click/Enter details and focused double borders.
+
+Adapt the public NewStyles semantic values to tree palette roles rather than mixing in the separate draft candidate palette. Defer Tab/Panel/Split/Breadcrumb/Status adoption to LORA-73–76; this task does not complete those issues.
+
+Validation passed: existing UI regression, six tree-specific tests (including 12 theme/color combinations), 5,000-object navigation, full `go test -race ./...`, `go vet ./...`, and Linux ARM64 `make build`. Checked 93 local documentation links and eight sections in each embedded guide before adding this audit link. No fresh remote-terminal or live-database connection test, remote CI, publishing or release was performed. See the [bilingual validation record](../audits/lora-72-tree.md).
 
 ## Evidence and migration history
 

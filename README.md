@@ -21,7 +21,7 @@ SQL·PL/SQL 편집부터 스키마 탐색, 실행 결과 확인과 내보내기�
 
 ![LazyOra 한국어 UI 전체 화면: 상단 메뉴, 스키마 브라우저, SQL 편집기, 결과 그리드와 하단 단축키](docs/images/lazyora-overview-ko.png)
 
-*다크 테마 · 한국어 UI · DB 연결 없는 데모 위젯의 모의 터미널 캡처.*
+*v0.10.2 · 다크 테마 · 한국어 UI · DB 연결 없는 데모 위젯의 모의 터미널 캡처.*
 
 ## 빠른 시작
 
@@ -96,3 +96,7 @@ tview/tcell이 화면·입력을, go-ora가 Oracle 통신을 담당합니다. Or
 이채강 (Chaekang Lee) · leechis7@gmail.com
 
 Copyright (C) 2026 Chaekang Lee. [GNU AGPL v3.0](LICENSE) (`AGPL-3.0-only`). 의존 라이브러리에는 각 프로젝트의 라이선스가 적용됩니다.
+
+## 다음 버전 개발 내용
+
+미배포 개발 브랜치는 **Tuivory v0.1.0** 트리를 적용합니다. 테이블·뷰를 펼쳐 컬럼·자료형을 확인하고 긴 이름을 가로 탐색할 수 있습니다. [트리 사용법](docs/usage.md)을 참고하세요. 정식 v0.10.2 다운로드는 기존 동작을 유지합니다.

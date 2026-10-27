@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### 추가 / Added
+
+- LORA-72: Tuivory Go v0.1.0 공개 트리로 스키마 목록을 표시하고, 테이블·뷰 펼침 시 컬럼·자료형을 지연 조회합니다. 기존 사용자·유형 선택·검색·상세 보기를 유지하며 방향키/Space 펼침, Alt+방향키 가로 이동을 지원합니다.
+- LORA-72: Use the public Tuivory Go v0.1.0 tree with lazy table/view columns and types. Preserve selectors, filtering and details; add arrow/Space expansion and Alt+arrow horizontal panning.
+
 ### 문서 / Documentation
 
 - LORA-71: 한국어·영어 README와 사용·개발·Tuivory UI·호환성·Oracle 시험 안내를 현행화하고 문서 색인을 추가했습니다. F5 DBMS_OUTPUT 지원과 접속별 트랜잭션 설명을 바로잡고 보관 설계/검증 기록을 구분했습니다.

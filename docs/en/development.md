@@ -49,7 +49,7 @@ After publication, verify assets/checksums and the actual executable version, sy
 
 ## Dependencies and UI
 
-Common styling uses **Tuivory v0.0.1**, `github.com/leechis7/tuivory/go`, first shipped in v0.10.2. Develop Tuivory itself separately. Review public versions/commits and import the module; do not copy it or replace it with a local checkout. Record updates in [Tuivory integration](tuivory-sync.md) and use [UI adapters](ui-style.md).
+The development branch pins **Tuivory v0.1.0**, `github.com/leechis7/tuivory/go`, including its public tree component. Released LazyOra v0.10.2 still ships Tuivory v0.0.1; the new tree is for the next release. Develop Tuivory itself separately. Review public versions/commits and import the module; do not copy it or replace it with a local checkout. Record updates in [Tuivory integration](tuivory-sync.md) and use [UI adapters](ui-style.md).
 
 The tview v0.42.0 local fork adds SQL TextArea highlighting. Its source difference is confined to `textarea.go`; retain the upstream MIT notice and rendering checks. Workflow Actions are pinned to commit SHAs; Go toolchain versions are coordinated with `mise.toml`. Module downloads retry transient failures, but actual check failures remain failures.
 

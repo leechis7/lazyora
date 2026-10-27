@@ -194,7 +194,7 @@ type screen struct {
 	footerKeys                               []footerKey
 	resultsFocused                           bool
 	limitedColors                            bool
-	browser                                  *tview.TreeView
+	browser                                  *browserTree
 	browserHidden                            bool
 	mainLayout, queryLayout                  *tview.Flex
 	browserOwner                             string
@@ -205,6 +205,7 @@ type screen struct {
 	browserSchemas                           []string
 	browserObjects                           []oracle.Object
 	browserKind                              int
+	browserNodes                             map[oracle.Object]*tview.TreeNode
 	object                                   oracle.Object
 	objectInfo                               *tview.TextView
 	objectFocus                              tview.Primitive
@@ -452,7 +453,7 @@ func (s *screen) submit(j job) {
 	} else {
 		j.ctx, s.cancel = context.WithTimeout(context.Background(), 60*time.Second)
 	}
-	if j.action == "definition" || j.action == "complete" || j.action == "schemas" || j.action == "objects" || j.action == "columns" || j.action == "object_info" || j.action == "source" || j.action == "arguments" {
+	if j.action == "definition" || j.action == "complete" || j.action == "schemas" || j.action == "objects" || j.action == "browser_columns" || j.action == "columns" || j.action == "object_info" || j.action == "source" || j.action == "arguments" {
 		s.setStatus("browser_loading")
 	} else {
 		s.setStatus("running", j.action)
@@ -585,7 +586,7 @@ func (s *screen) worker() {
 			catalog, err = session.Catalog(j.ctx)
 		case "objects":
 			objects, err = session.Objects(j.ctx, j.object.Owner)
-		case "columns":
+		case "columns", "browser_columns":
 			columns, err = session.Columns(j.ctx, j.object)
 		case "describe":
 			object, err = session.FindObject(j.ctx, j.text)
@@ -698,6 +699,10 @@ func (s *screen) worker() {
 				}
 				return
 			}
+			if j.action == "browser_columns" {
+				s.acceptBrowserColumns(j.node, columns, err)
+				return
+			}
 			if j.action == "definition" {
 				s.acceptDefinition(j.object, j.text, definition, err)
 			}
@@ -738,9 +743,9 @@ func (s *screen) worker() {
 					s.renderObject(nil)
 					s.objectInfo.SetText(s.objectInfo.GetText(false) + "\n" + s.tr("browser_error") + ": " + err.Error())
 				}
-				if j.action == "objects" {
-					s.browser.SetRoot(j.node).SetCurrentNode(nil)
+				if j.action == "objects" && s.browser.GetRoot() == j.node {
 					j.node.ClearChildren().AddChild(s.treeMessage("browser_error"))
+					s.browser.SetCurrentNode(nil)
 				}
 				if j.action == "source" {
 					s.sourceInfo.SetText(s.tr("browser_error") + ": " + err.Error())

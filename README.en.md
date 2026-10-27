@@ -16,7 +16,7 @@ Current version: **0.10.2** · **Linux / Windows / macOS · AMD64 / ARM64**
 
 ![LazyOra: menus, schema browser, SQL editor, result grid and context-sensitive shortcuts](docs/images/lazyora-overview.png)
 
-*Dark theme · English UI · DB-free demo widgets rendered in a simulated terminal.*
+*v0.10.2 · Dark theme · English UI · DB-free demo widgets rendered in a simulated terminal.*
 
 ## Quick start
 
@@ -94,3 +94,7 @@ The initial screen layout was inspired by [lazySQL](https://github.com/jorgeroja
 Developer: **이채강 (Chaekang Lee)** · leechis7@gmail.com
 
 Copyright (C) 2026 Chaekang Lee. [GNU AGPL v3.0](LICENSE) (`AGPL-3.0-only`). Dependencies retain their own licenses.
+
+## Next-version development
+
+The unreleased branch adopts the **Tuivory v0.1.0** tree: expand tables/views for columns and types, and pan long names horizontally. See [tree controls](docs/en/usage.md). Published v0.10.2 downloads retain their existing behavior.

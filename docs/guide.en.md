@@ -45,6 +45,8 @@ An uncertain outcome needs verification through a new connection; never assume a
 
 ## Connections and schema browsing
 
+The next development version uses the published Tuivory **v0.1.0** tree. User/type selectors and live object filtering remain. On a table or view, use **Right/Space or click the disclosure arrow** to fetch columns and data types. **Left** collapses or moves to the parent; **Alt+Left/Right** pans long names. **Enter or clicking a name** opens the existing object details. Columns are fetched on expansion and cached for the current list; Ctrl+R refresh, owner changes and reconnects clear the cache. Collapse and re-expand after failure/cancellation to retry. Existing Esc cancellation and work-protection rules apply during queries. This change is not yet in a published LazyOra release.
+
 Alt+J opens workspaces: N adds a connection, Enter switches, Delete asks before closing one.
 SQL tabs, results and transactions are separate between connections. Check the environment, account and database labels.
 Closing one workspace preserves the other connections' transactions.

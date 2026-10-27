@@ -540,7 +540,7 @@ var messages = map[string][2]string{
 	"nullable":                {"Nullable", "NULL 허용"},
 	"yes":                     {"Yes", "예"},
 	"no":                      {"No", "아니요"},
-	"footer_browser":          {"Alt+B Hide | Alt+U User | Alt+O Type | ↑↓ Move | Enter Open | Ctrl+R Refresh | Tab Next", "Alt+B 숨김 | Alt+U 사용자 | Alt+O 종류 | ↑↓ 이동 | Enter 열기 | Ctrl+R 새로고침 | Tab 다음"},
+	"footer_browser":          {"Alt+B Hide | Alt+U User | Alt+O Type | ↑↓ Move | ←→/Space Expand | Enter Open | Alt+←→ Pan | Ctrl+R Refresh | Tab Next", "Alt+B 숨김 | Alt+U 사용자 | Alt+O 종류 | ↑↓ 이동 | ←→/Space 펼침 | Enter 열기 | Alt+←→ 가로 이동 | Ctrl+R 새로고침 | Tab 다음"},
 	"footer_object":           {"Alt+D DDL | Alt+C Constraints | Alt+I Indexes | Ctrl+R Refresh | Esc Back", "Alt+D DDL | Alt+C 제약조건 | Alt+I 인덱스 | Ctrl+R 새로고침 | Esc 돌아가기"},
 	"developer":               {"Developer", "개발자"},
 	"email":                   {"Email", "이메일"},

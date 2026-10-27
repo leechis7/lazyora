@@ -134,6 +134,8 @@ func widgetBox(p tview.Primitive) *tview.Box {
 		return w.Box
 	case *tview.Table:
 		return w.Box
+	case *browserTree:
+		return w.Box
 	case *tview.TreeView:
 		return w.Box
 	case *tview.List:

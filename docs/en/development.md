@@ -4,6 +4,14 @@
 
 `dev` integrates development; `main` is the release/public documentation branch. Start feature, fix and documentation work from current `dev`. Maintainers check the related Jira issue before work, update it when work starts and record implementation/verification evidence. External contributors do not need Jira accounts.
 
+## Jira Kanban workflow
+
+Since 2026-10-27, LazyOra uses Kanban without sprints. Prioritize the backlog and use **To Do → In Progress → Review → Done** instead of inventing deadlines or creating new sprints. Preserve the historical records of sprints 1 and 2; sprint 2 is closed.
+
+Work on one issue at a time. Move it to In Progress when work actually starts, then to Review after implementation and required verification, recording evidence and any pending CI/publication in a comment. Move to Done only after explicit user review approval. Return requested rework to In Progress and resubmit it for Review after verification. If Jira has no Review status yet, keep In Progress with a review-pending comment rather than using Done. Keep epics open while required child work remains. Leave work awaiting a dependency, such as a published Tuivory package, in To Do with a recorded reason. Existing commit/publishing approval and sequential-branch rules still apply.
+
+For the team-managed Jira board, disable Sprints under project/space settings → Features. The connected tools do not expose this toggle, so UI configuration still needs confirmation; adopting the workflow and completing the Jira UI setting are separate steps. See [Atlassian’s instructions](https://support.atlassian.com/jira-software-cloud/docs/enable-sprints/).
+
 ## Branches and checks
 
 ```sh
@@ -24,7 +32,7 @@ Merge after CI succeeds, then remove completed feature branches. Publishing docu
 
 The 2026-10-21 approved backlog batch used sequential local implementation/checks/commits/dev merges and branch cleanup, followed by one integration publication/CI phase. This is an explicit exception for that batch, not permission to skip normal CI for all future work. Preserve already-running CI and local dev commits ahead of origin; do not overwrite them with remote state.
 
-Under the updated completion rule, completed implementation and required local checks may be marked Done with evidence, distinguishing pending remote CI/publication. Do not close an epic while required child work remains.
+The batch originally allowed Done after implementation and required local checks with evidence. Since 2026-10-27, the Kanban Review step above supersedes that rule: submit verified work for Review and mark Done only after explicit user review approval, distinguishing pending remote CI/publication. Do not close an epic while required child work remains.
 
 ## Releases
 

@@ -4,7 +4,7 @@
 
 공통 설계 원칙의 상위 출처는 [Tuivory](https://github.com/leechis7/tuivory)입니다. LazyOra 적용 기준과 마지막 확인 커밋은 [Tuivory 가이드 반영 기록](tuivory-sync.md)에 남깁니다. 아래 문서는 LazyOra의 실제 컴포넌트·단축키·상태 처리에 맞춘 적용 규칙입니다.
 
-v0.11.0 공통 스타일의 원본은 **Tuivory v0.1.0** (`github.com/leechis7/tuivory/go`)입니다. 단일 공개 패키지 `tuivory`의 `Styles`, `Styler`, `Choice`와 상태 스타일 메서드를 import합니다. `internal/ui/style_tokens.go`는 패키지 값과 제품 역할을 연결하고, `theme.go`·`widgets.go`는 공통 API를 기존 위젯에 적용합니다. 실제 의존 버전은 `go.mod`와 [적용 기록](tuivory-sync.md)에 고정합니다.
+v0.11.2 공통 스타일의 원본은 **Tuivory v0.2.0** (`github.com/leechis7/tuivory/go`)입니다. 단일 공개 패키지 `tuivory`의 `Styles`, `Styler`, `Choice`와 상태 스타일 메서드를 import합니다. `internal/ui/style_tokens.go`는 패키지 값과 제품 역할을 연결하고, `theme.go`·`widgets.go`는 공통 API를 기존 위젯에 적용합니다. 실제 의존 버전은 `go.mod`와 [적용 기록](tuivory-sync.md)에 고정합니다.
 새 화면을 추가할 때 기본 tview 색상에 맡기지 않고 생성 시점부터 현재 테마를 적용합니다.
 
 | 역할 | 공통 표시 |
@@ -57,8 +57,12 @@ LORA-69의 추가 조사로 [공식 자료를 반영한 스타일 가이드 제�
 
 미커밋 셀은 배경색 외에 행 번호의 `*`와 선택 셀 상태 문구로 식별합니다. 선택 범위가 수정 배경을 덮더라도 변경 사실을 확인할 수 있고, 복사/내보내기 값에는 표식을 넣지 않습니다.
 
-## 새 트리 적용 (v0.11.0)
+## 새 트리 적용 (v0.11.2)
 
-v0.11.0은 Tuivory v0.1.0의 공개 `Tree`·`TreeState`·`TreeView`를 사용합니다. 기존 `NewStyles`의 의미별 색을 새 트리의 body/hint/surface/selection/focus.border 역할로 연결하며 별도 후보 팔레트를 혼합하지 않습니다. Oracle 메타데이터·노드 식별·지연 조회·상세 열기와 기존 포커스 이중선은 LazyOra가 관리합니다.
+v0.11.2은 Tuivory v0.2.0의 공개 `Tree`·`TreeState`·`TreeView`를 사용합니다. 기존 `NewStyles`의 의미별 색을 새 트리의 body/hint/surface/selection/focus.border 역할로 연결하며 별도 후보 팔레트를 혼합하지 않습니다. Oracle 메타데이터·노드 식별·지연 조회·상세 열기와 기존 포커스 이중선은 LazyOra가 관리합니다.
 
-v0.11.0의 LORA-78 변경은 공통 Tuivory v0.1.0 트리의 ASCII 옵션과 LazyOra의 화면 전용 어댑터를 연결합니다. 문자 모드는 테마·색상 프로필·마우스와 독립적입니다. ASCII에서는 영어 UI를 사용하고 단일/이중 가로선을 -/=로 구분하며 비 ASCII 데이터의 대체 표시는 편집·복사·내보내기 원문을 바꾸지 않습니다. 기존 패키지 소스를 변경하거나 복사하지 않습니다.
+v0.11.2의 LORA-78 변경은 공통 Tuivory v0.2.0 트리의 ASCII 옵션과 LazyOra의 화면 전용 어댑터를 연결합니다. 문자 모드는 테마·색상 프로필·마우스와 독립적입니다. ASCII에서는 영어 UI를 사용하고 단일/이중 가로선을 -/=로 구분하며 비 ASCII 데이터의 대체 표시는 편집·복사·내보내기 원문을 바꾸지 않습니다. 기존 패키지 소스를 변경하거나 복사하지 않습니다.
+
+## 공통 UI 구현 우선순위 (v0.11.2)
+
+공통 UI의 그리기·컨트롤·스타일은 Tuivory 공개 API를 우선 사용합니다. v0.11.2의 의존성 v0.2.0에서는 팝업 전체를 `WideSafeScreen`으로 그리고, 제한 폭 라벨은 `CellText`의 `~` 표식을 사용합니다. 기존 팔레트·포커스 이중선과 제품 입력/명령/데이터 소유권을 유지합니다. 새로운 상태 모델이 기존 제품 동작과 다른 부분은 어댑터·수용 기준을 먼저 검토하며, 공통 기능 부족은 Tuivory 프로젝트에서 보완한 뒤 소비합니다. [적용·보류 상세](audits/lora-76-tuivory.md).

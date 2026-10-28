@@ -4,6 +4,9 @@
 
 - 이 저장소와 대화에서는 LazyOra만 개발한다. Tuivory 자체 개발·견본·일감은 별도 Tuivory 프로젝트에서 관리한다. UI 스타일 작업은 Tuivory에 게시된 Go 스타일 패키지의 버전/커밋을 확인하고, 공개 패키지를 import하여 변경된 스타일을 LazyOra의 LORA 일감으로 적용·검증한다. 확인한 출처와 적용/보류 판단은 `docs/tuivory-sync.md`에 기록한다.
 
+- 공통 UI의 그리기·테두리/겹침 보호·컨트롤·스타일은 Tuivory 공개 API를 우선 사용한다. LazyOra에는 Oracle 동작과 데이터/상태·명령 연결 및 필요한 표시 어댑터만 둔다. 공통 기능이 부족하면 Tuivory 프로젝트의 제공 범위를 확인해 보완을 요청하고, 같은 UI 수정을 양쪽에 독립 구현하지 않는다. 패키지에 기능이 제공되면 기존 우회 구현을 제거하고 import 기반으로 전환·회귀 검증한다.
+- Shared UI policy: prefer published Tuivory APIs for rendering, borders/overlap repair, controls and styles. Keep Oracle behavior, application data/state/commands and required display adapters in LazyOra. Check/request missing shared capabilities in the separate Tuivory project rather than maintaining parallel UI fixes. Replace local workarounds with public package APIs once available and verify integration regressions.
+
 - 작업 시작 전에 Jira의 관련 일감을 확인한다. 기존 일감이 있으면 요구사항과 진행 내역을 그 일감에 추가한다. 없으면 사용자에게 등록 여부를 묻고, 등록하기로 승인받으면 등록한 뒤 작업한다.
 - 2026-10-27 사용자 지시로 스크럼에서 칸반으로 전환한다. 새 스프린트 생성·기간 설정·일감 배정을 하지 않고 백로그 우선순위와 `할 일 → 진행 중 → 검토 → 완료` 상태로 관리한다. 기존 스프린트 이력은 보존한다. 사용자 지시가 없는 한 한 번에 한 일감을 진행하고, Tuivory 패키지 등 선행 의존성이 준비되지 않은 작업은 할 일에 둔 채 사유를 기록한다.
 - 실제 작업을 시작하면 Jira 일감을 `진행 중`으로 전환한다. 2026-10-27 검토 단계 추가 지시가 2026-10-21 자동 완료 기준보다 우선한다. 구현·필요한 검증을 마치면 근거와 남은 CI/게시 여부를 댓글로 남기고 `검토`로 전환한다. 사용자 검토 완료가 명시된 뒤에만 `완료`로 전환한다. 수정 요청을 받아 재작업할 때는 `진행 중`으로 되돌리고 검증 후 다시 `검토`로 전환한다. 검토 상태가 아직 Jira에 없으면 `진행 중`을 유지하며 검토 대기임을 댓글로 기록하고, `완료`로 대체하지 않는다. 미구현 작업이나 하위 작업이 남은 에픽은 완료 처리하지 않는다. 아래 CI 일괄 실행 기간에는 로컬 검증 완료와 GitHub 통합 CI 대기를 구분해 기록한다.

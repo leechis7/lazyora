@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### 개선 / Changed
+
+- LORA-76: Tuivory Go v0.2.0으로 갱신하고 공통 팝업의 한글 경계 보호와 제한 폭 라벨 처리를 공개 API에 위임합니다. 중복 `popupFill`을 제거하고 새 문자 쓰기 API에서도 ASCII 표시와 원문 보존을 유지합니다. 좁은 라벨의 생략 표식은 `~`입니다.
+- LORA-76: Upgrade to Tuivory Go v0.2.0; delegate popup wide-glyph protection and clipped labels to public APIs. Remove duplicate `popupFill`, preserving ASCII rendering/original data with the new writing methods. Clipped labels use `~`.
+
 ## [0.11.1] - 2026-10-28
 
 ### 수정 / Fixed

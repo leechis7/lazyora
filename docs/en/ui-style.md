@@ -53,3 +53,7 @@ Tuivory extraction, publication and LazyOra consumption are complete. The origin
 v0.11.0 uses public Tuivory v0.1.0 `Tree`, `TreeState` and `TreeView`. Adapt existing `NewStyles` values to body/hint/surface/selection/focus.border roles instead of mixing in the separate candidate palette. LazyOra owns Oracle metadata, identities, lazy fetching, details actions and its existing focused double borders.
 
 In v0.11.0, LORA-78 connects the public Tuivory v0.1.0 tree ASCII option to a LazyOra display-only adapter. Character mode is independent of theme, colors and mouse. ASCII uses English UI, distinguishes single/double horizontal borders with -/=, and substitutes non-ASCII data only during drawing without changing editing/copy/export originals. Upstream source is neither changed nor copied.
+
+## Shared implementation priority (development branch)
+
+Prefer public Tuivory APIs for shared rendering, controls and styles. Development v0.2.0 uses `WideSafeScreen` for entire popup draws and `CellText` with its `~` marker for clipped labels. Preserve existing palettes, focused double borders and host input/commands/data ownership. Review adapters and acceptance criteria before replacing models with different product behavior; arrange missing shared capabilities in Tuivory before consumption. See [adoption/defer details](../audits/lora-76-tuivory.md).

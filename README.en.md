@@ -102,3 +102,5 @@ Copyright (C) 2026 Chaekang Lee. [GNU AGPL v3.0](LICENSE) (`AGPL-3.0-only`). Dep
 v0.11.0 adopts the **Tuivory v0.1.0** tree: expand tables/views for columns and types, and pan long names horizontally. See [tree controls](docs/en/usage.md).
 
 v0.11.0 adds saved **Auto/Unicode/ASCII** character display. Preview with `--demo --display-mode ascii`; see [terminal guidance](docs/en/terminal.md).
+
+The development branch adopts Tuivory Go v0.2.0 for shared popup drawing and clipped labels. Published v0.11.1 downloads remain unchanged; see the [integration/defer record](docs/en/tuivory-sync.md).

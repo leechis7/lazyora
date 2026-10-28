@@ -88,6 +88,44 @@ func (d *displayLayout) Draw(terminal tcell.Screen) {
 type asciiScreen struct{ tcell.Screen }
 
 func (a asciiScreen) CanDisplay(r rune, _ bool) bool { return r >= 0x20 && r <= 0x7e }
+
+// Tuivory's drawing adapter uses tcell's newer Put API. Keep all positioned
+// writes in the same display-only conversion path, regardless of wrapper order.
+func (a asciiScreen) Put(x, y int, text string, st tcell.Style) (string, int) {
+	w, h := a.Size()
+	if x < 0 || y < 0 || x >= w || y >= h {
+		return text, 0
+	}
+	g := uniseg.NewGraphemes(text)
+	for g.Next() {
+		if g.Width() == 0 {
+			continue
+		}
+		_, end := g.Positions()
+		runes := g.Runes()
+		a.SetContent(x, y, runes[0], runes[1:], st)
+		return text[end:], g.Width()
+	}
+	return "", 0
+}
+func (a asciiScreen) SetCell(x, y int, st tcell.Style, chars ...rune) {
+	if len(chars) > 0 {
+		a.SetContent(x, y, chars[0], chars[1:], st)
+	}
+}
+func (a asciiScreen) PutStrStyled(x, y int, text string, st tcell.Style) {
+	for text != "" {
+		rest, width := a.Put(x, y, text, st)
+		if width == 0 {
+			return
+		}
+		text, x = rest, x+width
+	}
+}
+func (a asciiScreen) PutStr(x, y int, text string) {
+	a.PutStrStyled(x, y, text, tcell.StyleDefault)
+}
+
 func (a asciiScreen) SetContent(x, y int, r rune, comb []rune, st tcell.Style) {
 	if r < 128 {
 		// Combining marks are display-only too; retain the base cell width.

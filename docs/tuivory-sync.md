@@ -4,6 +4,12 @@
 
 LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 원칙을 제품 UI에 적용합니다. Tuivory의 가이드·견본·도구 개발은 별도 저장소와 Tuivory Jira에서 관리하고, LazyOra의 적용 작업은 LORA Jira에서 관리합니다.
 
+## LORA-79: 공통 팝업 한글 경계 수정 (2026-10-28, v0.11.1)
+
+공개 의존성은 `github.com/leechis7/tuivory/go v0.1.0`, 태그 `go/v0.1.0`, 출처 커밋 `c034a00b1db92ee7ad4abd1ea5956907f1c1a124`를 유지합니다. Go 모듈 Origin을 다시 확인했습니다. Tuivory의 열린 Choice에는 두 칸 문자 경계 보호가 있으나 이번 결함은 LazyOra가 직접 배치하는 공통 팝업 카드·그림자에 있습니다. 공개 패키지를 그대로 import하고 upstream 수정·소스 복사·로컬 replace는 하지 않습니다.
+
+`form_popup.go`의 `popupFill`에서 카드·그림자의 양쪽 경계에 걸친 배경 문자의 두 칸을 함께 지웁니다. 경계 밖의 온전한 글자와 스타일은 유지합니다. 기존 검사가 논리 셀과 한 칸 배경만 확인해 놓친 문제이므로 `Show()` 이후 실제 출력 버퍼를 비교하는 회귀 검사를 추가합니다. 한영 UI·3종 팝업·12개 테마/색상·크기 왕복·한글/CJK/이모지/결합 문자·배경 복원 및 SQL/결과/포커스 보존을 검사합니다. [한영 검증 기록](audits/lora-79-popup.md)을 참고하세요. 이 수정은 LazyOra v0.11.1부터 포함되며 기존 v0.11.0 자산은 변경하지 않습니다. Tuivory의 일반 팝업/오버레이용 공개 경계 보호 API는 별도 Tuivory 프로젝트에서 보완한 뒤 LazyOra 후속 일감으로 적용할 범위입니다.
+
 ## LORA-78: 문자 지원 감지·ASCII 표시 (2026-10-28, v0.11.0)
 
 공개 모듈은 v0.1.0, 태그 go/v0.1.0, 커밋 c034a00b1db92ee7ad4abd1ea5956907f1c1a124를 유지합니다. TreeView.ASCII를 실제 적용 모드에 연결합니다. 기존 tview 화면은 LazyOra의 displayLayout/asciiScreen이 그릴 때만 호환 문자로 대체합니다. 데이터·언어 선호·터미널 입출력 프로토콜은 제품 책임으로 유지하며 Tuivory 자체 개발이나 소스 복사는 하지 않습니다. 아직 사용하지 않는 Tuivory Panel/Split 등의 ASCII 옵션은 해당 컴포넌트 적용 일감에서 연결합니다.

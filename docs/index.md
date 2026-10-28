@@ -22,6 +22,7 @@
 | 기여 방법 | [기여 안내](../CONTRIBUTING.md) | [Contributing](en/contributing.md) |
 | 문의·비공개 취약점 제보 | [지원](../SUPPORT.md) · [보안](../SECURITY.md) | [Support/security](en/support.md) |
 | 행동 규칙 | [한국어](../CODE_OF_CONDUCT.md) | [English](../CODE_OF_CONDUCT.en.md) |
+| v0.11.1 릴리스 설명 | [한국어](releases/v0.11.1.md) | [English](en/releases/v0.11.1.md) |
 | v0.11.0 릴리스 설명 | [한국어](releases/v0.11.0.md) | [English](en/releases/v0.11.0.md) |
 | v0.10.2 릴리스 설명 | [한국어](releases/v0.10.2.md) | [English](en/releases/v0.10.2.md) |
 

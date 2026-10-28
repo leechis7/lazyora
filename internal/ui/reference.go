@@ -84,7 +84,7 @@ func (s *screen) referenceContent(article referenceArticle) string {
 }
 
 func (s *screen) showGuide() {
-	data, _ := resources.Documents.ReadFile("docs/guide." + s.prefs.Language + ".md")
+	data, _ := resources.Documents.ReadFile("docs/guide." + s.uiLanguage() + ".md")
 	if len(data) == 0 {
 		data, _ = resources.Documents.ReadFile("docs/guide.en.md")
 	}
@@ -98,7 +98,7 @@ func (s *screen) showReleaseHistory() {
 		if strings.HasPrefix(articles[i].title, "[Unreleased]") {
 			articles[i].title = s.tr("release_unreleased")
 		}
-		if s.prefs.Language != "ko" {
+		if s.uiLanguage() != "ko" {
 			articles[i].body = s.tr("release_language_note") + "\n\n" + articles[i].body
 		}
 	}
@@ -144,6 +144,7 @@ func (s *screen) diagnosticContent() string {
 		keymap = "default"
 	}
 	fmt.Fprintf(&out, "Language: %s\nTheme: %s\nKeymap: %s\nMouse: %v\n", s.prefs.Language, theme, keymap, s.prefs.Mouse)
+	fmt.Fprintf(&out, "UI language: %s\nDisplay preference: %s\nDisplay override: %s\nDisplay: %s\n", s.uiLanguage(), s.prefs.DisplayMode, s.displayOverride, s.displaySummary())
 	for _, key := range []string{"TERM", "COLORTERM", "LANG", "LC_ALL", "LC_MESSAGES", "LC_CTYPE"} {
 		fmt.Fprintf(&out, "%s: %s\n", key, publicEnvironment(os.Getenv(key)))
 	}

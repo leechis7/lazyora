@@ -2,7 +2,7 @@
 
 [한국어 (primary)](../index.md) | **English**
 
-Use the guides below for current behavior. The app-version source is `internal/appinfo/info.go`, dependency versions are in `go.mod`, and actual published binaries are in [GitHub Releases](https://github.com/leechis7/lazyora/releases). **Tuivory v0.0.1 has provided shared UI styles since v0.10.2.** Earlier TUIS references and independent-project plans are migration/design history, not current dependencies or incomplete extraction work.
+Use the guides below for current behavior. The app-version source is `internal/appinfo/info.go`, dependency versions are in `go.mod`, and actual published binaries are in [GitHub Releases](https://github.com/leechis7/lazyora/releases). **v0.11.0 uses Tuivory v0.1.0 for shared UI styles.** Earlier TUIS references and independent-project plans are migration/design history, not current dependencies or incomplete extraction work.
 
 ## Current guidance
 
@@ -22,6 +22,7 @@ Use the guides below for current behavior. The app-version source is `internal/a
 | Contributions | [Contributing](contributing.md) | [기여](../../CONTRIBUTING.md) |
 | Support and private security reports | [Support/security](support.md) | [지원](../../SUPPORT.md) · [보안](../../SECURITY.md) |
 | Community rules | [Code of conduct](../../CODE_OF_CONDUCT.en.md) | [행동 규칙](../../CODE_OF_CONDUCT.md) |
+| v0.11.0 release description | [English](releases/v0.11.0.md) | [한국어](../releases/v0.11.0.md) |
 | v0.10.2 release description | [English](releases/v0.10.2.md) | [한국어](../releases/v0.10.2.md) |
 
 The [bilingual review record](../audits/lora-71-docs.md) and [machine-readable inventory](../audits/lora-71-docs-inventory.json) describe this refresh.

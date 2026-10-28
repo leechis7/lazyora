@@ -20,6 +20,9 @@ func (s *screen) applyTheme(previous string) {
 		seen[p] = true
 		var box *tview.Box
 		switch w := p.(type) {
+		case *displayLayout:
+			visit(w.Flex)
+			return
 		case *formPopupLayer:
 			visit(w.Flex)
 			return

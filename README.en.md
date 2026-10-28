@@ -6,7 +6,7 @@
 
 LazyOra aims to make everyday Oracle development and inspection practical in a terminal, including over SSH, without installing Toad or purchasing its commercial license. It adapts familiar Toad workflows and shortcuts to a TUI. It is an independent project under active development, not a complete replacement for every Toad feature.
 
-Current version: **0.10.2** · **Linux / Windows / macOS · AMD64 / ARM64**
+Current version: **0.11.0** · **Linux / Windows / macOS · AMD64 / ARM64**
 
 - Oracle SQL/PL/SQL syntax highlighting, files and multiple SQL tabs, cursor-statement execution, F5 scripts and IN bind variables.
 - Estimated execution plans, result copying, CSV/TSV/Excel/INSERT export, and manual commit/rollback.
@@ -16,7 +16,7 @@ Current version: **0.10.2** · **Linux / Windows / macOS · AMD64 / ARM64**
 
 ![LazyOra: menus, schema browser, SQL editor, result grid and context-sensitive shortcuts](docs/images/lazyora-overview.png)
 
-*Dark theme · English UI · DB-free demo widgets rendered in a simulated terminal.*
+*v0.11.0 · Dark theme · English UI · DB-free demo widgets rendered in a simulated terminal.*
 
 ## Quick start
 
@@ -83,7 +83,7 @@ Korean remains the primary documentation language. Historical audits, detailed d
 
 ## Implementation and shared UI
 
-**Since v0.10.2, [Tuivory](https://github.com/leechis7/tuivory) v0.0.1** provides common themes, color profiles, input/choice/button/table/popup styles, grid states and syntax colors through `github.com/leechis7/tuivory/go`. Release users do not install a separate package.
+**In v0.11.0, [Tuivory](https://github.com/leechis7/tuivory) v0.1.0** provides common themes, color profiles, input/choice/button/table/popup styles, grid states and syntax colors through `github.com/leechis7/tuivory/go`. Release users do not install a separate package.
 
 tview/tcell handle terminal rendering and input; go-ora handles Oracle communication. LazyOra retains SQL parsing for display, database execution and transactions, Toad keymaps, grid data and application state. See [UI style rules](docs/en/ui-style.md) and [Tuivory integration](docs/en/tuivory-sync.md).
 
@@ -94,3 +94,9 @@ The initial screen layout was inspired by [lazySQL](https://github.com/jorgeroja
 Developer: **이채강 (Chaekang Lee)** · leechis7@gmail.com
 
 Copyright (C) 2026 Chaekang Lee. [GNU AGPL v3.0](LICENSE) (`AGPL-3.0-only`). Dependencies retain their own licenses.
+
+## New in v0.11.0
+
+v0.11.0 adopts the **Tuivory v0.1.0** tree: expand tables/views for columns and types, and pan long names horizontally. See [tree controls](docs/en/usage.md).
+
+v0.11.0 adds saved **Auto/Unicode/ASCII** character display. Preview with `--demo --display-mode ascii`; see [terminal guidance](docs/en/terminal.md).

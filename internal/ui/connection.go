@@ -396,7 +396,7 @@ func (s *screen) connectionForm() {
 			form.GetButton(3).SetLabel(s.tr("connection_probe_short"))
 			if width < 52 {
 				labels := []string{"C", "X", "S", "T"}
-				if s.prefs.Language == "ko" {
+				if s.uiLanguage() == "ko" {
 					labels = []string{"접", "취", "저", "시"}
 				}
 				for i, label := range labels {

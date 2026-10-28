@@ -35,7 +35,7 @@ func (s *screen) showRoutine(object oracle.Object, reference string) {
 func (s *screen) requestRoutine() {
 	if s.browserHasFocus() {
 		if node := s.browser.GetCurrentNode(); node != nil {
-			if data, ok := node.GetReference().(*browserNode); ok && data.kind == "object" {
+			if data, ok := node.GetReference().(*browserNode); ok && (data.kind == "object" || data.kind == "column") {
 				s.showRoutine(data.object, "")
 				return
 			}

@@ -2,6 +2,12 @@
 
 [한국어](../tuivory-sync.md) | **English** · [UI style rules](ui-style.md)
 
+## LORA-79: wide-glyph modal boundaries (2026-10-28, development)
+
+Retain the public `github.com/leechis7/tuivory/go v0.1.0` dependency, tag `go/v0.1.0`, source `c034a00b1db92ee7ad4abd1ea5956907f1c1a124`; rechecked Go module Origin. The open Tuivory Choice already protects wide-glyph boundaries. This defect is in LazyOra's own popup card/shadow composition. Continue importing the public package without upstream edits, source copying or a local replacement.
+
+`popupFill` in `form_popup.go` clears both cells of a background glyph cut by either edge of a card/shadow row, preserving intact outside glyphs/styles. Previous checks inspected logical cells and single-cell backgrounds, missing skipped physical output. New regression tests compare the actual buffer after `Show()`, covering Korean/English, three dialogs, 12 theme/color combinations, resizing, Korean/CJK/emoji/combining marks, background restoration and preserved SQL/results/focus. See the [bilingual verification record](../audits/lora-79-popup.md). Published v0.11.0 assets do not include this development change.
+
 ## LORA-78: capability detection and ASCII display (2026-10-28, v0.11.0)
 
 Keep public module v0.1.0, tag go/v0.1.0, commit c034a00b1db92ee7ad4abd1ea5956907f1c1a124. Connect TreeView.ASCII to the effective mode. LazyOra displayLayout/asciiScreen substitutes compatible glyphs only while drawing existing tview screens. Data, language preferences and terminal I/O protocols remain application-owned; do not copy or develop upstream sources here. Wire the unused Tuivory Panel/Split ASCII options when those components are adopted in their own issues.

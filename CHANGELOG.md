@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### 수정 / Fixed
+
+- LORA-79: 한글·CJK·이모지 등 두 칸 문자가 공통 팝업 카드·그림자 경계에 걸리면 남은 반 칸 때문에 테두리 선이 사라지는 문제를 수정합니다. 접속·설정·앱 정보 등 공통 팝업에 적용하며 SQL·결과 원문은 유지합니다.
+- LORA-79: Fix missing modal borders when a wide Korean/CJK/emoji glyph crosses a popup card or shadow boundary. Applies to shared dialogs including connection, settings and About, preserving original SQL/result data.
+
 ## [0.11.0] - 2026-10-28
 
 ### 추가 / Added

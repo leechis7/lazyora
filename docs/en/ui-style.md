@@ -2,7 +2,7 @@
 
 [한국어](../ui-style.md) | **English** · [Documentation](index.md)
 
-In **v0.11.0**, common styles come from **Tuivory v0.1.0**, the public Go module `github.com/leechis7/tuivory/go`. Its single `tuivory` package supplies `Styles`, `Styler`, `Choice` and state-style methods. The pinned version is in `go.mod`; see [integration and updates](tuivory-sync.md).
+In **v0.11.2**, common styles come from **Tuivory v0.2.0**, the public Go module `github.com/leechis7/tuivory/go`. Its single `tuivory` package supplies `Styles`, `Styler`, `Choice` and state-style methods. The pinned version is in `go.mod`; see [integration and updates](tuivory-sync.md).
 
 LazyOra's `internal/ui/style_tokens.go` adapts package values to product roles. It does not own a second palette. `theme.go` and `widgets.go` apply styles to existing widgets. Oracle execution, transactions, SQL display lexing, Toad keymaps, grid data, focus and modal input routing remain application responsibilities.
 
@@ -48,12 +48,12 @@ The 12-profile comparison covers connection/settings, output/history/plan/script
 
 Tuivory extraction, publication and LazyOra consumption are complete. The original [proposal](../ui-style-proposal.md) and candidate CSV are archived design input, not the live palette. [The integration record](tuivory-sync.md) points to dated automated evidence and its limitations. Tuivory itself is developed in its separate repository.
 
-## New tree integration (v0.11.0)
+## New tree integration (v0.11.2)
 
-v0.11.0 uses public Tuivory v0.1.0 `Tree`, `TreeState` and `TreeView`. Adapt existing `NewStyles` values to body/hint/surface/selection/focus.border roles instead of mixing in the separate candidate palette. LazyOra owns Oracle metadata, identities, lazy fetching, details actions and its existing focused double borders.
+v0.11.2 uses public Tuivory v0.2.0 `Tree`, `TreeState` and `TreeView`. Adapt existing `NewStyles` values to body/hint/surface/selection/focus.border roles instead of mixing in the separate candidate palette. LazyOra owns Oracle metadata, identities, lazy fetching, details actions and its existing focused double borders.
 
-In v0.11.0, LORA-78 connects the public Tuivory v0.1.0 tree ASCII option to a LazyOra display-only adapter. Character mode is independent of theme, colors and mouse. ASCII uses English UI, distinguishes single/double horizontal borders with -/=, and substitutes non-ASCII data only during drawing without changing editing/copy/export originals. Upstream source is neither changed nor copied.
+In v0.11.2, LORA-78 connects the public Tuivory v0.2.0 tree ASCII option to a LazyOra display-only adapter. Character mode is independent of theme, colors and mouse. ASCII uses English UI, distinguishes single/double horizontal borders with -/=, and substitutes non-ASCII data only during drawing without changing editing/copy/export originals. Upstream source is neither changed nor copied.
 
-## Shared implementation priority (development branch)
+## Shared implementation priority (v0.11.2)
 
-Prefer public Tuivory APIs for shared rendering, controls and styles. Development v0.2.0 uses `WideSafeScreen` for entire popup draws and `CellText` with its `~` marker for clipped labels. Preserve existing palettes, focused double borders and host input/commands/data ownership. Review adapters and acceptance criteria before replacing models with different product behavior; arrange missing shared capabilities in Tuivory before consumption. See [adoption/defer details](../audits/lora-76-tuivory.md).
+Prefer public Tuivory APIs for shared rendering, controls and styles. Tuivory v0.2.0 in LazyOra v0.11.2 uses `WideSafeScreen` for entire popup draws and `CellText` with its `~` marker for clipped labels. Preserve existing palettes, focused double borders and host input/commands/data ownership. Review adapters and acceptance criteria before replacing models with different product behavior; arrange missing shared capabilities in Tuivory before consumption. See [adoption/defer details](../audits/lora-76-tuivory.md).

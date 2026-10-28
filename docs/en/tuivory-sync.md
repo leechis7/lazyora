@@ -2,13 +2,13 @@
 
 [한국어](../tuivory-sync.md) | **English** · [UI style rules](ui-style.md)
 
-## LORA-76: shared UI via Tuivory v0.2.0 (2026-10-28, development)
+## LORA-76: shared UI via Tuivory v0.2.0 (2026-10-29, v0.11.2)
 
 - Source: [public go/v0.2.0 release](https://github.com/leechis7/tuivory/releases/tag/go/v0.2.0), commit `987d1a6786033a6bf063235b5e7fea7b565f0af0`. Verified module Origin and Sum `h1:q+NJW7/inCfX1cbGLIlEihF8mo/i86cGHozvl9VL6Gw=`. Go 1.24, tcell/tview and AGPL-3.0-only requirements are compatible. No local module replacement or upstream source copying.
 - Adopted: draw the whole shared popup (backdrop/card/shadow/child borders) through public `WideSafeScreen`. Remove local `popupFill`; use `CellText` for clipped labels, with its common `~` omission marker. Retain LORA-79 physical-output regressions.
 - Host adapter: the new drawing API uses `Put`; route Put/SetCell/PutStr methods through the existing display-only ASCII conversion. Preserve originals, cell widths, copying and preferences without reimplementing wide-glyph repairs.
 - Reviewed: existing style/widget/tree APIs remain. Style values are unchanged; Choice now uses common overlap repair. Do not bulk-replace application state with new Form/FocusStack/Menu/Grid/Tab/Panel/Split/Status models. See [adoption/defer review](../audits/lora-76-tuivory.md) for behavior differences and follow-up issues.
-- Policy: solve shared UI defects through public Tuivory APIs; arrange missing capabilities in the separate Tuivory project before consumption. Keep product Oracle/command/data adapters distinct. Published v0.11.1 binaries are unchanged.
+- Policy: solve shared UI defects through public Tuivory APIs; arrange missing capabilities in the separate Tuivory project before consumption. Keep product Oracle/command/data adapters distinct. This ships in v0.11.2; existing v0.11.1 binaries remain unchanged.
 
 ## LORA-79: wide-glyph modal boundaries (2026-10-28, v0.11.1)
 
@@ -25,9 +25,9 @@ CharacterSet and CanDisplay provide estimates, not real font coverage. [Terminal
 
 ## Current state
 
-**LazyOra v0.11.0 ships Tuivory v0.1.0**, module `github.com/leechis7/tuivory/go`, release tag `go/v0.1.0`, source commit `c034a00b1db92ee7ad4abd1ea5956907f1c1a124`. It uses the single public `tuivory` package. TUIS is no longer a dependency; earlier TUIS entries in the Korean record document the migration history.
+**LazyOra v0.11.2 ships Tuivory v0.2.0**, module `github.com/leechis7/tuivory/go`, release tag `go/v0.2.0`, source commit `987d1a6786033a6bf063235b5e7fea7b565f0af0`. It uses the single public `tuivory` package. TUIS is no longer a dependency; earlier TUIS entries in the Korean record document the migration history.
 
-The Go module lives under the upstream repository's `go/` directory. Current development consumers specify `@v0.2.0` (released LazyOra v0.10.2 used `@v0.0.1`); the repository tag includes the `go/` prefix. Do not import upstream `internal` packages or replace the module with a local checkout.
+The Go module lives under the upstream repository's `go/` directory. Current consumers specify `@v0.2.0` (released LazyOra v0.10.2 used `@v0.0.1`); the repository tag includes the `go/` prefix. Do not import upstream `internal` packages or replace the module with a local checkout.
 
 | LazyOra area | Tuivory responsibility |
 | --- | --- |

@@ -62,16 +62,16 @@ func (s *screen) formPopup(content tview.Primitive, preferredWidth, preferredHei
 		// so the underlying SQL and result borders cannot show through it.
 		card := s.tuivoryStyles().PopupCardStyle()
 		for py := top; py < top+h; py++ {
-			gridFill(terminal, left, py, w, card)
+			popupFill(terminal, left, py, w, card)
 		}
 		shadow := s.tuivoryStyles().PopupShadowStyle()
 		if left+w < x+width {
 			for py := top + 1; py < top+h+1 && py < y+height; py++ {
-				terminal.SetContent(left+w, py, ' ', nil, shadow)
+				popupFill(terminal, left+w, py, 1, shadow)
 			}
 		}
 		if top+h < y+height {
-			gridFill(terminal, left+1, top+h, min(w, x+width-left-1), shadow)
+			popupFill(terminal, left+1, top+h, min(w, x+width-left-1), shadow)
 		}
 		if layout != nil {
 			layout(w, h)
@@ -79,6 +79,26 @@ func (s *screen) formPopup(content tview.Primitive, preferredWidth, preferredHei
 		return left, top, w, h
 	})
 	return &formPopupLayer{Flex: root, content: content}
+}
+
+// Clear both halves of background glyphs cut by an opaque row. Leaving the
+// leading half outside the popup makes tcell skip its first border cell during
+// physical output; leaving a trailing half can retain stale background content.
+// Intact glyphs outside the row and their styles remain untouched.
+func popupFill(terminal tcell.Screen, x, y, width int, style tcell.Style) {
+	if width <= 0 {
+		return
+	}
+	for _, edge := range [2]int{x, x + width} {
+		if edge > 0 {
+			_, _, previous, cellWidth := terminal.GetContent(edge-1, y)
+			if cellWidth > 1 {
+				terminal.SetContent(edge-1, y, ' ', nil, previous)
+				terminal.SetContent(edge, y, ' ', nil, previous)
+			}
+		}
+	}
+	gridFill(terminal, x, y, width, style)
 }
 
 type formPopupLayer struct {

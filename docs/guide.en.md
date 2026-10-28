@@ -28,7 +28,7 @@ F9 executes the selection, or the statement at the cursor when nothing is select
 F5 executes a script in order and stops at the first error or cancellation.
 Separate PL/SQL blocks with a standalone / line. SQL*Plus commands are unsupported.
 
-Since v0.10.2, Tuivory v0.0.1 supplies common theme, input, choice, button, grid and syntax styles. It is included in the executable; no separate installation is needed. Dark/Light/Black-White themes and 8/16/256/True Color terminal profiles are distinct.
+Tuivory v0.1.0 supplies common theme, input, choice, button, grid and syntax styles. It is included in the executable; no separate installation is needed. Dark/Light/Black-White themes and 8/16/256/True Color terminal profiles are distinct.
 
 Tools → Settings selects Toad (default), Vim, Notepad++, VS Code or IntelliJ IDEA keymaps, language, Dark/Light/Black-White theme and mouse support.
 Help → Editor keymap comparison, or Alt+K in F1 help, compares the assigned keys. Arrows navigate; full selected-cell text appears below. Enter switches table/detail; scroll detail with arrows or PgUp/PgDn. Tab cycles table/detail/Close. Ctrl+C copies the table and Esc returns.
@@ -45,7 +45,7 @@ An uncertain outcome needs verification through a new connection; never assume a
 
 ## Connections and schema browsing
 
-The next development version uses the published Tuivory **v0.1.0** tree. User/type selectors and live object filtering remain. On a table or view, use **Right/Space or click the disclosure arrow** to fetch columns and data types. **Left** collapses or moves to the parent; **Alt+Left/Right** pans long names. **Enter or clicking a name** opens the existing object details. Columns are fetched on expansion and cached for the current list; Ctrl+R refresh, owner changes and reconnects clear the cache. Collapse and re-expand after failure/cancellation to retry. Existing Esc cancellation and work-protection rules apply during queries. This change is not yet in a published LazyOra release.
+v0.11.0 uses the published Tuivory **v0.1.0** tree. User/type selectors and live object filtering remain. On a table or view, use **Right/Space or click the disclosure arrow** to fetch columns and data types. **Left** collapses or moves to the parent; **Alt+Left/Right** pans long names. **Enter or clicking a name** opens the existing object details. Columns are fetched on expansion and cached for the current list; Ctrl+R refresh, owner changes and reconnects clear the cache. Collapse and re-expand after failure/cancellation to retry. Existing Esc cancellation and work-protection rules apply during queries.
 
 Alt+J opens workspaces: N adds a connection, Enter switches, Delete asks before closing one.
 SQL tabs, results and transactions are separate between connections. Check the environment, account and database labels.
@@ -94,4 +94,4 @@ Help → View/copy diagnostics previews public environment details.
 Help → Report an issue / suggest a feature provides the URL and report template. Remove real credentials, SQL and results.
 Release history marks unreleased development separately. About is the last Help menu item.
 
-Tools → Settings → Character display (Alt+D) saves Auto/Unicode/ASCII (next version). --display-mode ascii overrides only this run. ASCII uses English UI and ? substitutes for non-ASCII data glyphs, preserving original SQL/data/application copy/export and Korean preferences. Settings/Diagnostics show the effective mode and reason. Actual font coverage cannot be detected.
+Tools → Settings → Character display (Alt+D) saves Auto/Unicode/ASCII (v0.11.0). --display-mode ascii overrides only this run. ASCII uses English UI and ? substitutes for non-ASCII data glyphs, preserving original SQL/data/application copy/export and Korean preferences. Settings/Diagnostics show the effective mode and reason. Actual font coverage cannot be detected.

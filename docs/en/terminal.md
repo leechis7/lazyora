@@ -2,9 +2,9 @@
 
 [한국어](../terminal.md) | **English** · [English README](../../README.en.md)
 
-## Character display mode (development)
+## Character display mode (v0.11.0)
 
-In the next version, choose **Auto (default) / Unicode / ASCII** under **Tools → Settings → Character display (Alt+D)** and Save. Apply saved changes immediately to every connection workspace and retain them across launches. Canceling or failing to save preserves the active preferences. The settings note and Help → Diagnostics show the effective mode and reason.
+In v0.11.0, choose **Auto (default) / Unicode / ASCII** under **Tools → Settings → Character display (Alt+D)** and Save. Apply saved changes immediately to every connection workspace and retain them across launches. Canceling or failing to save preserves the active preferences. The settings note and Help → Diagnostics show the effective mode and reason.
 
 - Auto checks the actual output character set and tcell’s encoding/terminfo estimates for required line/icon glyphs. Color count or `TERM=ansi` alone does not force ASCII. UTF-8 support cannot establish actual font coverage.
 - Unicode is a manual display selection. It does not change terminal encoding/fonts or guarantee unsupported glyphs.
@@ -22,7 +22,7 @@ The optional `display_mode` setting accepts `auto`, `unicode`, or `ascii`; old f
 
 ASCII mode still requires a terminal supporting basic cursor positioning and screen updates. Character substitution does not add TUI capabilities to an unsupported TERM or a plain output-only terminal.
 
-This feature is not in the published v0.10.2 downloads yet.
+This feature is available since v0.11.0.
 
 
 ## Ctrl+Enter inserts a newline
@@ -47,7 +47,7 @@ Some MobaXterm configurations send Shift+F2 as `Esc[24~`, the same input as ordi
 
 ## Themes and color profiles
 
-v0.10.2 uses Tuivory v0.0.1 for shared styling. Dark/Light/Black-White themes are independent from the 8/16/256/True Color profile reported by the terminal. Reference-palette contrast checks do not guarantee the appearance of a customized ANSI palette. See [UI style rules](ui-style.md).
+v0.11.0 uses Tuivory v0.1.0 for shared styling. Dark/Light/Black-White themes are independent from the 8/16/256/True Color profile reported by the terminal. Reference-palette contrast checks do not guarantee the appearance of a customized ANSI palette. See [UI style rules](ui-style.md).
 
 ## Color, mouse and missing TERM
 

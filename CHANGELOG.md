@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-28
+
 ### 추가 / Added
 
 - LORA-78: 설정에서 자동/Unicode/ASCII 문자 표시를 저장하고 `--display-mode`로 이번 실행만 지정합니다. 출력 문자 지원 추정에 따라 ASCII/영어 UI로 대체하며 SQL·DB 값·복사/내보내기 원문과 언어 선호를 보존합니다.
@@ -295,7 +297,8 @@ v0.0.1의 F2 접속은 Alt+L, F4 실행은 F9, F5 커밋은 Alt+C, F6 롤백은 
 - 이 릴리스 시점에는 실제 CentOS 7.4, 구형 Oracle 및 SID 접속 검증이 완료되지 않았습니다. 이후 호환성 수정은 `Unreleased`에 기록합니다.
 - 한 번에 SQL 한 문장 또는 BEGIN/DECLARE 블록 하나를 실행합니다. 여러 문장 일괄 실행, SQL*Plus 스크립트, 바인드 입력, DBMS_OUTPUT 출력은 지원하지 않습니다.
 
-[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.10.2...dev
+[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.11.0...dev
+[0.11.0]: https://github.com/leechis7/lazyora/compare/v0.10.2...v0.11.0
 [0.10.2]: https://github.com/leechis7/lazyora/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/leechis7/lazyora/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/leechis7/lazyora/compare/v0.9.0...v0.10.0

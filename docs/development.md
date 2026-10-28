@@ -78,7 +78,7 @@ GitHub에서 CI 성공을 병합의 필수 조건으로 강제하려면 `dev`와
 
 ## Tuivory 스타일 가이드 반영
 
-Tuivory 자체 개발은 별도 프로젝트에서 진행합니다. 현재 개발 브랜치는 `github.com/leechis7/tuivory/go v0.1.0`을 고정합니다. 정식 v0.10.2는 v0.0.1을 사용하며 새 트리는 다음 릴리스 대상입니다. LazyOra에서는 공개 Go 스타일 패키지를 import하고, 검토한 버전의 변경을 LORA 일감에서 적용·검증합니다. Tuivory 소스를 복사하거나 로컬 경로로 replace하지 않습니다. 출처 커밋, 변경 원칙, LazyOra 적용 위치, 검증과 보류 사유는 [반영 기록](tuivory-sync.md)에 남깁니다. 공통 가이드와 Oracle/Toad 관련 제품 동작을 구분하며 커밋·게시·릴리스 승인은 기존 절차를 따릅니다.
+Tuivory 자체 개발은 별도 프로젝트에서 진행합니다. 현재 개발 브랜치는 `github.com/leechis7/tuivory/go v0.1.0`을 고정합니다. v0.11.0부터 새 트리를 제공합니다. LazyOra에서는 공개 Go 스타일 패키지를 import하고, 검토한 버전의 변경을 LORA 일감에서 적용·검증합니다. Tuivory 소스를 복사하거나 로컬 경로로 replace하지 않습니다. 출처 커밋, 변경 원칙, LazyOra 적용 위치, 검증과 보류 사유는 [반영 기록](tuivory-sync.md)에 남깁니다. 공통 가이드와 Oracle/Toad 관련 제품 동작을 구분하며 커밋·게시·릴리스 승인은 기존 절차를 따릅니다.
 
 
 ## 한국어·영어 문서 유지

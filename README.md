@@ -11,7 +11,7 @@ Toad를 설치하고 상용 라이선스를 구매하는 부담 없이, 터미�
 
 SQL·PL/SQL 편집부터 스키마 탐색, 실행 결과 확인과 내보내기까지 하나의 화면에서 이어가고, SSH로 접속한 서버에서도 실행파일 하나로 사용할 수 있도록 개발합니다. Toad의 모든 기능을 갖춘 단계는 아니며, 실제 Oracle 작업에 필요한 기능을 차근차근 확장하고 있습니다.
 
-현재 버전: **0.10.2** · **Linux / Windows / macOS · AMD64 / ARM64**
+현재 버전: **0.11.0** · **Linux / Windows / macOS · AMD64 / ARM64**
 
 - Oracle SQL·PL/SQL 구문 색상, SQL 파일·여러 편집 탭, 커서 문장·F5 스크립트 실행과 IN 바인드 입력
 - 예상 실행 계획, 결과 조회·복사와 CSV·TSV·Excel·INSERT 내보내기, 수동 커밋·롤백
@@ -21,7 +21,7 @@ SQL·PL/SQL 편집부터 스키마 탐색, 실행 결과 확인과 내보내기�
 
 ![LazyOra 한국어 UI 전체 화면: 상단 메뉴, 스키마 브라우저, SQL 편집기, 결과 그리드와 하단 단축키](docs/images/lazyora-overview-ko.png)
 
-*v0.10.2 · 다크 테마 · 한국어 UI · DB 연결 없는 데모 위젯의 모의 터미널 캡처.*
+*v0.11.0 · 다크 테마 · 한국어 UI · DB 연결 없는 데모 위젯의 모의 터미널 캡처.*
 
 ## 빠른 시작
 
@@ -83,7 +83,7 @@ F9는 커서 문장을, F5는 스크립트를 실행합니다. F9 SELECT 결과�
 
 ## 구현과 공통 UI
 
-**v0.10.2부터 [Tuivory](https://github.com/leechis7/tuivory) v0.0.1**을 가져와 테마·색상 프로필·입력·선택·버튼·표·팝업·그리드·SQL 문법색을 공통 패키지로 적용합니다. Go 모듈은 `github.com/leechis7/tuivory/go`이며, 실행파일 사용자에게 별도 설치는 필요하지 않습니다.
+**v0.11.0은 [Tuivory](https://github.com/leechis7/tuivory) v0.1.0**을 가져와 테마·색상 프로필·입력·선택·버튼·표·팝업·그리드·SQL 문법색을 공통 패키지로 적용합니다. Go 모듈은 `github.com/leechis7/tuivory/go`이며, 실행파일 사용자에게 별도 설치는 필요하지 않습니다.
 
 tview/tcell이 화면·입력을, go-ora가 Oracle 통신을 담당합니다. Oracle 실행·트랜잭션·SQL lexer·Toad 키맵·그리드 데이터와 화면별 상태는 LazyOra에서 관리합니다. [UI 스타일 규칙](docs/ui-style.md) · [Tuivory 적용·갱신 기록](docs/tuivory-sync.md)을 참고하세요.
 
@@ -97,8 +97,8 @@ tview/tcell이 화면·입력을, go-ora가 Oracle 통신을 담당합니다. Or
 
 Copyright (C) 2026 Chaekang Lee. [GNU AGPL v3.0](LICENSE) (`AGPL-3.0-only`). 의존 라이브러리에는 각 프로젝트의 라이선스가 적용됩니다.
 
-## 다음 버전 개발 내용
+## v0.11.0 주요 개선
 
-미배포 개발 브랜치는 **Tuivory v0.1.0** 트리를 적용합니다. 테이블·뷰를 펼쳐 컬럼·자료형을 확인하고 긴 이름을 가로 탐색할 수 있습니다. [트리 사용법](docs/usage.md)을 참고하세요. 정식 v0.10.2 다운로드는 기존 동작을 유지합니다.
+v0.11.0은 **Tuivory v0.1.0** 트리를 적용합니다. 테이블·뷰를 펼쳐 컬럼·자료형을 확인하고 긴 이름을 가로 탐색할 수 있습니다. [트리 사용법](docs/usage.md)을 참고하세요.
 
-미배포 개발 브랜치는 설정에서 **자동/Unicode/ASCII 문자 표시**를 선택할 수 있습니다. `--demo --display-mode ascii`로 호환 화면을 미리 볼 수 있습니다. [터미널 안내](docs/terminal.md)를 참고하세요.
+v0.11.0은 설정에서 **자동/Unicode/ASCII 문자 표시**를 선택할 수 있습니다. `--demo --display-mode ascii`로 호환 화면을 미리 볼 수 있습니다. [터미널 안내](docs/terminal.md)를 참고하세요.

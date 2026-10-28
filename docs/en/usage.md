@@ -2,11 +2,11 @@
 
 [한국어](../usage.md) | **English** · [Documentation](index.md) · [Offline guide](../guide.en.md)
 
-This guide covers released v0.10.2 workflows and explicitly marked next-version additions. Released v0.10.2 input, selection, button, grid and popup styles use **Tuivory v0.0.1**, included in the executable. Choose Dark/Light/Black-White in Tools → Settings; terminal capability independently selects 8/16/256/True Color rendering. See [UI style rules](ui-style.md).
+This guide covers v0.11.0 workflows. Its input, selection, button, grid and popup styles use **Tuivory v0.1.0**, included in the executable. Choose Dark/Light/Black-White in Tools → Settings; terminal capability independently selects 8/16/256/True Color rendering. See [UI style rules](ui-style.md).
 
-The next development version uses the published Tuivory **v0.1.0** tree. User/type selectors and live object filtering remain. On a table or view, use **Right/Space or click the disclosure arrow** to fetch columns and data types. **Left** collapses or moves to the parent; **Alt+Left/Right** pans long names. **Enter or clicking a name** opens the existing object details. Columns are fetched on expansion and cached for the current list; Ctrl+R refresh, owner changes and reconnects clear the cache. Collapse and re-expand after failure/cancellation to retry. Existing Esc cancellation and work-protection rules apply during queries. This change is not yet in a published LazyOra release.
+v0.11.0 uses the published Tuivory **v0.1.0** tree. User/type selectors and live object filtering remain. On a table or view, use **Right/Space or click the disclosure arrow** to fetch columns and data types. **Left** collapses or moves to the parent; **Alt+Left/Right** pans long names. **Enter or clicking a name** opens the existing object details. Columns are fetched on expansion and cached for the current list; Ctrl+R refresh, owner changes and reconnects clear the cache. Collapse and re-expand after failure/cancellation to retry. Existing Esc cancellation and work-protection rules apply during queries.
 
-The next version adds saved **Auto/Unicode/ASCII** selection in Tools → Settings (**Alt+D**), plus a one-run `--display-mode ascii` override. ASCII uses English UI and compatible glyphs while preserving original SQL/data, application copy/export and Korean preferences. Displayed `?` substitutes can differ from original data. Actual font coverage cannot be detected. See [modes and precedence](terminal.md).
+v0.11.0 adds saved **Auto/Unicode/ASCII** selection in Tools → Settings (**Alt+D**), plus a one-run `--display-mode ascii` override. ASCII uses English UI and compatible glyphs while preserving original SQL/data, application copy/export and Korean preferences. Displayed `?` substitutes can differ from original data. Actual font coverage cannot be detected. See [modes and precedence](terminal.md).
 
 ## Help, menus and panel layout
 

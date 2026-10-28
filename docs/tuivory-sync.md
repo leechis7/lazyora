@@ -4,7 +4,7 @@
 
 LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 원칙을 제품 UI에 적용합니다. Tuivory의 가이드·견본·도구 개발은 별도 저장소와 Tuivory Jira에서 관리하고, LazyOra의 적용 작업은 LORA Jira에서 관리합니다.
 
-## LORA-78: 문자 지원 감지·ASCII 표시 (2026-10-28, 미배포)
+## LORA-78: 문자 지원 감지·ASCII 표시 (2026-10-28, v0.11.0)
 
 공개 모듈은 v0.1.0, 태그 go/v0.1.0, 커밋 c034a00b1db92ee7ad4abd1ea5956907f1c1a124를 유지합니다. TreeView.ASCII를 실제 적용 모드에 연결합니다. 기존 tview 화면은 LazyOra의 displayLayout/asciiScreen이 그릴 때만 호환 문자로 대체합니다. 데이터·언어 선호·터미널 입출력 프로토콜은 제품 책임으로 유지하며 Tuivory 자체 개발이나 소스 복사는 하지 않습니다. 아직 사용하지 않는 Tuivory Panel/Split 등의 ASCII 옵션은 해당 컴포넌트 적용 일감에서 연결합니다.
 
@@ -22,16 +22,16 @@ LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 �
 
 색상 후보를 일괄 교체하는 대신 실제 배경과 상태 합성에서 대비·표시 의미를 검증하여 제품 값을 정합니다. 자동 정기 동기화나 Tuivory 프로젝트의 일감/스프린트 변경은 이 절차에 포함하지 않습니다.
 
-현재 개발 패키지는 **`github.com/leechis7/tuivory/go v0.1.0`**입니다. 정식 LazyOra v0.10.2는 이전 v0.0.1을 사용합니다. 아래 TUIS 관련 항목은 이전 적용 이력이며 현행 의존성이 아닙니다.
+현재 개발 패키지는 **`github.com/leechis7/tuivory/go v0.1.0`**입니다. LazyOra v0.11.0부터 이 버전을 배포하며 v0.10.2는 이전 v0.0.1을 사용했습니다. 아래 TUIS 관련 항목은 이전 적용 이력이며 현행 의존성이 아닙니다.
 
-## LORA-72: Tuivory v0.1.0 트리 적용 (2026-10-28, 미배포)
+## LORA-72: Tuivory v0.1.0 트리 적용 (2026-10-28, v0.11.0)
 
 - 공개 태그: [go/v0.1.0](https://github.com/leechis7/tuivory/releases/tag/go/v0.1.0), 소스 커밋 `c034a00b1db92ee7ad4abd1ea5956907f1c1a124`. 공개 Go 모듈의 Origin 및 체크섬을 확인하고 `v0.0.1 → v0.1.0`으로 갱신했습니다. 로컬 replace나 소스 복사는 없습니다.
 - 적용: `browser_tree.go`가 공개 Tree/TreeState/TreeView의 렌더링·탐색·스크롤을 사용합니다. Oracle 객체 식별과 비동기 작업 참조는 LazyOra 어댑터에서 유지합니다. `browser_columns.go`에서 테이블·뷰의 컬럼을 펼칠 때만 조회하고 현재 목록에 캐시합니다.
 - 기존 사용자·유형 선택·검색·단일 클릭/Enter 상세 보기·포커스 이중선은 유지합니다. 타입 선택·필터로 숨긴 노드의 컬럼 캐시는 유지하고, Ctrl+R·사용자 변경·재접속으로 목록을 교체하면 폐기합니다. 지연 응답은 원래 노드 인스턴스가 현재 캐시에 있는 경우에만 반영합니다.
 - 색상: 신규 공통 후보 토큰과 기존 NewStyles 팔레트는 서로 다른 자료입니다. 트리는 기존 공개 Styles의 의미 역할에 연결하여 같은 화면에서 팔레트를 혼합하지 않습니다.
 - 보류: Tab·Panel·Split·Breadcrumb·Status 컴포넌트는 이번 릴리스에 추가됐지만 LORA-73~76에서 순차 적용·검토합니다. 이번 작업으로 해당 일감을 완료 처리하지 않습니다.
-- 검증 완료: 기존 UI 회귀, 새 트리 전용 6개 테스트(12개 테마/색상 조합 포함), 5천 객체 탐색, 전체 `go test -race ./...`, `go vet ./...`, Linux ARM64 `make build`를 통과했습니다. 문서 로컬 링크 93개와 한영 내장 가이드 각 8개 목차도 확인했습니다. 실제 원격 단말·실DB 신규 접속은 이번에 시험하지 않았고 원격 CI·게시·릴리스는 수행하지 않았습니다. [검증 기록](audits/lora-72-tree.md)을 참고하세요.
+- 검증 완료: 기존 UI 회귀, 새 트리 전용 6개 테스트(12개 테마/색상 조합 포함), 5천 객체 탐색, 전체 `go test -race ./...`, `go vet ./...`, Linux ARM64 `make build`를 통과했습니다. 문서 로컬 링크 93개와 한영 내장 가이드 각 8개 목차도 확인했습니다. 실제 원격 단말·실DB 신규 접속은 이번에 시험하지 않았습니다. 상세 기록은 통합·게시 전의 검증 시점을 기준으로 합니다. [검증 기록](audits/lora-72-tree.md)을 참고하세요.
 
 ## LORA-70: Tuivory 전환 (2026-10-24)
 

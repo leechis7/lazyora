@@ -49,7 +49,7 @@ After publication, verify assets/checksums and the actual executable version, sy
 
 ## Dependencies and UI
 
-LazyOra v0.11.0 pins **Tuivory v0.1.0**, `github.com/leechis7/tuivory/go`, including its public tree component. LazyOra v0.11.0 includes the new tree. Develop Tuivory itself separately. Review public versions/commits and import the module; do not copy it or replace it with a local checkout. Record updates in [Tuivory integration](tuivory-sync.md) and use [UI adapters](ui-style.md).
+Published LazyOra v0.11.2 pins **Tuivory v0.2.0**, `github.com/leechis7/tuivory/go`, including its public tree component. LazyOra v0.11.0 includes the new tree. Develop Tuivory itself separately. Review public versions/commits and import the module; do not copy it or replace it with a local checkout. Record updates in [Tuivory integration](tuivory-sync.md) and use [UI adapters](ui-style.md).
 
 The tview v0.42.0 local fork adds SQL TextArea highlighting. Its source difference is confined to `textarea.go`; retain the upstream MIT notice and rendering checks. Workflow Actions are pinned to commit SHAs; Go toolchain versions are coordinated with `mise.toml`. Module downloads retry transient failures, but actual check failures remain failures.
 
@@ -58,3 +58,9 @@ Branch rules can require the `Test, vet and build` check; workflow files alone d
 ## Korean and English together
 
 Korean is primary. New/changed README, user/developer guidance and release descriptions are updated in both languages. Keep versions, commands, shortcuts, verification scope and language links aligned. English user docs live under `docs/en/`; the offline user guide is `docs/guide.en.md`. Unchanged historical evidence does not require bulk translation. Use the [document index](index.md) to distinguish live guidance from archives and proposals.
+
+## Prefer Tuivory for shared UI
+
+Check and use public Tuivory APIs first for shared drawing, borders/overlap repair, controls and styles. Do not maintain independent fixes for the same defect in both projects. Define missing shared capabilities in the separate Tuivory project, then integrate published APIs through LazyOra adapters. Oracle execution/transactions, tab/workspace data ownership, commands and language/ASCII preference policy remain product responsibilities. Style tview widgets with Tuivory Styler; preserve input, focus, modal isolation, copying and data safety when adopting new models/views.
+
+The release pins public `github.com/leechis7/tuivory/go v0.2.0`, tag `go/v0.2.0`, source `987d1a6786033a6bf063235b5e7fea7b565f0af0`. Delegate the whole popup draw to `WideSafeScreen` and clipped form/button labels to `CellText`; remove local `popupFill`. This ships in v0.11.2; existing v0.11.1 assets retain v0.1.0. See [adoption/defer review](../audits/lora-76-tuivory.md).

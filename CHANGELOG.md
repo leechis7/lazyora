@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-10-29
+
+### 개선 / Changed
+
+- LORA-76: Tuivory Go v0.2.0으로 갱신하고 공통 팝업의 한글 경계 보호와 제한 폭 라벨 처리를 공개 API에 위임합니다. 중복 `popupFill`을 제거하고 새 문자 쓰기 API에서도 ASCII 표시와 원문 보존을 유지합니다. 좁은 라벨의 생략 표식은 `~`입니다.
+- LORA-76: Upgrade to Tuivory Go v0.2.0; delegate popup wide-glyph protection and clipped labels to public APIs. Remove duplicate `popupFill`, preserving ASCII rendering/original data with the new writing methods. Clipped labels use `~`.
+
 ## [0.11.1] - 2026-10-28
 
 ### 수정 / Fixed
@@ -304,7 +311,8 @@ v0.0.1의 F2 접속은 Alt+L, F4 실행은 F9, F5 커밋은 Alt+C, F6 롤백은 
 - 이 릴리스 시점에는 실제 CentOS 7.4, 구형 Oracle 및 SID 접속 검증이 완료되지 않았습니다. 이후 호환성 수정은 `Unreleased`에 기록합니다.
 - 한 번에 SQL 한 문장 또는 BEGIN/DECLARE 블록 하나를 실행합니다. 여러 문장 일괄 실행, SQL*Plus 스크립트, 바인드 입력, DBMS_OUTPUT 출력은 지원하지 않습니다.
 
-[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.11.1...dev
+[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.11.2...dev
+[0.11.2]: https://github.com/leechis7/lazyora/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/leechis7/lazyora/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/leechis7/lazyora/compare/v0.10.2...v0.11.0
 [0.10.2]: https://github.com/leechis7/lazyora/compare/v0.10.1...v0.10.2

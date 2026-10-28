@@ -2,8 +2,8 @@ package ui
 
 import (
 	"github.com/gdamore/tcell/v2"
+	"github.com/leechis7/tuivory/go"
 	"github.com/rivo/tview"
-	"github.com/rivo/uniseg"
 )
 
 // formDialog gives all input dialogs the same responsive card layout. Keep the
@@ -62,16 +62,16 @@ func (s *screen) formPopup(content tview.Primitive, preferredWidth, preferredHei
 		// so the underlying SQL and result borders cannot show through it.
 		card := s.tuivoryStyles().PopupCardStyle()
 		for py := top; py < top+h; py++ {
-			popupFill(terminal, left, py, w, card)
+			gridFill(terminal, left, py, w, card)
 		}
 		shadow := s.tuivoryStyles().PopupShadowStyle()
 		if left+w < x+width {
 			for py := top + 1; py < top+h+1 && py < y+height; py++ {
-				popupFill(terminal, left+w, py, 1, shadow)
+				terminal.SetContent(left+w, py, ' ', nil, shadow)
 			}
 		}
 		if top+h < y+height {
-			popupFill(terminal, left+1, top+h, min(w, x+width-left-1), shadow)
+			gridFill(terminal, left+1, top+h, min(w, x+width-left-1), shadow)
 		}
 		if layout != nil {
 			layout(w, h)
@@ -81,29 +81,15 @@ func (s *screen) formPopup(content tview.Primitive, preferredWidth, preferredHei
 	return &formPopupLayer{Flex: root, content: content}
 }
 
-// Clear both halves of background glyphs cut by an opaque row. Leaving the
-// leading half outside the popup makes tcell skip its first border cell during
-// physical output; leaving a trailing half can retain stale background content.
-// Intact glyphs outside the row and their styles remain untouched.
-func popupFill(terminal tcell.Screen, x, y, width int, style tcell.Style) {
-	if width <= 0 {
-		return
-	}
-	for _, edge := range [2]int{x, x + width} {
-		if edge > 0 {
-			_, _, previous, cellWidth := terminal.GetContent(edge-1, y)
-			if cellWidth > 1 {
-				terminal.SetContent(edge-1, y, ' ', nil, previous)
-				terminal.SetContent(edge, y, ' ', nil, previous)
-			}
-		}
-	}
-	gridFill(terminal, x, y, width, style)
-}
-
 type formPopupLayer struct {
 	*tview.Flex
 	content tview.Primitive
+}
+
+func (p *formPopupLayer) Draw(terminal tcell.Screen) {
+	// Protect the entire composite, including its card, shadow and child borders.
+	// Tuivory owns glyph-overlap repair; LazyOra only supplies product content.
+	p.Flex.Draw(tuivory.WideSafeScreen(terminal))
 }
 
 func (p *formPopupLayer) MouseHandler() func(tview.MouseAction, *tcell.EventMouse, func(tview.Primitive)) (bool, tview.Primitive) {
@@ -140,21 +126,9 @@ func openFormChoice(root tview.Primitive) *choiceField {
 	return nil
 }
 
-// Clip at grapheme boundaries and count terminal columns, including Korean.
+// Use Tuivory's common literal-text clipping, including its ASCII loss marker.
 func popupLabel(text string, width int) string {
-	if uniseg.StringWidth(text) <= width {
-		return text
-	}
-	g := uniseg.NewGraphemes(text)
-	result, used := "", 0
-	for g.Next() {
-		if used+g.Width() > width-1 {
-			break
-		}
-		result += g.Str()
-		used += g.Width()
-	}
-	return result + "…"
+	return tuivory.CellText(text, width)
 }
 
 func formLayout(form *tview.Form) func(int, int) {

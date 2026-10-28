@@ -4,6 +4,14 @@
 
 LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 원칙을 제품 UI에 적용합니다. Tuivory의 가이드·견본·도구 개발은 별도 저장소와 Tuivory Jira에서 관리하고, LazyOra의 적용 작업은 LORA Jira에서 관리합니다.
 
+## LORA-76: Tuivory v0.2.0 공통 UI 우선 적용 (2026-10-29, v0.11.2)
+
+- 출처: [go/v0.2.0 공개 릴리스](https://github.com/leechis7/tuivory/releases/tag/go/v0.2.0), 커밋 `987d1a6786033a6bf063235b5e7fea7b565f0af0`. 모듈 Origin·Sum `h1:q+NJW7/inCfX1cbGLIlEihF8mo/i86cGHozvl9VL6Gw=`를 확인하고 공개 모듈을 고정합니다. Go 1.24·tcell/tview·AGPL-3.0-only 요구는 호환됩니다. 로컬 replace나 패키지 소스 복사는 없습니다.
+- 적용: 공통 팝업 전체(배경·카드·그림자·자식 테두리)를 공개 `WideSafeScreen`으로 그립니다. 독자 `popupFill`을 제거하고 라벨 폭 자르기도 `CellText`로 전환합니다. 좁은 라벨의 생략 표식은 공통 API의 `~`를 사용합니다. LORA-79의 물리 출력 회귀 검사는 유지합니다.
+- 제품 어댑터: 새 그리기 API가 `Put`을 사용하므로 `asciiScreen`의 Put/SetCell/PutStr 계열도 기존 표시 전용 변환으로 연결합니다. 원문·셀 폭·복사·설정 정책은 보존하며 두 칸 문자 겹침 수리 코드를 재구현하지 않습니다.
+- 검토: 기존 스타일/위젯/트리 API는 유지합니다. 기존 스타일 값은 변경되지 않았고 Choice는 새 공통 겹침 보호를 내부 사용합니다. 새 Form/FocusStack/Menu/Grid/Tab/Panel/Split/Status의 상태 모델을 제품 전체에 일괄 교체하지 않습니다. 적용/보류의 구체적 동작 차이와 관련 후속 일감은 [검토 기록](audits/lora-76-tuivory.md)에 구분합니다.
+- 정책: 공통 UI 문제는 Tuivory 공개 API로 해결하고, 부족한 기능은 별도 Tuivory 프로젝트에서 제공한 뒤 소비합니다. 제품 Oracle/명령/데이터 어댑터와 공통 컴포넌트 책임을 분리합니다. v0.11.2에 적용하며 기존 v0.11.1 바이너리는 변경하지 않습니다.
+
 ## LORA-79: 공통 팝업 한글 경계 수정 (2026-10-28, v0.11.1)
 
 공개 의존성은 `github.com/leechis7/tuivory/go v0.1.0`, 태그 `go/v0.1.0`, 출처 커밋 `c034a00b1db92ee7ad4abd1ea5956907f1c1a124`를 유지합니다. Go 모듈 Origin을 다시 확인했습니다. Tuivory의 열린 Choice에는 두 칸 문자 경계 보호가 있으나 이번 결함은 LazyOra가 직접 배치하는 공통 팝업 카드·그림자에 있습니다. 공개 패키지를 그대로 import하고 upstream 수정·소스 복사·로컬 replace는 하지 않습니다.
@@ -28,7 +36,7 @@ LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 �
 
 색상 후보를 일괄 교체하는 대신 실제 배경과 상태 합성에서 대비·표시 의미를 검증하여 제품 값을 정합니다. 자동 정기 동기화나 Tuivory 프로젝트의 일감/스프린트 변경은 이 절차에 포함하지 않습니다.
 
-현재 개발 패키지는 **`github.com/leechis7/tuivory/go v0.1.0`**입니다. LazyOra v0.11.0부터 이 버전을 배포하며 v0.10.2는 이전 v0.0.1을 사용했습니다. 아래 TUIS 관련 항목은 이전 적용 이력이며 현행 의존성이 아닙니다.
+현재 패키지는 **`github.com/leechis7/tuivory/go v0.2.0`**입니다. 정식 LazyOra v0.11.0·v0.11.1은 v0.1.0을, v0.10.2는 v0.0.1을 포함합니다. 아래 TUIS 관련 항목은 이전 적용 이력이며 현행 의존성이 아닙니다.
 
 ## LORA-72: Tuivory v0.1.0 트리 적용 (2026-10-28, v0.11.0)
 

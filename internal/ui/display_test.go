@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/leechis7/tuivory/go"
 	"lazyora/internal/oracle"
 	"lazyora/internal/settings"
 )
@@ -258,5 +259,41 @@ func TestDisplaySavePreservesRealResultAfterDemoStartup(t *testing.T) {
 	s.copyResults("cell")
 	if s.clipboardText != "실제 결과 원문" {
 		t.Fatal("copy lost real result")
+	}
+}
+
+func TestASCIIWritesThroughTuivorySafeScreenPreserveWidths(t *testing.T) {
+	for _, order := range []string{"host-first", "library-first"} {
+		t.Run(order, func(t *testing.T) {
+			base := tcell.NewSimulationScreen("UTF-8")
+			if err := base.Init(); err != nil {
+				t.Fatal(err)
+			}
+			defer base.Fini()
+			base.SetSize(40, 4)
+			var writer tcell.Screen = asciiScreen{tuivory.WideSafeScreen(base)}
+			if order == "library-first" {
+				writer = tuivory.WideSafeScreen(asciiScreen{base})
+			}
+			style := tcell.StyleDefault.Foreground(tcell.ColorGreen)
+			writer.SetContent(0, 0, '한', nil, style)
+			rest, width := writer.Put(3, 0, "界Z", style)
+			if rest != "Z" || width != 2 {
+				t.Fatalf("Put lost original grapheme boundaries: %q/%d", rest, width)
+			}
+			writer.SetCell(6, 0, style, []rune("👩‍💻")...)
+			writer.PutStrStyled(10, 0, "A한é", style)
+			writer.PutStr(18, 0, "─한")
+			if rest, width = writer.Put(-1, 0, "한", style); rest != "한" || width != 0 {
+				t.Fatal("out-of-bounds Put consumed input")
+			}
+			assertASCIIFrame(t, base)
+			for x, want := range map[int]rune{0: '?', 1: '?', 3: '?', 4: '?', 6: '?', 7: '?', 10: 'A', 11: '?', 12: '?', 13: 'e', 18: '-', 19: '?', 20: '?'} {
+				got, comb, _, _ := base.GetContent(x, 0)
+				if got != want || len(comb) != 0 {
+					t.Fatalf("column %d: got %q/%v want %q", x, got, comb, want)
+				}
+			}
+		})
 	}
 }

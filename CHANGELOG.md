@@ -6,6 +6,9 @@
 
 ### 추가 / Added
 
+- LORA-78: 설정에서 자동/Unicode/ASCII 문자 표시를 저장하고 `--display-mode`로 이번 실행만 지정합니다. 출력 문자 지원 추정에 따라 ASCII/영어 UI로 대체하며 SQL·DB 값·복사/내보내기 원문과 언어 선호를 보존합니다.
+- LORA-78: Add saved Auto/Unicode/ASCII display modes and a one-run `--display-mode` override. Fall back to ASCII/English UI using output capability estimates while preserving original SQL/data/copy/export and language preferences.
+
 - LORA-72: Tuivory Go v0.1.0 공개 트리로 스키마 목록을 표시하고, 테이블·뷰 펼침 시 컬럼·자료형을 지연 조회합니다. 기존 사용자·유형 선택·검색·상세 보기를 유지하며 방향키/Space 펼침, Alt+방향키 가로 이동을 지원합니다.
 - LORA-72: Use the public Tuivory Go v0.1.0 tree with lazy table/view columns and types. Preserve selectors, filtering and details; add arrow/Space expansion and Alt+arrow horizontal panning.
 

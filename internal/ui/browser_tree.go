@@ -173,7 +173,7 @@ func (b *browserTree) event(e tuivory.TreeEvent) {
 }
 func (b *browserTree) Draw(screen tcell.Screen) {
 	_ = b.SetPalette(b.screen.browserPalette())
-	b.ASCII = !screen.CanDisplay('▸', false) || !screen.CanDisplay('▦', false)
+	b.ASCII = b.screen.asciiDisplay()
 	b.TreeView.Draw(screen)
 }
 func (b *browserTree) MouseHandler() func(tview.MouseAction, *tcell.EventMouse, func(tview.Primitive)) (bool, tview.Primitive) {

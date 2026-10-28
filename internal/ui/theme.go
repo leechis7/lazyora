@@ -98,6 +98,9 @@ func (s *screen) refreshBorders() {
 			box.SetTitleColor(title)
 		}
 		switch w := p.(type) {
+		case *displayLayout:
+			visit(w.Flex)
+			return
 		case *formPopupLayer:
 			visit(w.Flex)
 		case *resultGrid:

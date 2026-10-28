@@ -2,6 +2,29 @@
 
 [한국어](../terminal.md) | **English** · [English README](../../README.en.md)
 
+## Character display mode (development)
+
+In the next version, choose **Auto (default) / Unicode / ASCII** under **Tools → Settings → Character display (Alt+D)** and Save. Apply saved changes immediately to every connection workspace and retain them across launches. Canceling or failing to save preserves the active preferences. The settings note and Help → Diagnostics show the effective mode and reason.
+
+- Auto checks the actual output character set and tcell’s encoding/terminfo estimates for required line/icon glyphs. Color count or `TERM=ansi` alone does not force ASCII. UTF-8 support cannot establish actual font coverage.
+- Unicode is a manual display selection. It does not change terminal encoding/fonts or guarantee unsupported glyphs.
+- ASCII uses English UI with ASCII lines/icons/markers: focused double horizontal borders become `=`, ordinary lines `-`, and vertical lines `|`. Auto also uses English when Korean cannot be encoded. Saved Korean preferences remain intact and are restored in a supported environment or when returning to Unicode/Auto where supported.
+
+Override only the current invocation with the commands below. CLI overrides take precedence without being written into preferences. Saving another selection during an overridden run affects future launches, while the current CLI override remains effective.
+
+```sh
+./bin/lazyora-linux-arm64 --demo --display-mode ascii
+./bin/lazyora-linux-arm64 --display-mode auto
+./bin/lazyora-linux-arm64 --display-mode unicode
+```
+
+The optional `display_mode` setting accepts `auto`, `unicode`, or `ascii`; old files without it use Auto. SQL, object identities, database values, edit targets, files and application copy/export values are never converted. Non-ASCII data glyphs appear as `?` with their original cell width in ASCII rendering. Terminal-native selection copies those displayed substitutes; use **application copy commands or file export** to retrieve original values. Mouse, colors and keyboard protocols remain independent.
+
+ASCII mode still requires a terminal supporting basic cursor positioning and screen updates. Character substitution does not add TUI capabilities to an unsupported TERM or a plain output-only terminal.
+
+This feature is not in the published v0.10.2 downloads yet.
+
+
 ## Ctrl+Enter inserts a newline
 
 Use **F9 or Alt+Enter** to execute SQL. Plain Enter inserts a newline. In the connection dialog, Ctrl+Enter, Alt+Enter or Alt+C connects.

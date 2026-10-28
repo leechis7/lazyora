@@ -6,6 +6,8 @@ This guide covers released v0.10.2 workflows and explicitly marked next-version 
 
 The next development version uses the published Tuivory **v0.1.0** tree. User/type selectors and live object filtering remain. On a table or view, use **Right/Space or click the disclosure arrow** to fetch columns and data types. **Left** collapses or moves to the parent; **Alt+Left/Right** pans long names. **Enter or clicking a name** opens the existing object details. Columns are fetched on expansion and cached for the current list; Ctrl+R refresh, owner changes and reconnects clear the cache. Collapse and re-expand after failure/cancellation to retry. Existing Esc cancellation and work-protection rules apply during queries. This change is not yet in a published LazyOra release.
 
+The next version adds saved **Auto/Unicode/ASCII** selection in Tools → Settings (**Alt+D**), plus a one-run `--display-mode ascii` override. ASCII uses English UI and compatible glyphs while preserving original SQL/data, application copy/export and Korean preferences. Displayed `?` substitutes can differ from original data. Actual font coverage cannot be detected. See [modes and precedence](terminal.md).
+
 ## Help, menus and panel layout
 
 F1 shows context/keymap help. F10 opens the main menu; Shift+F10 or right-click opens the current panel's context menu. Help also includes the offline guide, version history, diagnostics, issue reporting, keymap comparison and About. Version history comes from the embedded changelog and distinguishes unreleased work; historical release text is primarily Korean.

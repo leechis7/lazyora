@@ -98,3 +98,5 @@ Copyright (C) 2026 Chaekang Lee. [GNU AGPL v3.0](LICENSE) (`AGPL-3.0-only`). Dep
 ## Next-version development
 
 The unreleased branch adopts the **Tuivory v0.1.0** tree: expand tables/views for columns and types, and pan long names horizontally. See [tree controls](docs/en/usage.md). Published v0.10.2 downloads retain their existing behavior.
+
+The unreleased branch adds saved **Auto/Unicode/ASCII** character display. Preview with `--demo --display-mode ascii`; see [terminal guidance](docs/en/terminal.md).

@@ -4,6 +4,13 @@
 
 LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 원칙을 제품 UI에 적용합니다. Tuivory의 가이드·견본·도구 개발은 별도 저장소와 Tuivory Jira에서 관리하고, LazyOra의 적용 작업은 LORA Jira에서 관리합니다.
 
+## LORA-78: 문자 지원 감지·ASCII 표시 (2026-10-28, 미배포)
+
+공개 모듈은 v0.1.0, 태그 go/v0.1.0, 커밋 c034a00b1db92ee7ad4abd1ea5956907f1c1a124를 유지합니다. TreeView.ASCII를 실제 적용 모드에 연결합니다. 기존 tview 화면은 LazyOra의 displayLayout/asciiScreen이 그릴 때만 호환 문자로 대체합니다. 데이터·언어 선호·터미널 입출력 프로토콜은 제품 책임으로 유지하며 Tuivory 자체 개발이나 소스 복사는 하지 않습니다. 아직 사용하지 않는 Tuivory Panel/Split 등의 ASCII 옵션은 해당 컴포넌트 적용 일감에서 연결합니다.
+
+자동 감지는 CharacterSet과 CanDisplay의 추정치를 사용하며 실제 폰트 글리프는 확인하지 못합니다. 수동 모드·설정 저장·CLI 우선순위와 원문 보존 정책은 [터미널 안내](terminal.md)에 기록합니다. 전체 race/vet/ARM64 빌드·144종 모의 화면·3종 로컬 PTY 시험을 통과했습니다. 원문 보존과 실제 원격 폰트/실DB 미검증 범위는 [검증 기록](audits/lora-78-ascii.md) 및 LORA-78 검토 댓글에 남깁니다.
+
+
 ## 반영 절차
 
 1. 게시된 릴리스나 main의 정확한 커밋과 문서를 확인합니다. 로컬의 미게시 변경을 게시 기준과 섞지 않습니다.

@@ -93,3 +93,5 @@ OSC 52 delivery depends on terminal/SSH settings and clipboard permissions.
 Help → View/copy diagnostics previews public environment details.
 Help → Report an issue / suggest a feature provides the URL and report template. Remove real credentials, SQL and results.
 Release history marks unreleased development separately. About is the last Help menu item.
+
+Tools → Settings → Character display (Alt+D) saves Auto/Unicode/ASCII (next version). --display-mode ascii overrides only this run. ASCII uses English UI and ? substitutes for non-ASCII data glyphs, preserving original SQL/data/application copy/export and Korean preferences. Settings/Diagnostics show the effective mode and reason. Actual font coverage cannot be detected.

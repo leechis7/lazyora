@@ -100,3 +100,5 @@ Copyright (C) 2026 Chaekang Lee. [GNU AGPL v3.0](LICENSE) (`AGPL-3.0-only`). 의
 ## 다음 버전 개발 내용
 
 미배포 개발 브랜치는 **Tuivory v0.1.0** 트리를 적용합니다. 테이블·뷰를 펼쳐 컬럼·자료형을 확인하고 긴 이름을 가로 탐색할 수 있습니다. [트리 사용법](docs/usage.md)을 참고하세요. 정식 v0.10.2 다운로드는 기존 동작을 유지합니다.
+
+미배포 개발 브랜치는 설정에서 **자동/Unicode/ASCII 문자 표시**를 선택할 수 있습니다. `--demo --display-mode ascii`로 호환 화면을 미리 볼 수 있습니다. [터미널 안내](docs/terminal.md)를 참고하세요.

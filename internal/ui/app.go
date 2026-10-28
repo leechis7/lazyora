@@ -156,7 +156,9 @@ type screen struct {
 	searchFocus                              tview.Primitive
 	searchAction                             func(string)
 	findText, replaceText                    string
-	rootLayout, menuLayout                   *tview.Flex
+	rootLayout                               *displayLayout
+	menuLayout                               *tview.Flex
+	displayOverride                          string
 	chromeHidden                             bool
 	sizing                                   panelSizing
 	splitOffsets                             panelOffsets
@@ -250,6 +252,10 @@ type screen struct {
 func Run(demo bool) error { return run(demo, nil, nil) }
 
 func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
+	return runWithDisplayMode(demo, terminal, ready, "")
+}
+
+func runWithDisplayMode(demo bool, terminal tcell.Screen, ready func(*screen), override string) error {
 	if terminal == nil {
 		var err error
 		terminal, err = newCompatibleScreen()
@@ -263,9 +269,11 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 		prefs, prefsErr = settings.Load(path)
 	}
 	app := tview.NewApplication().SetScreen(terminal)
-	s := newWorkspaceScreen(app, terminal, prefs, path, demo, prefsErr)
+	s := newWorkspaceScreenWithDisplay(app, terminal, prefs, path, demo, prefsErr, override)
 	spaces := &workspaceSet{app: app, active: s}
-	spaces.factory = func(p settings.Config) *screen { return newWorkspaceScreen(app, terminal, p, path, demo, nil) }
+	spaces.factory = func(p settings.Config) *screen {
+		return newWorkspaceScreenWithDisplay(app, terminal, p, path, demo, nil, override)
+	}
 	spaces.adopt(s)
 	if ready != nil {
 		ready(s)
@@ -276,8 +284,13 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 }
 
 func newWorkspaceScreen(app *tview.Application, terminal tcell.Screen, prefs settings.Config, path string, demo bool, prefsErr error) *screen {
+	return newWorkspaceScreenWithDisplay(app, terminal, prefs, path, demo, prefsErr, "")
+}
+
+func newWorkspaceScreenWithDisplay(app *tview.Application, terminal tcell.Screen, prefs settings.Config, path string, demo bool, prefsErr error, override string) *screen {
 	s := &screen{app: app, jobs: make(chan job, 1), done: make(chan struct{}), demo: demo, prefs: prefs, prefsPath: path}
 	s.terminal = terminal
+	s.displayOverride = override
 	s.limitedColors = terminal.Colors() > 0 && terminal.Colors() <= 16
 	s.editor = tview.NewTextArea().SetText("SELECT sysdate AS server_time FROM dual;", false)
 	s.editor.SetBorder(true)
@@ -368,7 +381,7 @@ func newWorkspaceScreen(app *tview.Application, terminal tcell.Screen, prefs set
 	layout := s.newFlex().SetDirection(tview.FlexRow).
 		AddItem(s.menuLayout, 1, 0, false).AddItem(s.pages, 0, 1, true).AddItem(s.footer, 1, 0, false).AddItem(s.toolbar(), 1, 0, false)
 	layout.Box = s.newBox().SetBackgroundColor(s.colors().background)
-	s.rootLayout = layout
+	s.rootLayout = &displayLayout{Flex: layout, owner: s}
 	s.connectionHeader = s.newTextView(textAccent).SetWrap(false).SetTextColor(s.colors().accent)
 	s.textSurface(s.connectionHeader, surfacePanel)
 	s.installHandlers = func() {
@@ -414,7 +427,7 @@ func newWorkspaceScreen(app *tview.Application, terminal tcell.Screen, prefs set
 			return event, action
 		})
 	}
-	s.app.SetRoot(layout, true).SetFocus(s.editor)
+	s.app.SetRoot(s.rootLayout, true).SetFocus(s.editor)
 	s.installHandlers()
 	s.refreshLabels()
 	s.initTabs()

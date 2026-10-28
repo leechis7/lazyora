@@ -40,7 +40,7 @@ var helpSections = []helpSection{
 }
 
 func (s *screen) helpLanguage() int {
-	if s.prefs.Language == "ko" {
+	if s.uiLanguage() == "ko" {
 		return 1
 	}
 	return 0
@@ -210,7 +210,7 @@ func (s *screen) helpContext(page string) string {
 	case "connect":
 		return s.tr("footer_connect") + "\nAlt+V: " + s.tr("connection_probe") + " (15s, Esc)\nCtrl+Enter / Alt+C: " + s.tr("connect") + " | Ctrl+S: " + s.tr("save")
 	case "settings":
-		return s.tr("footer_settings") + "\nAlt+T: " + s.tr("theme_dark") + " / " + s.tr("theme_light") + " / " + s.tr("theme_blackwhite") + "\nCtrl+S: " + s.tr("save") + " | Esc: " + s.tr("cancel")
+		return s.tr("display_mode") + ": " + s.tr("display_auto") + " / Unicode / ASCII\n" + s.tr("display_font_note") + "\n" + s.tr("footer_settings") + "\nAlt+T: " + s.tr("theme_dark") + " / " + s.tr("theme_light") + " / " + s.tr("theme_blackwhite") + "\nCtrl+S: " + s.tr("save") + " | Esc: " + s.tr("cancel")
 	case "object":
 		return s.tr("footer_object") + "\nAlt+S: " + s.tr("source") + " | Alt+A: " + s.tr("arguments")
 	case "source":

@@ -108,6 +108,8 @@ func (s *screen) disabledStyle() tcell.Style {
 
 func widgetBox(p tview.Primitive) *tview.Box {
 	switch w := p.(type) {
+	case *displayLayout:
+		return w.Box
 	case *formPopupLayer:
 		return w.Flex.Box
 	case *resultGrid:

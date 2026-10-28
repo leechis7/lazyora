@@ -2,6 +2,13 @@
 
 [한국어](../tuivory-sync.md) | **English** · [UI style rules](ui-style.md)
 
+## LORA-78: capability detection and ASCII display (2026-10-28, unreleased)
+
+Keep public module v0.1.0, tag go/v0.1.0, commit c034a00b1db92ee7ad4abd1ea5956907f1c1a124. Connect TreeView.ASCII to the effective mode. LazyOra displayLayout/asciiScreen substitutes compatible glyphs only while drawing existing tview screens. Data, language preferences and terminal I/O protocols remain application-owned; do not copy or develop upstream sources here. Wire the unused Tuivory Panel/Split ASCII options when those components are adopted in their own issues.
+
+CharacterSet and CanDisplay provide estimates, not real font coverage. [Terminal guidance](terminal.md) describes saved/manual modes, CLI precedence and original-data preservation. Full race/vet/ARM64 build, 144 simulated screen combinations and three local PTY runs passed. See the [bilingual validation record](../audits/lora-78-ascii.md) and Jira review comment for original-data preservation and real remote-font/live-DB limits.
+
+
 ## Current state
 
 **LazyOra v0.10.2 ships Tuivory v0.0.1**, module `github.com/leechis7/tuivory/go`, release tag `go/v0.0.1`, source commit `cf06d95f4334f65436197ae4f12faf35783f5b7a`. It uses the single public `tuivory` package. TUIS is no longer a dependency; earlier TUIS entries in the Korean record document the migration history.

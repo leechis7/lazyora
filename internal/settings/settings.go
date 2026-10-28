@@ -10,6 +10,7 @@ import (
 )
 
 type Config struct {
+	DisplayMode  string `json:"display_mode,omitempty"`
 	Theme        string `json:"theme,omitempty"`
 	Language     string `json:"language"`
 	Mouse        bool   `json:"mouse"`
@@ -41,7 +42,17 @@ func Path() (string, error) {
 	return filepath.Join(dir, "lazyora", "settings.json"), nil
 }
 
+func ValidateDisplayMode(mode string) error {
+	if mode != "" && mode != "auto" && mode != "unicode" && mode != "ascii" {
+		return errors.New("display mode must be auto, unicode or ascii")
+	}
+	return nil
+}
+
 func (c Config) Validate() error {
+	if err := ValidateDisplayMode(c.DisplayMode); err != nil {
+		return err
+	}
 	if c.Theme != "" && c.Theme != "dark" && c.Theme != "light" && c.Theme != "blackwhite" {
 		return errors.New("theme must be dark, light or blackwhite")
 	}

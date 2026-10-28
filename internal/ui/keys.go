@@ -433,6 +433,9 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 			case 't':
 				focusForm(s, s.prefsForm, 3)
 				return nil
+			case 'd':
+				focusForm(s, s.prefsForm, 4)
+				return nil
 			}
 		}
 		return event

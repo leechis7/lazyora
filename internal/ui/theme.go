@@ -98,6 +98,9 @@ func (s *screen) refreshBorders() {
 			box.SetTitleColor(title)
 		}
 		switch w := p.(type) {
+		case *displayLayout:
+			visit(w.Flex)
+			return
 		case *formPopupLayer:
 			visit(w.Flex)
 		case *resultGrid:
@@ -109,6 +112,10 @@ func (s *screen) refreshBorders() {
 		case *tview.Flex:
 			for i := 0; i < w.GetItemCount(); i++ {
 				visit(w.GetItem(i))
+			}
+		case *browserTree:
+			if root := w.GetRoot(); root != nil {
+				root.Walk(func(n, parent *tview.TreeNode) bool { liveNodes[n] = true; return true })
 			}
 		case *tview.TreeView:
 			if root := w.GetRoot(); root != nil {

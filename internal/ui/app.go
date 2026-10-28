@@ -156,7 +156,9 @@ type screen struct {
 	searchFocus                              tview.Primitive
 	searchAction                             func(string)
 	findText, replaceText                    string
-	rootLayout, menuLayout                   *tview.Flex
+	rootLayout                               *displayLayout
+	menuLayout                               *tview.Flex
+	displayOverride                          string
 	chromeHidden                             bool
 	sizing                                   panelSizing
 	splitOffsets                             panelOffsets
@@ -194,7 +196,7 @@ type screen struct {
 	footerKeys                               []footerKey
 	resultsFocused                           bool
 	limitedColors                            bool
-	browser                                  *tview.TreeView
+	browser                                  *browserTree
 	browserHidden                            bool
 	mainLayout, queryLayout                  *tview.Flex
 	browserOwner                             string
@@ -205,6 +207,7 @@ type screen struct {
 	browserSchemas                           []string
 	browserObjects                           []oracle.Object
 	browserKind                              int
+	browserNodes                             map[oracle.Object]*tview.TreeNode
 	object                                   oracle.Object
 	objectInfo                               *tview.TextView
 	objectFocus                              tview.Primitive
@@ -249,6 +252,10 @@ type screen struct {
 func Run(demo bool) error { return run(demo, nil, nil) }
 
 func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
+	return runWithDisplayMode(demo, terminal, ready, "")
+}
+
+func runWithDisplayMode(demo bool, terminal tcell.Screen, ready func(*screen), override string) error {
 	if terminal == nil {
 		var err error
 		terminal, err = newCompatibleScreen()
@@ -262,9 +269,11 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 		prefs, prefsErr = settings.Load(path)
 	}
 	app := tview.NewApplication().SetScreen(terminal)
-	s := newWorkspaceScreen(app, terminal, prefs, path, demo, prefsErr)
+	s := newWorkspaceScreenWithDisplay(app, terminal, prefs, path, demo, prefsErr, override)
 	spaces := &workspaceSet{app: app, active: s}
-	spaces.factory = func(p settings.Config) *screen { return newWorkspaceScreen(app, terminal, p, path, demo, nil) }
+	spaces.factory = func(p settings.Config) *screen {
+		return newWorkspaceScreenWithDisplay(app, terminal, p, path, demo, nil, override)
+	}
 	spaces.adopt(s)
 	if ready != nil {
 		ready(s)
@@ -275,8 +284,13 @@ func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
 }
 
 func newWorkspaceScreen(app *tview.Application, terminal tcell.Screen, prefs settings.Config, path string, demo bool, prefsErr error) *screen {
+	return newWorkspaceScreenWithDisplay(app, terminal, prefs, path, demo, prefsErr, "")
+}
+
+func newWorkspaceScreenWithDisplay(app *tview.Application, terminal tcell.Screen, prefs settings.Config, path string, demo bool, prefsErr error, override string) *screen {
 	s := &screen{app: app, jobs: make(chan job, 1), done: make(chan struct{}), demo: demo, prefs: prefs, prefsPath: path}
 	s.terminal = terminal
+	s.displayOverride = override
 	s.limitedColors = terminal.Colors() > 0 && terminal.Colors() <= 16
 	s.editor = tview.NewTextArea().SetText("SELECT sysdate AS server_time FROM dual;", false)
 	s.editor.SetBorder(true)
@@ -367,7 +381,7 @@ func newWorkspaceScreen(app *tview.Application, terminal tcell.Screen, prefs set
 	layout := s.newFlex().SetDirection(tview.FlexRow).
 		AddItem(s.menuLayout, 1, 0, false).AddItem(s.pages, 0, 1, true).AddItem(s.footer, 1, 0, false).AddItem(s.toolbar(), 1, 0, false)
 	layout.Box = s.newBox().SetBackgroundColor(s.colors().background)
-	s.rootLayout = layout
+	s.rootLayout = &displayLayout{Flex: layout, owner: s}
 	s.connectionHeader = s.newTextView(textAccent).SetWrap(false).SetTextColor(s.colors().accent)
 	s.textSurface(s.connectionHeader, surfacePanel)
 	s.installHandlers = func() {
@@ -413,7 +427,7 @@ func newWorkspaceScreen(app *tview.Application, terminal tcell.Screen, prefs set
 			return event, action
 		})
 	}
-	s.app.SetRoot(layout, true).SetFocus(s.editor)
+	s.app.SetRoot(s.rootLayout, true).SetFocus(s.editor)
 	s.installHandlers()
 	s.refreshLabels()
 	s.initTabs()
@@ -452,7 +466,7 @@ func (s *screen) submit(j job) {
 	} else {
 		j.ctx, s.cancel = context.WithTimeout(context.Background(), 60*time.Second)
 	}
-	if j.action == "definition" || j.action == "complete" || j.action == "schemas" || j.action == "objects" || j.action == "columns" || j.action == "object_info" || j.action == "source" || j.action == "arguments" {
+	if j.action == "definition" || j.action == "complete" || j.action == "schemas" || j.action == "objects" || j.action == "browser_columns" || j.action == "columns" || j.action == "object_info" || j.action == "source" || j.action == "arguments" {
 		s.setStatus("browser_loading")
 	} else {
 		s.setStatus("running", j.action)
@@ -585,7 +599,7 @@ func (s *screen) worker() {
 			catalog, err = session.Catalog(j.ctx)
 		case "objects":
 			objects, err = session.Objects(j.ctx, j.object.Owner)
-		case "columns":
+		case "columns", "browser_columns":
 			columns, err = session.Columns(j.ctx, j.object)
 		case "describe":
 			object, err = session.FindObject(j.ctx, j.text)
@@ -698,6 +712,10 @@ func (s *screen) worker() {
 				}
 				return
 			}
+			if j.action == "browser_columns" {
+				s.acceptBrowserColumns(j.node, columns, err)
+				return
+			}
 			if j.action == "definition" {
 				s.acceptDefinition(j.object, j.text, definition, err)
 			}
@@ -738,9 +756,9 @@ func (s *screen) worker() {
 					s.renderObject(nil)
 					s.objectInfo.SetText(s.objectInfo.GetText(false) + "\n" + s.tr("browser_error") + ": " + err.Error())
 				}
-				if j.action == "objects" {
-					s.browser.SetRoot(j.node).SetCurrentNode(nil)
+				if j.action == "objects" && s.browser.GetRoot() == j.node {
 					j.node.ClearChildren().AddChild(s.treeMessage("browser_error"))
+					s.browser.SetCurrentNode(nil)
 				}
 				if j.action == "source" {
 					s.sourceInfo.SetText(s.tr("browser_error") + ": " + err.Error())

@@ -4,6 +4,16 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"display_reason_auto":       {"encoding/terminfo estimate", "문자 인코딩·터미널 정보 기준"},
+	"display_reason_ascii":      {"manual ASCII", "ASCII 직접 선택"},
+	"display_reason_unicode":    {"manual Unicode; check your font", "Unicode 직접 선택; 폰트 확인 필요"},
+	"display_reason_unknown":    {"terminal capabilities unavailable", "터미널 문자 정보 없음"},
+	"display_reason_charset":    {"ASCII character set", "ASCII 출력 문자셋"},
+	"display_reason_glyph":      {"required UI glyph is not encodable", "필수 UI 문자를 출력할 수 없음"},
+	"display_mode":              {"Character display (Alt+D)", "문자 표시 (Alt+D)"},
+	"display_auto":              {"Auto (recommended)", "자동 (권장)"},
+	"display_effective":         {"Effective display", "적용 중인 표시"},
+	"display_font_note":         {"Font coverage cannot be detected. ASCII uses English UI; original SQL/data stay unchanged.", "폰트 지원은 감지할 수 없습니다. ASCII에서는 영어 UI를 쓰며 SQL·데이터 원문은 유지합니다."},
 	"copy":                      {"Copy", "복사"},
 	"keyboard_help":             {"Keyboard shortcuts", "단축키 도움말"},
 	"guide":                     {"User guide", "사용 가이드"},
@@ -540,7 +550,7 @@ var messages = map[string][2]string{
 	"nullable":                {"Nullable", "NULL 허용"},
 	"yes":                     {"Yes", "예"},
 	"no":                      {"No", "아니요"},
-	"footer_browser":          {"Alt+B Hide | Alt+U User | Alt+O Type | ↑↓ Move | Enter Open | Ctrl+R Refresh | Tab Next", "Alt+B 숨김 | Alt+U 사용자 | Alt+O 종류 | ↑↓ 이동 | Enter 열기 | Ctrl+R 새로고침 | Tab 다음"},
+	"footer_browser":          {"Alt+B Hide | Alt+U User | Alt+O Type | ↑↓ Move | ←→/Space Expand | Enter Open | Alt+←→ Pan | Ctrl+R Refresh | Tab Next", "Alt+B 숨김 | Alt+U 사용자 | Alt+O 종류 | ↑↓ 이동 | ←→/Space 펼침 | Enter 열기 | Alt+←→ 가로 이동 | Ctrl+R 새로고침 | Tab 다음"},
 	"footer_object":           {"Alt+D DDL | Alt+C Constraints | Alt+I Indexes | Ctrl+R Refresh | Esc Back", "Alt+D DDL | Alt+C 제약조건 | Alt+I 인덱스 | Ctrl+R 새로고침 | Esc 돌아가기"},
 	"developer":               {"Developer", "개발자"},
 	"email":                   {"Email", "이메일"},
@@ -548,7 +558,7 @@ var messages = map[string][2]string{
 	"footer_sql":              {"%s Run | Ctrl+T Complete | %s Describe | Alt+F8 Resize | %s Switch | %s", "%s 실행 | Ctrl+T 자동완성 | %s 상세 | Alt+F8 크기 | %s 전환 | %s"},
 	"footer_results":          {"%s Copy | %s Row | Enter Edit/Detail | Alt+F8 Resize | Shift+Arrows | PgUp/PgDn | %s Switch | %s", "%s 복사 | %s 행 | Enter 편집/상세 | Alt+F8 크기 | Shift+방향키 | PgUp/PgDn | %s 전환 | %s"},
 	"footer_connect":          {"Alt+V Test | ←→ Buttons | Tab Fields | Alt+R Profiles | Alt+A Alias | Alt+W Password", "Alt+V 접속 테스트 | ←→ 버튼 | Tab 항목 이동 | Alt+R 저장된 접속 | Alt+A 별칭 | Alt+W 비밀번호"},
-	"footer_settings":         {"Alt+L Language | Alt+M Mouse | Alt+K Keymap | Space Toggle | Tab Fields | ←→ Buttons", "Alt+L 언어 | Alt+M 마우스 | Alt+K 키맵 | Space 선택 | Tab 항목 이동 | ←→ 버튼"},
+	"footer_settings":         {"Alt+L Language | Alt+M Mouse | Alt+K Keymap | Alt+D Display | Space Toggle | Tab Fields | ←→ Buttons", "Alt+L 언어 | Alt+M 마우스 | Alt+K 키맵 | Alt+D 문자 표시 | Space 선택 | Tab 항목 이동 | ←→ 버튼"},
 	"footer_help":             {"Up/Down / 0–9 Topic | Right Text / Left Contents | Tab Focus | F1 / Esc Close", "↑↓ / 0–9 주제 | → 본문 / ← 목차 | Tab 포커스 이동 | F1 / Esc 닫기"},
 	"footer_busy":             {"Esc Cancel", "Esc 실행 취소"},
 	"previous_page":           {"Previous", "이전"},
@@ -620,7 +630,7 @@ func (s *screen) tr(key string) string {
 	if !ok {
 		return key
 	}
-	if s.prefs.Language == "ko" {
+	if s.uiLanguage() == "ko" {
 		return value[1]
 	}
 	return value[0]
@@ -647,7 +657,7 @@ func (s *screen) refreshLabels() {
 	if s.connectForm != nil {
 		s.localizeConnection()
 	}
-	if s.demo && s.table.GetRowCount() > 1 {
+	if s.demo && !s.connected && s.table.GetRowCount() > 1 {
 		s.table.GetCell(1, 1).SetText(s.tr("demo_cell"))
 		if len(s.resultRows) > 0 && len(s.resultRows[0]) > 1 {
 			s.resultRows[0][1] = s.tr("demo_cell")

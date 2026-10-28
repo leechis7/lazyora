@@ -26,7 +26,11 @@ func (s *screen) settingsForm() {
 	if s.prefs.Language == "ko" {
 		selected = 1
 	}
-	form.AddFormItem(s.newChoice(s.tr("language"), []string{"English", "한국어"}, selected, nil)).
+	languages := []string{"English", "한국어"}
+	if s.asciiDisplay() || !s.displayCapability().korean {
+		languages[1] = "Korean"
+	}
+	form.AddFormItem(s.newChoice(s.tr("language"), languages, selected, nil)).
 		AddCheckbox(s.tr("mouse")+" — "+s.tr("mouse_label"), s.prefs.Mouse, nil)
 	keymaps := []string{"", "vim", "notepad++", "vscode", "intellij"}
 	keymapIndex := 0
@@ -44,6 +48,17 @@ func (s *screen) settingsForm() {
 		}
 	}
 	form.AddFormItem(s.newChoice(s.tr("theme"), []string{s.tr("theme_dark"), s.tr("theme_light"), s.tr("theme_blackwhite")}, themeIndex, nil))
+	modes := []string{"auto", "unicode", "ascii"}
+	modeIndex := 0
+	for i, mode := range modes {
+		if s.prefs.DisplayMode == mode {
+			modeIndex = i
+		}
+	}
+	form.AddFormItem(s.newChoice(s.tr("display_mode"), []string{s.tr("display_auto"), "Unicode", "ASCII"}, modeIndex, nil))
+	info := s.newTextView(textHint).SetWrap(true).SetScrollable(false)
+	info.SetText(s.tr("display_effective") + ": " + s.displaySummary())
+	s.textSurface(info, surfacePanel)
 	s.savePrefs = func() {
 		index, _ := form.GetFormItem(0).(*choiceField).GetCurrentOption()
 		language := "en"
@@ -55,6 +70,8 @@ func (s *screen) settingsForm() {
 		prefs.EditorKeymap = keymaps[keymapIndex]
 		themeIndex, _ := form.GetFormItem(3).(*choiceField).GetCurrentOption()
 		prefs.Theme = themes[themeIndex]
+		modeIndex, _ := form.GetFormItem(4).(*choiceField).GetCurrentOption()
+		prefs.DisplayMode = modes[modeIndex]
 		if err := settings.Save(s.prefsPath, prefs); err != nil {
 			form.SetTitle(" " + fmt.Sprintf(s.tr("settings_error"), err) + " ")
 			return
@@ -77,14 +94,16 @@ func (s *screen) settingsForm() {
 	s.clickable(form.GetButton(1))
 	form.SetBorder(true).SetTitle(s.tr("settings_title"))
 	s.styleForm(form)
-	root := s.formPopup(form, 74, 20, func(width, height int) {
-		spacing := 2
-		if height < 16 {
-			spacing = 1
+	content := s.newFlex().SetDirection(tview.FlexRow).AddItem(form, 0, 1, true).AddItem(info, 3, 0, false)
+	root := s.formPopup(content, 84, 26, func(width, height int) {
+		infoHeight := min(3, max(0, height-12))
+		content.ResizeItem(info, infoHeight, 0)
+		if infoHeight == 0 {
+			info.SetRect(0, 0, 0, 0)
 		}
-		if height < 12 {
-			spacing = 0
-		}
+		height -= infoHeight
+		// Reserve borders, padding and the button row before adding field gaps.
+		spacing := max(0, min(2, (height-7)/form.GetFormItemCount()-1))
 		form.SetItemPadding(spacing)
 		if width < 60 {
 			form.GetFormItem(1).(*tview.Checkbox).SetLabel(s.tr("mouse"))

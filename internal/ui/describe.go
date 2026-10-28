@@ -43,7 +43,7 @@ func (s *screen) describe(prompt bool) {
 	reference := objectAtCursor(s.editor)
 	if s.browser != nil && s.browser.HasFocus() {
 		if node := s.browser.GetCurrentNode(); node != nil {
-			if data, ok := node.GetReference().(*browserNode); ok && data.kind == "object" {
+			if data, ok := node.GetReference().(*browserNode); ok && (data.kind == "object" || data.kind == "column") {
 				if !prompt {
 					s.openObject(data.object)
 					return

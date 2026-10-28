@@ -5,8 +5,9 @@
 - 이 저장소와 대화에서는 LazyOra만 개발한다. Tuivory 자체 개발·견본·일감은 별도 Tuivory 프로젝트에서 관리한다. UI 스타일 작업은 Tuivory에 게시된 Go 스타일 패키지의 버전/커밋을 확인하고, 공개 패키지를 import하여 변경된 스타일을 LazyOra의 LORA 일감으로 적용·검증한다. 확인한 출처와 적용/보류 판단은 `docs/tuivory-sync.md`에 기록한다.
 
 - 작업 시작 전에 Jira의 관련 일감을 확인한다. 기존 일감이 있으면 요구사항과 진행 내역을 그 일감에 추가한다. 없으면 사용자에게 등록 여부를 묻고, 등록하기로 승인받으면 등록한 뒤 작업한다.
-- 선택한 Jira 일감의 실제 작업을 시작하면 스프린트에서 해당 일감을 `진행 중`으로 전환한다. 구현·검증·CI가 끝나도 사용자 검토 전에는 `완료`로 전환하지 않는다. 사용자가 검토 완료를 명시하면 해당 일감을 `완료`로 전환한다.
-- 2026-10-21 사용자 지시로 완료 처리 기준을 갱신한다. 구현·필요한 검증을 마친 일감은 스프린트에서도 `완료`로 전환하고 근거를 댓글로 남긴다. 미구현 작업이나 하위 작업이 남은 에픽은 완료 처리하지 않는다. 아래 CI 일괄 실행 기간에는 로컬 검증 완료와 GitHub 통합 CI 대기를 구분해 기록한다.
+- 2026-10-27 사용자 지시로 스크럼에서 칸반으로 전환한다. 새 스프린트 생성·기간 설정·일감 배정을 하지 않고 백로그 우선순위와 `할 일 → 진행 중 → 검토 → 완료` 상태로 관리한다. 기존 스프린트 이력은 보존한다. 사용자 지시가 없는 한 한 번에 한 일감을 진행하고, Tuivory 패키지 등 선행 의존성이 준비되지 않은 작업은 할 일에 둔 채 사유를 기록한다.
+- 실제 작업을 시작하면 Jira 일감을 `진행 중`으로 전환한다. 2026-10-27 검토 단계 추가 지시가 2026-10-21 자동 완료 기준보다 우선한다. 구현·필요한 검증을 마치면 근거와 남은 CI/게시 여부를 댓글로 남기고 `검토`로 전환한다. 사용자 검토 완료가 명시된 뒤에만 `완료`로 전환한다. 수정 요청을 받아 재작업할 때는 `진행 중`으로 되돌리고 검증 후 다시 `검토`로 전환한다. 검토 상태가 아직 Jira에 없으면 `진행 중`을 유지하며 검토 대기임을 댓글로 기록하고, `완료`로 대체하지 않는다. 미구현 작업이나 하위 작업이 남은 에픽은 완료 처리하지 않는다. 아래 CI 일괄 실행 기간에는 로컬 검증 완료와 GitHub 통합 CI 대기를 구분해 기록한다.
+- Kanban policy (2026-10-27): prioritize the backlog without creating or assigning sprints, preserve historical sprints, and use To Do → In Progress → Review → Done. Work on one issue at a time unless instructed otherwise. Leave dependency-waiting work in To Do with a recorded reason. After implementation and required verification, move to Review with evidence and any pending CI/publication noted; move to Done only after explicit user review approval. Return requested rework to In Progress. If Jira has no Review status yet, keep In Progress with a review-pending comment rather than using Done. This supersedes the 2026-10-21 automatic completion rule; do not close epics with remaining work. Existing commit, publication and sequential-branch approval rules still apply.
 - 사용자가 해당 변경의 커밋을 명시적으로 승인할 때만 커밋한다. 구현·수정 요청만으로 자동 커밋하지 않는다.
 - GitHub 업로드는 사용자가 명시적으로 요청하거나 승인할 때만 한다. 구조 정리 중인 변경은 로컬에 보존한다.
 - 커밋 메시지의 설명은 한국어로 작성한다. Git 훅이 요구하는 `feat:`·`fix:` 등의 접두어는 사용할 수 있다.

@@ -13,7 +13,7 @@ func (s *screen) editTableTarget() oracle.Object {
 	}
 	if s.browser != nil {
 		if node := s.browser.GetCurrentNode(); node != nil {
-			if data, ok := node.GetReference().(*browserNode); ok && data.kind == "object" {
+			if data, ok := node.GetReference().(*browserNode); ok && (data.kind == "object" || data.kind == "column") {
 				return data.object
 			}
 		}

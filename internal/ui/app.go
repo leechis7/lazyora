@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/leechis7/tuivory/go"
 	"github.com/rivo/tview"
 	"lazyora/internal/credentials"
 	"lazyora/internal/exportdata"
@@ -162,14 +163,13 @@ type screen struct {
 	chromeHidden                             bool
 	sizing                                   panelSizing
 	splitOffsets                             panelOffsets
-	menuButtons                              []*tview.Button
-	menuList                                 *tview.List
+	menuList                                 *commandMenuView
+	mainMenu, menuModel                      *tuivory.Menu
+	menuBarView                              *tuivory.RowsView
+	menuCard                                 *tuivory.PanelView
 	menuFocus                                tview.Primitive
 	menuIndex                                int
-	menuRows                                 []commandMenuRow
 	menuTitle                                string
-	menuEntries                              []command
-	menuParent                               *commandMenuParent
 	describeForm                             *tview.Form
 	describeFocus                            tview.Primitive
 	describeAction                           func()
@@ -306,6 +306,7 @@ func newWorkspaceScreenWithDisplay(app *tview.Application, terminal tcell.Screen
 	s.table = tview.NewTable().SetBorders(false).SetSelectable(true, true).SetFixed(1, 0)
 	s.table.SetBorder(true)
 	s.table.SetMouseCapture(s.resultMouse)
+	s.table.SetInputCapture(s.resultGridKey)
 	s.editor.SetClipboard(s.sendClipboard, func() string { return s.clipboardText })
 	s.status = s.newTextView(textHint)
 	s.queryLayout = s.newFlex().SetDirection(tview.FlexRow).

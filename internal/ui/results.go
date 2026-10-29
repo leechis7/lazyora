@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/leechis7/tuivory/go"
 	"github.com/rivo/tview"
 )
 
@@ -37,92 +38,64 @@ func (s *screen) clearResultSelection() {
 	s.highlightResults()
 }
 
+// The app intercepts Oracle editing/context commands; all pointer selection,
+// hit testing and range geometry come from the common Grid.
 func (s *screen) resultMouse(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 	if !s.prefs.Mouse {
-		return action, nil
+		return tview.MouseConsumed, nil
 	}
 	page, _ := s.pages.GetFrontPage()
 	if page != "main" && page != "routine_grid" {
 		return action, event
 	}
+	s.prepareResultGrid()
 	x, y := event.Position()
-	row, col := s.table.CellAt(x, y)
-	innerX, _, _, _ := s.table.GetInnerRect()
-	if x < innerX && s.table.InRect(x, y) && row > 0 && row < s.table.GetRowCount() && (action == tview.MouseLeftDown || action == tview.MouseLeftClick) {
-		if action == tview.MouseLeftDown {
-			s.resultSelection = resultSelection{anchorRow: row, endRow: row, anchorCol: 0, endCol: len(s.resultHeaders) - 1, active: true}
-			s.table.Select(row, 0)
+	left, top, w, h := s.table.GetInnerRect()
+	if action == tview.MouseRightClick {
+		if page == "main" {
 			s.app.SetFocus(s.table)
-			s.highlightResults()
+			s.showContextMenu()
 		}
 		return tview.MouseConsumed, nil
 	}
-	valid := s.table.InRect(x, y) && row > 0 && row < s.table.GetRowCount() && col >= 0 && col < s.table.GetColumnCount()
-	switch action {
-	case tview.MouseLeftDoubleClick:
-		if valid {
+	pointer := map[tview.MouseAction]string{tview.MouseLeftDown: "down", tview.MouseLeftUp: "up", tview.MouseMove: "move", tview.MouseLeftClick: "click", tview.MouseLeftDoubleClick: "double", tview.MouseScrollUp: "wheel_up", tview.MouseScrollDown: "wheel_down", tview.MouseScrollLeft: "wheel_left", tview.MouseScrollRight: "wheel_right"}[action]
+	if pointer == "" {
+		return action, event
+	}
+	if !s.table.InRect(x, y) && pointer != "up" && pointer != "move" {
+		return action, event
+	}
+	// Double-click opens the existing inline editor or read-only detail popup.
+	if pointer == "double" {
+		row, col := s.resultCellAt(x, y)
+		if row > 0 && col >= 0 {
 			s.table.Select(row, col)
 			s.app.SetFocus(s.table)
 			if page != "main" || !s.startInlineEdit(nil) {
 				s.showCellDetail()
 			}
-			return tview.MouseConsumed, nil
 		}
-	case tview.MouseRightClick:
-		if page == "routine_grid" {
-			return action, event
-		}
-		s.app.SetFocus(s.table)
-		s.showContextMenu()
 		return tview.MouseConsumed, nil
-	case tview.MouseLeftDown:
-		s.clearResultSelection()
-		if valid {
-			s.resultSelection = resultSelection{anchorRow: row, anchorCol: col, endRow: row, endCol: col, active: true, dragging: true}
-			s.table.Select(row, col)
-			s.app.SetFocus(s.table)
-		}
-	case tview.MouseMove:
-		if s.resultSelection.dragging && event.Buttons()&tcell.Button1 != 0 && valid {
-			s.resultSelection.endRow, s.resultSelection.endCol = row, col
-			s.table.Select(row, col)
-			s.highlightResults()
-		}
-	case tview.MouseLeftUp:
-		s.resultSelection.dragging = false
-	case tview.MouseLeftClick:
-		// Preserve the drag end; Table's default click would collapse the rectangle.
-		if s.resultSelection.active {
-			return tview.MouseConsumed, nil
-		}
 	}
-	s.highlightResults()
-	return action, event
+	p := s.grid.presentation
+	if pointer != "move" && pointer != "up" || pointer == "move" && p.pointer {
+		s.app.SetFocus(s.table)
+	}
+	eventResult := p.model.Pointer(pointer, x-left, y-top, w, h, event.Modifiers()&tcell.ModShift != 0)
+	if pointer == "down" && eventResult.Kind != "" {
+		p.pointer = true
+	}
+	if pointer == "up" {
+		p.pointer = false
+	}
+	s.resultGridEvent(eventResult)
+	return tview.MouseConsumed, nil
 }
-
 func (s *screen) extendResultSelection(key tcell.Key) {
-	row, col := s.table.GetSelection()
-	if row <= 0 || s.table.GetRowCount() < 2 || s.table.GetColumnCount() == 0 {
-		return
-	}
-	if !s.resultSelection.active {
-		s.resultSelection = resultSelection{anchorRow: row, anchorCol: col, active: true}
-	}
-	switch key {
-	case tcell.KeyUp:
-		row--
-	case tcell.KeyDown:
-		row++
-	case tcell.KeyLeft:
-		col--
-	case tcell.KeyRight:
-		col++
-	}
-	row = max(1, min(row, s.table.GetRowCount()-1))
-	col = max(0, min(col, s.table.GetColumnCount()-1))
-	s.resultSelection.endRow, s.resultSelection.endCol = row, col
-	s.table.Select(row, col)
-	s.highlightResults()
+	s.prepareResultGrid()
+	action := tuivory.GridKey(tcell.NewEventKey(key, 0, tcell.ModShift))
+	_, _, _, h := s.table.GetInnerRect()
+	s.resultGridEvent(s.grid.presentation.model.Handle(action, h))
 }
 
 func (s *screen) copyResults(mode string) {

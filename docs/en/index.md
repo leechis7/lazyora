@@ -2,7 +2,7 @@
 
 [한국어 (primary)](../index.md) | **English**
 
-Use the guides below for current behavior. The app-version source is `internal/appinfo/info.go`, dependency versions are in `go.mod`, and actual published binaries are in [GitHub Releases](https://github.com/leechis7/lazyora/releases). **v0.11.2 uses Tuivory v0.2.0 for shared UI styles.** Earlier TUIS references and independent-project plans are migration/design history, not current dependencies or incomplete extraction work.
+Use the guides below for current behavior. The app-version source is `internal/appinfo/info.go`, dependency versions are in `go.mod`, and actual published binaries are in [GitHub Releases](https://github.com/leechis7/lazyora/releases). **v0.12.0 uses Tuivory v0.4.0 for shared UI styles.** Earlier TUIS references and independent-project plans are migration/design history, not current dependencies or incomplete extraction work.
 
 ## Current guidance
 
@@ -23,7 +23,7 @@ Use the guides below for current behavior. The app-version source is `internal/a
 | Support and private security reports | [Support/security](support.md) | [지원](../../SUPPORT.md) · [보안](../../SECURITY.md) |
 | Community rules | [Code of conduct](../../CODE_OF_CONDUCT.en.md) | [행동 규칙](../../CODE_OF_CONDUCT.md) |
 | v0.11.3 release description | [English](releases/v0.11.3.md) | [한국어](../releases/v0.11.3.md) |
-| v0.11.2 release description | [English](releases/v0.11.2.md) | [한국어](../releases/v0.11.2.md) |
+| v0.12.0 release description | [English](releases/v0.12.0.md) | [한국어](../releases/v0.12.0.md) |
 | v0.11.1 release description | [English](releases/v0.11.1.md) | [한국어](../releases/v0.11.1.md) |
 | v0.11.0 release description | [English](releases/v0.11.0.md) | [한국어](../releases/v0.11.0.md) |
 | v0.10.2 release description | [English](releases/v0.10.2.md) | [한국어](../releases/v0.10.2.md) |

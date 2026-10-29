@@ -95,12 +95,18 @@ func (s *screen) setSurface(box *tview.Box, role surfaceRole) {
 }
 func (s *screen) textSurface(view *tview.TextView, role surfaceRole) {
 	s.setSurface(view.Box, role)
-	fg := s.textColor(s.textRoles[view])
-	if role == surfaceField {
-		fg = s.colors().fieldText
+	palette := s.componentPalette()
+	palette["surface"] = tuivory.Pair{FG: s.surfaceText(role), BG: s.surfaceColor(role)}
+	textRole := map[textRole]string{textBody: "body", textHint: "hint", textAccent: "info", textWarning: "warning"}[s.textRoles[view]]
+	if textRole == "" {
+		textRole = "body"
+	}
+	style, err := tuivory.TextOnSurface(palette, textRole, "surface")
+	if err != nil {
+		panic(err)
 	}
 	view.SetBackgroundColor(s.surfaceColor(role))
-	view.SetTextColor(fg)
+	view.SetTextStyle(style)
 }
 func (s *screen) disabledStyle() tcell.Style {
 	return s.tuivoryStyles().DisabledStyle()

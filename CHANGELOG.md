@@ -4,6 +4,16 @@
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-30
+
+### 개선 / Changed
+
+- LORA-76: 공통 PanelView의 메뉴 단일선을 사용해 별도 테두리 박스를 제거하고, 표면 기반 텍스트·비활성 회색/Dim·접두사 제거를 적용합니다. 상태 배경과 비활성 입력 차단을 유지합니다.
+- LORA-76: Use common PanelView menu single borders, removing the separate border Box; adopt surface-aware text and gray/Dim disabled presentation without ordinary prefixes, preserving state backgrounds and disabled input exclusion.
+
+- LORA-76: Tuivory Go v0.4.0 공개 메뉴·중첩 탐색·결과 Grid(data 프리셋)로 전환하고 독자 본체 그리기를 제거합니다. 기존 앱 키맵·원문 복사·ROWID 편집·트랜잭션 보호를 유지하며 헤더 구분선 드래그로 열 너비를 조절합니다. 현재 행 표식은 `>`, 공통 폭 생략 표식은 `~`이며 미커밋 셀 배경·상태줄 `*`를 사용합니다.
+- LORA-76: Adopt published Tuivory Go v0.4.0 menus/nested navigation and Grid (data preset), removing local body rendering. Preserve global keymaps, original-value copying, ROWID editing and transaction guards; drag header dividers to resize columns. Current-row/clipping markers are `>`/`~`; edited cells retain distinct backgrounds and status `*`.
+
 ## [0.11.3] - 2026-10-29
 
 ### 개선 / Changed
@@ -323,7 +333,8 @@ v0.0.1의 F2 접속은 Alt+L, F4 실행은 F9, F5 커밋은 Alt+C, F6 롤백은 
 - 이 릴리스 시점에는 실제 CentOS 7.4, 구형 Oracle 및 SID 접속 검증이 완료되지 않았습니다. 이후 호환성 수정은 `Unreleased`에 기록합니다.
 - 한 번에 SQL 한 문장 또는 BEGIN/DECLARE 블록 하나를 실행합니다. 여러 문장 일괄 실행, SQL*Plus 스크립트, 바인드 입력, DBMS_OUTPUT 출력은 지원하지 않습니다.
 
-[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.11.3...dev
+[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.12.0...dev
+[0.12.0]: https://github.com/leechis7/lazyora/compare/v0.11.3...v0.12.0
 [0.11.3]: https://github.com/leechis7/lazyora/compare/v0.11.2...v0.11.3
 [0.11.2]: https://github.com/leechis7/lazyora/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/leechis7/lazyora/compare/v0.11.0...v0.11.1

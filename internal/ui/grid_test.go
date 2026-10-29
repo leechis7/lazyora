@@ -26,12 +26,13 @@ func TestGridDecorationPreservesRawCopyHitTestingAndRowNumbers(t *testing.T) {
 			if s.table.GetCell(1, 0).Align != tview.AlignRight || strings.TrimSpace(s.table.GetCell(1, 2).Text) != "∅ NULL" || !strings.Contains(s.table.GetCell(1, 1).Text, "…") {
 				t.Fatal("typed preview/alignment missing")
 			}
-			x, y, _ := s.table.GetCell(1, 0).GetLastPosition()
-			row, col := s.table.CellAt(x, y)
+			x, y, _ := s.resultCellRect(1, 0)
+			row, col := s.resultCellAt(x, y)
 			if row != 1 || col != 0 {
 				t.Fatal("gutter shifted data hit testing")
 			}
-			ix, _, _, _ := s.table.GetInnerRect()
+			ix, _, gw, gh := s.table.GetInnerRect()
+			ix += s.grid.presentation.model.Geometry(gw, gh).Gutter
 			r, _, _, _ := terminal.GetContent(ix-2, y)
 			if r != '1' {
 				t.Fatalf("row number missing: %q", r)
@@ -69,14 +70,15 @@ func TestGridScrolledGutterTracksActualDataAndTabWidths(t *testing.T) {
 	grid := s.resultGrid()
 	grid.SetRect(0, 0, 80, 12)
 	grid.Draw(terminal)
-	_, y, _ := s.table.GetCell(501, 1).GetLastPosition()
-	x, _, _, _ := s.table.GetInnerRect()
+	_, y, _ := s.resultCellRect(501, 1)
+	x, _, gw, gh := s.table.GetInnerRect()
+	x += s.grid.presentation.model.Geometry(gw, gh).Gutter
 	var number strings.Builder
 	for px := x - 5; px < x-1; px++ {
 		r, _, _, _ := terminal.GetContent(px, y)
 		number.WriteRune(r)
 	}
-	if strings.TrimSpace(number.String()) != "501" {
+	if strings.TrimPrefix(strings.TrimSpace(number.String()), ">") != "501" {
 		t.Fatalf("scrolled row gutter: %q", number.String())
 	}
 	if !strings.Contains(s.table.GetCell(501, 1).Text, "⇥") || !strings.Contains(s.table.GetCell(501, 1).Text, "↵") {

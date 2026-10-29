@@ -32,9 +32,14 @@ func TestMenuOnlyPaintsItsPopupArea(t *testing.T) {
 						}
 						root.SetRect(0, 0, width, height)
 						root.Draw(terminal)
+						mx, my, _, _ := s.menuCard.GetRect()
+						corner, _, _, _ := terminal.GetContent(mx, my)
+						if corner != '┌' {
+							t.Fatalf("menu lost single border: %q", corner)
+						}
 						for y := 0; y < height; y++ {
 							for x := 0; x < width; x++ {
-								if s.menuList.InRect(x, y) {
+								if s.menuCard.InRect(x, y) {
 									continue
 								}
 								r, _, style, _ := terminal.GetContent(x, y)
@@ -56,22 +61,13 @@ func TestMenuOnlyPaintsItsPopupArea(t *testing.T) {
 
 func selectMenuCommand(t *testing.T, s *screen, id string) {
 	t.Helper()
-	for i, row := range s.menuRows {
-		for _, child := range row.children {
-			if child.id == id {
-				s.menuList.SetCurrentItem(i)
-				s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
-				selectMenuCommand(t, s, id)
+	for _, item := range s.menuModel.Items() {
+		if strings.HasSuffix(item.ID, "/"+id) {
+			if item.Disabled {
 				return
 			}
-		}
-	}
-	label := s.tr(commandFor(id).label)
-	for i := 0; i < s.menuList.GetItemCount(); i++ {
-		text, _ := s.menuList.GetItemText(i)
-		text = strings.ReplaceAll(strings.ReplaceAll(text, "["+s.tokens().disabled.String()+"]", ""), "[-:-:-]", "")
-		if text == label || strings.HasPrefix(text, label+"  ") || strings.HasPrefix(text, "[gray]"+label) {
-			s.menuList.SetCurrentItem(i)
+			s.menuModel.Open(item.Parent, s.menuModel.ReturnID())
+			s.menuModel.Focus(item.ID)
 			s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
 			return
 		}
@@ -191,6 +187,7 @@ func TestEditMenuRetainsSelectionClipboardAndUndo(t *testing.T) {
 	s.app.SetFocus(s.table)
 	s.showMenu(menuEdit)
 	selectMenuCommand(t, s, "cut")
+	s.closeMenu() // Disabled commands stay open; Esc restores the original panel.
 	if s.editor.GetText() != text || !s.table.HasFocus() {
 		t.Fatal("disabled editor command modified SQL from result focus")
 	}
@@ -222,7 +219,7 @@ func TestLongMenuScrollsWithinSmallTerminal(t *testing.T) {
 	if y < 0 || y+height > 10 {
 		t.Fatal("menu extends beyond terminal")
 	}
-	for i, row := range s.menuRows {
+	for i, row := range menuTestRows(s) {
 		for _, cmd := range row.children {
 			if cmd.id == "format_code" {
 				s.menuList.SetCurrentItem(i)
@@ -230,7 +227,7 @@ func TestLongMenuScrollsWithinSmallTerminal(t *testing.T) {
 				break
 			}
 		}
-		if s.menuParent != nil {
+		if menuNested(s) {
 			break
 		}
 	}
@@ -351,8 +348,14 @@ func TestMouseMenuUsesTheFocusedResultPanel(t *testing.T) {
 	terminal := s.terminal
 	bar.SetRect(0, 0, 120, 1)
 	bar.Draw(terminal)
-	button := s.menuButtons[menuEdit]
+	button := s.menuBarView
 	x, y, _, _ := button.GetRect()
+	for _, cell := range s.mainMenu.BarLayout(120).Cells {
+		if cell.ID == menuRoot(menuEdit) {
+			x += cell.Start
+			break
+		}
+	}
 	focus := func(p tview.Primitive) { s.app.SetFocus(p) }
 	button.MouseHandler()(tview.MouseLeftDown, tcell.NewEventMouse(x+1, y, tcell.Button1, 0), focus)
 	button.MouseHandler()(tview.MouseLeftClick, tcell.NewEventMouse(x+1, y, 0, 0), focus)

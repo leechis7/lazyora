@@ -2,6 +2,7 @@ package ui
 
 import (
 	"github.com/gdamore/tcell/v2"
+	"github.com/leechis7/tuivory/go"
 	"github.com/rivo/tview"
 	"strings"
 )
@@ -403,22 +404,28 @@ func (s *screen) commandKey(event *tcell.EventKey) bool {
 }
 
 func (s *screen) menuBar() *tview.Flex {
-	bar := s.newFlex()
-	for index := range menuGroups {
-		button := s.clickable(tview.NewButton("").SetSelectedFunc(func() { s.showMenu(index) }))
-		button.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
-			// Menu clicks act on the current panel; do not transfer focus to the bar.
-			if action == tview.MouseLeftDown {
-				return tview.MouseConsumed, nil
-			}
-			if action == tview.MouseLeftDoubleClick {
-				action = tview.MouseLeftClick
-			}
-			return action, event
-		})
-		s.menuButtons = append(s.menuButtons, button)
-		bar.AddItem(button, 0, 1, false)
-	}
 	s.refreshMenuLabels()
-	return bar
+	view, err := tuivory.NewMenuBarView(s.mainMenu, s.componentPalette(), func(e tuivory.MenuEvent) {
+		if e.Kind != "open_request" {
+			return
+		}
+		for i := range menuGroups {
+			if e.ID == menuRoot(i) {
+				s.showMenu(i)
+				return
+			}
+		}
+	})
+	if err != nil {
+		panic(err)
+	}
+	// Component hit testing/navigation is retained; menu-bar clicks act on
+	// the existing panel rather than transferring application focus to the bar.
+	mouse := view.Mouse
+	view.Mouse = func(a tview.MouseAction, e *tcell.EventMouse, _ func(tview.Primitive)) (bool, tview.Primitive) {
+		return mouse(a, e, func(tview.Primitive) {})
+	}
+
+	s.menuBarView = view
+	return s.newFlex().AddItem(view, 0, 1, false)
 }

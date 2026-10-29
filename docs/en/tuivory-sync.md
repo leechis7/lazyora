@@ -8,9 +8,9 @@ Tuivory is a TUI component library. Prefer public APIs for reusable control rend
 
 Corrected the TVR-7 description and overly broad request comment in Korean/English. Keep [TVR-17](https://leechis7.atlassian.net/browse/TVR-17), its single simple grid with options/presets and both comparison images. Avoid duplicated shared controls without delegating whole application screens. This changes review records, not application code or published assets.
 
-## LORA-76: omit duplicate column-leaf icons (2026-10-29, development)
+## LORA-76: omit duplicate column-leaf icons (2026-10-29, v0.11.3)
 
-Retain public Tuivory Go v0.2.0 / go/v0.2.0 / 987d1a6786033a6bf063235b5e7fea7b565f0af0. TreeView already supplies a leaf marker (Unicode · / ASCII .); leave public TreeNode.Icon/ASCIIIcon empty instead of adding LazyOra's · / C column icon. Recover two cells per column while preserving the default marker, indentation, identity, selection and details actions. Do not copy or change the renderer. Any future option to hide the built-in marker belongs to Tuivory before consumption. Published v0.11.2 assets remain unchanged.
+Retain public Tuivory Go v0.2.0 / go/v0.2.0 / 987d1a6786033a6bf063235b5e7fea7b565f0af0. TreeView already supplies a leaf marker (Unicode · / ASCII .); leave public TreeNode.Icon/ASCIIIcon empty instead of adding LazyOra's · / C column icon. Recover two cells per column while preserving the default marker, indentation, identity, selection and details actions. Do not copy or change the renderer. Any future option to hide the built-in marker belongs to Tuivory before consumption. This display improvement ships in v0.11.3; existing v0.11.2 assets remain unchanged.
 
 ## LORA-76: shared UI via Tuivory v0.2.0 (2026-10-29, v0.11.2)
 

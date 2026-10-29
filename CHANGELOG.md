@@ -4,10 +4,17 @@
 
 ## [Unreleased]
 
+## [0.11.3] - 2026-10-29
+
 ### 개선 / Changed
 
 - LORA-76: 스키마 트리의 컬럼 아이콘을 생략해 중복 말단 표식(· · / . C)을 하나로 줄이고 이름·자료형 공간을 두 칸 확보합니다.
 - LORA-76: Omit redundant schema-column icons, keeping one leaf marker instead of · · / . C and recovering two cells for names/types.
+
+### 문서 / Documentation
+
+- LORA-76: Tuivory의 재사용 컴포넌트와 LazyOra의 화면 조합·배치·기능 연결 책임을 구분하고 한영 규칙·적용 기록을 정정합니다. 단일 공통 그리드의 옵션/프리셋 요청(TVR-17)은 유지합니다.
+- LORA-76: Clarify reusable Tuivory controls versus LazyOra screen composition/layout/action binding in bilingual policies and integration records. Retain TVR-17's options/presets request on one shared grid.
 
 ## [0.11.2] - 2026-10-29
 
@@ -316,7 +323,8 @@ v0.0.1의 F2 접속은 Alt+L, F4 실행은 F9, F5 커밋은 Alt+C, F6 롤백은 
 - 이 릴리스 시점에는 실제 CentOS 7.4, 구형 Oracle 및 SID 접속 검증이 완료되지 않았습니다. 이후 호환성 수정은 `Unreleased`에 기록합니다.
 - 한 번에 SQL 한 문장 또는 BEGIN/DECLARE 블록 하나를 실행합니다. 여러 문장 일괄 실행, SQL*Plus 스크립트, 바인드 입력, DBMS_OUTPUT 출력은 지원하지 않습니다.
 
-[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.11.2...dev
+[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.11.3...dev
+[0.11.3]: https://github.com/leechis7/lazyora/compare/v0.11.2...v0.11.3
 [0.11.2]: https://github.com/leechis7/lazyora/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/leechis7/lazyora/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/leechis7/lazyora/compare/v0.10.2...v0.11.0

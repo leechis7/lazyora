@@ -16,6 +16,8 @@ Enter inserts a newline. Use F9 or Alt+Enter if your terminal cannot send Ctrl+E
 F1 lists controls for the current screen and selected editor keymap.
 Use Up/Down to select a contents item, Right/Enter to enter its article, and Left to return.
 F10 opens/closes the main menu. Shift+F10 or right-click opens the current panel’s context menu.
+Navigate menus with Up/Down, Home/End and PgUp/PgDn; Enter invokes/opens a child group. Disabled items are skipped. Left/Esc returns to the parent; top-level Esc restores the caller; Right opens the next top-level menu.
+Unreleased sources use Tuivory v0.4.0 menu single borders, surface-aware text and gray/Dim disabled cues. Disabled entries cannot be focused/activated; eight-color Dim brightness is terminal-dependent.
 Tab cycles panels; the focused box has a double border and a distinct highlight color.
 F2 makes the SQL editor fullscreen; Shift+F2 or F12 makes the result grid fullscreen. Repeat the key or press Esc to restore split.
 Esc closes an open dialog first, or cancels a running query before restoring the layout.
@@ -59,6 +61,7 @@ Execute → Run procedure/function supports routine arguments. Step debugging is
 ## Browse, copy and inspect results
 
 F6 switches SQL/results. Alt+F8 or View opens panel sizing: Up/Down changes SQL height, Left/Right changes schema width, Home resets, and Enter/Esc finishes. Splitters can also be dragged with the mouse. Use arrows and PgUp/PgDn in the result grid.
+Drag a header column divider to resize. The current row uses `>`, edited cells use a distinct background and status `*`, and common width clipping uses `~`.
 Click, drag or Shift+arrows selects cells; Ctrl+C copies and Alt+Y copies a row.
 View/Shift+F10 provides the next 1,000 rows, local sorting/filtering and column widths.
 One F9 query retains at most 10,000 rows / estimated 64 MiB; loaded rows are not the full database result.

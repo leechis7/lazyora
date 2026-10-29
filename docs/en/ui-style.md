@@ -40,7 +40,7 @@ Black-White uses neutral colors at every capability. Keyword/bind underlines, it
 
 Theme changes in `theme_apply.go` reapply semantic roles to existing widgets, including hidden tabs. Preserve SQL/password input, selection, focus, scroll, results and pending work. Update both Box and TextView content backgrounds. Remove bookkeeping for closed widgets rather than retaining them indefinitely.
 
-SQL syntax and result-grid header/current cell/range/NULL/edited states use Tuivory's styles with LazyOra's data. Edited cells also have a `*` row marker and status text; markers never enter copied/exported values.
+SQL syntax and result-grid header/current cell/range/NULL/edited states use Tuivory's styles with LazyOra's data. Edited cells have a distinct background and `*` status text; markers never enter copied/exported values.
 
 ## Evidence and historical material
 
@@ -57,3 +57,9 @@ In v0.11.2, LORA-78 connects the public Tuivory v0.2.0 tree ASCII option to a La
 ## Shared implementation priority (v0.11.2)
 
 Prefer public Tuivory APIs for shared rendering, controls and styles. Tuivory v0.2.0 in LazyOra v0.11.2 uses `WideSafeScreen` for entire popup draws and `CellText` with its `~` marker for clipped labels. Preserve existing palettes, focused double borders and host input/commands/data ownership. Review adapters and acceptance criteria before replacing models with different product behavior; arrange missing shared capabilities in Tuivory before consumption. See [adoption/defer details](../audits/lora-76-tuivory.md).
+
+## Development sources: menu and grid components
+
+Unreleased sources use Tuivory v0.4.0 Menu/MenuView/MenuBarView and Grid/GridView (data preset). LazyOra owns menu content/placement/global keys/actions and grid originals/edit/copy policy. Public components own body rendering, clipping and range/pointer interaction. The current-row marker is `>`; edited cells use their background and status `*`, without a row-number `*`. See [source, visual differences and verification](tuivory-sync.md).
+
+Common PanelView owns menu single borders/titles/surfaces; remove the separate border Box. TextOnSurface binds ordinary text to its real surface. Ordinary reference contrast remains 4.5:1; distinguish disabled controls with the shared 2:1 target, gray/Dim and input exclusion. Eight-color Dim brightness is terminal-dependent. Do not overwrite input/selection/edited backgrounds.

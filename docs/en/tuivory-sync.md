@@ -2,6 +2,28 @@
 
 [한국어](../tuivory-sync.md) | **English** · [UI style rules](ui-style.md)
 
+## LORA-76: Tuivory v0.4.0 borders, surfaces and disabled states (2026-10-30, unreleased)
+
+Verified public `github.com/leechis7/tuivory/go v0.4.0`, [go/v0.4.0](https://github.com/leechis7/tuivory/releases/tag/go/v0.4.0), Origin `fef7a7b2247d1c68ef0fb1469e6a2fc2e1cec9b5`, Sum `h1:rhyWAiaCladiGiRSs/K97VpCyDj4FCma539665KazeU=`. Upgrade the current uncommitted menu/grid branch from v0.3.0; no source copy/modification/local replacement.
+
+- Place the original MenuView directly in public PanelView for single borders, title clipping, surface fill and wide-glyph protection. Remove the separate manually drawn Box and extra menu WideSafeScreen wrapper. The app retains placement/size/title/zero padding and command/focus binding. Ordinary focused panels retain double borders.
+- Public TextOnSurface binds ordinary body/hint/info/warning text to the actual surface and corrects poor contrast without replacing explicit input/selection/edited backgrounds. GridView's public PreserveBackgrounds default preserves result styles.
+- Consume public DisabledStyle and common gray/Dim presentation, removal of ordinary disabled prefixes and exclusion from focus/click/activation. Keep 4.5:1 reference checks for ordinary text; use the new shared 2:1 disabled target plus a distinct cue only for inactive controls. Actual eight-color Dim brightness depends on the terminal.
+- Upstream's resize deadlock fix is in its private playground reflow queue. LazyOra does not copy that application code: keep host terminal lifecycle and separately exercise actual PTY resizing and continued interaction.
+
+The v0.3.0 entry below records the preceding local stage. See the [current bilingual v0.4.0 evidence](../audits/lora-76-tuivory040.md). Released v0.11.3 still includes v0.2.0; no commit/publication/release yet. Remaining LORA-76 panel/split/footer work is not complete.
+
+
+## LORA-76: Tuivory v0.3.0 menus and result grid (2026-10-29, unreleased)
+
+- Published module: `github.com/leechis7/tuivory/go v0.3.0`, [go/v0.3.0](https://github.com/leechis7/tuivory/releases/tag/go/v0.3.0), Origin `dabab8b8d9b23e9c641231b5358301e3fbb45431`, Sum `h1:yvisKQpR9gB90Hge+K0b8NvJJI38LT6gMnH2YE3VTkQ=`. Import the public module without copying/modifying Tuivory or using a local replacement. Retain the existing tview replacement for SQL editing extensions.
+- Menus: public `Menu`, `MenuView` and `MenuBarView` own rendering, separators, disabled items, nesting/back, scrolling and pointer navigation. Remove the former List renderer and local list navigation. The app owns command grouping/eligibility, F10/Shift+F10/Alt entry, existing Left/Right top-level navigation policy, original-panel restoration and single-border card placement. Protect the entire card with the existing `WideSafeScreen` wrapper.
+- Grid: configure the same public `Grid` with the `data` preset/options for row numbers, separators, stripes, numeric alignment, current cell/row, ranges, edited cells and status; render through `GridView`. Remove the local result-body renderer and gutter/divider overpainting. `GridSource` provides original values by visible window; `GridCellInfo` supplies display/NULL/numeric/edit metadata. The legacy Table retains application metadata/selection compatibility and never paints the result body. Inline-editor coordinates use public `Geometry`.
+- Preserve Oracle ROWID/original mappings, sorting/filtering/paging, transactions, edit confirmation, partial-LOB copy guards, TSV/OSC52 and global keys in LazyOra. Do not install the library demo's F5–F12 bindings. Disable header-click sorting; retain existing sort commands.
+- Visual changes: the current row number uses `>`; common width clipping uses `~`. Edited-cell backgrounds and status `*` remain, but row-number `*` is omitted. A common row Edited state would color every cell, so supply only cell-level Edited metadata. Feed localized product status through common StatusLine.
+- TVR-17 grid options are now published and consumed. This does not complete panels/splitters/footer or LORA-73–75 application workspaces. See the [bilingual verification record](../audits/lora-76-menu-grid.md). Released v0.11.3 still contains Tuivory v0.2.0; these source changes are not committed, published or released yet.
+
+
 ## LORA-76: component/application boundary correction (2026-10-29, review)
 
 Tuivory is a TUI component library. Prefer public APIs for reusable control rendering, internal focus/selection/input, style/options and glyph-overlap protection. LazyOra owns actual connection/settings/help screen composition, application layout/sizing/order, cross-component focus, global shortcuts and data/action binding. Host UI composition is normal, not an unfinished migration. Withdraw the earlier proposal to transfer all host screen UI; see the [corrected ownership table and sources](../audits/lora-76-tuivory.md).
@@ -35,9 +57,9 @@ CharacterSet and CanDisplay provide estimates, not real font coverage. [Terminal
 
 ## Current state
 
-**LazyOra v0.11.2 ships Tuivory v0.2.0**, module `github.com/leechis7/tuivory/go`, release tag `go/v0.2.0`, source commit `987d1a6786033a6bf063235b5e7fea7b565f0af0`. It uses the single public `tuivory` package. TUIS is no longer a dependency; earlier TUIS entries in the Korean record document the migration history.
+**Released LazyOra v0.11.3 ships Tuivory v0.2.0**, module `github.com/leechis7/tuivory/go`, release tag `go/v0.2.0`, source commit `987d1a6786033a6bf063235b5e7fea7b565f0af0`. It uses the single public `tuivory` package. TUIS is no longer a dependency; earlier TUIS entries in the Korean record document the migration history.
 
-The Go module lives under the upstream repository's `go/` directory. Current consumers specify `@v0.2.0` (released LazyOra v0.10.2 used `@v0.0.1`); the repository tag includes the `go/` prefix. Do not import upstream `internal` packages or replace the module with a local checkout.
+The Go module lives under the upstream repository's `go/` directory. Current development sources specify `@v0.4.0` (released LazyOra v0.10.2 used `@v0.0.1`); the repository tag includes the `go/` prefix. Do not import upstream `internal` packages or replace the module with a local checkout.
 
 | LazyOra area | Tuivory responsibility |
 | --- | --- |

@@ -33,6 +33,7 @@ func (s *screen) newTextView(roles ...textRole) *tview.TextView {
 		s.textRoles = make(map[*tview.TextView]textRole)
 	}
 	s.textRoles[view] = role
+	s.textSurface(view, surfaceCanvas)
 	return view
 }
 

@@ -62,9 +62,9 @@ type inlineCellEditor struct {
 
 func (e *inlineCellEditor) Draw(terminal tcell.Screen) {
 	table := e.owner.table
-	x, y, width := table.GetCell(e.row, e.col).GetLastPosition()
+	x, y, width := e.owner.resultCellRect(e.row, e.col)
 	left, top, w, h := table.GetInnerRect()
-	actualRow, actualCol := table.CellAt(x, y)
+	actualRow, actualCol := e.owner.resultCellAt(x, y)
 	if actualRow != e.row || actualCol != e.col || y < top || y >= top+h || x < left || x >= left+w {
 		return
 	}

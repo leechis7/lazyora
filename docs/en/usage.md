@@ -2,7 +2,7 @@
 
 [한국어](../usage.md) | **English** · [Documentation](index.md) · [Offline guide](../guide.en.md)
 
-This guide covers v0.11.2 workflows. Its input, selection, button, grid and popup styles use **Tuivory v0.2.0**, included in the executable. Choose Dark/Light/Black-White in Tools → Settings; terminal capability independently selects 8/16/256/True Color rendering. See [UI style rules](ui-style.md).
+This guide covers v0.12.0 workflows. Its input, selection, button, grid and popup styles use **Tuivory v0.4.0**, included in the executable. Choose Dark/Light/Black-White in Tools → Settings; terminal capability independently selects 8/16/256/True Color rendering. See [UI style rules](ui-style.md).
 
 v0.11.2 uses the published Tuivory **v0.2.0** tree. User/type selectors and live object filtering remain. On a table or view, use **Right/Space or click the disclosure arrow** to fetch columns and data types. **Left** collapses or moves to the parent; **Alt+Left/Right** pans long names. **Enter or clicking a name** opens the existing object details. Columns are fetched on expansion and cached for the current list; Ctrl+R refresh, owner changes and reconnects clear the cache. Collapse and re-expand after failure/cancellation to retry. Existing Esc cancellation and work-protection rules apply during queries.
 
@@ -94,7 +94,7 @@ SELECT t.ROWID, t.* FROM scott.emp t WHERE t.deptno = 10 ORDER BY t.empno;
 
 Validated ROWID is hidden in the grid, row/range copy and fetched-result export, but retained internally. Full DB export repeats the original SQL and can include ROWID. Joins/views/synonyms/DB links/CTEs/subqueries/DISTINCT/aggregates/calculations/ROWIDTOCHAR or unverifiable origins remain read-only. Supported origins are permanent heap tables and direct columns/`t.*`; omitted schema uses CURRENT_SCHEMA. LOB and unsupported types remain read-only.
 
-Enter/double-click edits an editable cell; typing replaces its value. Enter previews before UPDATE, Esc cancels the draft, Ctrl+U clears, Alt+Delete requests NULL, and Alt+D opens the separate editor. The **change-preview** default is Proceed; Cancel returns to the draft. This differs from the safe Cancel default on general dangerous-SQL warnings. Applied cells have a changed background, `*` row marker and status text until commit/rollback.
+Enter/double-click edits an editable cell; typing replaces its value. Enter previews before UPDATE, Esc cancels the draft, Ctrl+U clears, Alt+Delete requests NULL, and Alt+D opens the separate editor. The **change-preview** default is Proceed; Cancel returns to the draft. This differs from the safe Cancel default on general dangerous-SQL warnings. Applied cells have a changed background and `*` status text until commit/rollback.
 
 Edits use ROWID and original fetched editable-column values to detect conflicts, not every unfetched/read-only column. Lock conflicts and failed recovery are distinct from success. After commit/rollback the current grid requeries its original SQL/binds or explicit edit-table source, preserving sort/filter/widths and a feasible selection while clearing edit markers. Paging restarts at the first page; other SQL tabs' old results need rerunning. A failed refresh is reported separately from a successful transaction. The current editor text is never executed implicitly for this refresh; exit-time transaction actions proceed to exit.
 
@@ -109,3 +109,11 @@ Alt+P opens DBMS_OUTPUT; enable it with Alt+E in that view or the Session menu *
 Ctrl+C copies retained output, Alt+D clears the display and Esc closes the view without canceling SQL. Output control/collection does not commit/rollback or add pending SQL entries. Reconnect disables output and resets history. SQL errors and output-collection errors are reported separately; failed buffer cleanup can block the next SQL to avoid mixing output.
 
 For password storage, terminal key mappings and environment-specific evidence, see [Credentials](credentials.md), [Terminal troubleshooting](terminal.md) and [Compatibility](compatibility.md).
+
+### Menus and result grid in v0.12.0
+
+Current sources use the common Tuivory v0.4.0 menu/grid. Navigate menus with Up/Down, Home/End and PgUp/PgDn; Enter invokes a command or enters a child group. Disabled entries are skipped and cannot execute by click. Left/Esc or Back returns to the parent; top-level Esc restores the calling panel. Right retains the existing next-top-level-menu policy.
+
+Drag a column divider in the grid header to resize; existing width menus/keyboard commands remain. The current-row marker is `>` and long cells/menus use `~` for clipping. Enter/double-click editing, Shift+arrows/mouse ranges, row-number row selection, Ctrl+C/Alt+Y original-value copying, F10 menu and F12 result maximization remain. Edited-cell backgrounds and status `*` indicate uncommitted work; row-number `*` is omitted. These changes are included in v0.12.0.
+
+In v0.4.0 the shared package renders menu single borders and clipped titles. Disabled entries use gray/Dim without an ordinary prefix and cannot be focused/activated. Eight-color Dim brightness depends on the terminal. Ordinary information text uses the actual card/panel background.

@@ -29,6 +29,16 @@ func (s *screen) applyTheme(previous string) {
 		case *resultGrid:
 			visit(w.Table)
 			return
+		case *tuivory.PanelView:
+			_ = w.SetPalette(s.componentPalette())
+			visit(w.Child)
+			return
+		case *commandMenuView:
+			_ = w.SetPalette(s.componentPalette())
+			return
+		case *tuivory.RowsView:
+			_ = w.SetPalette(s.componentPalette())
+			return
 		case *tview.Pages:
 			box = w.Box
 			for _, name := range w.GetPageNames(false) {
@@ -110,9 +120,6 @@ func (s *screen) applyTheme(previous string) {
 			inactive := screen{prefs: s.prefs, terminal: s.terminal, limitedColors: s.limitedColors, table: tab.table, resultRows: tab.rows, resultHeaders: tab.headers, resultValues: tab.values, resultSelection: tab.selection, resultBrowser: tab.browser, editedCells: s.editedCells}
 			inactive.repaintGridTheme()
 		}
-	}
-	for _, button := range s.menuButtons {
-		visit(button)
 	}
 	for _, button := range s.buttons {
 		s.tuivoryWidgets().FooterButton(button)

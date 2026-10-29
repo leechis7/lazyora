@@ -6,9 +6,9 @@
 
 LazyOra aims to make everyday Oracle development and inspection practical in a terminal, including over SSH, without installing Toad or purchasing its commercial license. It adapts familiar Toad workflows and shortcuts to a TUI. It is an independent project under active development, not a complete replacement for every Toad feature.
 
-Current version: **0.11.3** · **Linux / Windows / macOS · AMD64 / ARM64**
+Current version: **0.12.0** · **Linux / Windows / macOS · AMD64 / ARM64**
 
-v0.11.3 removes redundant schema-column icons to recover space for names and data types. See the [release notes](docs/en/releases/v0.11.3.md).
+v0.12.0 adopts Tuivory v0.4.0 common menus/results, header-divider resizing, single menu borders, surface-aware text and disabled cues. See the [release notes](docs/en/releases/v0.12.0.md).
 
 - Oracle SQL/PL/SQL syntax highlighting, files and multiple SQL tabs, cursor-statement execution, F5 scripts and IN bind variables.
 - Estimated execution plans, result copying, CSV/TSV/Excel/INSERT export, and manual commit/rollback.
@@ -16,9 +16,11 @@ v0.11.3 removes redundant schema-column icons to recover space for names and dat
 - DBMS_OUTPUT, routine execution, object DDL/privileges/dependencies, additional result fetching, sorting/filtering, cell details and guarded editing.
 - Toad (default), Vim, Notepad++, VS Code and IntelliJ IDEA editor keymaps; completion, formatting, dark/light/black-and-white themes, and Korean/English UI.
 
+v0.12.0 adopts Tuivory v0.4.0 common menus and result grids. Resize columns by dragging header dividers or using existing menus. See [scope and verification](docs/en/tuivory-sync.md).
+
 ![LazyOra: menus, schema browser, SQL editor, result grid and context-sensitive shortcuts](docs/images/lazyora-overview.png)
 
-*v0.11.3 · Dark theme · English UI · DB-free executable --demo output captured through a PTY.*
+*v0.12.0 · Dark theme · English UI · local DB-free executable --demo PTY capture.*
 
 ## Quick start
 
@@ -85,7 +87,7 @@ Korean remains the primary documentation language. Historical audits, detailed d
 
 ## Implementation and shared UI
 
-**In v0.11.2, [Tuivory](https://github.com/leechis7/tuivory) v0.2.0** provides common themes, color profiles, input/choice/button/table/popup styles, grid states and syntax colors through `github.com/leechis7/tuivory/go`. Release users do not install a separate package.
+**In v0.12.0, [Tuivory](https://github.com/leechis7/tuivory) v0.4.0** provides common themes, color profiles, input/choice/button/table/popup styles, grid states and syntax colors through `github.com/leechis7/tuivory/go`. Release users do not install a separate package.
 
 tview/tcell handle terminal rendering and input; go-ora handles Oracle communication. LazyOra retains SQL parsing for display, database execution and transactions, Toad keymaps, grid data and application state. See [UI style rules](docs/en/ui-style.md) and [Tuivory integration](docs/en/tuivory-sync.md).
 

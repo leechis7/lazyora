@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### 개선 / Changed
+
+- LORA-76: 스키마 트리의 컬럼 아이콘을 생략해 중복 말단 표식(· · / . C)을 하나로 줄이고 이름·자료형 공간을 두 칸 확보합니다.
+- LORA-76: Omit redundant schema-column icons, keeping one leaf marker instead of · · / . C and recovering two cells for names/types.
+
 ## [0.11.2] - 2026-10-29
 
 ### 개선 / Changed

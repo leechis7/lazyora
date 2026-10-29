@@ -124,7 +124,7 @@ func (b *browserTree) Refresh() {
 				if d.column.Nullable {
 					row.Secondary += " · NULL"
 				}
-				row.Icon, row.ASCIIIcon = "·", "C"
+				// TreeView supplies the leaf marker; a second icon wastes columns.
 			case "message":
 				row.Name = b.screen.tr(d.label)
 			}

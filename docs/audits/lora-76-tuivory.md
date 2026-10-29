@@ -45,3 +45,41 @@ Retain the LORA-79 physical-output regression (1,728 frames across dialogs/langu
 - Full UI tests passed (16.610s), as did the full race suite (UI 185.784s), vet, Linux ARM64 build/version and embedded Tuivory v0.2.0 verification. Durations describe tests, not product performance.
 - Two local PTY demo key scenarios (Unicode/ASCII, Alt+L → Esc → confirmed Ctrl+Q) exited 0. Temporary Korean/Unicode preferences were byte-identical; ASCII output contained only 7-bit bytes. This is not a visual inspection of a remote terminal/font.
 - Verified 95 local documentation links and diff formatting; no local `popupFill` definitions remain. Preserve the user's run.sh mode change. No commit/publication/CI/release; the local ARM64 build contains development changes and still displays 0.11.1.
+
+## 2026-10-29 컴포넌트와 앱 책임 정정 / Component and application boundary correction
+
+사용자가 Tuivory는 TUI 컴포넌트 라이브러리임을 명확히 했습니다. 이전 검토에서 앱의 화면 조합 코드까지 모두 이전 대상으로 분류한 해석은 철회합니다. 아래는 ‘미이관 목록’이 아니라 현재 코드의 책임을 나눈 표입니다. 색상만 재사용한 것과 공통 컨트롤을 재사용한 것은 구분하되, 화면 조합·배치·앱 명령 연결이 호스트에 남는 것은 정상입니다.
+
+| 영역 | Tuivory에 적합한 공통 컴포넌트 | LazyOra에 남는 정상적인 UI·기능 연결 |
+| --- | --- | --- |
+| 폼·팝업 | 입력/버튼/선택·팝업 표면·내부 포커스/입력 계약·문자 겹침 보호 | 접속/설정 등 실제 화면의 항목·배치·크기·저장/닫기 동작. [form_popup.go](../../internal/ui/form_popup.go), [buttons.go](../../internal/ui/buttons.go)의 조합 전체를 이전 대상으로 보지 않음. |
+| 메뉴 | 메뉴·하위 메뉴·구분선·컴포넌트 내 탐색 API | 앱 메뉴 분류·명령/활성 조건·진입 위치와 기능 실행. [menu.go](../../internal/ui/menu.go), [menu_groups.go](../../internal/ui/menu_groups.go). |
+| 탭·작업공간 | 탭 표시·넘침·선택/닫기 요청 등 범용 조작 | SQL 문서/세션 소유권·저장/닫기 검증·탭 배치와 이벤트 연결. [tabs.go](../../internal/ui/tabs.go). |
+| 패널·분할선 | 패널/분할선의 표시·최소 크기·크기 조절 기능 | 어떤 패널을 어느 위치/크기로 구성하고 최대화/복원 명령과 연결할지. [panel_resize.go](../../internal/ui/panel_resize.go), [layout.go](../../internal/ui/layout.go). |
+| 하단 상태/키 | 상태/키 항목의 공통 표시·폭/우선순위·생략 옵션 | 현재 화면의 키·버전·메시지 선택, 앱 단축키와 명령 연결·전체 배치. [toolbar.go](../../internal/ui/toolbar.go). |
+| 도움말·상세 | 목록·본문·패널·분할·표 등 재사용 가능한 부품 | 도움말 화면 전체 조합·목차/내용·비교표 데이터·화면 간 이동. [help.go](../../internal/ui/help.go), [reference.go](../../internal/ui/reference.go), [keymap_comparison.go](../../internal/ui/keymap_comparison.go). |
+| 검색·자동완성 | 검색 입력·후보 목록·선택 이벤트 등 범용 컨트롤 | 팝업을 여는 시점/배치, SQL 문맥·후보 생성·삽입 동작. [completion.go](../../internal/ui/completion.go). |
+| 편집기·표시 모드 | 공통 편집/표시 훅, 문자 폭·겹침·호환 표시 API | SQL lexer·편집 정책·언어/모드 설정·단말 수명주기·필요한 표시 어댑터. [display.go](../../internal/ui/display.go). |
+| 데이터 그리드 | [TVR-17](https://leechis7.atlassian.net/browse/TVR-17)의 단일 그리드 옵션/프리셋, 선택/뷰포트/공통 표시 | 열/자료형·원본 매핑·SQL/검증/트랜잭션·실제 복사/파일 I/O. [grid.go](../../internal/ui/grid.go). |
+
+공통 컨트롤을 재구현하지 않는 원칙은 유지합니다. 다만 Tuivory의 컴포넌트 옵션이 필요한 것과 앱의 화면 구성 책임을 분리합니다. 기본 외형 차이는 공통 옵션 보완을 검토하되, 앱 전체 화면 템플릿을 Tuivory가 제공해야 한다고 요구하지 않습니다. Form/FocusStack/Layout 도구도 앱의 포커스 순서나 화면 구조를 결정하지 않습니다.
+
+TVR-7 본문에 이 경계를 한영으로 추가하고, 과도한 전체 UI 이전 요청 댓글(10824)을 정정했습니다. 기존 에픽 요구/배포 이력과 상태는 보존합니다. TVR-17의 단일 간결 그리드 + 옵션/프리셋 요청과 비교 PNG 2장은 유효합니다. 이 검토는 새 컨트롤 구현이나 전체 이관 완료를 뜻하지 않습니다. 현재 미커밋 트리 아이콘 변경과 사용자 run.sh 모드 변경을 보존했습니다.
+
+### English
+
+The user clarified that Tuivory is a TUI component library. Withdraw the earlier classification of all host screen-composition code as migration work. The table distinguishes reusable controls from normal host UI and feature binding; styling reuse and component reuse are separate, but host composition is not a defect.
+
+| Area | Tuivory | LazyOra |
+| --- | --- | --- |
+| Forms/popups | Reusable fields/buttons/choices, popup surfaces, internal focus/input and overlap protection | Actual connection/settings screen fields/layout/size, save/close decisions and composition. |
+| Menus | Generic menus/submenus/separators and internal navigation | App command groups/availability, entry placement and action binding. |
+| Tabs/workspaces | Tab display/overflow/selection/close requests | Documents/sessions, save/close guards, placement and event binding. |
+| Panels/splits | Component rendering/minimum sizes/resizing | Panel composition, application layout and maximize/restore commands. |
+| Footer/status | Common item rendering/width/priority/omission options | Which keys/messages/version to show and global shortcut/action/layout choices. |
+| Help/detail viewers | Lists/text/panels/splits/tables | Full help-screen composition, contents/data and navigation policy. |
+| Completion/search | Reusable filter/list/selection controls | When/where to open, SQL context/candidates and insertion. |
+| Editor/display | Common render/edit hooks, width/overlap/fallback APIs | SQL lexer, edit policy, preferences, terminal lifetime and required display adapters. |
+| Grid | One configurable grid with presets (TVR-17) | Columns/types/original mappings, SQL/validation/transactions and real clipboard/file I/O. |
+
+Avoid reimplementing shared controls without transferring entire screens to the library. Distinguish reusable option gaps from host composition. Focus/layout primitives do not dictate app-wide focus order or structure. The epic description and overly broad comment 10824 were corrected in Korean/English, preserving original requirements/release history/status. TVR-17 and both images remain valid. No new component implementation or completion claim; preserve existing leaf-icon and run.sh changes.

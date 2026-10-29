@@ -111,6 +111,7 @@ func (s *screen) newTab() {
 	s.styleBox(table.Box)
 	table.SetTitle(s.tr("results_title"))
 	table.SetMouseCapture(s.resultMouse)
+	table.SetInputCapture(s.resultGridKey)
 	s.tabs = append(s.tabs, &sqlTab{editor: editor, table: table, document: &sqlfile.Document{}, status: "tab_shared"})
 	s.switchTab(len(s.tabs) - 1)
 	s.initDocument()

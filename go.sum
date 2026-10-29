@@ -5,8 +5,8 @@ github.com/gdamore/encoding v1.0.1/go.mod h1:0Z0cMFinngz9kS1QfMjCP8TY7em3bZYeekl
 github.com/gdamore/tcell/v2 v2.13.10 h1:Afs3JKt83HnhuUKdZ3MnxUgOqQRWftj5JyDqv1LLynA=
 github.com/gdamore/tcell/v2 v2.13.10/go.mod h1:+Wfe208WDdB7INEtCsNrAN6O2m+wsTPk1RAovjaILlo=
 github.com/kisielk/sqlstruct v0.0.0-20201105191214-5f3e10d3ab46/go.mod h1:yyMNCyc/Ib3bDTKd379tNMpB/7/H5TjM2Y9QJ5THLbE=
-github.com/leechis7/tuivory/go v0.2.0 h1:q+NJW7/inCfX1cbGLIlEihF8mo/i86cGHozvl9VL6Gw=
-github.com/leechis7/tuivory/go v0.2.0/go.mod h1:d/qS2dVqqaFo/t/ktK9lq+GScrqjbQIK86IMqYEC+vE=
+github.com/leechis7/tuivory/go v0.4.0 h1:rhyWAiaCladiGiRSs/K97VpCyDj4FCma539665KazeU=
+github.com/leechis7/tuivory/go v0.4.0/go.mod h1:d/qS2dVqqaFo/t/ktK9lq+GScrqjbQIK86IMqYEC+vE=
 github.com/lucasb-eyer/go-colorful v1.3.0 h1:2/yBRLdWBZKrf7gB40FoiKfAWYQ0lqNcbuQwVHXptag=
 github.com/lucasb-eyer/go-colorful v1.3.0/go.mod h1:R4dSotOR9KMtayYi1e77YzuveK+i7ruzyGqttikkLy0=
 github.com/rivo/uniseg v0.4.7 h1:WUdvkW8uEhrYfLC4ZzdpI2ztxP1I582+49Oc5Mq64VQ=

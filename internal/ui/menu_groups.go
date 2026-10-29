@@ -1,19 +1,9 @@
 package ui
 
-import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-)
-
 type commandMenuRow struct {
-	id, label     string
-	children      []command
-	divider, back bool
-}
-type commandMenuParent struct {
-	title           string
-	entries         []command
-	index, selected int
+	id, label string
+	children  []command
+	divider   bool
 }
 
 func menuSection(id string) string {
@@ -70,16 +60,13 @@ func (s *screen) commandMenuRows(entries []command, index int) []commandMenuRow 
 		buckets[section] = append(buckets[section], cmd)
 	}
 	var rows []commandMenuRow
-	if s.menuParent != nil {
-		rows = append(rows, commandMenuRow{back: true, label: s.tr("mg_back")}, commandMenuRow{divider: true})
-	}
-	nested := index >= 0 && len(entries) > 12 && s.menuParent == nil
+	nested := index >= 0 && len(entries) > 12
 	for group, key := range order {
 		if group > 0 && !nested {
 			rows = append(rows, commandMenuRow{divider: true})
 		}
 		if nested && len(buckets[key]) > 1 {
-			rows = append(rows, commandMenuRow{label: s.tr(key) + "  ›", children: buckets[key]})
+			rows = append(rows, commandMenuRow{label: s.tr(key), children: buckets[key]})
 			continue
 		}
 		for _, cmd := range buckets[key] {
@@ -87,82 +74,4 @@ func (s *screen) commandMenuRows(entries []command, index int) []commandMenuRow 
 		}
 	}
 	return rows
-}
-func (s *screen) menuRowAction(index int) {
-	if index < 0 || index >= len(s.menuRows) {
-		return
-	}
-	row := s.menuRows[index]
-	if row.divider {
-		return
-	}
-	if row.back {
-		s.backCommandMenu()
-		return
-	}
-	if len(row.children) > 0 {
-		s.menuParent = &commandMenuParent{s.menuTitle, s.menuEntries, s.menuIndex, index}
-		s.renderCommandMenu(s.menuTitle+" / "+row.label, row.children, s.menuIndex)
-		return
-	}
-	s.closeMenu()
-	s.invoke(row.id)
-}
-func (s *screen) backCommandMenu() bool {
-	parent := s.menuParent
-	if parent == nil {
-		return false
-	}
-	s.menuParent = nil
-	s.renderCommandMenu(parent.title, parent.entries, parent.index)
-	s.menuList.SetCurrentItem(parent.selected)
-	return true
-}
-func (s *screen) menuListKey(e *tcell.EventKey) *tcell.EventKey {
-	list := s.menuList
-	index := list.GetCurrentItem()
-	step := 0
-	switch e.Key() {
-	case tcell.KeyUp:
-		step = -1
-	case tcell.KeyDown:
-		step = 1
-	case tcell.KeyHome:
-		index = 0
-		step = 1
-	case tcell.KeyEnd:
-		index = len(s.menuRows) - 1
-		step = -1
-	case tcell.KeyPgUp:
-		index = max(0, index-5)
-		step = -1
-	case tcell.KeyPgDn:
-		index = min(len(s.menuRows)-1, index+5)
-		step = 1
-	default:
-		return e
-	}
-	if e.Key() == tcell.KeyUp || e.Key() == tcell.KeyDown {
-		index = (index + step + len(s.menuRows)) % len(s.menuRows)
-	}
-	for s.menuRows[index].divider {
-		index = (index + step + len(s.menuRows)) % len(s.menuRows)
-	}
-	list.SetCurrentItem(index)
-	return nil
-}
-func (s *screen) menuListMouse(action tview.MouseAction, e *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
-	if action == tview.MouseLeftDoubleClick {
-		action = tview.MouseLeftClick
-	}
-	if action == tview.MouseLeftClick {
-		x, y := e.Position()
-		left, top, w, h := s.menuList.GetInnerRect()
-		offset, _ := s.menuList.GetOffset()
-		index := y - top + offset
-		if x >= left && x < left+w && y >= top && y < top+h && index >= 0 && index < len(s.menuRows) && s.menuRows[index].divider {
-			return tview.MouseConsumed, nil
-		}
-	}
-	return action, e
 }

@@ -160,7 +160,7 @@ func TestInlineDoubleClickAndFocusedModifiedCellColor(t *testing.T) {
 	s.limitedColors = true
 	s.table.SetRect(0, 0, 120, 25)
 	s.resultGrid().Draw(terminal)
-	x, y, _ := s.table.GetCell(1, 1).GetLastPosition()
+	x, y, _ := s.resultCellRect(1, 1)
 	action, _ := s.resultMouse(tview.MouseLeftDoubleClick, tcell.NewEventMouse(x, y, 0, 0))
 	if action != tview.MouseConsumed || s.inlineEdit == nil || s.inlineEdit.GetText() != "first" {
 		t.Fatal("double-click did not open inline editor")
@@ -168,7 +168,7 @@ func TestInlineDoubleClickAndFocusedModifiedCellColor(t *testing.T) {
 	s.closeInlineEdit()
 	s.markEditedCell(s.editedCellIdentity(s.resultBrowser.source, 0, 1))
 	s.resultGrid().Draw(terminal)
-	x, y, _ = s.table.GetCell(1, 1).GetLastPosition()
+	x, y, _ = s.resultCellRect(1, 1)
 	_, _, style, _ := terminal.GetContent(x, y)
 	_, bg, _ := style.Decompose()
 	if bg != tcell.ColorOlive {

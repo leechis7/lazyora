@@ -25,7 +25,7 @@ func TestGridVisibleStatesAndColumnSeparators(t *testing.T) {
 			grid.SetRect(0, 0, 100, 12)
 			grid.Draw(terminal)
 			background := func(row, col int) tcell.Color {
-				x, y, _ := s.table.GetCell(row, col).GetLastPosition()
+				x, y, _ := s.resultCellRect(row, col)
 				_, _, style, _ := terminal.GetContent(x, y)
 				_, bg, _ := style.Decompose()
 				return bg
@@ -37,12 +37,12 @@ func TestGridVisibleStatesAndColumnSeparators(t *testing.T) {
 			if s.table.GetCell(1, 0).Align != tview.AlignRight {
 				t.Fatal("formatted NUMBER metadata was not right aligned")
 			}
-			x, y, width := s.table.GetCell(1, 1).GetLastPosition()
+			x, y, width := s.resultCellRect(1, 1)
 			r, _, _, _ := terminal.GetContent(x+width, y)
 			if r != '│' {
 				t.Fatal("column divider missing")
 			}
-			row, col := s.table.CellAt(x+1, y)
+			row, col := s.resultCellAt(x+1, y)
 			if row != 1 || col != 1 {
 				t.Fatal("padded cell shifted mouse hit testing")
 			}
@@ -60,8 +60,8 @@ func TestGridVisibleStatesAndColumnSeparators(t *testing.T) {
 				grid.Draw(terminal)
 				s.table.Select(3, 3)
 				grid.Draw(terminal)
-				x, y, _ := s.table.GetCell(3, 3).GetLastPosition()
-				r, c := s.table.CellAt(x, y)
+				x, y, _ := s.resultCellRect(3, 3)
+				r, c := s.resultCellAt(x, y)
 				if r != 3 || c != 3 {
 					t.Fatal("resize/horizontal scroll changed data mapping")
 				}

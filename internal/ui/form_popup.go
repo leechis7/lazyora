@@ -62,7 +62,7 @@ func (s *screen) formPopup(content tview.Primitive, preferredWidth, preferredHei
 		// so the underlying SQL and result borders cannot show through it.
 		card := s.tuivoryStyles().PopupCardStyle()
 		for py := top; py < top+h; py++ {
-			gridFill(terminal, left, py, w, card)
+			popupSurfaceRow(terminal, left, py, w, card)
 		}
 		shadow := s.tuivoryStyles().PopupShadowStyle()
 		if left+w < x+width {
@@ -71,7 +71,7 @@ func (s *screen) formPopup(content tview.Primitive, preferredWidth, preferredHei
 			}
 		}
 		if top+h < y+height {
-			gridFill(terminal, left+1, top+h, min(w, x+width-left-1), shadow)
+			popupSurfaceRow(terminal, left+1, top+h, min(w, x+width-left-1), shadow)
 		}
 		if layout != nil {
 			layout(w, h)
@@ -169,5 +169,12 @@ func formLayout(form *tview.Form) func(int, int) {
 			}
 			form.GetButton(i).SetLabel(label)
 		}
+	}
+}
+
+// Host popup surface fill; collision handling is supplied by WideSafeScreen.
+func popupSurfaceRow(terminal tcell.Screen, x, y, width int, style tcell.Style) {
+	for px := x; px < x+width; px++ {
+		terminal.SetContent(px, y, ' ', nil, style)
 	}
 }

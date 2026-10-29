@@ -3,7 +3,6 @@ package ui
 import (
 	"fmt"
 	"github.com/leechis7/tuivory/go"
-	"strconv"
 	"strings"
 	"unicode"
 
@@ -14,9 +13,10 @@ import (
 )
 
 type gridState struct {
-	widths  []int
-	painted resultSelection
-	row     int
+	presentation *resultPresentation
+	widths       []int
+	painted      resultSelection
+	row          int
 }
 
 // The gutter is decoration outside the Table's inner rectangle. Data column
@@ -27,7 +27,25 @@ type resultGrid struct {
 }
 
 func (g *resultGrid) Focus(delegate func(tview.Primitive)) { delegate(g.Table) }
-func (s *screen) resultGrid() tview.Primitive              { return &resultGrid{Table: s.table, owner: s} }
+func (g *resultGrid) MouseHandler() func(tview.MouseAction, *tcell.EventMouse, func(tview.Primitive)) (bool, tview.Primitive) {
+	return func(a tview.MouseAction, e *tcell.EventMouse, _ func(tview.Primitive)) (bool, tview.Primitive) {
+		s := g.owner
+		x, y := e.Position()
+		captured := s.grid.presentation != nil && s.grid.presentation.pointer
+		if !g.Table.InRect(x, y) && !captured {
+			return false, nil
+		}
+		_, event := s.resultMouse(a, e)
+		if event != nil {
+			return false, nil
+		}
+		if s.grid.presentation != nil && s.grid.presentation.pointer {
+			return true, g
+		}
+		return true, nil
+	}
+}
+func (s *screen) resultGrid() tview.Primitive { return &resultGrid{Table: s.table, owner: s} }
 
 // Grid-specific surfaces retain the app's muted blue/cyan palette while
 // distinguishing header, row, range and active cell without bright row stripes.
@@ -39,86 +57,24 @@ func (s *screen) gridHeaderStyle(active bool) tcell.Style {
 func (s *screen) gridActiveStyle(focused bool) tcell.Style {
 	return s.tuivoryStyles().GridActiveStyle(focused, false)
 }
-func gridFill(terminal tcell.Screen, x, y, width int, style tcell.Style) {
-	for px := x; px < x+width; px++ {
-		terminal.SetContent(px, y, ' ', nil, style)
-	}
-}
+
+// Draw only the host panel border; the common GridView owns its entire body.
 func (g *resultGrid) Draw(terminal tcell.Screen) {
 	s := g.owner
-	rows := max(0, g.GetRowCount()-1)
-	gutter := max(4, len(strconv.Itoa(rows))+3)
-	g.SetBorderPadding(0, 1, gutter, 0)
-	g.SetSelectedStyle(s.gridActiveStyle(g.HasFocus()))
-	selectedRow, selectedCol := g.GetSelection()
-	if s.isEditedCell(selectedRow, selectedCol) {
-		g.SetSelectedStyle(s.editedCellStyle().Underline(g.HasFocus()))
-	}
-	for col := 0; col < g.GetColumnCount(); col++ {
-		g.GetCell(0, col).SetStyle(s.gridHeaderStyle(col == selectedCol))
-	}
-	g.Table.Draw(terminal)
+	g.Table.Box.Draw(terminal)
+	s.prepareResultGrid()
+	p := s.grid.presentation
 	x, y, w, h := g.GetInnerRect()
-	if w <= 0 || h <= 0 {
-		return
+	p.view.SetRect(x, y, w, h)
+	if g.Table.HasFocus() {
+		p.view.Box.Focus(nil)
+	} else {
+		p.view.Blur()
 	}
-	selected, _ := g.GetSelection()
-	type edge struct{ x, col int }
-	var edges []edge
-	last := x
-	for col := 0; col < g.GetColumnCount(); col++ {
-		cx, cy, cw := g.GetCell(0, col).GetLastPosition()
-		if cx < x || cx >= x+w || cy != y {
-			continue
-		}
-		row, actual := g.CellAt(cx, cy)
-		if row != 0 || actual != col {
-			continue
-		}
-		last = max(last, cx+cw+1)
-		if cx+cw < x+w {
-			edges = append(edges, edge{cx + cw, col})
-		}
-	}
-	for py := y; py < y+h; py++ {
-		row, _ := g.CellAt(x, py)
-		style := s.tuivoryStyles().GridGutterStyle()
-		label := ""
-		if row == 0 {
-			label = "#"
-			style = s.gridHeaderStyle(false)
-		} else if row > 0 && row <= rows {
-			label = strconv.Itoa(row)
-			for col := 0; col < s.table.GetColumnCount(); col++ {
-				if s.isEditedCell(row, col) {
-					label = "*" + label
-					break
-				}
-			}
-			style = s.gridBaseStyle(row, 0)
-		}
-		if last < x+w {
-			gridFill(terminal, last, py, x+w-last, style)
-		}
-		gridFill(terminal, x-gutter, py, gutter, style)
-		fg, _, _ := style.Decompose()
-		tview.Print(terminal, label, x-gutter+1, py, gutter-2, tview.AlignRight, fg)
-		divider := s.tuivoryStyles().GridDividerColor()
-		terminal.SetContent(x-1, py, '│', nil, style.Foreground(divider))
-		for _, e := range edges {
-			terminal.SetContent(e.x, py, '│', nil, style.Foreground(divider))
-		}
-		if row == selected && row > 0 && row <= rows {
-			terminal.SetContent(x-gutter, py, '›', nil, s.gridActiveStyle(g.HasFocus()))
-		}
-	}
-	bar := s.tuivoryStyles().GridStatusStyle()
-	gridFill(terminal, x-gutter, y+h, w+gutter, bar)
-	text := s.gridStatusText()
-	fg, _, _ := bar.Decompose()
-	tview.Print(terminal, tview.Escape(" "+text), x-gutter, y+h, w+gutter, tview.AlignLeft, fg)
+	p.view.Draw(terminal)
+	geo := p.model.Geometry(w, h)
+	g.Table.SetOffset(geo.Top, geo.Left)
 }
-
 func (s *screen) gridStatusText() string {
 	row, col := s.table.GetSelection()
 	text := fmt.Sprintf(s.tr("grid_summary"), len(s.resultRows), len(s.resultHeaders))

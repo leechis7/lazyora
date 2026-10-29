@@ -62,7 +62,13 @@ func TestStyleProfilesKeepContentReadable(t *testing.T) {
 					}
 					mapped := auditStyleOf(style, count)
 					for _, colors := range [][2]string{{mapped.FGHex, mapped.BGHex}, {mapped.BrightFGHex, mapped.BrightBGHex}} {
-						if ratio := referenceContrast(colors[0], colors[1]); ratio < 4.5 {
+						minimum := 4.5
+						// Tuivory v0.4.0 deliberately distinguishes inactive controls with gray/Dim.
+						// Its published disabled text target is 2:1; actionable text remains 4.5:1.
+						if name == "disabled" {
+							minimum = 2.0
+						}
+						if ratio := referenceContrast(colors[0], colors[1]); ratio < minimum {
 							t.Errorf("%s contrast %.3f: %v", name, ratio, colors)
 						}
 					}

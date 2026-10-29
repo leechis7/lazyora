@@ -23,7 +23,7 @@ func resultScreen(t *testing.T) (*screen, tcell.SimulationScreen) {
 	s.table.SetRect(0, 0, 120, 15)
 	s.table.SetMouseCapture(s.resultMouse)
 	s.app.SetFocus(s.table)
-	s.table.Draw(terminal)
+	s.resultGrid().Draw(terminal)
 	return s, terminal
 }
 
@@ -63,8 +63,8 @@ func TestCopyRawRowsAndKeyboardRange(t *testing.T) {
 func TestDragRangeCopyAndPreviewRestoresFocus(t *testing.T) {
 	s, terminal := resultScreen(t)
 	handler := s.table.MouseHandler()
-	x1, y1, _ := s.table.GetCell(1, 0).GetLastPosition()
-	x2, y2, _ := s.table.GetCell(3, 1).GetLastPosition()
+	x1, y1, _ := s.resultCellRect(1, 0)
+	x2, y2, _ := s.resultCellRect(3, 1)
 	focus := func(p tview.Primitive) { s.app.SetFocus(p) }
 	handler(tview.MouseLeftDown, tcell.NewEventMouse(x1, y1, tcell.Button1, 0), focus)
 	handler(tview.MouseMove, tcell.NewEventMouse(x2, y2, tcell.Button1, 0), focus)
@@ -104,8 +104,8 @@ func TestCopyFromScrolledResultUsesActualRowAndFullValue(t *testing.T) {
 	}
 	s.render(oracle.Result{Columns: []string{"ID", "VALUE"}, Rows: rows})
 	s.table.Select(501, 0).SetOffset(500, 0)
-	s.table.Draw(terminal)
-	x, y, _ := s.table.GetCell(501, 1).GetLastPosition()
+	s.resultGrid().Draw(terminal)
+	x, y, _ := s.resultCellRect(501, 1)
 	s.table.MouseHandler()(tview.MouseLeftDown, tcell.NewEventMouse(x, y, tcell.Button1, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
 	s.table.MouseHandler()(tview.MouseLeftUp, tcell.NewEventMouse(x, y, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
 	s.copyResults("row")

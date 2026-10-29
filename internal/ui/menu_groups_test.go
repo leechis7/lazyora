@@ -15,7 +15,7 @@ func TestMenuSeparatorsNeverSelectOrExecute(t *testing.T) {
 	root.SetRect(0, 0, 120, 35)
 	root.Draw(terminal)
 	separator := -1
-	for i, row := range s.menuRows {
+	for i, row := range menuTestRows(s) {
 		if row.divider {
 			separator = i
 			break
@@ -26,7 +26,7 @@ func TestMenuSeparatorsNeverSelectOrExecute(t *testing.T) {
 	}
 	s.menuList.SetCurrentItem(separator - 1)
 	s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyDown, 0, 0), delegate)
-	if s.menuRows[s.menuList.GetCurrentItem()].divider {
+	if menuTestRows(s)[s.menuList.GetCurrentItem()].divider {
 		t.Fatal("arrow selected separator")
 	}
 	x, y, _, _ := s.menuList.GetInnerRect()
@@ -41,21 +41,21 @@ func TestNestedMenuKeyboardMouseBackAndCommand(t *testing.T) {
 	s, _ := resultScreen(t)
 	s.app.SetFocus(s.editor)
 	s.showMenu(menuEdit)
-	if len(s.menuRows) > 12 {
+	if len(menuTestRows(s)) > 12 {
 		t.Fatal("long menu not grouped")
 	}
 	parent := s.menuList
 	s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
-	if s.menuParent == nil || s.menuList == parent {
+	if !menuNested(s) || s.menuList != parent {
 		t.Fatal("Enter did not enter submenu")
 	}
 	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
-	if s.menuParent != nil || !s.pages.HasPage("menu") {
+	if menuNested(s) || !s.pages.HasPage("menu") {
 		t.Fatal("Escape did not return")
 	}
 	s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
 	s.menuRowAction(0)
-	if s.menuParent != nil {
+	if menuNested(s) {
 		t.Fatal("mouse Back item failed")
 	}
 	s.closeMenu()
@@ -75,7 +75,7 @@ func TestMenuArrowsTraverseAllTopLevelMenus(t *testing.T) {
 		for range len(menuGroups) {
 			want := (s.menuIndex + direction.step + len(menuGroups)) % len(menuGroups)
 			s.key(tcell.NewEventKey(direction.key, 0, 0))
-			if s.menuIndex != want || s.menuParent != nil || !s.menuList.HasFocus() {
+			if s.menuIndex != want || menuNested(s) || !s.menuList.HasFocus() {
 				t.Fatalf("arrow %v did not reach top-level menu %d", direction.key, want)
 			}
 		}
@@ -93,16 +93,16 @@ func TestSubmenuArrowsReturnOrAdvanceAndContextStaysLocal(t *testing.T) {
 		s.showMenu(menu)
 		selected := s.menuList.GetCurrentItem()
 		s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
-		if s.menuParent == nil {
+		if !menuNested(s) {
 			t.Fatal("Enter did not open submenu")
 		}
 		s.key(tcell.NewEventKey(tcell.KeyLeft, 0, 0))
-		if s.menuParent != nil || s.menuIndex != menu || s.menuList.GetCurrentItem() != selected {
+		if menuNested(s) || s.menuIndex != menu || s.menuList.GetCurrentItem() != selected {
 			t.Fatal("Left did not restore parent selection")
 		}
 		s.menuRowAction(selected)
 		s.key(tcell.NewEventKey(tcell.KeyRight, 0, 0))
-		if s.menuParent != nil || s.menuIndex != menu+1 {
+		if menuNested(s) || s.menuIndex != menu+1 {
 			t.Fatal("Right did not advance from submenu to next top-level menu")
 		}
 	}
@@ -111,7 +111,7 @@ func TestSubmenuArrowsReturnOrAdvanceAndContextStaysLocal(t *testing.T) {
 	list := s.menuList
 	for _, key := range []tcell.Key{tcell.KeyLeft, tcell.KeyRight} {
 		s.key(tcell.NewEventKey(key, 0, 0))
-		if s.menuIndex != -1 || s.menuList != list || s.menuParent != nil {
+		if s.menuIndex != -1 || s.menuList != list || menuNested(s) {
 			t.Fatal("context menu arrow opened a top-level menu")
 		}
 	}

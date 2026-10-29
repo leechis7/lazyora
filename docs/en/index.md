@@ -22,6 +22,7 @@ Use the guides below for current behavior. The app-version source is `internal/a
 | Contributions | [Contributing](contributing.md) | [기여](../../CONTRIBUTING.md) |
 | Support and private security reports | [Support/security](support.md) | [지원](../../SUPPORT.md) · [보안](../../SECURITY.md) |
 | Community rules | [Code of conduct](../../CODE_OF_CONDUCT.en.md) | [행동 규칙](../../CODE_OF_CONDUCT.md) |
+| v0.11.3 release description | [English](releases/v0.11.3.md) | [한국어](../releases/v0.11.3.md) |
 | v0.11.2 release description | [English](releases/v0.11.2.md) | [한국어](../releases/v0.11.2.md) |
 | v0.11.1 release description | [English](releases/v0.11.1.md) | [한국어](../releases/v0.11.1.md) |
 | v0.11.0 release description | [English](releases/v0.11.0.md) | [한국어](../releases/v0.11.0.md) |

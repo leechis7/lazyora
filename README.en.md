@@ -6,9 +6,9 @@
 
 LazyOra aims to make everyday Oracle development and inspection practical in a terminal, including over SSH, without installing Toad or purchasing its commercial license. It adapts familiar Toad workflows and shortcuts to a TUI. It is an independent project under active development, not a complete replacement for every Toad feature.
 
-Current version: **0.11.2** · **Linux / Windows / macOS · AMD64 / ARM64**
+Current version: **0.11.3** · **Linux / Windows / macOS · AMD64 / ARM64**
 
-v0.11.2 delegates shared popup/label handling to public Tuivory v0.2.0 APIs while preserving ASCII compatibility. See the [release notes](docs/en/releases/v0.11.2.md).
+v0.11.3 removes redundant schema-column icons to recover space for names and data types. See the [release notes](docs/en/releases/v0.11.3.md).
 
 - Oracle SQL/PL/SQL syntax highlighting, files and multiple SQL tabs, cursor-statement execution, F5 scripts and IN bind variables.
 - Estimated execution plans, result copying, CSV/TSV/Excel/INSERT export, and manual commit/rollback.
@@ -18,7 +18,7 @@ v0.11.2 delegates shared popup/label handling to public Tuivory v0.2.0 APIs whil
 
 ![LazyOra: menus, schema browser, SQL editor, result grid and context-sensitive shortcuts](docs/images/lazyora-overview.png)
 
-*v0.11.0 · Dark theme · English UI · DB-free demo widgets rendered in a simulated terminal.*
+*v0.11.3 · Dark theme · English UI · DB-free executable --demo output captured through a PTY.*
 
 ## Quick start
 

@@ -4,6 +4,16 @@
 
 LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 원칙을 제품 UI에 적용합니다. Tuivory의 가이드·견본·도구 개발은 별도 저장소와 Tuivory Jira에서 관리하고, LazyOra의 적용 작업은 LORA Jira에서 관리합니다.
 
+## LORA-76: 컴포넌트와 앱 책임 정정 (2026-10-29, 검토)
+
+Tuivory는 TUI 컴포넌트 라이브러리입니다. 재사용 가능한 컨트롤의 표시·내부 포커스/선택/입력·스타일·옵션·문자 겹침 보호는 공개 API를 우선 사용합니다. 실제 접속/설정/도움말 화면 조합, 앱 전체 배치·크기/순서·컴포넌트 간 포커스·전역 단축키·데이터/명령 연결은 LazyOra가 담당합니다. UI 조합 코드가 제품에 남는 것 자체는 미이관 결함이 아니며, 전체 화면을 Tuivory로 이전하자는 앞선 해석은 철회합니다. [정정한 책임 표와 소스 위치](audits/lora-76-tuivory.md)를 참고하세요.
+
+TVR-7 본문과 과도한 이전 요청 댓글을 한영으로 정정했습니다. [TVR-17](https://leechis7.atlassian.net/browse/TVR-17)의 단일 간결 그리드 옵션/프리셋 요청과 비교 이미지 2장은 유지합니다. 공통 컨트롤의 중복만 줄이며 앱 화면 조합까지 패키지에 맡기지 않습니다. 검토 기록 변경이며 코드·정식 배포 자산을 추가 변경하지 않았습니다.
+
+## LORA-76: 컬럼 말단 중복 아이콘 생략 (2026-10-29, v0.11.3)
+
+공개 Tuivory Go v0.2.0 / go/v0.2.0 / 987d1a6786033a6bf063235b5e7fea7b565f0af0을 유지합니다. TreeView의 기본 말단 표식(Unicode · / ASCII .)에 LazyOra의 컬럼 아이콘(· / C)이 중복됐으므로 공개 TreeNode.Icon/ASCIIIcon을 빈 값으로 둡니다. 각 컬럼 줄에서 두 칸을 줄이고 기본 말단 표시·들여쓰기·식별·선택·상세 열기를 보존합니다. 공통 렌더러를 복사하거나 수정하지 않습니다. 기본 표식 자체의 선택 옵션이 필요하면 Tuivory 쪽에서 제공한 뒤 소비합니다. 이 표시 개선은 v0.11.3에 포함하며 기존 v0.11.2 자산은 변경하지 않습니다.
+
 ## LORA-76: Tuivory v0.2.0 공통 UI 우선 적용 (2026-10-29, v0.11.2)
 
 - 출처: [go/v0.2.0 공개 릴리스](https://github.com/leechis7/tuivory/releases/tag/go/v0.2.0), 커밋 `987d1a6786033a6bf063235b5e7fea7b565f0af0`. 모듈 Origin·Sum `h1:q+NJW7/inCfX1cbGLIlEihF8mo/i86cGHozvl9VL6Gw=`를 확인하고 공개 모듈을 고정합니다. Go 1.24·tcell/tview·AGPL-3.0-only 요구는 호환됩니다. 로컬 replace나 패키지 소스 복사는 없습니다.

@@ -4,6 +4,11 @@
 
 LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 원칙을 제품 UI에 적용합니다. Tuivory의 가이드·견본·도구 개발은 별도 저장소와 Tuivory Jira에서 관리하고, LazyOra의 적용 작업은 LORA Jira에서 관리합니다.
 
+## v0.12.0 릴리스 적용
+
+v0.12.0은 Tuivory Go v0.4.0을 고정하고 아래 메뉴·그리드·표면/비활성 개선을 포함합니다. 사용자 배포 승인에 따라 구현·문서·릴리스 준비를 분리해 dev/main PR·CI와 정식 태그로 발행합니다. 아래 미배포 표기·검증 기록은 당시의 구현/검토 시점을 보존한 이력이며 현재 의존성은 v0.4.0입니다. 전체 LORA-76의 남은 앱 패널/분할/하단 작업은 포함하지 않습니다.
+
+
 ## LORA-76: Tuivory v0.4.0 단일선·표면·비활성 개선 (2026-10-30, 미배포)
 
 공개 모듈 `github.com/leechis7/tuivory/go v0.4.0`, [go/v0.4.0](https://github.com/leechis7/tuivory/releases/tag/go/v0.4.0), Origin `fef7a7b2247d1c68ef0fb1469e6a2fc2e1cec9b5`, Sum `h1:rhyWAiaCladiGiRSs/K97VpCyDj4FCma539665KazeU=`를 확인했습니다. 현재 메뉴·그리드 브랜치에서 v0.3.0을 갱신하며 소스 복사·수정·로컬 replace는 하지 않습니다.

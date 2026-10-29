@@ -2,6 +2,11 @@
 
 [한국어](../tuivory-sync.md) | **English** · [UI style rules](ui-style.md)
 
+## v0.12.0 release adoption
+
+v0.12.0 pins Tuivory Go v0.4.0 and includes the menu/grid/surface/disabled improvements below. User-approved publication separates implementation/docs/release preparation through dev/main PRs, CI and a formal tag. Unreleased labels and evidence below preserve their implementation/review times; the current dependency is v0.4.0. Remaining application panel/split/footer work in LORA-76 is outside this release.
+
+
 ## LORA-76: Tuivory v0.4.0 borders, surfaces and disabled states (2026-10-30, unreleased)
 
 Verified public `github.com/leechis7/tuivory/go v0.4.0`, [go/v0.4.0](https://github.com/leechis7/tuivory/releases/tag/go/v0.4.0), Origin `fef7a7b2247d1c68ef0fb1469e6a2fc2e1cec9b5`, Sum `h1:rhyWAiaCladiGiRSs/K97VpCyDj4FCma539665KazeU=`. Upgrade the current uncommitted menu/grid branch from v0.3.0; no source copy/modification/local replacement.

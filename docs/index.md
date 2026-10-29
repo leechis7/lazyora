@@ -2,7 +2,7 @@
 
 [한국어 (기본)](index.md) | [English](en/index.md)
 
-현행 사용법은 아래 안내를 따릅니다. 앱 버전의 원본은 `internal/appinfo/info.go`, 의존 버전은 `go.mod`, 실제 배포 파일은 [GitHub Releases](https://github.com/leechis7/lazyora/releases)에서 확인합니다. **v0.11.2는 Tuivory v0.2.0을 공통 UI 패키지로 사용**합니다. 이전 TUIS·독립 프로젝트 준비안은 현재 의존성이나 미완료 작업을 뜻하지 않습니다.
+현행 사용법은 아래 안내를 따릅니다. 앱 버전의 원본은 `internal/appinfo/info.go`, 의존 버전은 `go.mod`, 실제 배포 파일은 [GitHub Releases](https://github.com/leechis7/lazyora/releases)에서 확인합니다. **v0.12.0는 Tuivory v0.4.0을 공통 UI 패키지로 사용**합니다. 이전 TUIS·독립 프로젝트 준비안은 현재 의존성이나 미완료 작업을 뜻하지 않습니다.
 
 ## 현행 안내
 
@@ -22,8 +22,8 @@
 | 기여 방법 | [기여 안내](../CONTRIBUTING.md) | [Contributing](en/contributing.md) |
 | 문의·비공개 취약점 제보 | [지원](../SUPPORT.md) · [보안](../SECURITY.md) | [Support/security](en/support.md) |
 | 행동 규칙 | [한국어](../CODE_OF_CONDUCT.md) | [English](../CODE_OF_CONDUCT.en.md) |
+| v0.12.0 릴리스 설명 | [한국어](releases/v0.12.0.md) | [English](en/releases/v0.12.0.md) |
 | v0.11.3 릴리스 설명 | [한국어](releases/v0.11.3.md) | [English](en/releases/v0.11.3.md) |
-| v0.11.2 릴리스 설명 | [한국어](releases/v0.11.2.md) | [English](en/releases/v0.11.2.md) |
 | v0.11.1 릴리스 설명 | [한국어](releases/v0.11.1.md) | [English](en/releases/v0.11.1.md) |
 | v0.11.0 릴리스 설명 | [한국어](releases/v0.11.0.md) | [English](en/releases/v0.11.0.md) |
 | v0.10.2 릴리스 설명 | [한국어](releases/v0.10.2.md) | [English](en/releases/v0.10.2.md) |

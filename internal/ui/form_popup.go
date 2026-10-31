@@ -37,18 +37,18 @@ func (s *screen) formDialog(form *tview.Form, info *tview.TextView, width int) *
 // Keep the underlying work visible, but route every mouse event through the
 // modal layer. The returned Flex retains normal Form/DropDown event routing.
 func (s *screen) formPopup(content tview.Primitive, preferredWidth, preferredHeight int, layout func(width, height int)) *formPopupLayer {
-	root := s.newFlex().AddItem(content, 0, 1, true)
+	// The content and its layout remain host-owned; shared surfaces/shadows
+	// and wide-glyph protection are delegated to published Tuivory components.
+	card := s.newFlex().AddItem(content, 0, 1, true)
+	card.Box = s.newBox() // Opaque, borderless host container; see SDK gap record.
+	s.setSurface(card.Box, surfacePanel)
+	shadow, err := tuivory.NewShadowView(card, s.componentPalette(), tuivory.ShadowOptions{Mode: tuivory.ShadowAuto, OffsetX: 1, OffsetY: 1})
+	if err != nil {
+		panic(err)
+	}
+	root := s.newFlex().AddItem(shadow, 0, 1, true)
 	root.SetDrawFunc(func(terminal tcell.Screen, x, y, width, height int) (int, int, int, int) {
-		for py := y; py < y+height; py++ {
-			for px := x; px < x+width; px++ {
-				r, comb, style, cellWidth := terminal.GetContent(px, py)
-				backdrop := s.tuivoryStyles().PopupBackdrop(style, s.limitedColors)
-				terminal.SetContent(px, py, r, comb, backdrop)
-				if cellWidth > 1 {
-					px += cellWidth - 1
-				}
-			}
-		}
+		tuivory.DimRegion(terminal, tuivory.CellRect{X: x, Y: y, Width: width, Height: height})
 		insetX, insetY := 2, 1
 		if width < 44 {
 			insetX = 0
@@ -58,38 +58,27 @@ func (s *screen) formPopup(content tview.Primitive, preferredWidth, preferredHei
 		}
 		w, h := max(0, min(preferredWidth, width-2*insetX)), max(0, min(preferredHeight, height-2*insetY))
 		left, top := x+(width-w)/2, y+(height-h)/2
-		// Flex leaves padding and spacers untouched. Paint an opaque card first
-		// so the underlying SQL and result borders cannot show through it.
-		card := s.tuivoryStyles().PopupCardStyle()
-		for py := top; py < top+h; py++ {
-			popupSurfaceRow(terminal, left, py, w, card)
+		dx, dy := min(1, max(0, x+width-left-w)), min(1, max(0, y+height-top-h))
+		options := tuivory.ShadowOptions{Mode: tuivory.ShadowAuto, OffsetX: dx, OffsetY: dy}
+		if dx == 0 && dy == 0 {
+			options.Mode = tuivory.ShadowOff
 		}
-		shadow := s.tuivoryStyles().PopupShadowStyle()
-		if left+w < x+width {
-			for py := top + 1; py < top+h+1 && py < y+height; py++ {
-				terminal.SetContent(left+w, py, ' ', nil, shadow)
-			}
-		}
-		if top+h < y+height {
-			popupSurfaceRow(terminal, left+1, top+h, min(w, x+width-left-1), shadow)
-		}
+		_ = shadow.SetShadow(options)
+		_ = shadow.SetPalette(s.componentPalette())
+		shadow.ASCII = s.asciiDisplay()
+		s.styleBox(card.Box)
 		if layout != nil {
 			layout(w, h)
 		}
-		return left, top, w, h
+		return left, top, w + dx, h + dy
 	})
-	return &formPopupLayer{Flex: root, content: content}
+	return &formPopupLayer{Flex: root, content: content, shadow: shadow}
 }
 
 type formPopupLayer struct {
 	*tview.Flex
 	content tview.Primitive
-}
-
-func (p *formPopupLayer) Draw(terminal tcell.Screen) {
-	// Protect the entire composite, including its card, shadow and child borders.
-	// Tuivory owns glyph-overlap repair; LazyOra only supplies product content.
-	p.Flex.Draw(tuivory.WideSafeScreen(terminal))
+	shadow  *tuivory.ShadowView
 }
 
 func (p *formPopupLayer) MouseHandler() func(tview.MouseAction, *tcell.EventMouse, func(tview.Primitive)) (bool, tview.Primitive) {
@@ -122,6 +111,13 @@ func openFormChoice(root tview.Primitive) *choiceField {
 				}
 			}
 		}
+	case tuivory.StyleChildren:
+		for _, child := range item.StyleChildren() {
+			if choice := openFormChoice(child); choice != nil {
+				return choice
+			}
+		}
+
 	}
 	return nil
 }
@@ -169,12 +165,5 @@ func formLayout(form *tview.Form) func(int, int) {
 			}
 			form.GetButton(i).SetLabel(label)
 		}
-	}
-}
-
-// Host popup surface fill; collision handling is supplied by WideSafeScreen.
-func popupSurfaceRow(terminal tcell.Screen, x, y, width int, style tcell.Style) {
-	for px := x; px < x+width; px++ {
-		terminal.SetContent(px, y, ' ', nil, style)
 	}
 }

@@ -4,6 +4,18 @@
 
 LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 원칙을 제품 UI에 적용합니다. Tuivory의 가이드·견본·도구 개발은 별도 저장소와 Tuivory Jira에서 관리하고, LazyOra의 적용 작업은 LORA Jira에서 관리합니다.
 
+## v0.12.1 릴리스 적용
+
+v0.12.1은 공개 Tuivory Go v0.5.0을 포함합니다. 아래 팝업·소스 명령 메뉴 전환과 Deprecated 정리를 사용자 승인으로 발행하며 한영 문서·실제 PTY 캡처를 갱신합니다. 전체 tview 직접 import 제거는 TVR-22~26의 언어 중립 API 제공에 의존하는 미완료 목표입니다. 아래 미배포/미커밋 표기는 검증 당시 시점을 보존한 기록이며 정식 v0.12.0은 여전히 v0.4.0을 포함합니다.
+
+
+## LORA-76: Tuivory v0.5.0 우선 적용 (2026-10-31, 미배포)
+
+현재 개발 의존성은 `github.com/leechis7/tuivory/go v0.5.0`, 태그 go/v0.5.0, Origin `26da505af4b818bb8c3c272e5970c411d9bde92b`, Sum `h1:KjY4+GAHeY6SULi6++Gv3TaUUS/jTZ2UEpgDsRGmKxo=`입니다. 공개 ShadowView/DimRegion으로 팝업 직접 그리기를 제거하고 소스 편집 명령 목록을 공통 메뉴로 바꾸며 Deprecated 소비를 정리합니다. 기존 폼 크기에 맞춰 Auto 그림자를 오른쪽/아래 1칸으로 명시하고 배경은 원래 색에 Dim만 적용합니다.
+
+모든 tview 사용을 제거한 것은 아닙니다. 이미 있는 Tab/List/Panel/Split/Status API의 제품 연결과, SDK 기능 부족을 구분합니다. TVR-22(테두리 없는 표면), TVR-23(보안 입력/버튼/폼), TVR-24(Editor/TextView)를 사용자 요청에 따라 별도 프로젝트 백로그에 등록했습니다. [직접 UI 사용 분류·요청·검증](audits/lora-76-tuivory050.md)을 참고하세요. 정식 v0.12.0은 여전히 v0.4.0이며 이번 변경은 커밋·게시·배포 전입니다.
+
+
 ## v0.12.0 릴리스 적용
 
 v0.12.0은 Tuivory Go v0.4.0을 고정하고 아래 메뉴·그리드·표면/비활성 개선을 포함합니다. 사용자 배포 승인에 따라 구현·문서·릴리스 준비를 분리해 dev/main PR·CI와 정식 태그로 발행합니다. 아래 미배포 표기·검증 기록은 당시의 구현/검토 시점을 보존한 이력이며 현재 의존성은 v0.4.0입니다. 전체 LORA-76의 남은 앱 패널/분할/하단 작업은 포함하지 않습니다.
@@ -73,7 +85,7 @@ TVR-7 본문과 과도한 이전 요청 댓글을 한영으로 정정했습니�
 
 색상 후보를 일괄 교체하는 대신 실제 배경과 상태 합성에서 대비·표시 의미를 검증하여 제품 값을 정합니다. 자동 정기 동기화나 Tuivory 프로젝트의 일감/스프린트 변경은 이 절차에 포함하지 않습니다.
 
-현재 개발 소스의 패키지는 **`github.com/leechis7/tuivory/go v0.4.0`**입니다. 정식 LazyOra v0.11.0·v0.11.1은 v0.1.0을, v0.10.2는 v0.0.1을 포함합니다. 아래 TUIS 관련 항목은 이전 적용 이력이며 현행 의존성이 아닙니다.
+현재 개발 소스의 패키지는 **`github.com/leechis7/tuivory/go v0.5.0`**입니다. 정식 LazyOra v0.11.0·v0.11.1은 v0.1.0을, v0.10.2는 v0.0.1을 포함합니다. 아래 TUIS 관련 항목은 이전 적용 이력이며 현행 의존성이 아닙니다.
 
 ## LORA-72: Tuivory v0.1.0 트리 적용 (2026-10-28, v0.11.0)
 
@@ -148,3 +160,7 @@ TVR-7 본문과 과도한 이전 요청 댓글을 한영으로 정정했습니�
 - Go 모듈 다운로드의 Origin은 `refs/tags/v0.1.0`, 커밋 `ea155a284e80f7d45c5dbaf054ba070c35b9425f`입니다. GitHub compare와 다운로드한 두 모듈 디렉터리의 `diff -qr` 모두 소스 동일성을 확인했습니다.
 - API·팔레트·위젯 동작 변경이 없어 소비 코드 수정은 필요하지 않습니다. `go.mod`와 `go.sum`만 정식 버전으로 갱신했습니다. 앞서 수행한 3,216프레임 비교는 동일한 소스에 대한 결과로 유지하며 이번 갱신으로 재생성한 결과라고 기록하지 않습니다.
 - 갱신 후 검사와 실행파일 의존성 확인은 [LORA-70 검증 기록](audits/lora-70.md)의 정식 버전 항목을 참조합니다.
+
+최종 UI 목표는 **LazyOra 앱/테스트의 직접 tview import 0개**입니다. Tuivory가 컨트롤·배치 컨테이너·타입/생성자·편집기까지 감싸는 [TVR-26](https://leechis7.atlassian.net/browse/TVR-26), 일반 배치 API인 [TVR-25](https://leechis7.atlassian.net/browse/TVR-25)를 추가 요청했습니다. SDK 내부 호환 별칭은 허용하며 LazyOra 내부 로컬 shim으로 숨기지 않습니다. 현재 v0.5.0만으로 전체 목표를 달성한 것은 아닙니다.
+
+Tuivory의 공통 규격은 현재 Go/Rust와 향후 Python·JavaScript·C·C++를 고려한 언어 중립 설계입니다. LazyOra의 Go 소비와 Tuivory 전체 지원 범위를 구분하며, TVR-22~26도 공통 계약과 언어별 어댑터를 나눠 요청했습니다. 계획 언어를 이미 구현된 것으로 표시하지 않습니다.

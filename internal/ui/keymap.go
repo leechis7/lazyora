@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/leechis7/tuivory/go"
 	"github.com/rivo/tview"
 )
 
@@ -264,6 +265,10 @@ func (s *screen) keymapHelp() string {
 
 func (s *screen) closeSourceEdit() {
 	s.pages.RemovePage("editor_actions")
+	if s.sourceActions != nil {
+		s.sourceActions.model.Close()
+		s.sourceActions = nil
+	}
 	if s.sourceEditor != nil {
 		s.app.SetFocus(s.sourceEditor)
 	}
@@ -274,43 +279,67 @@ func (s *screen) showSourceEdit() {
 		return
 	}
 	e := s.sourceEditor
-	list := tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
-	list.SetBorder(true).SetTitle(s.tr("source_edit"))
-	s.styleList(list)
-	for _, id := range []string{"undo", "redo", "cut", "copy", "paste", "select_all", "find", "replace", "complete", "complete_refresh", "duplicate_line", "copy_line", "cut_line", "delete_line", "line_up", "line_down", "transpose_line", "format_code"} {
-		label := s.tr(commandFor(id).label)
-		if key := s.editorBindingLabels(id, 1); key != "" {
-			label += "  " + key
-		}
-		list.AddItem(label, "", 0, func() {
-			s.closeSourceEdit()
-			switch id {
-			case "undo", "redo", "cut", "paste", "select_all":
-				if id == "cut" && lineClipboardKeymap(s.prefs.EditorKeymap) && !e.HasSelection() {
-					s.editorLineAction(e, "cut_line")
-					break
-				}
-				s.nativeEditorKey(e, commandFor(id).bindings[0].key)
-			case "copy":
-				selected, _, _ := e.GetSelection()
-				if selected == "" && lineClipboardKeymap(s.prefs.EditorKeymap) {
-					s.editorLineAction(e, "copy_line")
-				} else {
-					s.sendClipboard(selected)
-				}
-			case "find", "replace":
-				s.showSearch(id == "replace")
-			case "complete", "complete_refresh":
-				s.showCompletion(id == "complete_refresh")
-			case "format_code":
-				s.formatCode()
-			default:
-				s.editorLineAction(e, id)
-			}
-		})
+	ids := []string{"undo", "redo", "cut", "copy", "paste", "select_all", "find", "replace", "complete", "complete_refresh", "duplicate_line", "copy_line", "cut_line", "delete_line", "line_up", "line_down", "transpose_line", "format_code"}
+	items := make([]tuivory.MenuItem, 0, len(ids))
+	for _, id := range ids {
+		items = append(items, tuivory.MenuItem{ID: id, Label: s.tr(commandFor(id).label), Shortcut: s.editorBindingLabels(id, 1)})
 	}
-	s.pages.AddPage("editor_actions", list, true, true)
-	s.app.SetFocus(list)
+	model, err := tuivory.NewMenu(items)
+	if err != nil {
+		panic(err)
+	}
+	model.Open("", "source-editor")
+	view, err := tuivory.NewMenuView(model, s.componentPalette(), s.asciiDisplay(), func(event tuivory.MenuEvent) {
+		if event.Kind == "close" {
+			s.closeSourceEdit()
+			return
+		}
+		if event.Kind != "activate" {
+			return
+		}
+		s.closeSourceEdit()
+		s.sourceEditAction(e, event.ID)
+	})
+	if err != nil {
+		panic(err)
+	}
+	s.sourceActions = &commandMenuView{MenuView: view, model: model}
+	panel, err := tuivory.NewPanelView(view, s.componentPalette())
+	if err != nil {
+		panic(err)
+	}
+	panel.SetBorderPadding(0, 0, 0, 0)
+	panel.SetTitle(s.tr("source_edit"))
+	panel.ASCII = s.asciiDisplay()
+	popup := s.formPopup(panel, 64, len(ids)+2, nil)
+	s.pages.AddPage("editor_actions", popup, true, true)
+	s.app.SetFocus(s.sourceActions)
+}
+
+func (s *screen) sourceEditAction(e *tview.TextArea, id string) {
+	switch id {
+	case "undo", "redo", "cut", "paste", "select_all":
+		if id == "cut" && lineClipboardKeymap(s.prefs.EditorKeymap) && !e.HasSelection() {
+			s.editorLineAction(e, "cut_line")
+			break
+		}
+		s.nativeEditorKey(e, commandFor(id).bindings[0].key)
+	case "copy":
+		selected, _, _ := e.GetSelection()
+		if selected == "" && lineClipboardKeymap(s.prefs.EditorKeymap) {
+			s.editorLineAction(e, "copy_line")
+		} else {
+			s.sendClipboard(selected)
+		}
+	case "find", "replace":
+		s.showSearch(id == "replace")
+	case "complete", "complete_refresh":
+		s.showCompletion(id == "complete_refresh")
+	case "format_code":
+		s.formatCode()
+	default:
+		s.editorLineAction(e, id)
+	}
 }
 
 func (s *screen) vimMode() string {

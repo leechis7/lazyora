@@ -4,7 +4,7 @@
 
 공통 설계 원칙의 상위 출처는 [Tuivory](https://github.com/leechis7/tuivory)입니다. LazyOra 적용 기준과 마지막 확인 커밋은 [Tuivory 가이드 반영 기록](tuivory-sync.md)에 남깁니다. 아래 문서는 LazyOra의 실제 컴포넌트·단축키·상태 처리에 맞춘 적용 규칙입니다.
 
-v0.12.0 공통 스타일의 원본은 **Tuivory v0.4.0** (`github.com/leechis7/tuivory/go`)입니다. 단일 공개 패키지 `tuivory`의 `Styles`, `Styler`, `Choice`와 상태 스타일 메서드를 import합니다. `internal/ui/style_tokens.go`는 패키지 값과 제품 역할을 연결하고, `theme.go`·`widgets.go`는 공통 API를 기존 위젯에 적용합니다. 실제 의존 버전은 `go.mod`와 [적용 기록](tuivory-sync.md)에 고정합니다.
+v0.12.1 공통 스타일의 원본은 **Tuivory v0.5.0** (`github.com/leechis7/tuivory/go`)입니다. 단일 공개 패키지 `tuivory`의 `Styles`, `Styler`, `Choice`와 상태 스타일 메서드를 import합니다. `internal/ui/style_tokens.go`는 패키지 값과 제품 역할을 연결하고, `theme.go`·`widgets.go`는 공통 API를 기존 위젯에 적용합니다. 실제 의존 버전은 `go.mod`와 [적용 기록](tuivory-sync.md)에 고정합니다.
 새 화면을 추가할 때 기본 tview 색상에 맡기지 않고 생성 시점부터 현재 테마를 적용합니다.
 
 | 역할 | 공통 표시 |
@@ -72,3 +72,13 @@ v0.11.2의 LORA-78 변경은 공통 Tuivory v0.2.0 트리의 ASCII 옵션과 Laz
 v0.12.0은 Tuivory v0.4.0의 Menu/MenuView/MenuBarView 및 Grid/GridView(data 프리셋)를 사용합니다. 메뉴 항목·배치·앱 키·명령과 그리드 원본 데이터·편집·복사 정책은 LazyOra가 관리합니다. 본체 그리기·클리핑·범위/포인터 조작은 공개 컴포넌트에 위임합니다. 현재 행 표식은 `>`이며 변경 셀의 배경·상태줄 `*`를 사용합니다. 행 번호의 `*`는 표시하지 않습니다. [출처·표시 차이·검증](tuivory-sync.md)을 참고하세요.
 
 메뉴 단일선·제목·배경은 공통 PanelView가 처리하며 앱의 별도 테두리 Box는 제거했습니다. 일반 텍스트는 TextOnSurface로 실제 표면에 연결합니다. 일반 글자 참조 대비 4.5:1을 유지하되 비활성은 공통 2:1 목표·회색/Dim·입력 차단으로 구분합니다. 8색 단말에서 Dim의 실제 밝기는 단말별로 다릅니다. 입력·선택·편집 배경은 덮어쓰지 않습니다.
+
+## v0.12.1의 v0.5.0 소비
+
+공통 팝업은 ShadowView/DimRegion으로 그리고 소스 편집 명령도 공통 MenuView/PanelView를 사용합니다. 기존 폼 배치를 유지해 Auto 오른쪽/아래 1칸을 명시하며 SDK 기본값을 바꾸지 않습니다. 배경의 원래 색은 Dim으로만 감쇠합니다. 보안 입력·풍부한 텍스트/편집기와 테두리 없는 표면의 부족 API는 TVR-22~24로 요청했습니다. 이미 제공되는 컨트롤의 미연결과 API 부재를 구분한 [UI 적용 분류](audits/lora-76-tuivory050.md)를 따릅니다.
+
+### UI 진입점의 최종 기준
+
+화면 선언/Oracle 명령 연결은 앱에 남기되 배치 계산·컨테이너와 UI backend는 Tuivory가 감쌉니다. 앱/테스트에서 직접 tview import가 없어야 하며 SDK 내부 타입 별칭·생성자 호환 계층은 허용합니다. TVR-25/26의 공개 API가 제공되면 남은 직접 사용을 제거합니다. 이전 ‘배치는 앱 책임’은 화면 선언과 배치 엔진을 나눈 이 기준으로 해석합니다.
+
+Tuivory의 공통 규격은 현재 Go/Rust와 향후 Python·JavaScript·C·C++를 고려한 언어 중립 설계입니다. LazyOra의 Go 소비와 Tuivory 전체 지원 범위를 구분하며, TVR-22~26도 공통 계약과 언어별 어댑터를 나눠 요청했습니다. 계획 언어를 이미 구현된 것으로 표시하지 않습니다.

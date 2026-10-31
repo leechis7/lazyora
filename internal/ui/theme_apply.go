@@ -29,7 +29,16 @@ func (s *screen) applyTheme(previous string) {
 		case *resultGrid:
 			visit(w.Table)
 			return
+		case *tuivory.ShadowView:
+			_ = w.SetPalette(s.componentPalette())
+			visit(w.Child)
+			return
+		case *tuivory.MenuView:
+			_ = w.SetPalette(s.componentPalette())
+			w.ASCII = s.asciiDisplay()
+			return
 		case *tuivory.PanelView:
+			w.ASCII = s.asciiDisplay()
 			_ = w.SetPalette(s.componentPalette())
 			visit(w.Child)
 			return

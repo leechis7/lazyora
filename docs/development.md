@@ -78,7 +78,7 @@ GitHub에서 CI 성공을 병합의 필수 조건으로 강제하려면 `dev`와
 
 ## Tuivory 스타일 가이드 반영
 
-Tuivory 자체 개발은 별도 프로젝트에서 진행합니다. v0.12.0은 `github.com/leechis7/tuivory/go v0.4.0`을 포함합니다. 개발 의존성과 공통 UI 우선 원칙은 아래 항목을 따릅니다. LazyOra에서는 공개 Go 스타일 패키지를 import하고, 검토한 버전의 변경을 LORA 일감에서 적용·검증합니다. Tuivory 소스를 복사하거나 로컬 경로로 replace하지 않습니다. 출처 커밋, 변경 원칙, LazyOra 적용 위치, 검증과 보류 사유는 [반영 기록](tuivory-sync.md)에 남깁니다. 공통 가이드와 Oracle/Toad 관련 제품 동작을 구분하며 커밋·게시·릴리스 승인은 기존 절차를 따릅니다.
+Tuivory 자체 개발은 별도 프로젝트에서 진행합니다. v0.12.1은 `github.com/leechis7/tuivory/go v0.5.0`을 포함합니다. 개발 의존성과 공통 UI 우선 원칙은 아래 항목을 따릅니다. LazyOra에서는 공개 Go 스타일 패키지를 import하고, 검토한 버전의 변경을 LORA 일감에서 적용·검증합니다. Tuivory 소스를 복사하거나 로컬 경로로 replace하지 않습니다. 출처 커밋, 변경 원칙, LazyOra 적용 위치, 검증과 보류 사유는 [반영 기록](tuivory-sync.md)에 남깁니다. 공통 가이드와 Oracle/Toad 관련 제품 동작을 구분하며 커밋·게시·릴리스 승인은 기존 절차를 따릅니다.
 
 
 ## 한국어·영어 문서 유지
@@ -94,4 +94,10 @@ Tuivory 자체 개발은 별도 프로젝트에서 진행합니다. v0.12.0은 `
 
 공통 그리기·테두리/겹침 보호·컨트롤·스타일은 공개 Tuivory API를 먼저 확인해 사용합니다. 같은 결함을 LazyOra와 Tuivory에 별도로 고치지 않습니다. 공통 API가 없으면 별도 Tuivory 프로젝트에서 제공할 범위를 정하고, 제공 후 LazyOra에서 어댑터로 연결합니다. Oracle 실행·트랜잭션·탭/작업공간의 데이터 소유권·명령과 언어/ASCII 선호 정책은 제품 책임입니다. tview 위젯은 Tuivory Styler로 스타일을 적용하며, 새 모델/위젯으로 옮길 때 기존 입력·포커스·팝업 차단·복사·데이터 안전을 검증합니다.
 
-현재 공개 `github.com/leechis7/tuivory/go v0.4.0`(태그 `go/v0.4.0`, 커밋 `fef7a7b2247d1c68ef0fb1469e6a2fc2e1cec9b5`)을 고정합니다. 공통 메뉴/그리드·메뉴 PanelView·TextOnSurface를 소비하고 폼 팝업 전체는 WideSafeScreen, 제한 폭 라벨은 CellText에 위임합니다. 독자 그리드 본체·메뉴 테두리 우회·popupFill을 제거했습니다. 현재 적용과 보류는 [반영 기록](tuivory-sync.md)을 참고하세요. 과거 v0.11.3은 v0.2.0을 포함하며 기존 자산은 바꾸지 않습니다.
+정식 v0.12.1은 공개 `github.com/leechis7/tuivory/go v0.5.0`(태그 `go/v0.5.0`, 커밋 `26da505af4b818bb8c3c272e5970c411d9bde92b`)을 고정합니다. 공통 메뉴/그리드·메뉴 PanelView·TextOnSurface를 소비하고 폼 팝업 그림자는 ShadowView, 배경은 DimRegion, 제한 폭 라벨은 CellText에 위임합니다. 독자 그리드 본체·메뉴 테두리 우회·popupFill을 제거했습니다. 현재 적용과 보류는 [반영 기록](tuivory-sync.md)을 참고하세요. 과거 v0.11.3은 v0.2.0을 포함하며 기존 자산은 바꾸지 않습니다.
+
+## 최종 UI 의존 경계 (2026-10-31)
+
+목표는 first-party Go 코드와 테스트의 직접 tview import 0개입니다. Tuivory가 컨트롤·배치 엔진·컨테이너·타입/상수/생성자·편집기 확장을 공개 facade로 감싸고, 앱은 화면 선언과 Oracle/상태/명령·단말 I/O를 연결합니다. SDK 내부의 backend 별칭/forwarder는 허용하지만 소비 저장소의 로컬 tview shim으로 우회하지 않습니다. `go.mod`의 간접 backend 의존성과 앱 직접 import는 구분합니다. [TVR-26](https://leechis7.atlassian.net/browse/TVR-26) 공개 후 코드·테스트·로컬 편집기 포크/replace 전환을 검증합니다. [현재 전환과 선행 의존성](audits/lora-76-tuivory050.md)을 참고하세요.
+
+Tuivory의 공통 규격은 현재 Go/Rust와 향후 Python·JavaScript·C·C++를 고려한 언어 중립 설계입니다. LazyOra의 Go 소비와 Tuivory 전체 지원 범위를 구분하며, TVR-22~26도 공통 계약과 언어별 어댑터를 나눠 요청했습니다. 계획 언어를 이미 구현된 것으로 표시하지 않습니다.

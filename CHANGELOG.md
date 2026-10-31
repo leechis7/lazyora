@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-10-31
+
+### 개선 / Changed
+
+- LORA-76: Tuivory Go v0.5.0의 ShadowView/DimRegion으로 팝업 카드·그림자 직접 그리기를 제거하고 소스 편집 명령 목록을 공통 메뉴로 전환합니다. 기존 크기/입력·편집·암호 정책을 유지하며 원래 배경색을 Dim으로 감쇠합니다. Deprecated 소비를 정리하고 부족한 공통 API는 TVR-22~26에 요청했습니다.
+- LORA-76: Adopt published Tuivory Go v0.5.0 ShadowView/DimRegion, remove local popup painting and migrate source-edit commands to the shared menu. Preserve sizing/input/edit/secret policies while dimming original backdrop colors. Retire deprecated consumers and request missing shared APIs in TVR-22–26.
+
 ## [0.12.0] - 2026-10-30
 
 ### 개선 / Changed
@@ -333,7 +340,8 @@ v0.0.1의 F2 접속은 Alt+L, F4 실행은 F9, F5 커밋은 Alt+C, F6 롤백은 
 - 이 릴리스 시점에는 실제 CentOS 7.4, 구형 Oracle 및 SID 접속 검증이 완료되지 않았습니다. 이후 호환성 수정은 `Unreleased`에 기록합니다.
 - 한 번에 SQL 한 문장 또는 BEGIN/DECLARE 블록 하나를 실행합니다. 여러 문장 일괄 실행, SQL*Plus 스크립트, 바인드 입력, DBMS_OUTPUT 출력은 지원하지 않습니다.
 
-[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.12.0...dev
+[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.12.1...dev
+[0.12.1]: https://github.com/leechis7/lazyora/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/leechis7/lazyora/compare/v0.11.3...v0.12.0
 [0.11.3]: https://github.com/leechis7/lazyora/compare/v0.11.2...v0.11.3
 [0.11.2]: https://github.com/leechis7/lazyora/compare/v0.11.1...v0.11.2

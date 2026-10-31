@@ -14,7 +14,7 @@ type themeColors struct {
 }
 
 func (s *screen) fieldStyle() tcell.Style {
-	return s.tuivoryStyles().FieldStyle()
+	return s.tuivoryStyles().TextStyle(tuivory.Field, tuivory.Body)
 }
 
 func (s *screen) focusStyle() tcell.Style {
@@ -103,6 +103,10 @@ func (s *screen) refreshBorders() {
 			return
 		case *formPopupLayer:
 			visit(w.Flex)
+		case *tuivory.ShadowView:
+			visit(w.Child)
+		case *tuivory.PanelView:
+			visit(w.Child)
 		case *resultGrid:
 			visit(w.Table)
 		case *tview.Pages:

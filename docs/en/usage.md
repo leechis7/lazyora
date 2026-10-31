@@ -2,7 +2,7 @@
 
 [한국어](../usage.md) | **English** · [Documentation](index.md) · [Offline guide](../guide.en.md)
 
-This guide covers v0.12.0 workflows. Its input, selection, button, grid and popup styles use **Tuivory v0.4.0**, included in the executable. Choose Dark/Light/Black-White in Tools → Settings; terminal capability independently selects 8/16/256/True Color rendering. See [UI style rules](ui-style.md).
+This guide covers v0.12.1 workflows. Its input, selection, button, grid and popup styles use **Tuivory v0.5.0**, included in the executable. Choose Dark/Light/Black-White in Tools → Settings; terminal capability independently selects 8/16/256/True Color rendering. See [UI style rules](ui-style.md).
 
 v0.11.2 uses the published Tuivory **v0.2.0** tree. User/type selectors and live object filtering remain. On a table or view, use **Right/Space or click the disclosure arrow** to fetch columns and data types. **Left** collapses or moves to the parent; **Alt+Left/Right** pans long names. **Enter or clicking a name** opens the existing object details. Columns are fetched on expansion and cached for the current list; Ctrl+R refresh, owner changes and reconnects clear the cache. Collapse and re-expand after failure/cancellation to retry. Existing Esc cancellation and work-protection rules apply during queries.
 
@@ -118,6 +118,6 @@ Drag a column divider in the grid header to resize; existing width menus/keyboar
 
 In v0.4.0 the shared package renders menu single borders and clipped titles. Disabled entries use gray/Dim without an ordinary prefix and cannot be focused/activated. Eight-color Dim brightness depends on the terminal. Ordinary information text uses the actual card/panel background.
 
-### Unreleased popup refinements
+### v0.12.1 popup refinements
 
-Development sources use Tuivory v0.5.0 shared shadows and backdrop dimming. Background colors remain under Dim; shadow clicks cannot activate the page behind. Shift+F10 source-edit commands open in a common popup menu: navigate with arrows/Home/End/PgUp/PgDn and Enter; Esc restores the source editor. Editing, secret handling and settings-save policy remain.
+v0.12.1 uses Tuivory v0.5.0 shared shadows and backdrop dimming. Background colors remain under Dim; shadow clicks cannot activate the page behind. Shift+F10 source-edit commands open in a common popup menu: navigate with arrows/Home/End/PgUp/PgDn and Enter; Esc restores the source editor. Editing, secret handling and settings-save policy remain.

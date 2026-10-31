@@ -49,7 +49,7 @@ After publication, verify assets/checksums and the actual executable version, sy
 
 ## Dependencies and UI
 
-LazyOra v0.12.0 pins **Tuivory v0.4.0**, `github.com/leechis7/tuivory/go`, including its public tree component. LazyOra v0.11.0 includes the new tree. Develop Tuivory itself separately. Review public versions/commits and import the module; do not copy it or replace it with a local checkout. Record updates in [Tuivory integration](tuivory-sync.md) and use [UI adapters](ui-style.md).
+LazyOra v0.12.1 pins **Tuivory v0.5.0**, `github.com/leechis7/tuivory/go`, including its public tree component. LazyOra v0.11.0 includes the new tree. Develop Tuivory itself separately. Review public versions/commits and import the module; do not copy it or replace it with a local checkout. Record updates in [Tuivory integration](tuivory-sync.md) and use [UI adapters](ui-style.md).
 
 The tview v0.42.0 local fork adds SQL TextArea highlighting. Its source difference is confined to `textarea.go`; retain the upstream MIT notice and rendering checks. Workflow Actions are pinned to commit SHAs; Go toolchain versions are coordinated with `mise.toml`. Module downloads retry transient failures, but actual check failures remain failures.
 
@@ -63,7 +63,7 @@ Korean is primary. New/changed README, user/developer guidance and release descr
 
 Check and use public Tuivory APIs first for shared drawing, borders/overlap repair, controls and styles. Do not maintain independent fixes for the same defect in both projects. Define missing shared capabilities in the separate Tuivory project, then integrate published APIs through LazyOra adapters. Oracle execution/transactions, tab/workspace data ownership, commands and language/ASCII preference policy remain product responsibilities. Style tview widgets with Tuivory Styler; preserve input, focus, modal isolation, copying and data safety when adopting new models/views.
 
-Released v0.12.0 pins public `github.com/leechis7/tuivory/go v0.4.0`, tag `go/v0.4.0`, source `fef7a7b2247d1c68ef0fb1469e6a2fc2e1cec9b5`. Consume shared menus/GridView, menu PanelView and TextOnSurface; delegate whole form-popup draws to WideSafeScreen and clipped labels to CellText. Remove local grid-body rendering, menu-border workarounds and popupFill. See [adoption and remaining work](tuivory-sync.md). Earlier v0.11.3 retains v0.2.0; existing assets are unchanged.
+Released v0.12.1 pins public `github.com/leechis7/tuivory/go v0.5.0`, tag `go/v0.5.0`, source `26da505af4b818bb8c3c272e5970c411d9bde92b`. Consume shared menus/GridView, menu PanelView and TextOnSurface; delegate form-popup shadows to ShadowView, backdrops to DimRegion and clipped labels to CellText. Remove local grid-body rendering, menu-border workarounds and popupFill. See [adoption and remaining work](tuivory-sync.md). Earlier v0.11.3 retains v0.2.0; existing assets are unchanged.
 
 ## Final UI dependency boundary (2026-10-31)
 

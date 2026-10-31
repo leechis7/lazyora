@@ -4,6 +4,11 @@
 
 LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 원칙을 제품 UI에 적용합니다. Tuivory의 가이드·견본·도구 개발은 별도 저장소와 Tuivory Jira에서 관리하고, LazyOra의 적용 작업은 LORA Jira에서 관리합니다.
 
+## v0.12.1 릴리스 적용
+
+v0.12.1은 공개 Tuivory Go v0.5.0을 포함합니다. 아래 팝업·소스 명령 메뉴 전환과 Deprecated 정리를 사용자 승인으로 발행하며 한영 문서·실제 PTY 캡처를 갱신합니다. 전체 tview 직접 import 제거는 TVR-22~26의 언어 중립 API 제공에 의존하는 미완료 목표입니다. 아래 미배포/미커밋 표기는 검증 당시 시점을 보존한 기록이며 정식 v0.12.0은 여전히 v0.4.0을 포함합니다.
+
+
 ## LORA-76: Tuivory v0.5.0 우선 적용 (2026-10-31, 미배포)
 
 현재 개발 의존성은 `github.com/leechis7/tuivory/go v0.5.0`, 태그 go/v0.5.0, Origin `26da505af4b818bb8c3c272e5970c411d9bde92b`, Sum `h1:KjY4+GAHeY6SULi6++Gv3TaUUS/jTZ2UEpgDsRGmKxo=`입니다. 공개 ShadowView/DimRegion으로 팝업 직접 그리기를 제거하고 소스 편집 명령 목록을 공통 메뉴로 바꾸며 Deprecated 소비를 정리합니다. 기존 폼 크기에 맞춰 Auto 그림자를 오른쪽/아래 1칸으로 명시하고 배경은 원래 색에 Dim만 적용합니다.

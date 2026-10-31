@@ -2,6 +2,11 @@
 
 [한국어](../tuivory-sync.md) | **English** · [UI style rules](ui-style.md)
 
+## v0.12.1 release adoption
+
+v0.12.1 includes published Tuivory Go v0.5.0, releasing the popup/source-menu/deprecation integration below with bilingual docs and actual PTY captures. Full zero-direct-tview-import migration remains dependent on TVR-22–26's language-neutral APIs. Unreleased/uncommitted labels below preserve validation-time history; earlier v0.12.0 still contains v0.4.0.
+
+
 ## LORA-76: Tuivory-first v0.5.0 adoption (2026-10-31, unreleased)
 
 Development dependency: `github.com/leechis7/tuivory/go v0.5.0`, tag go/v0.5.0, Origin `26da505af4b818bb8c3c272e5970c411d9bde92b`, Sum `h1:KjY4+GAHeY6SULi6++Gv3TaUUS/jTZ2UEpgDsRGmKxo=`. Replace popup drawing with public ShadowView/DimRegion, migrate source-edit actions to the common menu and retire deprecated consumers. Preserve form geometry with explicit Auto right-one/down-one offsets and preserve underlying colors with Dim.

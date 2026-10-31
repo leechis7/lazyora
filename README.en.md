@@ -18,6 +18,8 @@ v0.12.0 adopts Tuivory v0.4.0 common menus/results, header-divider resizing, sin
 
 v0.12.0 adopts Tuivory v0.4.0 common menus and result grids. Resize columns by dragging header dividers or using existing menus. See [scope and verification](docs/en/tuivory-sync.md).
 
+Development sources adopt Tuivory v0.5.0 popups/source-edit menus, targeting a complete public UI facade with no direct tview imports. Missing SDK capabilities have been requested; see [scope and prerequisites](docs/en/tuivory-sync.md).
+
 ![LazyOra: menus, schema browser, SQL editor, result grid and context-sensitive shortcuts](docs/images/lazyora-overview.png)
 
 *v0.12.0 · Dark theme · English UI · local DB-free executable --demo PTY capture.*

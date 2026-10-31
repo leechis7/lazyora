@@ -23,6 +23,8 @@ v0.12.0은 Tuivory v0.4.0의 공통 메뉴·결과 그리드와 열 너비 드�
 
 v0.12.0은 Tuivory v0.4.0의 공통 메뉴·결과 그리드를 사용합니다. 열 너비는 헤더 구분선 드래그 또는 기존 메뉴로 조절합니다. [적용 범위·검증](docs/tuivory-sync.md)을 참고하세요.
 
+개발 소스는 Tuivory v0.5.0의 공통 팝업·소스 편집 메뉴를 적용 중입니다. 최종적으로 tview 직접 import 없이 Tuivory만 사용하도록 필요한 SDK API를 요청했습니다. [적용 범위와 선행 요청](docs/tuivory-sync.md)을 참고하세요.
+
 ![LazyOra 한국어 UI 전체 화면: 상단 메뉴, 스키마 브라우저, SQL 편집기, 결과 그리드와 하단 단축키](docs/images/lazyora-overview-ko.png)
 
 *v0.12.0 · 다크 테마 · 한국어 UI · DB 연결 없는 로컬 실행파일 --demo의 PTY 출력 캡처.*

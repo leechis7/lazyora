@@ -117,3 +117,7 @@ Current sources use the common Tuivory v0.4.0 menu/grid. Navigate menus with Up/
 Drag a column divider in the grid header to resize; existing width menus/keyboard commands remain. The current-row marker is `>` and long cells/menus use `~` for clipping. Enter/double-click editing, Shift+arrows/mouse ranges, row-number row selection, Ctrl+C/Alt+Y original-value copying, F10 menu and F12 result maximization remain. Edited-cell backgrounds and status `*` indicate uncommitted work; row-number `*` is omitted. These changes are included in v0.12.0.
 
 In v0.4.0 the shared package renders menu single borders and clipped titles. Disabled entries use gray/Dim without an ordinary prefix and cannot be focused/activated. Eight-color Dim brightness depends on the terminal. Ordinary information text uses the actual card/panel background.
+
+### Unreleased popup refinements
+
+Development sources use Tuivory v0.5.0 shared shadows and backdrop dimming. Background colors remain under Dim; shadow clicks cannot activate the page behind. Shift+F10 source-edit commands open in a common popup menu: navigate with arrows/Home/End/PgUp/PgDn and Enter; Esc restores the source editor. Editing, secret handling and settings-save policy remain.

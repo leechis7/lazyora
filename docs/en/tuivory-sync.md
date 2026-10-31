@@ -2,6 +2,13 @@
 
 [한국어](../tuivory-sync.md) | **English** · [UI style rules](ui-style.md)
 
+## LORA-76: Tuivory-first v0.5.0 adoption (2026-10-31, unreleased)
+
+Development dependency: `github.com/leechis7/tuivory/go v0.5.0`, tag go/v0.5.0, Origin `26da505af4b818bb8c3c272e5970c411d9bde92b`, Sum `h1:KjY4+GAHeY6SULi6++Gv3TaUUS/jTZ2UEpgDsRGmKxo=`. Replace popup drawing with public ShadowView/DimRegion, migrate source-edit actions to the common menu and retire deprecated consumers. Preserve form geometry with explicit Auto right-one/down-one offsets and preserve underlying colors with Dim.
+
+This does not remove every tview control. Separate available Tab/List/Panel/Split/Status integration from missing APIs. User-authorized requests TVR-22 (borderless surface), TVR-23 (secret input/buttons/forms) and TVR-24 (Editor/TextView) are in the separate Tuivory backlog. See the [inventory, requests and evidence](../audits/lora-76-tuivory050.md). Released v0.12.0 still ships v0.4.0; these changes are not committed, published or released.
+
+
 ## v0.12.0 release adoption
 
 v0.12.0 pins Tuivory Go v0.4.0 and includes the menu/grid/surface/disabled improvements below. User-approved publication separates implementation/docs/release preparation through dev/main PRs, CI and a formal tag. Unreleased labels and evidence below preserve their implementation/review times; the current dependency is v0.4.0. Remaining application panel/split/footer work in LORA-76 is outside this release.
@@ -64,7 +71,7 @@ CharacterSet and CanDisplay provide estimates, not real font coverage. [Terminal
 
 **Released LazyOra v0.11.3 ships Tuivory v0.2.0**, module `github.com/leechis7/tuivory/go`, release tag `go/v0.2.0`, source commit `987d1a6786033a6bf063235b5e7fea7b565f0af0`. It uses the single public `tuivory` package. TUIS is no longer a dependency; earlier TUIS entries in the Korean record document the migration history.
 
-The Go module lives under the upstream repository's `go/` directory. Current development sources specify `@v0.4.0` (released LazyOra v0.10.2 used `@v0.0.1`); the repository tag includes the `go/` prefix. Do not import upstream `internal` packages or replace the module with a local checkout.
+The Go module lives under the upstream repository's `go/` directory. Current development sources specify `@v0.5.0` (released LazyOra v0.10.2 used `@v0.0.1`); the repository tag includes the `go/` prefix. Do not import upstream `internal` packages or replace the module with a local checkout.
 
 | LazyOra area | Tuivory responsibility |
 | --- | --- |
@@ -104,3 +111,7 @@ The public v0.0.1 implementation was compared with the previous TUIS styles/widg
 Fresh verification after migration passed full race/vet and ARM64 build. The 3,216 simulated frames matched the original dev baseline after normalizing only random test-directory text; 1,608 theme-roundtrip pairs were unchanged. Captured role/SQL style values matched. The reference-palette contrast analysis is not a guarantee for every customized terminal.
 
 See [dated verification (Korean)](../audits/lora-70.md), [machine-readable comparison](../audits/lora-70-tuivory-comparison.json) and [v0.10.2 release](https://github.com/leechis7/lazyora/releases/tag/v0.10.2). TUIS pseudo-version/v0.1.0 checks remain historical evidence, not the current dependency.
+
+Final acceptance is **zero direct tview imports in LazyOra app/tests**. Request the complete control/layout/type/constructor/editor facade in [TVR-26](https://leechis7.atlassian.net/browse/TVR-26) and general containers in [TVR-25](https://leechis7.atlassian.net/browse/TVR-25). SDK-owned compatibility aliases are permitted; a local consumer shim is not completion. Current v0.5.0 alone does not meet the entire target.
+
+Tuivory contracts are language-neutral: Go and Rust today, Python/JavaScript/C/C++ in the roadmap. LazyOra is a Go consumer; TVR-22–26 request shared semantics plus language-specific adapters, not Go-only component design. Released and planned language support remain distinct.

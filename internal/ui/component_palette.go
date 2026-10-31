@@ -16,7 +16,7 @@ func (s *screen) componentPalette() tuivory.Palette {
 	c := p.Colors
 	return tuivory.Palette{
 		"surface": {FG: c.Text, BG: c.Surface}, "body": {FG: c.Text, BG: c.Surface},
-		"hint": {FG: c.Muted, BG: c.Surface}, "field": stylePair(p.FieldStyle()),
+		"hint": {FG: c.Muted, BG: c.Surface}, "field": stylePair(p.TextStyle(tuivory.Field, tuivory.Body)),
 		"button": stylePair(p.ButtonStyle()), "selection": stylePair(p.SelectionStyle()),
 		"disabled": stylePair(p.DisabledStyle()), "edited": stylePair(p.EditedStyle()),
 		"header": stylePair(p.GridHeaderStyle(false)), "info": {FG: c.Accent, BG: c.Surface},

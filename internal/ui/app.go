@@ -164,6 +164,7 @@ type screen struct {
 	sizing                                   panelSizing
 	splitOffsets                             panelOffsets
 	menuList                                 *commandMenuView
+	sourceActions                            *commandMenuView
 	mainMenu, menuModel                      *tuivory.Menu
 	menuBarView                              *tuivory.RowsView
 	menuCard                                 *tuivory.PanelView

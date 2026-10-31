@@ -244,15 +244,10 @@ func TestSourceEditMenuAlternativeAndCompletionBinding(t *testing.T) {
 	if page != "editor_actions" {
 		t.Fatal("source menu did not open")
 	}
-	list := root.(*tview.List)
-	for i := 0; i < list.GetItemCount(); i++ {
-		label, _ := list.GetItemText(i)
-		if strings.Contains(label, s.tr("duplicate_line")) {
-			list.SetCurrentItem(i)
-			list.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
-			break
-		}
-	}
+	_ = root // The source menu is now a shared popup, not a native tview.List.
+	s.sourceActions.model.Focus("duplicate_line")
+	s.sourceActions.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+
 	if s.sourceEditor.GetText() == before || s.editor.GetText() != sql || !s.sourceEditor.HasFocus() {
 		t.Fatal("source edit menu targeted wrong editor")
 	}

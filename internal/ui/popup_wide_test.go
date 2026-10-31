@@ -109,7 +109,7 @@ func TestPopupWideBoundaryPreservesOutsideContentAndRestoresOnClose(t *testing.T
 	// Both ordinary and shadow boundaries cut through a wide glyph.
 	assertPopupPhysicalCells(t, terminal, x, y, w+1, h+1)
 	r, _, style, cw := terminal.GetContent(x-2, y+2)
-	wantStyle := s.tuivoryStyles().PopupBackdrop(tcell.StyleDefault.Foreground(tcell.ColorGreen), s.limitedColors)
+	wantStyle := tcell.StyleDefault.Foreground(tcell.ColorGreen).Dim(true)
 	if r != '한' || cw != 2 || style != wantStyle {
 		t.Fatal("intact wide glyph outside popup was erased")
 	}

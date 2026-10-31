@@ -61,13 +61,13 @@ func (s *screen) tuivoryStyles() tuivory.Styles {
 	return p
 }
 func (s *screen) tuivoryWidgets() tuivory.Styler { return tuivory.Styler{Styles: s.tuivoryStyles()} }
-func legacyColors(c tuivory.Colors) themeColors {
+func legacyColors(c tuivory.Colors, selectionFG tcell.Color) themeColors {
 	return themeColors{c.Background, c.Surface, c.Footer, c.Field, c.Text, c.Muted, c.Accent, c.Button,
-		c.Editor, c.EditorText, c.FieldText, c.SelectionText, c.Placeholder, c.Warning}
+		c.Editor, c.EditorText, c.FieldText, selectionFG, c.Placeholder, c.Warning}
 }
 func (s *screen) tokens() styleTokens {
 	p := s.tuivoryStyles()
-	return styleTokens{legacyColors(p.Colors), p.Selection, p.SelectionFG, p.Edited, p.EditedFG, p.Disabled, p.Focus}
+	return styleTokens{legacyColors(p.Colors, p.SelectionFG), p.Selection, p.SelectionFG, p.Edited, p.EditedFG, p.Disabled, p.Focus}
 }
 
 type surfaceRole uint8

@@ -17,7 +17,8 @@ F1 lists controls for the current screen and selected editor keymap.
 Use Up/Down to select a contents item, Right/Enter to enter its article, and Left to return.
 F10 opens/closes the main menu. Shift+F10 or right-click opens the current panel’s context menu.
 Navigate menus with Up/Down, Home/End and PgUp/PgDn; Enter invokes/opens a child group. Disabled items are skipped. Left/Esc returns to the parent; top-level Esc restores the caller; Right opens the next top-level menu.
-v0.12.0 uses Tuivory v0.4.0 menu single borders, surface-aware text and gray/Dim disabled cues. Disabled entries cannot be focused/activated; eight-color Dim brightness is terminal-dependent.
+v0.12.1 uses Tuivory v0.5.0 menu single borders, surface-aware text and gray/Dim disabled cues. Disabled entries cannot be focused/activated; eight-color Dim brightness is terminal-dependent.
+Source-editor Shift+F10 actions appear in a popup menu; use arrows/Enter and Esc to return. Shadow clicks cannot operate the page behind.
 Tab cycles panels; the focused box has a double border and a distinct highlight color.
 F2 makes the SQL editor fullscreen; Shift+F2 or F12 makes the result grid fullscreen. Repeat the key or press Esc to restore split.
 Esc closes an open dialog first, or cancels a running query before restoring the layout.

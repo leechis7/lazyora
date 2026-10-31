@@ -2,7 +2,7 @@
 
 [한국어](../ui-style.md) | **English** · [Documentation](index.md)
 
-In **v0.12.0**, common styles come from **Tuivory v0.4.0**, the public Go module `github.com/leechis7/tuivory/go`. Its single `tuivory` package supplies `Styles`, `Styler`, `Choice` and state-style methods. The pinned version is in `go.mod`; see [integration and updates](tuivory-sync.md).
+In **v0.12.1**, common styles come from **Tuivory v0.5.0**, the public Go module `github.com/leechis7/tuivory/go`. Its single `tuivory` package supplies `Styles`, `Styler`, `Choice` and state-style methods. The pinned version is in `go.mod`; see [integration and updates](tuivory-sync.md).
 
 LazyOra's `internal/ui/style_tokens.go` adapts package values to product roles. It does not own a second palette. `theme.go` and `widgets.go` apply styles to existing widgets. Oracle execution, transactions, SQL display lexing, Toad keymaps, grid data, focus and modal input routing remain application responsibilities.
 
@@ -63,3 +63,13 @@ Prefer public Tuivory APIs for shared rendering, controls and styles. Tuivory v0
 v0.12.0 uses Tuivory v0.4.0 Menu/MenuView/MenuBarView and Grid/GridView (data preset). LazyOra owns menu content/placement/global keys/actions and grid originals/edit/copy policy. Public components own body rendering, clipping and range/pointer interaction. The current-row marker is `>`; edited cells use their background and status `*`, without a row-number `*`. See [source, visual differences and verification](tuivory-sync.md).
 
 Common PanelView owns menu single borders/titles/surfaces; remove the separate border Box. TextOnSurface binds ordinary text to its real surface. Ordinary reference contrast remains 4.5:1; distinguish disabled controls with the shared 2:1 target, gray/Dim and input exclusion. Eight-color Dim brightness is terminal-dependent. Do not overwrite input/selection/edited backgrounds.
+
+## v0.5.0 consumption in v0.12.1
+
+Use ShadowView/DimRegion for common popups and MenuView/PanelView for source-edit actions. Explicit Auto right-one/down-one preserves form layout without changing SDK defaults. Dim preserves underlying colors. Request missing secret input, rich text/editor and borderless-surface APIs as TVR-22–24. Distinguish available but unbound controls from missing APIs in the [UI integration inventory](../audits/lora-76-tuivory050.md).
+
+### Final public UI entry point
+
+The app keeps declarative screen structure and Oracle/action binding; Tuivory wraps layout execution, containers and the UI backend. No direct tview imports in app/tests; SDK-owned type aliases/constructor compatibility are acceptable. Retire remaining uses after public TVR-25/26 APIs. Interpret earlier host-layout language as screen declarations rather than backend layout execution.
+
+Tuivory contracts are language-neutral: Go and Rust today, Python/JavaScript/C/C++ in the roadmap. LazyOra is a Go consumer; TVR-22–26 request shared semantics plus language-specific adapters, not Go-only component design. Released and planned language support remain distinct.

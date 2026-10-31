@@ -2,6 +2,7 @@ package ui
 
 import (
 	"github.com/gdamore/tcell/v2"
+	"github.com/leechis7/tuivory/go"
 	"github.com/rivo/tview"
 )
 
@@ -54,6 +55,13 @@ func buttonRow(root tview.Primitive, focused *tview.Button) ([]*tview.Button, *t
 		if found {
 			return row, nil
 		}
+	case tuivory.StyleChildren:
+		for _, child := range container.StyleChildren() {
+			if buttons, form := buttonRow(child, focused); len(buttons) > 0 {
+				return buttons, form
+			}
+		}
+
 	}
 	return nil, nil
 }

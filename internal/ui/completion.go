@@ -2,13 +2,11 @@ package ui
 
 import (
 	"fmt"
-	"sort"
+	"lazyora/internal/oracle"
 	"strings"
 	"unicode/utf8"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 func (s *screen) showCompletion(refresh bool) {
@@ -43,24 +41,24 @@ func (s *screen) showCompletion(refresh bool) {
 	s.completionCandidates = nil
 	s.completionRows = nil
 	s.completionResult = oracle.Completions{}
-	s.completionList = tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(true).SetSelectedStyle(s.focusStyle())
+	s.completionList = tuivory.NewWidgetList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(true).SetSelectedStyle(s.focusStyle())
 	s.completionList.SetBorder(true).SetTitle(s.tr("completion"))
 	s.styleList(s.completionList)
 	s.completionList.SetSelectedFunc(func(int, string, string, rune) { s.applyCompletion() })
 	s.completionFilter = s.newInputField().SetLabel(s.tr("completion_filter")).SetText(context.Prefix).SetFieldWidth(40)
-	s.completionFilter.SetFieldStyle(s.fieldStyle()).SetLabelStyle(tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().background))
+	s.completionFilter.SetFieldStyle(s.fieldStyle()).SetLabelStyle(tuivory.StyleDefault.Foreground(s.colors().text).Background(s.colors().background))
 	s.completionFilter.SetChangedFunc(func(string) { s.filterCompletions() })
-	s.completionFilter.SetDoneFunc(func(key tcell.Key) {
-		if key == tcell.KeyEnter {
+	s.completionFilter.SetDoneFunc(func(key tuivory.Key) {
+		if key == tuivory.KeyEnter {
 			s.applyCompletion()
 		}
 	})
 	s.completionInfo = s.newTextView().SetWrap(true).SetText(s.tr("browser_loading"))
 	s.completionInfo.SetTextColor(s.colors().text).SetBackgroundColor(s.colors().background)
-	buttons := s.newFlex().AddItem(s.clickable(tview.NewButton(s.tr("completion_insert")).SetSelectedFunc(s.applyCompletion)), 0, 1, false).
-		AddItem(s.clickable(tview.NewButton(s.tr("completion_refresh")).SetSelectedFunc(func() { s.loadCompletions(true) })), 0, 1, false).
-		AddItem(s.clickable(tview.NewButton(s.tr("cancel")).SetSelectedFunc(s.cancelCompletion)), 0, 1, false)
-	root := s.newFlex().SetDirection(tview.FlexRow).AddItem(s.completionInfo, 4, 0, false).AddItem(s.completionFilter, 1, 0, false).AddItem(s.completionList, 0, 1, true).AddItem(buttons, 1, 0, false)
+	buttons := s.newFlex().AddItem(s.clickable(tuivory.NewWidgetButton(s.tr("completion_insert")).SetSelectedFunc(s.applyCompletion)), 0, 1, false).
+		AddItem(s.clickable(tuivory.NewWidgetButton(s.tr("completion_refresh")).SetSelectedFunc(func() { s.loadCompletions(true) })), 0, 1, false).
+		AddItem(s.clickable(tuivory.NewWidgetButton(s.tr("cancel")).SetSelectedFunc(s.cancelCompletion)), 0, 1, false)
+	root := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(s.completionInfo, 4, 0, false).AddItem(s.completionFilter, 1, 0, false).AddItem(s.completionList, 0, 1, true).AddItem(buttons, 1, 0, false)
 	s.pages.AddPage("completion", root, true, true)
 	s.app.SetFocus(s.completionList)
 	s.loadCompletions(refresh)
@@ -85,12 +83,7 @@ func (s *screen) acceptCompletions(result oracle.Completions, err error) {
 	s.completionResult = result
 	s.completionCandidates = append([]oracle.CompletionCandidate(nil), result.Candidates...)
 	if len(s.completionContext.Qualifier) == 0 && !s.completionContext.ObjectsOnly && !s.completionContext.Quoted {
-		var names []string
-		for name := range sqlWords {
-			names = append(names, name)
-		}
-		sort.Strings(names)
-		for _, name := range names {
+		for _, name := range sqlCompletionWords {
 			insert := name
 			prefix := s.completionFilter.GetText()
 			if prefix != "" && prefix == strings.ToLower(prefix) {
@@ -143,7 +136,7 @@ func (s *screen) filterCompletions() {
 			break
 		}
 		s.completionRows = append(s.completionRows, candidate)
-		s.completionList.AddItem(tview.Escape(candidate.Text), tview.Escape(candidate.Detail), 0, nil)
+		s.completionList.AddItem(tuivory.Escape(candidate.Text), tuivory.Escape(candidate.Detail), 0, nil)
 	}
 	s.completionList.SetTitle(fmt.Sprintf("%s · %d", s.tr("completion"), len(s.completionRows)))
 }
@@ -194,39 +187,39 @@ func (s *screen) cancelCompletion() {
 	}
 	s.closeCompletion()
 }
-func (s *screen) completionKey(event *tcell.EventKey) *tcell.EventKey {
-	if event.Key() == tcell.KeyF1 {
+func (s *screen) completionKey(event *tuivory.EventKey) *tuivory.EventKey {
+	if event.Key() == tuivory.KeyF1 {
 		s.showHelp()
 		return nil
 	}
 	if s.busy {
-		if event.Key() == tcell.KeyEscape {
+		if event.Key() == tuivory.KeyEscape {
 			s.cancelCompletion()
 		}
 		return nil
 	}
 	switch event.Key() {
-	case tcell.KeyEscape:
+	case tuivory.KeyEscape:
 		s.closeCompletion()
 		return nil
-	case tcell.KeyCtrlR:
+	case tuivory.KeyCtrlR:
 		s.loadCompletions(true)
 		return nil
-	case tcell.KeyTab, tcell.KeyBacktab:
+	case tuivory.KeyTab, tuivory.KeyBacktab:
 		s.dialogTab(event, s.completionFilter, s.completionList)
 		return nil
-	case tcell.KeyUp, tcell.KeyDown, tcell.KeyPgUp, tcell.KeyPgDn:
+	case tuivory.KeyUp, tuivory.KeyDown, tuivory.KeyPgUp, tuivory.KeyPgDn:
 		if s.completionFilter.HasFocus() {
-			s.completionList.InputHandler()(event, func(tview.Primitive) {})
+			s.completionList.InputHandler()(event, func(tuivory.Primitive) {})
 			return nil
 		}
-	case tcell.KeyRune:
-		if s.completionList.HasFocus() && event.Modifiers()&(tcell.ModCtrl|tcell.ModAlt) == 0 {
+	case tuivory.KeyRune:
+		if s.completionList.HasFocus() && event.Modifiers()&(tuivory.ModCtrl|tuivory.ModAlt) == 0 {
 			s.completionFilter.SetText(s.completionFilter.GetText() + string(event.Rune()))
 			s.app.SetFocus(s.completionFilter)
 			return nil
 		}
-	case tcell.KeyBackspace, tcell.KeyBackspace2:
+	case tuivory.KeyBackspace, tuivory.KeyBackspace2:
 		if s.completionList.HasFocus() {
 			text := s.completionFilter.GetText()
 			_, size := utf8.DecodeLastRuneInString(text)

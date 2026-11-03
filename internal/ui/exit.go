@@ -1,8 +1,7 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 )
 
 func (s *screen) requestQuit() {
@@ -53,13 +52,13 @@ func (s *screen) showExitConfirmation() {
 		width, _ := s.terminal.Size()
 		needed := 2
 		for _, label := range labels {
-			needed += tview.TaggedStringWidth(label) + 6
+			needed += tuivory.TaggedStringWidth(label) + 6
 		}
 		if needed > width && !s.transactionUncertain && s.pendingChanges {
 			labels = []string{s.tr("commit"), s.tr("rollback"), s.tr("pending_work_short"), s.tr("cancel")}
 		}
 	}
-	s.exitDialog = tview.NewModal().SetText(s.exitMessage(message)).AddButtons(labels).
+	s.exitDialog = tuivory.NewModal().SetText(s.exitMessage(message)).AddButtons(labels).
 		SetBackgroundColor(s.colors().background).SetTextColor(s.colors().text).
 		SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(s.buttonFocusStyle())
 	s.exitDialog.SetDoneFunc(func(index int, _ string) {
@@ -86,12 +85,12 @@ func (s *screen) showExitConfirmation() {
 		s.confirmExit(action)
 	})
 	s.styleModal(s.exitDialog)
-	s.exitDialog.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
+	s.exitDialog.SetMouseCapture(func(action tuivory.MouseAction, event *tuivory.EventMouse) (tuivory.MouseAction, *tuivory.EventMouse) {
 		if s.busy {
 			return action, nil
 		}
-		if action == tview.MouseLeftDoubleClick {
-			action = tview.MouseLeftClick
+		if action == tuivory.MouseLeftDoubleClick {
+			action = tuivory.MouseLeftClick
 		}
 		return action, event
 	})
@@ -136,26 +135,26 @@ func (s *screen) confirmExit(action string) {
 	}
 }
 
-func (s *screen) exitKey(event *tcell.EventKey) *tcell.EventKey {
+func (s *screen) exitKey(event *tuivory.EventKey) *tuivory.EventKey {
 	if s.busy {
 		return nil
 	}
-	if event.Modifiers()&tcell.ModAlt != 0 && event.Rune() == 'v' {
+	if event.Modifiers()&tuivory.ModAlt != 0 && event.Rune() == 'v' {
 		if s.pendingChanges {
 			s.showPendingWork()
 		}
 		return nil
 	}
-	if event.Modifiers()&tcell.ModAlt != 0 && event.Rune() == 'c' {
+	if event.Modifiers()&tuivory.ModAlt != 0 && event.Rune() == 'c' {
 		s.confirmExit("exit_commit")
 		return nil
 	}
-	if event.Modifiers()&tcell.ModAlt != 0 && event.Rune() == 'r' {
+	if event.Modifiers()&tuivory.ModAlt != 0 && event.Rune() == 'r' {
 		s.confirmExit("exit_rollback")
 		return nil
 	}
 	switch event.Key() {
-	case tcell.KeyEscape:
+	case tuivory.KeyEscape:
 		s.cancelExit()
 		return nil
 

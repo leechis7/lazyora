@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 )
 
 // New menu commands must be documented, including actions without a shortcut.
@@ -23,14 +23,14 @@ func TestHelpCoversEveryMenuCommandAndCurrentBinding(t *testing.T) {
 				if !covered[command.id] {
 					t.Errorf("%s is missing from help topics", command.id)
 				}
-				rows := tview.TranslateANSI(s.helpCommands([]string{command.id}))
+				rows := tuivory.TranslateANSI(s.helpCommands([]string{command.id}))
 				if key := s.editorBindingLabels(command.id, 2); key != "" {
 					if !strings.Contains(rows, key) {
 						t.Errorf("%s does not show its current binding %s", command.id, key)
 					}
 				} else {
 					path := s.tr(menuGroups[command.group].label) + " > " + s.tr(command.label)
-					if !strings.Contains(rows, tview.Escape(path)) {
+					if !strings.Contains(rows, tuivory.Escape(path)) {
 						t.Errorf("%s has no keyboard binding and no menu path", command.id)
 					}
 				}

@@ -1,14 +1,12 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
 	"github.com/leechis7/tuivory/go"
-	"github.com/rivo/tview"
 )
 
 // formDialog gives all input dialogs the same responsive card layout. Keep the
 // Form itself intact so its validation, focus order and shortcuts stay local.
-func (s *screen) formDialog(form *tview.Form, info *tview.TextView, width int) *formPopupLayer {
+func (s *screen) formDialog(form *tuivory.WidgetForm, info *tuivory.WidgetTextView, width int) *formPopupLayer {
 	form.SetBorder(true)
 	fieldsHeight := 0
 	for i := 0; i < form.GetFormItemCount(); i++ {
@@ -16,7 +14,7 @@ func (s *screen) formDialog(form *tview.Form, info *tview.TextView, width int) *
 	}
 	fit := formLayout(form)
 	infoHeight := 0
-	content := s.newFlex().SetDirection(tview.FlexRow)
+	content := s.newFlex().SetDirection(tuivory.FlexRow)
 	if info != nil {
 		infoHeight = 5
 		s.textSurface(info, surfacePanel)
@@ -36,18 +34,19 @@ func (s *screen) formDialog(form *tview.Form, info *tview.TextView, width int) *
 
 // Keep the underlying work visible, but route every mouse event through the
 // modal layer. The returned Flex retains normal Form/DropDown event routing.
-func (s *screen) formPopup(content tview.Primitive, preferredWidth, preferredHeight int, layout func(width, height int)) *formPopupLayer {
+func (s *screen) formPopup(content tuivory.Primitive, preferredWidth, preferredHeight int, layout func(width, height int)) *formPopupLayer {
 	// The content and its layout remain host-owned; shared surfaces/shadows
 	// and wide-glyph protection are delegated to published Tuivory components.
-	card := s.newFlex().AddItem(content, 0, 1, true)
-	card.Box = s.newBox() // Opaque, borderless host container; see SDK gap record.
-	s.setSurface(card.Box, surfacePanel)
+	card, err := tuivory.NewSurfaceView(content, s.componentPalette())
+	if err != nil {
+		panic(err)
+	}
 	shadow, err := tuivory.NewShadowView(card, s.componentPalette(), tuivory.ShadowOptions{Mode: tuivory.ShadowAuto, OffsetX: 1, OffsetY: 1})
 	if err != nil {
 		panic(err)
 	}
 	root := s.newFlex().AddItem(shadow, 0, 1, true)
-	root.SetDrawFunc(func(terminal tcell.Screen, x, y, width, height int) (int, int, int, int) {
+	root.SetDrawFunc(func(terminal tuivory.Screen, x, y, width, height int) (int, int, int, int) {
 		tuivory.DimRegion(terminal, tuivory.CellRect{X: x, Y: y, Width: width, Height: height})
 		insetX, insetY := 2, 1
 		if width < 44 {
@@ -66,7 +65,8 @@ func (s *screen) formPopup(content tview.Primitive, preferredWidth, preferredHei
 		_ = shadow.SetShadow(options)
 		_ = shadow.SetPalette(s.componentPalette())
 		shadow.ASCII = s.asciiDisplay()
-		s.styleBox(card.Box)
+		_ = card.SetPalette(s.componentPalette())
+		card.ASCII = s.asciiDisplay()
 		if layout != nil {
 			layout(w, h)
 		}
@@ -76,14 +76,14 @@ func (s *screen) formPopup(content tview.Primitive, preferredWidth, preferredHei
 }
 
 type formPopupLayer struct {
-	*tview.Flex
-	content tview.Primitive
+	*tuivory.Flex
+	content tuivory.Primitive
 	shadow  *tuivory.ShadowView
 }
 
-func (p *formPopupLayer) MouseHandler() func(tview.MouseAction, *tcell.EventMouse, func(tview.Primitive)) (bool, tview.Primitive) {
+func (p *formPopupLayer) MouseHandler() func(tuivory.MouseAction, *tuivory.EventMouse, func(tuivory.Primitive)) (bool, tuivory.Primitive) {
 	handler := p.Flex.MouseHandler()
-	return func(action tview.MouseAction, event *tcell.EventMouse, focus func(tview.Primitive)) (bool, tview.Primitive) {
+	return func(action tuivory.MouseAction, event *tuivory.EventMouse, focus func(tuivory.Primitive)) (bool, tuivory.Primitive) {
 		if dropdown := openFormChoice(p.content); dropdown != nil {
 			_, capture := dropdown.MouseHandler()(action, event, focus)
 			return true, capture
@@ -95,15 +95,15 @@ func (p *formPopupLayer) MouseHandler() func(tview.MouseAction, *tcell.EventMous
 	}
 }
 
-func openFormChoice(root tview.Primitive) *choiceField {
+func openFormChoice(root tuivory.Primitive) *choiceField {
 	switch item := root.(type) {
-	case *tview.Form:
+	case *tuivory.WidgetForm:
 		for i := 0; i < item.GetFormItemCount(); i++ {
 			if choice, ok := item.GetFormItem(i).(*choiceField); ok && choice.IsOpen() {
 				return choice
 			}
 		}
-	case *tview.Flex:
+	case *tuivory.Flex:
 		for i := 0; i < item.GetItemCount(); i++ {
 			if child := item.GetItem(i); child != nil {
 				if choice := openFormChoice(child); choice != nil {
@@ -127,7 +127,7 @@ func popupLabel(text string, width int) string {
 	return tuivory.CellText(text, width)
 }
 
-func formLayout(form *tview.Form) func(int, int) {
+func formLayout(form *tuivory.WidgetForm) func(int, int) {
 	labels := make([]string, form.GetFormItemCount())
 	buttons := make([]string, form.GetButtonCount())
 	fieldsHeight := 0
@@ -147,17 +147,17 @@ func formLayout(form *tview.Form) func(int, int) {
 		for i, label := range labels {
 			short := popupLabel(label, max(4, (w-6)/2))
 			switch item := form.GetFormItem(i).(type) {
-			case *tview.InputField:
+			case *tuivory.InputField:
 				item.SetLabel(short)
 			case *choiceField:
 				item.SetLabel(short)
-			case *tview.Checkbox:
+			case *tuivory.Checkbox:
 				item.SetLabel(short)
 			}
 		}
 		total := 0
 		for _, label := range buttons {
-			total += tview.TaggedStringWidth(label) + 5
+			total += tuivory.TaggedStringWidth(label) + 5
 		}
 		for i, label := range buttons {
 			if total > w-5 {

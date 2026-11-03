@@ -2,6 +2,8 @@ package ui
 
 import (
 	"bytes"
+	"lazyora/internal/credentials"
+	"lazyora/internal/settings"
 	"os"
 	"path/filepath"
 	"strings"
@@ -9,17 +11,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/credentials"
-	"lazyora/internal/settings"
+	"github.com/leechis7/tuivory/go"
 )
 
 func runningVaultUI(t *testing.T) *screen {
 	t.Helper()
 	t.Setenv("LAZYORA_CONFIG", filepath.Join(t.TempDir(), "settings.json"))
 	t.Setenv("LC_ALL", "C")
-	terminal := tcell.NewSimulationScreen("UTF-8")
+	terminal := tuivory.NewSimulationScreen("UTF-8")
 	if err := terminal.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -29,7 +28,7 @@ func runningVaultUI(t *testing.T) *screen {
 	go func() {
 		finished <- run(true, terminal, func(s *screen) {
 			var once sync.Once
-			s.app.SetAfterDrawFunc(func(tcell.Screen) { once.Do(func() { ready <- s }) })
+			s.app.SetAfterDrawFunc(func(tuivory.Screen) { once.Do(func() { ready <- s }) })
 		})
 	}()
 	var s *screen
@@ -67,9 +66,9 @@ func waitVaultUI(t *testing.T, s *screen) {
 	t.Fatal("password operation did not finish")
 }
 func inputMaster(s *screen, value string) {
-	s.masterForm.GetFormItem(1).(*tview.InputField).SetText(value)
+	s.masterForm.GetFormItem(1).(*tuivory.InputField).SetText(value)
 	if s.masterForm.GetFormItemCount() > 2 {
-		s.masterForm.GetFormItem(2).(*tview.InputField).SetText(value)
+		s.masterForm.GetFormItem(2).(*tuivory.InputField).SetText(value)
 	}
 	s.masterSubmit()
 }
@@ -78,7 +77,7 @@ func TestMasterPasswordUIRoundTripAndCancellation(t *testing.T) {
 	s.app.QueueUpdateDraw(func() {
 		s.connectionForm()
 		fillConnection(s, "development", "service")
-		s.connectForm.GetFormItem(connectionSavePassword).(*tview.Checkbox).SetChecked(true)
+		s.connectForm.GetFormItem(connectionSavePassword).(*tuivory.Checkbox).SetChecked(true)
 		s.saveConnection()
 		if s.masterForm == nil {
 			t.Error("first save did not ask for master")
@@ -102,7 +101,7 @@ func TestMasterPasswordUIRoundTripAndCancellation(t *testing.T) {
 			t.Error("save marker missing")
 		}
 		s.lockPasswords()
-		if s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).GetText() != "" {
+		if s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).GetText() != "" {
 			t.Error("lock retained password field")
 		}
 		s.closeConnection()
@@ -123,8 +122,8 @@ func TestMasterPasswordUIRoundTripAndCancellation(t *testing.T) {
 		if strings.Contains(s.masterForm.GetTitle(), "wrong master") {
 			t.Error("master leaked into error")
 		}
-		s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
-		if s.masterForm != nil || s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).GetText() != "" {
+		s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
+		if s.masterForm != nil || s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).GetText() != "" {
 			t.Error("cancel loaded a secret")
 		}
 		// Saving after cancelled unlock must never replace the saved secret with empty text.
@@ -133,7 +132,7 @@ func TestMasterPasswordUIRoundTripAndCancellation(t *testing.T) {
 			t.Error("empty password could overwrite the saved secret")
 		}
 		// Cancelled unlock still permits typing a password manually.
-		s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).SetText("manual-entry")
+		s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).SetText("manual-entry")
 		s.connectProfiles.GetFormItem(0).(*choiceField).SetCurrentOption(1)
 		if s.masterForm == nil {
 			t.Error("retry did not ask for master")
@@ -147,11 +146,11 @@ func TestMasterPasswordUIRoundTripAndCancellation(t *testing.T) {
 			t.Error("correct master rejected")
 			return
 		}
-		if s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).GetText() != "secret-only-in-memory" {
+		if s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).GetText() != "secret-only-in-memory" {
 			t.Error("saved password not restored")
 		}
-		s.connectForm.GetFormItem(connectionHost).(*tview.InputField).SetText("other-host")
-		if s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).GetText() != "" {
+		s.connectForm.GetFormItem(connectionHost).(*tuivory.InputField).SetText("other-host")
+		if s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).GetText() != "" {
 			t.Error("autofilled password followed a host edit")
 		}
 	})
@@ -179,7 +178,7 @@ func TestPasswordOptOutDeletesOnlySelectedSecretAndResetNeedsConfirmation(t *tes
 	t.Cleanup(store.Lock)
 	s.connectionForm()
 	fillConnection(s, "first", "service")
-	s.connectForm.GetFormItem(connectionSavePassword).(*tview.Checkbox).SetChecked(true)
+	s.connectForm.GetFormItem(connectionSavePassword).(*tuivory.Checkbox).SetChecked(true)
 	s.saveConnection()
 	fillConnection(s, "second", "service")
 	s.saveConnection()
@@ -188,7 +187,7 @@ func TestPasswordOptOutDeletesOnlySelectedSecretAndResetNeedsConfirmation(t *tes
 		t.Fatal("profiles not saved", err)
 	}
 	s.connectProfiles.GetFormItem(0).(*choiceField).SetCurrentOption(1)
-	s.connectForm.GetFormItem(connectionSavePassword).(*tview.Checkbox).SetChecked(false)
+	s.connectForm.GetFormItem(connectionSavePassword).(*tuivory.Checkbox).SetChecked(false)
 	s.saveConnection()
 	if _, ok, err := store.Get(profiles[0].ID, profiles[0].Binding()); err != nil || ok {
 		t.Fatal("opt-out did not delete secret", err)
@@ -197,17 +196,17 @@ func TestPasswordOptOutDeletesOnlySelectedSecretAndResetNeedsConfirmation(t *tes
 		t.Fatal("other profile lost", err)
 	}
 	s.passwordManager()
-	s.vaultForm.GetButton(3).InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(tview.Primitive) {})
+	s.vaultForm.GetButton(3).InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(tuivory.Primitive) {})
 	if s.programModal == nil {
 		t.Fatal("reset did not confirm")
 	}
-	s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyEscape, 0, 0), func(tview.Primitive) {})
+	s.programModal.InputHandler()(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0), func(tuivory.Primitive) {})
 	if !store.Exists() {
 		t.Fatal("cancel reset deleted passwords")
 	}
-	s.vaultForm.GetButton(3).InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(tview.Primitive) {})
-	s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyLeft, 0, 0), func(tview.Primitive) {})
-	s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(tview.Primitive) {})
+	s.vaultForm.GetButton(3).InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(tuivory.Primitive) {})
+	s.programModal.InputHandler()(tuivory.NewEventKey(tuivory.KeyLeft, 0, 0), func(tuivory.Primitive) {})
+	s.programModal.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(tuivory.Primitive) {})
 	path := credentials.Path(s.prefsPath, settings.ConnectionsPath(s.prefsPath))
 	if _, err = os.Stat(path); !os.IsNotExist(err) {
 		t.Fatal("reset did not remove passwords", err)
@@ -230,19 +229,19 @@ func TestMasterHelpPreservesInputWithoutDisplayingIt(t *testing.T) {
 	if s.masterForm == nil {
 		t.Fatal("master form missing")
 	}
-	s.masterForm.GetFormItem(1).(*tview.InputField).SetText("secret passphrase not for help")
-	s.key(tcell.NewEventKey(tcell.KeyF1, 0, 0))
+	s.masterForm.GetFormItem(1).(*tuivory.InputField).SetText("secret passphrase not for help")
+	s.key(tuivory.NewEventKey(tuivory.KeyF1, 0, 0))
 	if page, _ := s.pages.GetFrontPage(); page != "help" {
 		t.Fatal("F1 did not open help")
 	}
 	if strings.Contains(s.mainHelp(), "secret passphrase not for help") {
 		t.Fatal("master leaked into help")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if page, _ := s.pages.GetFrontPage(); page != "master" {
 		t.Fatal("help did not restore master form")
 	}
-	if s.masterForm.GetFormItem(1).(*tview.InputField).GetText() != "secret passphrase not for help" {
+	if s.masterForm.GetFormItem(1).(*tuivory.InputField).GetText() != "secret passphrase not for help" {
 		t.Fatal("help discarded input")
 	}
 	s.masterCancel()
@@ -279,9 +278,9 @@ func TestForgottenMasterAllowsManualDatabaseLogin(t *testing.T) {
 	if s.masterForm == nil {
 		t.Fatal("saved profile did not request unlock")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
-	s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).SetText("manually-entered-db-password")
-	s.key(tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModCtrl))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
+	s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).SetText("manually-entered-db-password")
+	s.key(tuivory.NewEventKey(tuivory.KeyEnter, 0, tuivory.ModCtrl))
 	select {
 	case j := <-s.jobs:
 		if j.action != "connect" || j.config.Password != "manually-entered-db-password" || j.config.User != "scott" {

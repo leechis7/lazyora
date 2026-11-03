@@ -1,20 +1,19 @@
 package ui
 
 import (
+	"lazyora/internal/settings"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/settings"
+	"github.com/leechis7/tuivory/go"
 )
 
 func fillConnection(s *screen, alias, mode string) {
 	for i, value := range map[int]string{connectionHost: "db.example", connectionPort: "1522", connectionUser: "scott", connectionPassword: "secret-only-in-memory", connectionName: "ORCL", connectionAlias: alias} {
-		s.connectForm.GetFormItem(i).(*tview.InputField).SetText(value)
+		s.connectForm.GetFormItem(i).(*tuivory.InputField).SetText(value)
 	}
 	index := 0
 	if mode == "sid" {
@@ -27,7 +26,7 @@ func TestConnectionProfilesPersistUpdateAndClearPassword(t *testing.T) {
 	s := shortcutScreen(t)
 	s.connectionForm()
 	fillConnection(s, " 개발 DB ", "sid")
-	s.key(tcell.NewEventKey(tcell.KeyCtrlS, 0, tcell.ModCtrl))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlS, 0, tuivory.ModCtrl))
 	if len(s.jobs) != 0 {
 		t.Fatal("saving a profile attempted a database connection")
 	}
@@ -44,17 +43,17 @@ func TestConnectionProfilesPersistUpdateAndClearPassword(t *testing.T) {
 	if runtime.GOOS != "windows" && info.Mode().Perm() != 0600 {
 		t.Fatalf("connection file permissions: %v", info.Mode())
 	}
-	if s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).GetText() != "secret-only-in-memory" {
+	if s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).GetText() != "secret-only-in-memory" {
 		t.Fatal("saving discarded the password needed for connecting")
 	}
-	s.connectForm.GetFormItem(connectionHost).(*tview.InputField).SetText("updated.example")
-	s.key(tcell.NewEventKey(tcell.KeyRune, 's', tcell.ModAlt))
+	s.connectForm.GetFormItem(connectionHost).(*tuivory.InputField).SetText("updated.example")
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 's', tuivory.ModAlt))
 	profiles, _ = settings.LoadConnections(path)
 	if len(profiles) != 1 || profiles[0].Host != "updated.example" {
 		t.Fatal("saving the same alias did not update the profile")
 	}
 	fillConnection(s, "운영 DB", "service")
-	s.connectForm.GetButton(2).InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone), func(tview.Primitive) {})
+	s.connectForm.GetButton(2).InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, tuivory.ModNone), func(tuivory.Primitive) {})
 	profiles, _ = settings.LoadConnections(path)
 	if len(profiles) != 2 {
 		t.Fatal("second alias did not create another profile")
@@ -65,22 +64,22 @@ func TestConnectionProfilesPersistUpdateAndClearPassword(t *testing.T) {
 	t.Setenv("LAZYORA_PASSWORD", "environment-secret")
 	s.connectionForm()
 	s.connectProfiles.GetFormItem(0).(*choiceField).SetCurrentOption(1)
-	if s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).GetText() != "" || s.connectForm.GetFormItem(connectionHost).(*tview.InputField).GetText() != "updated.example" {
+	if s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).GetText() != "" || s.connectForm.GetFormItem(connectionHost).(*tuivory.InputField).GetText() != "updated.example" {
 		t.Fatal("saved profile was not restored or password was reused")
 	}
 	index, _ := s.connectForm.GetFormItem(connectionMode).(*choiceField).GetCurrentOption()
 	if index != 1 {
 		t.Fatal("saved SID mode was not restored")
 	}
-	s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).SetText("another-secret")
+	s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).SetText("another-secret")
 	s.settingsForm()
 	s.prefsForm.GetFormItem(0).(*choiceField).SetCurrentOption(1)
 	s.savePrefs()
-	if s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).GetText() != "another-secret" {
+	if s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).GetText() != "another-secret" {
 		t.Fatal("language change discarded connection inputs")
 	}
 	s.connectProfiles.GetFormItem(0).(*choiceField).SetCurrentOption(2)
-	if s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).GetText() != "" {
+	if s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).GetText() != "" {
 		t.Fatal("switching aliases reused a password")
 	}
 	index, _ = s.connectForm.GetFormItem(connectionMode).(*choiceField).GetCurrentOption()
@@ -101,7 +100,7 @@ func TestConnectionProfileSaveFailuresKeepInputsAndFile(t *testing.T) {
 	s.saveConnection()
 	path := settings.ConnectionsPath(s.prefsPath)
 	before, _ := os.ReadFile(path)
-	s.connectForm.GetFormItem(connectionPort).(*tview.InputField).SetText("0")
+	s.connectForm.GetFormItem(connectionPort).(*tuivory.InputField).SetText("0")
 	s.saveConnection()
 	after, _ := os.ReadFile(path)
 	if string(before) != string(after) {
@@ -118,7 +117,7 @@ func TestConnectionProfileSaveFailuresKeepInputsAndFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	s.saveConnection()
-	if !strings.Contains(s.connectForm.GetTitle(), "Could not save") || s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).GetText() != "secret-only-in-memory" {
+	if !strings.Contains(s.connectForm.GetTitle(), "Could not save") || s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).GetText() != "secret-only-in-memory" {
 		t.Fatal("write failure was not reported or discarded inputs")
 	}
 	s.closeConnection()
@@ -145,7 +144,7 @@ func TestConnectionProfileSaveFailuresKeepInputsAndFile(t *testing.T) {
 	s.connectionForm()
 	fillConnection(s, "dev", "service")
 	s.saveConnection()
-	if s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).GetText() != "secret-only-in-memory" {
+	if s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).GetText() != "secret-only-in-memory" {
 		t.Fatal("save error discarded inputs")
 	}
 	if page, _ := s.pages.GetFrontPage(); page != "connect" {
@@ -160,10 +159,10 @@ func TestConnectionProfilePathNeverOverwritesPreferences(t *testing.T) {
 	}
 }
 
-func connectionKey(s *screen, key tcell.Key) {
-	event := s.key(tcell.NewEventKey(key, 0, tcell.ModNone))
+func connectionKey(s *screen, key tuivory.Key) {
+	event := s.key(tuivory.NewEventKey(key, 0, tuivory.ModNone))
 	if event != nil {
-		s.app.GetFocus().InputHandler()(event, func(p tview.Primitive) { s.app.SetFocus(p) })
+		s.app.GetFocus().InputHandler()(event, func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	}
 }
 
@@ -176,33 +175,33 @@ func TestConnectionSectionsAndTabCycle(t *testing.T) {
 	if s.connectProfiles.GetFormItemCount() != 1 || s.connectForm.GetFormItemCount() != 9 {
 		t.Fatal("profile picker not separate from editable fields")
 	}
-	connectionKey(s, tcell.KeyBacktab)
+	connectionKey(s, tuivory.KeyBacktab)
 	if !s.connectProfiles.HasFocus() {
 		t.Fatal("Shift+Tab from alias did not reach profiles")
 	}
-	connectionKey(s, tcell.KeyTab)
+	connectionKey(s, tuivory.KeyTab)
 	if !s.connectForm.GetFormItem(connectionAlias).HasFocus() {
 		t.Fatal("Tab from profiles did not reach alias")
 	}
 	for i := 0; i < s.connectForm.GetFormItemCount()+s.connectForm.GetButtonCount(); i++ {
-		connectionKey(s, tcell.KeyTab)
+		connectionKey(s, tuivory.KeyTab)
 	}
 	if !s.connectProfiles.HasFocus() {
 		t.Fatal("forward cycle did not include profiles")
 	}
-	connectionKey(s, tcell.KeyBacktab)
+	connectionKey(s, tuivory.KeyBacktab)
 	if !s.connectForm.GetButton(3).HasFocus() {
 		t.Fatal("reverse cycle missed final button")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'r', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'r', tuivory.ModAlt))
 	if !s.connectProfiles.HasFocus() {
 		t.Fatal("Alt+R missed profiles")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'a', tuivory.ModAlt))
 	if !s.connectForm.GetFormItem(connectionAlias).HasFocus() {
 		t.Fatal("Alt+A missed alias")
 	}
-	terminal := tcell.NewSimulationScreen("UTF-8")
+	terminal := tuivory.NewSimulationScreen("UTF-8")
 	if err := terminal.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -234,7 +233,7 @@ func TestNewConnectionClearsSelectedProfileAndPassword(t *testing.T) {
 	s.saveConnection()
 	s.connectProfiles.GetFormItem(0).(*choiceField).SetCurrentOption(0)
 	for index, want := range map[int]string{connectionAlias: "", connectionHost: "default.example", connectionPort: "1521", connectionUser: "default_user", connectionName: "DEFAULT_SERVICE", connectionPassword: ""} {
-		if got := s.connectForm.GetFormItem(index).(*tview.InputField).GetText(); got != want {
+		if got := s.connectForm.GetFormItem(index).(*tuivory.InputField).GetText(); got != want {
 			t.Fatalf("field %d: %q want %q", index, got, want)
 		}
 	}

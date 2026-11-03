@@ -1,9 +1,9 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"lazyora/internal/oracle"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func (s *screen) confirmSQL(text string, risk oracle.SQLRisk) {
@@ -27,17 +27,17 @@ func (s *screen) confirmActionPreview(text, message, title, button string, submi
 	s.styleBox(preview.Box)
 	preview.SetTextColor(s.colors().text)
 	s.sqlConfirmText = preview
-	execute := s.clickable(tview.NewButton(button).SetSelectedFunc(func() {
+	execute := s.clickable(tuivory.NewWidgetButton(button).SetSelectedFunc(func() {
 		if s.busy {
 			return
 		}
 		s.closeSQLConfirmation()
 		submit() // Submit the reviewed snapshot, never a later editor value.
 	}))
-	cancel := s.clickable(tview.NewButton(s.tr("cancel")).SetSelectedFunc(s.closeSQLConfirmation))
+	cancel := s.clickable(tuivory.NewWidgetButton(s.tr("cancel")).SetSelectedFunc(s.closeSQLConfirmation))
 	buttons := s.newFlex().AddItem(execute, 0, 1, false).AddItem(cancel, 0, 1, true)
 	s.textSurface(reason, surfacePanel)
-	content := s.newFlex().SetDirection(tview.FlexRow).AddItem(reason, 8, 0, false).AddItem(preview, 0, 1, false).AddItem(buttons, 1, 0, true)
+	content := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(reason, 8, 0, false).AddItem(preview, 0, 1, false).AddItem(buttons, 1, 0, true)
 	root := s.formPopup(content, 104, 32, func(w, h int) {
 		content.ResizeItem(reason, min(8, max(3, h/3)), 0)
 	})
@@ -54,17 +54,17 @@ func (s *screen) closeSQLConfirmation() {
 	}
 	s.sqlConfirmFocus = nil
 }
-func (s *screen) sqlConfirmationKey(event *tcell.EventKey) *tcell.EventKey {
+func (s *screen) sqlConfirmationKey(event *tuivory.EventKey) *tuivory.EventKey {
 	switch event.Key() {
-	case tcell.KeyCtrlC:
+	case tuivory.KeyCtrlC:
 		return nil
-	case tcell.KeyEscape:
+	case tuivory.KeyEscape:
 		s.closeSQLConfirmation()
 		return nil
-	case tcell.KeyF1:
+	case tuivory.KeyF1:
 		s.showHelp()
 		return nil
-	case tcell.KeyTab, tcell.KeyBacktab:
+	case tuivory.KeyTab, tuivory.KeyBacktab:
 		s.dialogTab(event, s.sqlConfirmText)
 		return nil
 	}

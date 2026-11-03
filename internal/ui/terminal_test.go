@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestMissingTermFallsBackWithoutChangingEnvironment(t *testing.T) {
@@ -46,7 +46,7 @@ func TestMissingTermFallsBackWithoutChangingEnvironment(t *testing.T) {
 }
 
 type recordedTTY struct {
-	tcell.Tty
+	tuivory.Tty
 	bytes.Buffer
 	stopped bool
 }
@@ -109,14 +109,14 @@ func TestTerminalAvoidsWin32KeyReleaseReportsWithoutDisablingModifiedKeys(t *tes
 func TestEightColorMouseCapabilityDependsOnTerminalProtocol(t *testing.T) {
 	for _, name := range []string{"ansi", "xterm"} {
 		t.Run(name, func(t *testing.T) {
-			info, err := tcell.LookupTerminfo(name)
+			info, err := tuivory.LookupTerminfo(name)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if info.Colors != 8 {
 				t.Fatalf("%s no longer describes an 8-color terminal", name)
 			}
-			screen, err := tcell.NewTerminfoScreenFromTtyTerminfo(&recordedTTY{}, info)
+			screen, err := tuivory.NewTerminfoScreenFromTtyTerminfo(&recordedTTY{}, info)
 			if err != nil {
 				t.Fatal(err)
 			}

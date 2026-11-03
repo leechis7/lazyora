@@ -1,16 +1,16 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"testing"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestFormButtonArrowsWrapWithoutActivatingOrLeavingRow(t *testing.T) {
 	for _, page := range []string{"connect", "settings", "search", "describe"} {
 		t.Run(page, func(t *testing.T) {
 			s := shortcutScreen(t)
-			var form *tview.Form
+			var form *tuivory.WidgetForm
 			switch page {
 			case "connect":
 				s.connectionForm()
@@ -26,15 +26,15 @@ func TestFormButtonArrowsWrapWithoutActivatingOrLeavingRow(t *testing.T) {
 				form = s.describeForm
 			}
 			focusForm(s, form, form.GetFormItemCount())
-			s.key(tcell.NewEventKey(tcell.KeyLeft, 0, 0))
+			s.key(tuivory.NewEventKey(tuivory.KeyLeft, 0, 0))
 			if !form.GetButton(form.GetButtonCount() - 1).HasFocus() {
 				t.Fatal("Left did not wrap to last button")
 			}
-			s.key(tcell.NewEventKey(tcell.KeyRight, 0, 0))
+			s.key(tuivory.NewEventKey(tuivory.KeyRight, 0, 0))
 			if !form.GetButton(0).HasFocus() {
 				t.Fatal("Right did not wrap to first button")
 			}
-			s.key(tcell.NewEventKey(tcell.KeyRight, 0, 0))
+			s.key(tuivory.NewEventKey(tuivory.KeyRight, 0, 0))
 			if !form.GetButton(1).HasFocus() {
 				t.Fatal("Right did not select next button")
 			}
@@ -42,7 +42,7 @@ func TestFormButtonArrowsWrapWithoutActivatingOrLeavingRow(t *testing.T) {
 				t.Fatal("arrows activated a button")
 			}
 			focusForm(s, form, 0)
-			event := tcell.NewEventKey(tcell.KeyLeft, 0, 0)
+			event := tuivory.NewEventKey(tuivory.KeyLeft, 0, 0)
 			if s.key(event) == nil || !form.GetFormItem(0).HasFocus() {
 				t.Fatal("button navigation stole input-field arrows")
 			}
@@ -56,12 +56,12 @@ func TestButtonArrowsSkipDisabledButtonsAndEnterActivatesSelected(t *testing.T) 
 	form := s.searchForm
 	form.GetButton(1).SetDisabled(true)
 	focusForm(s, form, form.GetFormItemCount())
-	s.key(tcell.NewEventKey(tcell.KeyRight, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyRight, 0, 0))
 	if !form.GetButton(2).HasFocus() {
 		t.Fatal("disabled button remained in arrow cycle")
 	}
-	event := s.key(tcell.NewEventKey(tcell.KeyEnter, 0, 0))
-	form.GetButton(2).InputHandler()(event, func(p tview.Primitive) { s.app.SetFocus(p) })
+	event := s.key(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
+	form.GetButton(2).InputHandler()(event, func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	if s.searchForm != nil || !s.editor.HasFocus() {
 		t.Fatal("Enter did not activate selected Close button")
 	}
@@ -69,24 +69,24 @@ func TestButtonArrowsSkipDisabledButtonsAndEnterActivatesSelected(t *testing.T) 
 
 func TestDetailButtonsAreReachableByTabAndArrows(t *testing.T) {
 	s := programScreen(t)
-	s.key(tcell.NewEventKey(tcell.KeyTab, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyTab, 0, 0))
 	if !s.sourceDiagnostics.HasFocus() {
 		t.Fatal("Tab skipped compiler diagnostics")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyTab, 0, 0))
-	first, ok := s.app.GetFocus().(*tview.Button)
+	s.key(tuivory.NewEventKey(tuivory.KeyTab, 0, 0))
+	first, ok := s.app.GetFocus().(*tuivory.WidgetButton)
 	if !ok {
 		t.Fatal("Tab did not reach source buttons")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyRight, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyRight, 0, 0))
 	if s.app.GetFocus() == first {
 		t.Fatal("Right did not move between source buttons")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyLeft, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyLeft, 0, 0))
 	if s.app.GetFocus() != first {
 		t.Fatal("Left did not return to first source button")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyBacktab, 0, tcell.ModShift))
+	s.key(tuivory.NewEventKey(tuivory.KeyBacktab, 0, tuivory.ModShift))
 	if !s.sourceDiagnostics.HasFocus() {
 		t.Fatal("Shift+Tab did not leave buttons for diagnostics")
 	}
@@ -96,7 +96,7 @@ func TestDetailButtonsAreReachableByTabAndArrows(t *testing.T) {
 }
 
 func TestSelectedButtonHasDistinctRenderedStyleAndModalArrowsWork(t *testing.T) {
-	terminal := tcell.NewSimulationScreen("UTF-8")
+	terminal := tuivory.NewSimulationScreen("UTF-8")
 	if err := terminal.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -107,7 +107,7 @@ func TestSelectedButtonHasDistinctRenderedStyleAndModalArrowsWork(t *testing.T) 
 	focusForm(s, s.prefsForm, s.prefsForm.GetFormItemCount())
 	s.prefsForm.SetRect(0, 0, 100, 30)
 	s.prefsForm.Draw(terminal)
-	styleAt := func(button *tview.Button) tcell.Style {
+	styleAt := func(button *tuivory.WidgetButton) tuivory.Style {
 		x, y, w, _ := button.GetRect()
 		_, _, style, _ := terminal.GetContent(x+w/2, y)
 		return style
@@ -116,22 +116,22 @@ func TestSelectedButtonHasDistinctRenderedStyleAndModalArrowsWork(t *testing.T) 
 	normal := styleAt(s.prefsForm.GetButton(1))
 	fg, bg, attrs := selected.Decompose()
 	_, otherBG, _ := normal.Decompose()
-	if fg != s.tokens().selectionFG || bg != s.tokens().selection || bg == otherBG || attrs&tcell.AttrUnderline == 0 {
+	if fg != s.tokens().selectionFG || bg != s.tokens().selection || bg == otherBG || attrs&tuivory.AttrUnderline == 0 {
 		t.Fatal("selected button lacks the contrasting focus palette and underline")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyRight, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyRight, 0, 0))
 	s.prefsForm.Draw(terminal)
 	if styleAt(s.prefsForm.GetButton(1)) != selected || styleAt(s.prefsForm.GetButton(0)) != normal {
 		t.Fatal("selection styling did not follow focus")
 	}
 	s.closeSettings()
 	s.showProgramConfirm("Confirm", func() { t.Fatal("arrow activated confirmation") })
-	modalKey(s, tcell.KeyLeft)
-	if focus, ok := s.app.GetFocus().(*tview.Button); !ok || focus.GetLabel() != s.tr("proceed") {
+	modalKey(s, tuivory.KeyLeft)
+	if focus, ok := s.app.GetFocus().(*tuivory.WidgetButton); !ok || focus.GetLabel() != s.tr("proceed") {
 		t.Fatal("modal Left did not select Proceed")
 	}
-	modalKey(s, tcell.KeyRight)
-	if focus, ok := s.app.GetFocus().(*tview.Button); !ok || focus.GetLabel() != s.tr("cancel") {
+	modalKey(s, tuivory.KeyRight)
+	if focus, ok := s.app.GetFocus().(*tuivory.WidgetButton); !ok || focus.GetLabel() != s.tr("cancel") {
 		t.Fatal("modal Right did not select Cancel")
 	}
 }

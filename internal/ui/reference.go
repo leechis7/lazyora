@@ -2,26 +2,24 @@ package ui
 
 import (
 	"fmt"
+	resources "lazyora"
+	"lazyora/internal/appinfo"
 	"os"
 	"regexp"
 	"runtime"
 	"strings"
 	"unicode"
 
-	resources "lazyora"
-	"lazyora/internal/appinfo"
-
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 )
 
 type referenceArticle struct{ title, body string }
 type referenceView struct {
 	kind     string
 	articles []referenceArticle
-	text     *tview.TextView
-	topics   *tview.List
-	focus    tview.Primitive
+	text     *tuivory.WidgetTextView
+	topics   *tuivory.WidgetList
+	focus    tuivory.Primitive
 	copy     func() string
 }
 
@@ -55,7 +53,7 @@ func referencePlain(text string) string {
 
 func (s *screen) referenceContent(article referenceArticle) string {
 	if s.reference != nil && (s.reference.kind == "diagnostic_info" || s.reference.kind == "issue_report") {
-		return s.helpSubheading(article.title) + tview.Escape(article.body)
+		return s.helpSubheading(article.title) + tuivory.Escape(article.body)
 	}
 	var out strings.Builder
 	out.WriteString(s.helpSubheading(referencePlain(article.title)))
@@ -77,7 +75,7 @@ func (s *screen) referenceContent(article referenceArticle) string {
 			line = referencePlain(line)
 		}
 		// Markdown and environment values are data, never tview color tags.
-		out.WriteString(tview.Escape(line))
+		out.WriteString(tuivory.Escape(line))
 		out.WriteByte('\n')
 	}
 	return out.String()
@@ -178,13 +176,13 @@ func (s *screen) showReference(kind string, articles []referenceArticle, copyCon
 	s.styleBox(text.Box)
 	text.SetBackgroundColor(s.colors().background)
 	r.text = text
-	topics := tview.NewList().ShowSecondaryText(false).SetMainTextColor(s.colors().text).SetMainTextStyle(tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().surface)).SetHighlightFullLine(true).SetSelectedFocusOnly(false).SetSelectedStyle(s.focusStyle().Underline(false))
+	topics := tuivory.NewWidgetList().ShowSecondaryText(false).SetMainTextColor(s.colors().text).SetMainTextStyle(tuivory.StyleDefault.Foreground(s.colors().text).Background(s.colors().surface)).SetHighlightFullLine(true).SetSelectedFocusOnly(false).SetSelectedStyle(s.focusStyle().Underline(false))
 	topics.SetBorder(true).SetTitle(s.tr("reference_topics"))
 	s.styleList(topics)
 	topics.SetBackgroundColor(s.colors().surface)
 	r.topics = topics
 	for _, article := range articles {
-		topics.AddItem(tview.Escape(article.title), "", 0, nil)
+		topics.AddItem(tuivory.Escape(article.title), "", 0, nil)
 	}
 	topics.SetChangedFunc(func(index int, _, _ string, _ rune) {
 		text.SetText(s.referenceContent(articles[index])).ScrollToBeginning()
@@ -194,7 +192,7 @@ func (s *screen) showReference(kind string, articles []referenceArticle, copyCon
 	if len(articles) == 1 {
 		body.RemoveItem(topics)
 	}
-	body.SetDrawFunc(func(_ tcell.Screen, x, y, w, h int) (int, int, int, int) {
+	body.SetDrawFunc(func(_ tuivory.Screen, x, y, w, h int) (int, int, int, int) {
 		if h < 16 {
 			text.SetBorderPadding(0, 0, 1, 1)
 		} else {
@@ -202,23 +200,23 @@ func (s *screen) showReference(kind string, articles []referenceArticle, copyCon
 		}
 		if len(articles) > 1 {
 			if w < 76 {
-				body.SetDirection(tview.FlexRow).ResizeItem(topics, min(5, max(3, h/4)), 0)
+				body.SetDirection(tuivory.FlexRow).ResizeItem(topics, min(5, max(3, h/4)), 0)
 			} else {
-				body.SetDirection(tview.FlexColumn).ResizeItem(topics, 28, 0)
+				body.SetDirection(tuivory.FlexColumn).ResizeItem(topics, 28, 0)
 			}
 		}
 		return x, y, w, h
 	})
 	buttons := s.newFlex()
 	add := func(label string, selected func()) {
-		buttons.AddItem(s.clickable(tview.NewButton(label).SetSelectedFunc(selected).SetStyle(s.buttonStyle()).SetActivatedStyle(s.buttonFocusStyle())), 0, 1, false)
+		buttons.AddItem(s.clickable(tuivory.NewWidgetButton(label).SetSelectedFunc(selected).SetStyle(s.buttonStyle()).SetActivatedStyle(s.buttonFocusStyle())), 0, 1, false)
 	}
 	add(s.tr("copy"), s.copyReference)
 	if kind == "issue_report" {
 		add(s.tr("copy_url"), func() { s.sendClipboard(appinfo.ProjectURL + "/issues") })
 	}
 	add(s.tr("close"), s.closeReference)
-	root := s.newFlex().SetDirection(tview.FlexRow).AddItem(body, 0, 1, true).AddItem(buttons, 1, 0, false)
+	root := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(body, 0, 1, true).AddItem(buttons, 1, 0, false)
 	text.SetText(s.referenceContent(articles[0]))
 	s.pages.AddPage("reference", &formPopupLayer{Flex: root, content: root}, true, true)
 	if len(articles) > 1 {
@@ -253,23 +251,23 @@ func (s *screen) closeReference() {
 	}
 }
 
-func (s *screen) referenceKey(e *tcell.EventKey) *tcell.EventKey {
+func (s *screen) referenceKey(e *tuivory.EventKey) *tuivory.EventKey {
 	if len(s.reference.articles) > 1 && s.listDetailArrow(e, s.reference.topics, s.reference.text) {
 		return nil
 	}
 	switch e.Key() {
-	case tcell.KeyEscape:
+	case tuivory.KeyEscape:
 		s.closeReference()
 		return nil
-	case tcell.KeyF1:
+	case tuivory.KeyF1:
 		s.showHelp()
 		return nil
-	case tcell.KeyCtrlC:
+	case tuivory.KeyCtrlC:
 		s.copyReference()
 		return nil
-	case tcell.KeyCtrlQ:
+	case tuivory.KeyCtrlQ:
 		return nil
-	case tcell.KeyTab, tcell.KeyBacktab:
+	case tuivory.KeyTab, tuivory.KeyBacktab:
 		if len(s.reference.articles) > 1 {
 			s.dialogTab(e, s.reference.topics, s.reference.text)
 		} else {
@@ -277,7 +275,7 @@ func (s *screen) referenceKey(e *tcell.EventKey) *tcell.EventKey {
 		}
 		return nil
 	}
-	if e.Key() == tcell.KeyRune && e.Modifiers()&tcell.ModAlt != 0 && unicode.ToLower(e.Rune()) == 'c' {
+	if e.Key() == tuivory.KeyRune && e.Modifiers()&tuivory.ModAlt != 0 && unicode.ToLower(e.Rune()) == 'c' {
 		s.copyReference()
 		return nil
 	}

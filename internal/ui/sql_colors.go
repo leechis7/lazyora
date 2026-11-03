@@ -1,26 +1,23 @@
 package ui
 
 import (
-	"github.com/leechis7/tuivory/go"
 	"sort"
-	"strings"
-	"unicode"
-	"unicode/utf8"
+	"sync"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 )
 
-type sqlColorKind uint8
+// Keep the existing display adapter's seven roles; the SDK owns classification.
+type sqlColorKind = tuivory.SyntaxKind
 
 const (
-	sqlKeyword sqlColorKind = iota + 1
-	sqlFunction
-	sqlType
-	sqlString
-	sqlNumber
-	sqlComment
-	sqlBind
+	sqlKeyword  = tuivory.SyntaxKeyword
+	sqlFunction = tuivory.SyntaxFunction
+	sqlType     = tuivory.SyntaxType
+	sqlString   = tuivory.SyntaxString
+	sqlNumber   = tuivory.SyntaxNumber
+	sqlComment  = tuivory.SyntaxComment
+	sqlBind     = tuivory.SyntaxParameter
 )
 
 type sqlColorSpan struct {
@@ -28,175 +25,46 @@ type sqlColorSpan struct {
 	kind       sqlColorKind
 }
 
-var sqlWords = func() map[string]sqlColorKind {
-	words := make(map[string]sqlColorKind)
-	for kind, list := range map[sqlColorKind]string{
-		sqlKeyword:  "SELECT FROM WHERE AS DISTINCT ALL WITH RECURSIVE UNION INTERSECT MINUS JOIN INNER LEFT RIGHT FULL OUTER CROSS ON USING AND OR NOT IN IS NULL LIKE BETWEEN EXISTS ESCAPE GROUP BY HAVING ORDER ASC DESC NULLS FIRST LAST FETCH OFFSET NEXT ROW ROWS ONLY FOR UPDATE NOWAIT SKIP LOCKED INSERT INTO VALUES DELETE MERGE MATCHED WHEN THEN ELSE END CASE SET RETURNING CREATE REPLACE ALTER DROP TRUNCATE TABLE VIEW MATERIALIZED INDEX SEQUENCE SYNONYM TRIGGER TYPE BODY PACKAGE PROCEDURE FUNCTION DECLARE BEGIN EXCEPTION WHEN OTHERS RAISE RETURN IF ELSIF LOOP WHILE EXIT CONTINUE CURSOR OPEN CLOSE BULK COLLECT LIMIT EXECUTE IMMEDIATE COMMIT ROLLBACK SAVEPOINT GRANT REVOKE TO CONNECT START PRIOR NOCYCLE OVER PARTITION RANGE UNBOUNDED PRECEDING FOLLOWING CURRENT ROWTYPE CONSTANT DEFAULT IN OUT NOCOPY AUTHID DEFINER CURRENT_USER PRAGMA EXCEPTION_INIT AUTONOMOUS_TRANSACTION TRUE FALSE SQL SQLCODE SQLERRM PIVOT UNPIVOT MODEL CONSTRAINT PRIMARY KEY FOREIGN REFERENCES UNIQUE CHECK ENABLE DISABLE ADD MODIFY COMMENT ANALYZE EXPLAIN PLAN LEVEL ROWNUM",
-		sqlFunction: "SYSDATE SYSTIMESTAMP CURRENT_DATE CURRENT_TIMESTAMP SESSIONTIMEZONE DBTIMEZONE USER SYS_CONTEXT COUNT SUM AVG MIN MAX LISTAGG ROW_NUMBER RANK DENSE_RANK LAG LEAD FIRST_VALUE LAST_VALUE NVL NVL2 NULLIF COALESCE DECODE TO_CHAR TO_DATE TO_TIMESTAMP TO_TIMESTAMP_TZ TO_NUMBER CAST CONVERT TRUNC ROUND CEIL FLOOR ABS MOD POWER SQRT SUBSTR INSTR LENGTH LENGTHB UPPER LOWER INITCAP TRIM LTRIM RTRIM LPAD RPAD TRANSLATE CONCAT REGEXP_LIKE REGEXP_REPLACE REGEXP_SUBSTR REGEXP_INSTR REGEXP_COUNT ADD_MONTHS MONTHS_BETWEEN LAST_DAY NEXT_DAY EXTRACT CHR ASCII HEXTORAW RAWTOHEX XMLTYPE JSON_VALUE JSON_QUERY JSON_TABLE DBMS_OUTPUT PUT_LINE",
-		sqlType:     "NUMBER INTEGER INT SMALLINT NUMERIC DECIMAL FLOAT BINARY_FLOAT BINARY_DOUBLE PLS_INTEGER BINARY_INTEGER SIMPLE_INTEGER BOOLEAN CHAR NCHAR VARCHAR VARCHAR2 NVARCHAR2 LONG RAW DATE TIMESTAMP INTERVAL YEAR MONTH DAY HOUR MINUTE SECOND TIME ZONE CLOB NCLOB BLOB BFILE ROWID UROWID RECORD REF VARRAY",
-	} {
-		for _, word := range strings.Fields(list) {
-			words[word] = kind
-		}
-	}
-	return words
-}()
+// Initialize optional SQL vocabulary only when a SQL editor needs highlighting.
+var oracleHighlight = sync.OnceValue(tuivory.NewSQLAnalyzer)
 
-func sqlWordKind(word string) sqlColorKind {
-	var upper [64]byte
-	if len(word) > len(upper) {
-		return 0
-	}
-	for i := range word {
-		c := word[i]
-		if c >= utf8.RuneSelf {
-			return 0 // Unicode identifiers remain literal identifiers.
-		}
-		if c >= 'a' && c <= 'z' {
-			c -= 'a' - 'A'
-		}
-		upper[i] = c
-	}
-	return sqlWords[string(upper[:len(word)])]
-}
-
-func sqlIdent(r rune) bool {
-	return unicode.IsLetter(r) || unicode.IsDigit(r) || strings.ContainsRune("_$#", r)
-}
-func sqlDigit(c byte) bool { return c >= '0' && c <= '9' }
-
-func sqlQuoteEnd(text string, start int, quote byte) int {
-	for i := start + 1; i < len(text); i++ {
-		if text[i] == quote {
-			if i+1 < len(text) && text[i+1] == quote {
-				i++
-				continue
-			}
-			return i + 1
-		}
-	}
-	return len(text) // Incomplete literals stay colored while being typed.
-}
-
-// colorSQL is a tolerant display lexer, never an SQL validator or rewriter.
-// Every emitted range is an original UTF-8 byte range. Each byte is scanned a
-// constant number of times, including multiline comments and Oracle q quotes.
+// colorSQL adapts public semantic byte ranges to the retained editor's style
+// callback. Execution parsing and dangerous-SQL decisions never use this result.
 func colorSQL(text string, spans []sqlColorSpan) []sqlColorSpan {
 	spans = spans[:0]
-	for i := 0; i < len(text); {
-		start := i
-		kind := sqlColorKind(0)
-		switch {
-		case strings.HasPrefix(text[i:], "--"):
-			i = len(text)
-			if n := strings.IndexByte(text[start:], '\n'); n >= 0 {
-				i = start + n
-			}
+	analysis, err := oracleHighlight().AnalyzeSyntax(text, tuivory.SyntaxRequest{Language: "sql", Dialect: "oracle"})
+	if err != nil {
+		return spans
+	} // Render plain text instead of stale colors.
+	for _, token := range analysis.Tokens {
+		var kind sqlColorKind
+		switch tuivory.SyntaxRoleStyle(token.Role) {
+		case "syntax.keyword":
+			kind = sqlKeyword
+		case "syntax.function":
+			kind = sqlFunction
+		case "syntax.type":
+			kind = sqlType
+		case "syntax.string":
+			kind = sqlString
+		case "syntax.number":
+			kind = sqlNumber
+		case "syntax.comment":
 			kind = sqlComment
-		case strings.HasPrefix(text[i:], "/*"):
-			i = len(text)
-			if n := strings.Index(text[start+2:], "*/"); n >= 0 {
-				i = start + 2 + n + 2
-			}
-			kind = sqlComment
+		case "syntax.parameter":
+			kind = sqlBind
 		default:
-			q := i
-			if (text[i] == 'n' || text[i] == 'N') && i+1 < len(text) && (text[i+1] == 'q' || text[i+1] == 'Q') {
-				q++
-			}
-			switch {
-			case q+2 < len(text) && (text[q] == 'q' || text[q] == 'Q') && text[q+1] == '\'':
-				delim, size := utf8.DecodeRuneInString(text[q+2:])
-				switch delim {
-				case '[':
-					delim = ']'
-				case '{':
-					delim = '}'
-				case '(':
-					delim = ')'
-				case '<':
-					delim = '>'
-				}
-				i = len(text)
-				if n := strings.Index(text[q+2+size:], string(delim)+"'"); n >= 0 {
-					i = q + 2 + size + n + len(string(delim)) + 1
-				}
-				kind = sqlString
-			case (text[i] == 'n' || text[i] == 'N') && i+1 < len(text) && text[i+1] == '\'':
-				i, kind = sqlQuoteEnd(text, i+1, '\''), sqlString
-			case text[i] == '\'':
-				i, kind = sqlQuoteEnd(text, i, '\''), sqlString
-			case text[i] == '"':
-				i = sqlQuoteEnd(text, i, '"')
-			case text[i] == ':' && i+1 < len(text) && text[i+1] != '=':
-				i++
-				if text[i] == '"' {
-					i = sqlQuoteEnd(text, i, '"')
-				} else {
-					for i < len(text) {
-						r, size := utf8.DecodeRuneInString(text[i:])
-						if !sqlIdent(r) {
-							break
-						}
-						i += size
-					}
-				}
-				if i > start+1 {
-					kind = sqlBind
-				}
-			case sqlDigit(text[i]) || text[i] == '.' && i+1 < len(text) && sqlDigit(text[i+1]) && (i == 0 || text[i-1] != '.'):
-				for i < len(text) && sqlDigit(text[i]) {
-					i++
-				}
-				if i < len(text) && text[i] == '.' && !(i+1 < len(text) && text[i+1] == '.') {
-					i++
-					for i < len(text) && sqlDigit(text[i]) {
-						i++
-					}
-				}
-				if i < len(text) && (text[i] == 'e' || text[i] == 'E') {
-					end := i + 1
-					if end < len(text) && (text[end] == '+' || text[end] == '-') {
-						end++
-					}
-					digits := end
-					for end < len(text) && sqlDigit(text[end]) {
-						end++
-					}
-					if end > digits {
-						i = end
-					}
-				}
-				if i < len(text) && strings.ContainsRune("fFdD", rune(text[i])) {
-					i++
-				}
-				kind = sqlNumber
-			default:
-				r, size := utf8.DecodeRuneInString(text[i:])
-				i += size
-				if sqlIdent(r) {
-					for i < len(text) {
-						r, size = utf8.DecodeRuneInString(text[i:])
-						if !sqlIdent(r) {
-							break
-						}
-						i += size
-					}
-					kind = sqlWordKind(text[start:i])
-				}
-			}
+			continue
 		}
-		if kind != 0 {
-			spans = append(spans, sqlColorSpan{start, i, kind})
-		}
+		spans = append(spans, sqlColorSpan{token.Start, token.End, kind})
 	}
 	return spans
 }
 
-func (s *screen) colorEditor(editor *tview.TextArea, changed func()) {
+func (s *screen) colorEditor(editor *tuivory.TextArea, changed func()) {
 	dirty := true
 	var spans []sqlColorSpan
-	editor.SetTextStyleFunc(func(offset int, base tcell.Style) tcell.Style {
+	editor.SetTextStyleFunc(func(offset int, base tuivory.Style) tuivory.Style {
 		if dirty {
 			spans = colorSQL(editor.GetText(), spans)
 			dirty = false
@@ -214,6 +82,6 @@ func (s *screen) colorEditor(editor *tview.TextArea, changed func()) {
 	})
 }
 
-func (s *screen) profileSQLStyle(kind sqlColorKind, base tcell.Style) tcell.Style {
+func (s *screen) profileSQLStyle(kind sqlColorKind, base tuivory.Style) tuivory.Style {
 	return s.tuivoryStyles().SyntaxStyle(tuivory.SyntaxKind(kind), base)
 }

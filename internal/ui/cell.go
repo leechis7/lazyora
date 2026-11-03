@@ -3,16 +3,15 @@ package ui
 import (
 	"encoding/hex"
 	"fmt"
+	"lazyora/internal/exportdata"
+	"lazyora/internal/oracle"
+	"lazyora/internal/sqlfile"
 	"os"
 	"strings"
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/exportdata"
-	"lazyora/internal/oracle"
-	"lazyora/internal/sqlfile"
+	"github.com/leechis7/tuivory/go"
 )
 
 func (s *screen) showCellDetail() {
@@ -28,13 +27,13 @@ func (s *screen) showCellDetail() {
 	s.cellInfo = s.newTextView(textHint).SetWrap(true).SetTextColor(s.colors().muted)
 	s.cellInfo.SetBackgroundColor(s.colors().background)
 	s.cellText = s.newTextView().SetWrap(false).SetScrollable(true).SetDynamicColors(false).SetTextColor(s.colors().text)
-	s.cellText.SetBorder(true).SetTitle(fmt.Sprintf("%s · %s", s.tr("cell_detail"), tview.Escape(s.resultHeaders[col])))
+	s.cellText.SetBorder(true).SetTitle(fmt.Sprintf("%s · %s", s.tr("cell_detail"), tuivory.Escape(s.resultHeaders[col])))
 	s.styleBox(s.cellText.Box)
 	name := "cell.txt"
 	if s.cellValue.Type == "RAW" || s.cellValue.Type == "BLOB" {
 		name = "cell.bin"
 	}
-	form := tview.NewForm().AddInputField(s.tr("file_path"), name, 40, nil, nil)
+	form := tuivory.NewWidgetForm().AddInputField(s.tr("file_path"), name, 40, nil, nil)
 	s.cellForm = form
 	form.AddButton(s.tr("save")+" (Ctrl+S)", s.saveCellFile)
 	form.AddButton(s.tr("cell_copy")+" (Ctrl+C)", s.copyCellDetail)
@@ -47,7 +46,7 @@ func (s *screen) showCellDetail() {
 	s.renderCellDetail()
 	form.SetBorder(true)
 	fit := formLayout(form)
-	content := s.newFlex().SetDirection(tview.FlexRow).AddItem(s.cellInfo, 3, 0, false).AddItem(s.cellText, 0, 1, true).AddItem(form, 8, 0, false)
+	content := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(s.cellInfo, 3, 0, false).AddItem(s.cellText, 0, 1, true).AddItem(form, 8, 0, false)
 	root := s.formPopup(content, 104, 32, func(w, h int) {
 		controls := min(8, max(5, h/3))
 		content.ResizeItem(form, controls, 0)
@@ -132,7 +131,7 @@ func (s *screen) saveCellFile() {
 		s.cellInfo.SetText(err.Error())
 		return
 	}
-	path, err := sqlfile.Resolve(s.cellForm.GetFormItem(0).(*tview.InputField).GetText(), directory)
+	path, err := sqlfile.Resolve(s.cellForm.GetFormItem(0).(*tuivory.InputField).GetText(), directory)
 	if err != nil {
 		s.cellInfo.SetText(err.Error())
 		return
@@ -148,7 +147,7 @@ func (s *screen) saveCellFile() {
 		s.submit(job{action: "cell_save", cell: cell, path: path, revision: revision})
 	}
 	if revision.Exists {
-		s.showProgramConfirm(fmt.Sprintf(s.tr("cell_overwrite"), tview.Escape(path)), write)
+		s.showProgramConfirm(fmt.Sprintf(s.tr("cell_overwrite"), tuivory.Escape(path)), write)
 	} else {
 		write()
 	}
@@ -166,12 +165,12 @@ func (s *screen) closeCellDetail() {
 	}
 	s.cellFocus = nil
 }
-func (s *screen) cellKey(event *tcell.EventKey) *tcell.EventKey {
-	if event.Key() == tcell.KeyF1 {
+func (s *screen) cellKey(event *tuivory.EventKey) *tuivory.EventKey {
+	if event.Key() == tuivory.KeyF1 {
 		s.showHelp()
 		return nil
 	}
-	if event.Key() == tcell.KeyEscape {
+	if event.Key() == tuivory.KeyEscape {
 		s.closeCellDetail()
 		return nil
 	}
@@ -182,18 +181,18 @@ func (s *screen) cellKey(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 	}
 	switch event.Key() {
-	case tcell.KeyCtrlS:
+	case tuivory.KeyCtrlS:
 		s.saveCellFile()
 		return nil
-	case tcell.KeyCtrlC:
+	case tuivory.KeyCtrlC:
 		s.copyCellDetail()
 		return nil
-	case tcell.KeyRune:
-		if event.Modifiers()&tcell.ModAlt != 0 && (event.Rune() == 'v' || event.Rune() == 'V') {
+	case tuivory.KeyRune:
+		if event.Modifiers()&tuivory.ModAlt != 0 && (event.Rune() == 'v' || event.Rune() == 'V') {
 			s.expandCellPreview()
 			return nil
 		}
-	case tcell.KeyTab, tcell.KeyBacktab:
+	case tuivory.KeyTab, tuivory.KeyBacktab:
 		index := 0
 		if s.cellForm.GetFormItem(0).HasFocus() {
 			index = 1
@@ -204,7 +203,7 @@ func (s *screen) cellKey(event *tcell.EventKey) *tcell.EventKey {
 			}
 		}
 		step := 1
-		if event.Key() == tcell.KeyBacktab {
+		if event.Key() == tuivory.KeyBacktab {
 			step = s.cellForm.GetButtonCount() + 1
 		}
 		next := (index + step) % (s.cellForm.GetButtonCount() + 2)

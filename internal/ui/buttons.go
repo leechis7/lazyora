@@ -1,22 +1,20 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
 	"github.com/leechis7/tuivory/go"
-	"github.com/rivo/tview"
 )
 
 // A contents list keeps Up/Down for selection. Right enters its detail pane;
 // Left returns from the detail pane without interfering with text inputs.
-func (s *screen) listDetailArrow(event *tcell.EventKey, list *tview.List, detail tview.Primitive) bool {
+func (s *screen) listDetailArrow(event *tuivory.EventKey, list *tuivory.WidgetList, detail tuivory.Primitive) bool {
 	if event.Modifiers() != 0 || list == nil || detail == nil {
 		return false
 	}
-	if event.Key() == tcell.KeyRight && list.HasFocus() {
+	if event.Key() == tuivory.KeyRight && list.HasFocus() {
 		s.app.SetFocus(detail)
 		return true
 	}
-	if event.Key() == tcell.KeyLeft && detail.HasFocus() {
+	if event.Key() == tuivory.KeyLeft && detail.HasFocus() {
 		s.app.SetFocus(list)
 		return true
 	}
@@ -25,12 +23,12 @@ func (s *screen) listDetailArrow(event *tcell.EventKey, list *tview.List, detail
 
 // Each form or horizontal button row keeps its own left/right focus cycle.
 // Looking up the actual focused button leaves text cursors and lists untouched.
-func buttonRow(root tview.Primitive, focused *tview.Button) ([]*tview.Button, *tview.Form) {
+func buttonRow(root tuivory.Primitive, focused *tuivory.WidgetButton) ([]*tuivory.WidgetButton, *tuivory.WidgetForm) {
 	switch container := root.(type) {
 	case *formPopupLayer:
 		return buttonRow(container.Flex, focused)
-	case *tview.Form:
-		var row []*tview.Button
+	case *tuivory.WidgetForm:
+		var row []*tuivory.WidgetButton
 		found := false
 		for i := 0; i < container.GetButtonCount(); i++ {
 			button := container.GetButton(i)
@@ -40,12 +38,12 @@ func buttonRow(root tview.Primitive, focused *tview.Button) ([]*tview.Button, *t
 		if found {
 			return row, container
 		}
-	case *tview.Flex:
-		var row []*tview.Button
+	case *tuivory.Flex:
+		var row []*tuivory.WidgetButton
 		found := false
 		for i := 0; i < container.GetItemCount(); i++ {
 			item := container.GetItem(i)
-			if button, ok := item.(*tview.Button); ok {
+			if button, ok := item.(*tuivory.WidgetButton); ok {
 				row = append(row, button)
 				found = found || button == focused
 			} else if buttons, form := buttonRow(item, focused); len(buttons) > 0 {
@@ -66,11 +64,11 @@ func buttonRow(root tview.Primitive, focused *tview.Button) ([]*tview.Button, *t
 	return nil, nil
 }
 
-func (s *screen) buttonArrow(event *tcell.EventKey) bool {
-	if event.Modifiers() != 0 || (event.Key() != tcell.KeyLeft && event.Key() != tcell.KeyRight) {
+func (s *screen) buttonArrow(event *tuivory.EventKey) bool {
+	if event.Modifiers() != 0 || (event.Key() != tuivory.KeyLeft && event.Key() != tuivory.KeyRight) {
 		return false
 	}
-	focused, ok := s.app.GetFocus().(*tview.Button)
+	focused, ok := s.app.GetFocus().(*tuivory.WidgetButton)
 	if !ok {
 		return false
 	}
@@ -84,7 +82,7 @@ func (s *screen) buttonArrow(event *tcell.EventKey) bool {
 			continue
 		}
 		step := 1
-		if event.Key() == tcell.KeyLeft {
+		if event.Key() == tuivory.KeyLeft {
 			step = -1
 		}
 		for offset := 1; offset <= len(row); offset++ {
@@ -104,25 +102,25 @@ func (s *screen) buttonArrow(event *tcell.EventKey) bool {
 }
 
 // Standalone detail pages include their action buttons in Tab navigation.
-func (s *screen) dialogTab(event *tcell.EventKey, content ...tview.Primitive) {
+func (s *screen) dialogTab(event *tuivory.EventKey, content ...tuivory.Primitive) {
 	_, root := s.pages.GetFrontPage()
 	if popup, ok := root.(*formPopupLayer); ok {
 		root = popup.content
 	}
-	if flex, ok := root.(*tview.Flex); ok {
+	if flex, ok := root.(*tuivory.Flex); ok {
 		last := flex.GetItem(flex.GetItemCount() - 1)
-		if button, ok := last.(*tview.Button); ok {
+		if button, ok := last.(*tuivory.WidgetButton); ok {
 			content = append(content, button)
-		} else if row, ok := last.(*tview.Flex); ok {
+		} else if row, ok := last.(*tuivory.Flex); ok {
 			for i := 0; i < row.GetItemCount(); i++ {
-				if button, ok := row.GetItem(i).(*tview.Button); ok && !button.IsDisabled() {
+				if button, ok := row.GetItem(i).(*tuivory.WidgetButton); ok && !button.IsDisabled() {
 					content = append(content, button)
 				}
 			}
 		}
 	}
 	step := 1
-	if event.Key() == tcell.KeyBacktab {
+	if event.Key() == tuivory.KeyBacktab {
 		step = len(content) - 1
 	}
 	for i, item := range content {

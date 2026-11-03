@@ -1,14 +1,13 @@
 package ui
 
 import (
+	"lazyora/internal/oracle"
+	"lazyora/internal/settings"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
-	"lazyora/internal/settings"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestExitPendingDetailsPreserveSQLAndReturnToSafeDefault(t *testing.T) {
@@ -23,11 +22,11 @@ func TestExitPendingDetailsPreserveSQLAndReturnToSafeDefault(t *testing.T) {
 	if !strings.Contains(s.exitMessage("exit_pending"), "2") {
 		t.Fatal("exit did not show statement count")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'v', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'v', tuivory.ModAlt))
 	if s.pendingTable == nil || s.pendingSQL.GetText(false) != s.pendingWork.Statements[0].SQL {
 		t.Fatal("exit details did not show original SQL")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF9, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyF9, 0, 0))
 	if len(s.jobs) != 0 {
 		t.Fatal("details allowed execution behind overlay")
 	}
@@ -35,15 +34,15 @@ func TestExitPendingDetailsPreserveSQLAndReturnToSafeDefault(t *testing.T) {
 	if !strings.Contains(s.pendingSQL.GetText(false), "cancelled [red]") {
 		t.Fatal("details omitted execution error")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyTab, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyTab, 0, 0))
 	if !s.pendingSQL.HasFocus() {
 		t.Fatal("Tab did not reach scrollable SQL")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if page, _ := s.pages.GetFrontPage(); page != "exit" || s.exitDialog == nil || !s.pendingChanges || len(s.jobs) != 0 {
 		t.Fatal("details changed transaction/exit state")
 	}
-	s.exitDialog.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	s.exitDialog.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	if s.exitDialog != nil || len(s.jobs) != 0 || !s.table.HasFocus() {
 		t.Fatal("return from details lost default Keep working")
 	}
@@ -61,7 +60,7 @@ func TestPendingJournalCanOpenFromSessionAndDisplaysOmissions(t *testing.T) {
 		t.Fatal("omitted numbering/zero-row count was lost")
 	}
 	s.selectPendingStatement(0)
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if !s.editor.HasFocus() || !s.pendingChanges || len(s.jobs) != 0 {
 		t.Fatal("journal close changed session state")
 	}

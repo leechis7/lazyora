@@ -2,14 +2,12 @@ package ui
 
 import (
 	"fmt"
-	"github.com/leechis7/tuivory/go"
+	"lazyora/internal/oracle"
 	"strings"
 	"unicode"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 	"github.com/rivo/uniseg"
-	"lazyora/internal/oracle"
 )
 
 type gridState struct {
@@ -22,13 +20,13 @@ type gridState struct {
 // The gutter is decoration outside the Table's inner rectangle. Data column
 // indices, hit testing, range selection and raw copying remain unchanged.
 type resultGrid struct {
-	*tview.Table
+	*tuivory.Table
 	owner *screen
 }
 
-func (g *resultGrid) Focus(delegate func(tview.Primitive)) { delegate(g.Table) }
-func (g *resultGrid) MouseHandler() func(tview.MouseAction, *tcell.EventMouse, func(tview.Primitive)) (bool, tview.Primitive) {
-	return func(a tview.MouseAction, e *tcell.EventMouse, _ func(tview.Primitive)) (bool, tview.Primitive) {
+func (g *resultGrid) Focus(delegate func(tuivory.Primitive)) { delegate(g.Table) }
+func (g *resultGrid) MouseHandler() func(tuivory.MouseAction, *tuivory.EventMouse, func(tuivory.Primitive)) (bool, tuivory.Primitive) {
+	return func(a tuivory.MouseAction, e *tuivory.EventMouse, _ func(tuivory.Primitive)) (bool, tuivory.Primitive) {
 		s := g.owner
 		x, y := e.Position()
 		captured := s.grid.presentation != nil && s.grid.presentation.pointer
@@ -45,21 +43,21 @@ func (g *resultGrid) MouseHandler() func(tview.MouseAction, *tcell.EventMouse, f
 		return true, nil
 	}
 }
-func (s *screen) resultGrid() tview.Primitive { return &resultGrid{Table: s.table, owner: s} }
+func (s *screen) resultGrid() tuivory.Primitive { return &resultGrid{Table: s.table, owner: s} }
 
 // Grid-specific surfaces retain the app's muted blue/cyan palette while
 // distinguishing header, row, range and active cell without bright row stripes.
-type gridColors struct{ background, stripe, header, current, rangeBG, divider, muted tcell.Color }
+type gridColors struct{ background, stripe, header, current, rangeBG, divider, muted tuivory.Color }
 
-func (s *screen) gridHeaderStyle(active bool) tcell.Style {
+func (s *screen) gridHeaderStyle(active bool) tuivory.Style {
 	return s.tuivoryStyles().GridHeaderStyle(active)
 }
-func (s *screen) gridActiveStyle(focused bool) tcell.Style {
+func (s *screen) gridActiveStyle(focused bool) tuivory.Style {
 	return s.tuivoryStyles().GridActiveStyle(focused, false)
 }
 
 // Draw only the host panel border; the common GridView owns its entire body.
-func (g *resultGrid) Draw(terminal tcell.Screen) {
+func (g *resultGrid) Draw(terminal tuivory.Screen) {
 	s := g.owner
 	g.Table.Box.Draw(terminal)
 	s.prepareResultGrid()
@@ -111,7 +109,7 @@ func (s *screen) refreshGridHeader(col int) {
 	}
 	width := s.grid.widths[col]
 	label += strings.Repeat(" ", max(0, width-uniseg.StringWidth(label)))
-	s.table.GetCell(0, col).SetText(tview.Escape(label)).SetMaxWidth(width)
+	s.table.GetCell(0, col).SetText(tuivory.Escape(label)).SetMaxWidth(width)
 }
 
 // Limit rendered values, not retained/copy/export values. Iterate graphemes
@@ -158,7 +156,7 @@ func gridNumeric(cell oracle.Cell) bool {
 	}
 	return false
 }
-func (s *screen) gridBaseStyle(row, col int) tcell.Style {
+func (s *screen) gridBaseStyle(row, col int) tuivory.Style {
 	current, _ := s.table.GetSelection()
 	null := row > 0 && row <= len(s.resultValues) && col >= 0 && col < len(s.resultValues[row-1]) && s.resultValues[row-1][col].Null
 	return s.tuivoryStyles().GridCellStyle(tuivory.CellState{Row: row, CurrentRow: row == current, Null: null})
@@ -211,7 +209,7 @@ func (s *screen) gridAutoWidth(col int) int {
 		width += 2
 	}
 	for row := 1; row < s.table.GetRowCount(); row++ {
-		width = max(width, tview.TaggedStringWidth(s.table.GetCell(row, col).Text))
+		width = max(width, tuivory.TaggedStringWidth(s.table.GetCell(row, col).Text))
 	}
 	return max(4, min(40, width))
 }
@@ -219,7 +217,7 @@ func (s *screen) gridAutoWidth(col int) int {
 func (s *screen) refreshResultPosition() {
 	title := s.tr("results_title")
 	if object := s.resultBrowser.source.EditObject; object.Kind == "TABLE" {
-		title += " · " + tview.Escape(oracle.QualifiedObject(object))
+		title += " · " + tuivory.Escape(oracle.QualifiedObject(object))
 		if s.resultBrowser.source.EditID != 0 {
 			title += " · " + s.tr("grid_editable")
 		} else {
@@ -227,7 +225,7 @@ func (s *screen) refreshResultPosition() {
 		}
 	}
 	if badge := s.connectionTitleBadge(); badge != "" {
-		title = " " + tview.Escape(badge) + " · " + title
+		title = " " + tuivory.Escape(badge) + " · " + title
 	}
 	s.table.SetTitle(title)
 }

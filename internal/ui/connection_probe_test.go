@@ -3,21 +3,21 @@ package ui
 import (
 	"context"
 	"errors"
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestConnectionProbeUsesCurrentFormWithoutSavingOrReplacingSession(t *testing.T) {
 	s, _ := resultScreen(t)
 	s.connectionForm()
 	for i, value := range map[int]string{connectionHost: "example", connectionPort: "1522", connectionUser: "SCOTT", connectionPassword: "secret&pwd", connectionName: "ORCL"} {
-		s.connectForm.GetFormItem(i).(*tview.InputField).SetText(value)
+		s.connectForm.GetFormItem(i).(*tuivory.InputField).SetText(value)
 	}
 	s.pendingChanges = true
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'v', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'v', tuivory.ModAlt))
 	j := <-s.jobs
 	if j.action != "test_connect" || j.config.Host != "example" || j.config.Password != "secret&pwd" || !s.testingConnection || !s.pendingChanges {
 		t.Fatal("test did not use isolated job/current fields")

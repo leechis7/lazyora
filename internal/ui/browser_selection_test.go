@@ -1,13 +1,12 @@
 package ui
 
 import (
+	"lazyora/internal/oracle"
 	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestBrowserSelectorsLoadOnlySelectedUserAndPreserveSessionState(t *testing.T) {
@@ -67,7 +66,7 @@ func TestBrowserSelectorsLoadOnlySelectedUserAndPreserveSessionState(t *testing.
 
 func TestBrowserSelectorKeysAndMouseLayout(t *testing.T) {
 	s := demoBrowserScreen(t)
-	terminal := tcell.NewSimulationScreen("UTF-8")
+	terminal := tuivory.NewSimulationScreen("UTF-8")
 	if err := terminal.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -81,22 +80,22 @@ func TestBrowserSelectorKeysAndMouseLayout(t *testing.T) {
 	if uy >= ty || ty >= ly {
 		t.Fatal("user/type selectors are not above the object list")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'u', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'u', tuivory.ModAlt))
 	if !s.browserUsers.HasFocus() {
 		t.Fatal("Alt+U did not focus user selector")
 	}
-	event := tcell.NewEventKey(tcell.KeyEnter, 0, 0)
-	s.browserUsers.InputHandler()(s.key(event), func(p tview.Primitive) { s.app.SetFocus(p) })
-	event = tcell.NewEventKey(tcell.KeyEscape, 0, 0)
+	event := tuivory.NewEventKey(tuivory.KeyEnter, 0, 0)
+	s.browserUsers.InputHandler()(s.key(event), func(p tuivory.Primitive) { s.app.SetFocus(p) })
+	event = tuivory.NewEventKey(tuivory.KeyEscape, 0, 0)
 	forwarded := s.key(event)
 	if forwarded == nil {
 		t.Fatal("Escape did not reach open selector")
 	}
-	s.browserUsers.InputHandler()(forwarded, func(p tview.Primitive) { s.app.SetFocus(p) })
+	s.browserUsers.InputHandler()(forwarded, func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	if s.browserUsers.IsOpen() {
 		t.Fatal("Escape did not close selector")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'o', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'o', tuivory.ModAlt))
 	if !s.browserTypes.HasFocus() {
 		t.Fatal("Alt+O did not focus type selector")
 	}
@@ -104,11 +103,11 @@ func TestBrowserSelectorKeysAndMouseLayout(t *testing.T) {
 	if !s.browserHidden || !s.editor.HasFocus() {
 		t.Fatal("hiding browser left focus in selector")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'u', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'u', tuivory.ModAlt))
 	if s.browserHidden || !s.browserUsers.HasFocus() {
 		t.Fatal("Alt+U did not reopen browser")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF2, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyF2, 0, 0))
 	if !s.editor.HasFocus() || !s.fullscreen {
 		t.Fatal("F2 from user selector did not open SQL fullscreen")
 	}
@@ -116,7 +115,7 @@ func TestBrowserSelectorKeysAndMouseLayout(t *testing.T) {
 
 func TestNormalStartupShowsLoginAndAltLReopensIt(t *testing.T) {
 	t.Setenv("LAZYORA_CONFIG", filepath.Join(t.TempDir(), "settings.json"))
-	terminal := tcell.NewSimulationScreen("UTF-8")
+	terminal := tuivory.NewSimulationScreen("UTF-8")
 	if err := terminal.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -145,8 +144,8 @@ func TestNormalStartupShowsLoginAndAltLReopensIt(t *testing.T) {
 		if page, _ := s.pages.GetFrontPage(); page != "connect" || s.connected || s.busy {
 			t.Error("startup did not show login without auto-connecting")
 		}
-		s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
-		s.key(tcell.NewEventKey(tcell.KeyRune, 'l', tcell.ModAlt))
+		s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
+		s.key(tuivory.NewEventKey(tuivory.KeyRune, 'l', tuivory.ModAlt))
 		if page, _ := s.pages.GetFrontPage(); page != "connect" || s.connectForm == nil {
 			t.Error("Alt+L did not reopen login")
 		}

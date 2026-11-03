@@ -1,24 +1,23 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/leechis7/tuivory/go"
-	"github.com/rivo/tview"
 	"reflect"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 // Recolor existing widgets, including hidden pages and tabs. Rebuilding pages
 // would lose focus, selections, unfinished SQL, credentials and pending jobs.
 func (s *screen) applyTheme(previous string) {
 	to := s.colors()
-	seen := map[tview.Primitive]bool{}
-	var visit func(tview.Primitive)
-	visit = func(p tview.Primitive) {
+	seen := map[tuivory.Primitive]bool{}
+	var visit func(tuivory.Primitive)
+	visit = func(p tuivory.Primitive) {
 		if p == nil || reflect.ValueOf(p).IsNil() || seen[p] {
 			return
 		}
 		seen[p] = true
-		var box *tview.Box
+		var box *tuivory.Box
 		switch w := p.(type) {
 		case *displayLayout:
 			visit(w.Flex)
@@ -48,17 +47,17 @@ func (s *screen) applyTheme(previous string) {
 		case *tuivory.RowsView:
 			_ = w.SetPalette(s.componentPalette())
 			return
-		case *tview.Pages:
+		case *tuivory.Pages:
 			box = w.Box
 			for _, name := range w.GetPageNames(false) {
 				visit(w.GetPage(name))
 			}
-		case *tview.Flex:
+		case *tuivory.Flex:
 			box = w.Box
 			for i := 0; i < w.GetItemCount(); i++ {
 				visit(w.GetItem(i))
 			}
-		case *tview.Form:
+		case *tuivory.WidgetForm:
 			box = w.Box
 			s.styleForm(w)
 			for i := 0; i < w.GetFormItemCount(); i++ {
@@ -67,47 +66,47 @@ func (s *screen) applyTheme(previous string) {
 		case *choiceField:
 			box = w.Box
 			s.styleChoice(w)
-		case *tview.InputField:
+		case *tuivory.InputField:
 			box = w.Box
-			w.SetFieldStyle(s.fieldStyle()).SetLabelStyle(tcell.StyleDefault.Foreground(to.text).Background(s.surfaceColor(s.surfaceRoles[w.Box])))
-		case *tview.Checkbox:
+			w.SetFieldStyle(s.fieldStyle()).SetLabelStyle(tuivory.StyleDefault.Foreground(to.text).Background(s.surfaceColor(s.surfaceRoles[w.Box])))
+		case *tuivory.Checkbox:
 			box = w.Box
 			s.styleCheckbox(w)
-		case *tview.TextArea:
+		case *tuivory.TextArea:
 			box = w.Box
 			s.styleEditor(w)
-		case *tview.TextView:
+		case *tuivory.WidgetTextView:
 			box = w.Box
 			s.textSurface(w, s.surfaceRoles[w.Box])
-		case *tview.List:
+		case *tuivory.WidgetList:
 			box = w.Box
 			s.styleList(w)
-		case *tview.TreeView:
+		case *tuivory.WidgetTreeView:
 			box = w.Box
-			roles := make(map[*tview.TreeNode]tuivory.TextRole, len(s.treeRoles))
+			roles := make(map[*tuivory.WidgetTreeNode]tuivory.TextRole, len(s.treeRoles))
 			for node, role := range s.treeRoles {
 				roles[node] = tuivory.TextRole(role)
 			}
 			s.tuivoryWidgets().Tree(w, roles)
-		case *tview.Table:
+		case *tuivory.Table:
 			box = w.Box
 			s.styleDataTable(w)
-		case *tview.Button:
+		case *tuivory.WidgetButton:
 			box = w.Box
 			s.tuivoryWidgets().Button(w)
-		case *tview.Modal:
+		case *tuivory.Modal:
 			box = w.Box
 			s.styleModal(w)
 			w.SetTextColor(to.text).SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(s.buttonFocusStyle())
-		case *tview.Box:
+		case *tuivory.Box:
 			box = w
 		}
 		if box != nil {
 			role := s.surfaceRoles[box]
 			switch p.(type) {
-			case *tview.TextArea:
+			case *tuivory.TextArea:
 				role = surfaceEditor
-			case *tview.Form, *tview.Modal, *tview.List, *tview.Checkbox:
+			case *tuivory.WidgetForm, *tuivory.Modal, *tuivory.WidgetList, *tuivory.Checkbox:
 				role = surfacePanel
 			}
 			s.setSurface(box, role)

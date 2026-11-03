@@ -1,12 +1,11 @@
 package ui
 
 import (
+	"lazyora/internal/oracle"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 func demoBrowserScreen(t *testing.T) *screen {
@@ -14,24 +13,24 @@ func demoBrowserScreen(t *testing.T) *screen {
 	s := shortcutScreen(t)
 	s.demo, s.connected = true, false
 	s.newBrowser()
-	s.queryLayout = tview.NewFlex().SetDirection(tview.FlexRow).AddItem(s.editor, 0, 2, true).AddItem(s.table, 0, 3, false)
-	s.mainLayout = tview.NewFlex().AddItem(s.browserPanel, 0, 1, false).AddItem(s.queryLayout, 0, 3, true)
+	s.queryLayout = tuivory.NewFlex().SetDirection(tuivory.FlexRow).AddItem(s.editor, 0, 2, true).AddItem(s.table, 0, 3, false)
+	s.mainLayout = tuivory.NewFlex().AddItem(s.browserPanel, 0, 1, false).AddItem(s.queryLayout, 0, 3, true)
 	s.pages.AddPage("main", s.mainLayout, true, true)
 	s.showDemoBrowser()
-	s.footer = tview.NewTextView()
+	s.footer = tuivory.NewWidgetTextView()
 	s.toolbar()
 	return s
 }
 
 func TestBrowserFocusCycleAndContext(t *testing.T) {
 	s := demoBrowserScreen(t)
-	for _, panel := range []tview.Primitive{s.table, s.browserUsers, s.browserTypes, s.browserSearch, s.browser, s.editor} {
-		s.key(tcell.NewEventKey(tcell.KeyTab, 0, tcell.ModNone))
+	for _, panel := range []tuivory.Primitive{s.table, s.browserUsers, s.browserTypes, s.browserSearch, s.browser, s.editor} {
+		s.key(tuivory.NewEventKey(tuivory.KeyTab, 0, tuivory.ModNone))
 		if s.app.GetFocus() != panel {
 			t.Fatal("Tab did not cycle SQL/results/schemas")
 		}
 	}
-	s.key(tcell.NewEventKey(tcell.KeyBacktab, 0, tcell.ModShift))
+	s.key(tuivory.NewEventKey(tuivory.KeyBacktab, 0, tuivory.ModShift))
 	if s.app.GetFocus() != s.browser {
 		t.Fatal("Shift+Tab did not cycle in reverse")
 	}
@@ -39,12 +38,12 @@ func TestBrowserFocusCycleAndContext(t *testing.T) {
 	if !strings.Contains(s.footer.GetText(false), "Ctrl+R") {
 		t.Fatal("browser context shortcuts missing")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF6, 0, tcell.ModNone))
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyF6, 0, tuivory.ModNone))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'b', tuivory.ModAlt))
 	if !s.browserHidden || !s.editor.HasFocus() {
 		t.Fatal("Browser menu did not hide the browser while preserving SQL focus")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'b', tuivory.ModAlt))
 	if s.app.GetFocus() != s.browser {
 		t.Fatal("Browser menu did not show and focus the browser")
 	}
@@ -53,7 +52,7 @@ func TestBrowserFocusCycleAndContext(t *testing.T) {
 func TestBrowserToggleRestoresLayoutAndState(t *testing.T) {
 	s := demoBrowserScreen(t)
 	s.render(oracle.Result{Columns: []string{"N"}, Rows: [][]string{{"keep"}}})
-	terminal := tcell.NewSimulationScreen("UTF-8")
+	terminal := tuivory.NewSimulationScreen("UTF-8")
 	if err := terminal.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -66,19 +65,19 @@ func TestBrowserToggleRestoresLayoutAndState(t *testing.T) {
 	s.app.SetFocus(s.browser)
 	s.mainLayout.Draw(terminal)
 	_, _, originalWidth, _ := s.editor.GetRect()
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'b', tuivory.ModAlt))
 	s.mainLayout.Draw(terminal)
 	x, _, width, _ := s.editor.GetRect()
 	if x != 0 || width != 100 || !s.editor.HasFocus() {
 		t.Fatalf("hidden browser did not release width/focus: x=%d width=%d", x, width)
 	}
-	for _, key := range []tcell.Key{tcell.KeyTab, tcell.KeyTab, tcell.KeyBacktab, tcell.KeyBacktab} {
-		s.key(tcell.NewEventKey(key, 0, tcell.ModNone))
+	for _, key := range []tuivory.Key{tuivory.KeyTab, tuivory.KeyTab, tuivory.KeyBacktab, tuivory.KeyBacktab} {
+		s.key(tuivory.NewEventKey(key, 0, tuivory.ModNone))
 		if s.browser.HasFocus() {
 			t.Fatal("hidden browser remained in focus cycle")
 		}
 	}
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'b', tuivory.ModAlt))
 	s.mainLayout.Draw(terminal)
 	_, _, restoredWidth, _ := s.editor.GetRect()
 	if restoredWidth != originalWidth || !s.browser.HasFocus() || s.browser.GetCurrentNode() != selected || !schema.IsExpanded() {
@@ -88,7 +87,7 @@ func TestBrowserToggleRestoresLayoutAndState(t *testing.T) {
 		t.Fatal("toggle changed SQL/results or submitted a database job")
 	}
 	s.app.SetFocus(s.table)
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'b', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'b', tuivory.ModAlt))
 	if !s.table.HasFocus() {
 		t.Fatal("hiding browser changed result focus")
 	}
@@ -110,18 +109,18 @@ func TestBrowserDetailsPreserveSQLAndResults(t *testing.T) {
 	if s.objectTable.GetCell(1, 1).Text != "ID" || s.objectTable.GetCell(1, 3).Text != "No" || s.objectTable.GetCell(1, 4).Text != "식별자 / Identifier" {
 		t.Fatal("column details incomplete")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF4, 0, tcell.ModNone))
-	s.key(tcell.NewEventKey(tcell.KeyF5, 0, tcell.ModNone))
+	s.key(tuivory.NewEventKey(tuivory.KeyF4, 0, tuivory.ModNone))
+	s.key(tuivory.NewEventKey(tuivory.KeyF5, 0, tuivory.ModNone))
 	if len(s.jobs) != 0 {
 		t.Fatal("detail allowed SQL/commit behind overlay")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF1, 0, tcell.ModNone))
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, tcell.ModNone))
+	s.key(tuivory.NewEventKey(tuivory.KeyF1, 0, tuivory.ModNone))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, tuivory.ModNone))
 	if page, _ := s.pages.GetFrontPage(); page != "object" || !s.objectTable.HasFocus() {
 		t.Fatal("help failed to restore object detail")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyCtrlR, 0, tcell.ModCtrl))
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, tcell.ModNone))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlR, 0, tuivory.ModCtrl))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, tuivory.ModNone))
 	if page, _ := s.pages.GetFrontPage(); page != "main" || !s.browser.HasFocus() {
 		t.Fatal("Esc did not restore browser")
 	}
@@ -151,14 +150,14 @@ func TestBrowserLazyLoadEmptySchemasAndLocalization(t *testing.T) {
 	s.prefs.Language = "ko"
 	s.refreshLabels()
 	_, typeLabel := s.browserTypes.GetCurrentOption()
-	if j.node.GetText() != tview.Escape("Case'[red]") || typeLabel != "테이블" {
+	if j.node.GetText() != tuivory.Escape("Case'[red]") || typeLabel != "테이블" {
 		t.Fatal("translation changed schema identity or missed labels")
 	}
 	if j.node.GetChildren()[0].GetText() != "(없음)" {
 		t.Fatal("empty state was not translated")
 	}
 	s.app.SetFocus(s.browser)
-	s.key(tcell.NewEventKey(tcell.KeyCtrlR, 0, tcell.ModCtrl))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlR, 0, tuivory.ModCtrl))
 	if j := <-s.jobs; j.action != "schemas" {
 		t.Fatal("refresh did not request catalog")
 	}
@@ -207,7 +206,7 @@ func TestColumnCommentRendering(t *testing.T) {
 	s.object = oracle.Object{Owner: "APP", Name: "V", Kind: "VIEW"}
 	s.openObject(s.object)
 	s.renderObject([]oracle.Column{{Name: "C", DataType: "VARCHAR2(30 BYTE)", Comment: "한글 [red] 주석\n둘째 줄"}, {Name: "D", DataType: "NUMBER"}})
-	if s.objectTable.GetCell(0, 4).Text != "Comment" || s.objectTable.GetCell(1, 4).Text != tview.Escape("한글 [red] 주석\n둘째 줄") || s.objectTable.GetCell(2, 4).Text != "" {
+	if s.objectTable.GetCell(0, 4).Text != "Comment" || s.objectTable.GetCell(1, 4).Text != tuivory.Escape("한글 [red] 주석\n둘째 줄") || s.objectTable.GetCell(2, 4).Text != "" {
 		t.Fatal("comment header/text or empty comment lost")
 	}
 	s.prefs.Language = "ko"

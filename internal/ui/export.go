@@ -4,15 +4,14 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"lazyora/internal/exportdata"
+	"lazyora/internal/oracle"
+	"lazyora/internal/sqlfile"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/exportdata"
-	"lazyora/internal/oracle"
-	"lazyora/internal/sqlfile"
+	"github.com/leechis7/tuivory/go"
 )
 
 var exportFormats = []string{"csv", "tsv", "xlsx", "sql"}
@@ -68,12 +67,12 @@ func (s *screen) showExport() {
 		s.setStatus("error", err)
 		return
 	}
-	form := tview.NewForm().SetItemPadding(0)
+	form := tuivory.NewWidgetForm().SetItemPadding(0)
 	format := s.newChoice(s.tr("export_format"), []string{"CSV", "TSV", "Excel (.xlsx)", "Oracle INSERT (.sql)"}, 0, func(_ string, index int) {
 		if form.GetFormItemCount() < 2 {
 			return
 		}
-		field := form.GetFormItem(1).(*tview.InputField)
+		field := form.GetFormItem(1).(*tuivory.InputField)
 		path := field.GetText()
 		ext := strings.ToLower(filepath.Ext(path))
 		for _, known := range exportFormats {
@@ -89,11 +88,11 @@ func (s *screen) showExport() {
 			return
 		}
 		if index == exportFullScope {
-			form.GetFormItem(8).(*tview.InputField).SetText(csvColumns(s.resultBrowser.source.Columns))
+			form.GetFormItem(8).(*tuivory.InputField).SetText(csvColumns(s.resultBrowser.source.Columns))
 			return
 		}
 		if data, err := s.exportDataset(index); err == nil {
-			form.GetFormItem(8).(*tview.InputField).SetText(csvColumns(data.Columns))
+			form.GetFormItem(8).(*tuivory.InputField).SetText(csvColumns(data.Columns))
 		}
 	}))
 	form.AddCheckbox(s.tr("export_headers"), true, nil).AddCheckbox("UTF-8 BOM (CSV/TSV)", true, nil)
@@ -136,18 +135,18 @@ func (s *screen) showExport() {
 			// Full DB export replays the unmodified query, including its ROWID.
 			data.Columns = append([]string(nil), s.resultBrowser.source.Columns...)
 		}
-		path, err := sqlfile.Resolve(form.GetFormItem(1).(*tview.InputField).GetText(), directory)
+		path, err := sqlfile.Resolve(form.GetFormItem(1).(*tuivory.InputField).GetText(), directory)
 		if err != nil {
 			info.SetText(err.Error())
 			return
 		}
-		options := exportdata.Options{Format: exportFormats[index], Headers: form.GetFormItem(3).(*tview.Checkbox).IsChecked(), BOM: form.GetFormItem(4).(*tview.Checkbox).IsChecked(), NullText: form.GetFormItem(5).(*tview.InputField).GetText(), Schema: form.GetFormItem(6).(*tview.InputField).GetText(), Table: form.GetFormItem(7).(*tview.InputField).GetText()}
+		options := exportdata.Options{Format: exportFormats[index], Headers: form.GetFormItem(3).(*tuivory.Checkbox).IsChecked(), BOM: form.GetFormItem(4).(*tuivory.Checkbox).IsChecked(), NullText: form.GetFormItem(5).(*tuivory.InputField).GetText(), Schema: form.GetFormItem(6).(*tuivory.InputField).GetText(), Table: form.GetFormItem(7).(*tuivory.InputField).GetText()}
 		if options.Format == "sql" {
 			if strings.TrimSpace(options.Table) == "" {
 				info.SetText(s.tr("export_need_table"))
 				return
 			}
-			reader := csv.NewReader(strings.NewReader(form.GetFormItem(8).(*tview.InputField).GetText()))
+			reader := csv.NewReader(strings.NewReader(form.GetFormItem(8).(*tuivory.InputField).GetText()))
 			options.Columns, err = reader.Read()
 			if err != nil || len(options.Columns) != len(data.Columns) {
 				info.SetText(s.tr("export_need_columns"))
@@ -177,7 +176,7 @@ func (s *screen) showExport() {
 			}
 			s.confirmActionPreview(query.Text+"\n\n"+s.tr("file_path")+": "+path, message, s.tr("export_full"), s.tr("export"), write)
 		} else if revision.Exists {
-			s.showProgramConfirm(fmt.Sprintf(s.tr("export_overwrite"), len(data.Rows), tview.Escape(path)), write)
+			s.showProgramConfirm(fmt.Sprintf(s.tr("export_overwrite"), len(data.Rows), tuivory.Escape(path)), write)
 		} else {
 			write()
 		}
@@ -219,31 +218,31 @@ func (s *screen) closeExport() {
 	}
 }
 
-func (s *screen) exportKey(event *tcell.EventKey) *tcell.EventKey {
+func (s *screen) exportKey(event *tuivory.EventKey) *tuivory.EventKey {
 	if s.busy {
-		if event.Key() == tcell.KeyEscape || (event.Key() == tcell.KeyEnter && s.exportForm.GetButton(1).HasFocus()) {
+		if event.Key() == tuivory.KeyEscape || (event.Key() == tuivory.KeyEnter && s.exportForm.GetButton(1).HasFocus()) {
 			s.cancelExport()
 		}
-		if event.Key() == tcell.KeyTab || event.Key() == tcell.KeyBacktab {
+		if event.Key() == tuivory.KeyTab || event.Key() == tuivory.KeyBacktab {
 			focusForm(s, s.exportForm, s.exportForm.GetFormItemCount()+1)
 		}
-		if event.Key() == tcell.KeyF1 {
+		if event.Key() == tuivory.KeyF1 {
 			s.showHelp()
 		}
 		return nil
 	}
 	switch event.Key() {
-	case tcell.KeyEscape:
+	case tuivory.KeyEscape:
 		s.closeExport()
 		return nil
-	case tcell.KeyF1:
+	case tuivory.KeyF1:
 		s.showHelp()
 		return nil
-	case tcell.KeyCtrlS:
+	case tuivory.KeyCtrlS:
 		s.exportSubmit()
 		return nil
-	case tcell.KeyEnter:
-		if event.Modifiers()&(tcell.ModCtrl|tcell.ModAlt) != 0 {
+	case tuivory.KeyEnter:
+		if event.Modifiers()&(tuivory.ModCtrl|tuivory.ModAlt) != 0 {
 			s.exportSubmit()
 			return nil
 		}

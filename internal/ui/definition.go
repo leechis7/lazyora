@@ -3,11 +3,10 @@ package ui
 import (
 	"encoding/csv"
 	"fmt"
+	"lazyora/internal/oracle"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 var definitionSections = []string{"ddl", "constraints", "indexes", "grants", "dependencies", "dependents"}
@@ -36,7 +35,7 @@ func (s *screen) showDefinition(section string) {
 		s.definitionInfo = s.newTextView().SetWrap(true)
 		s.definitionInfo.SetBackgroundColor(s.colors().background)
 		s.definitionInfo.SetTextColor(s.colors().text)
-		s.definitionRoot = s.newFlex().SetDirection(tview.FlexRow)
+		s.definitionRoot = s.newFlex().SetDirection(tuivory.FlexRow)
 		s.pages.AddPage("definition", s.definitionRoot, true, true)
 	}
 	s.definitionSection = section
@@ -180,11 +179,11 @@ func (s *screen) renderDefinition(data oracle.ObjectDefinition, err error) {
 		}
 	}
 	for col, label := range headers {
-		s.definitionTable.SetCell(0, col, tview.NewTableCell(s.tr(label)).SetSelectable(false).SetStyle(tcell.StyleDefault.Foreground(s.colors().accent).Background(s.colors().surface).Bold(true)))
+		s.definitionTable.SetCell(0, col, tuivory.NewTableCell(s.tr(label)).SetSelectable(false).SetStyle(tuivory.StyleDefault.Foreground(s.colors().accent).Background(s.colors().surface).Bold(true)))
 	}
 	for row, values := range s.definitionRows {
 		for col, value := range values {
-			s.definitionTable.SetCell(row+1, col, tview.NewTableCell(tview.Escape(value)).SetTextColor(s.colors().text))
+			s.definitionTable.SetCell(row+1, col, tuivory.NewTableCell(tuivory.Escape(value)).SetTextColor(s.colors().text))
 		}
 	}
 	s.definitionTable.SetSelectionChangedFunc(func(row, col int) {
@@ -193,19 +192,19 @@ func (s *screen) renderDefinition(data oracle.ObjectDefinition, err error) {
 		}
 	})
 	s.definitionTable.SetSelectedFunc(func(_, _ int) { s.openDefinitionRelation() })
-	var selectors, buttons *tview.Flex
+	var selectors, buttons *tuivory.Flex
 	if s.definitionRoot.GetItemCount() > 1 {
-		selectors = s.definitionRoot.GetItem(1).(*tview.Flex)
-		buttons = s.definitionRoot.GetItem(s.definitionRoot.GetItemCount() - 1).(*tview.Flex)
+		selectors = s.definitionRoot.GetItem(1).(*tuivory.Flex)
+		buttons = s.definitionRoot.GetItem(s.definitionRoot.GetItemCount() - 1).(*tuivory.Flex)
 	}
 	s.definitionRoot.Clear().AddItem(s.definitionInfo, 5, 0, false)
 	if selectors == nil {
-		selectors = s.newFlex().SetDirection(tview.FlexRow)
+		selectors = s.newFlex().SetDirection(tuivory.FlexRow)
 		for from := 0; from < len(definitionSections); from += 3 {
 			row := s.newFlex()
 			for i := from; i < from+3; i++ {
 				section := definitionSections[i]
-				button := s.clickable(tview.NewButton(fmt.Sprintf("%d %s", i+1, s.tr(section))).SetSelectedFunc(func() { s.showDefinition(section) }))
+				button := s.clickable(tuivory.NewWidgetButton(fmt.Sprintf("%d %s", i+1, s.tr(section))).SetSelectedFunc(func() { s.showDefinition(section) }))
 				s.definitionSelectors = append(s.definitionSelectors, button)
 				row.AddItem(button, 0, 1, false)
 			}
@@ -230,11 +229,11 @@ func (s *screen) renderDefinition(data oracle.ObjectDefinition, err error) {
 		}
 	}
 	if buttons == nil {
-		buttons = s.newFlex().AddItem(s.clickable(tview.NewButton(s.tr("copy_selection")+" (Ctrl+C)").SetSelectedFunc(s.copyDefinition)), 0, 1, false).
-			AddItem(s.clickable(tview.NewButton(s.tr("reload")+" (Ctrl+R)").SetSelectedFunc(s.refreshDefinition)), 0, 1, false).
-			AddItem(s.clickable(tview.NewButton(s.tr("relation_open")+" (Alt+O)").SetSelectedFunc(s.openDefinitionRelation)), 0, 1, false).
-			AddItem(s.clickable(tview.NewButton(s.tr("relation_back")+" (Alt+Left)").SetSelectedFunc(s.backDefinitionRelation)), 0, 1, false).
-			AddItem(s.clickable(tview.NewButton(s.tr("close")+" (Esc)").SetSelectedFunc(s.closeDefinition)), 0, 1, false)
+		buttons = s.newFlex().AddItem(s.clickable(tuivory.NewWidgetButton(s.tr("copy_selection")+" (Ctrl+C)").SetSelectedFunc(s.copyDefinition)), 0, 1, false).
+			AddItem(s.clickable(tuivory.NewWidgetButton(s.tr("reload")+" (Ctrl+R)").SetSelectedFunc(s.refreshDefinition)), 0, 1, false).
+			AddItem(s.clickable(tuivory.NewWidgetButton(s.tr("relation_open")+" (Alt+O)").SetSelectedFunc(s.openDefinitionRelation)), 0, 1, false).
+			AddItem(s.clickable(tuivory.NewWidgetButton(s.tr("relation_back")+" (Alt+Left)").SetSelectedFunc(s.backDefinitionRelation)), 0, 1, false).
+			AddItem(s.clickable(tuivory.NewWidgetButton(s.tr("close")+" (Esc)").SetSelectedFunc(s.closeDefinition)), 0, 1, false)
 	}
 	s.definitionRoot.AddItem(buttons, 1, 0, false)
 	if page, _ := s.pages.GetFrontPage(); page == "definition" {
@@ -271,39 +270,39 @@ func (s *screen) copyDefinition() {
 		s.sendClipboard(strings.TrimSuffix(out.String(), "\n"))
 	}
 }
-func (s *screen) definitionKey(event *tcell.EventKey) *tcell.EventKey {
-	if event.Modifiers()&tcell.ModAlt != 0 {
-		if event.Key() == tcell.KeyLeft {
+func (s *screen) definitionKey(event *tuivory.EventKey) *tuivory.EventKey {
+	if event.Modifiers()&tuivory.ModAlt != 0 {
+		if event.Key() == tuivory.KeyLeft {
 			s.backDefinitionRelation()
 			return nil
 		}
-		if event.Key() == tcell.KeyRune && (event.Rune() == 'o' || event.Rune() == 'O') {
+		if event.Key() == tuivory.KeyRune && (event.Rune() == 'o' || event.Rune() == 'O') {
 			s.openDefinitionRelation()
 			return nil
 		}
 	}
 	switch event.Key() {
-	case tcell.KeyF1:
+	case tuivory.KeyF1:
 		s.showHelp()
 		return nil
-	case tcell.KeyEscape:
+	case tuivory.KeyEscape:
 		s.closeDefinition()
 		return nil
-	case tcell.KeyCtrlC:
+	case tuivory.KeyCtrlC:
 		s.copyDefinition()
 		return nil
-	case tcell.KeyCtrlR:
+	case tuivory.KeyCtrlR:
 		s.refreshDefinition()
 		return nil
-	case tcell.KeyTab, tcell.KeyBacktab:
-		content := []tview.Primitive{s.definitionText}
+	case tuivory.KeyTab, tuivory.KeyBacktab:
+		content := []tuivory.Primitive{s.definitionText}
 		if s.definitionSection != "ddl" {
-			content = []tview.Primitive{s.definitionTable, s.definitionText}
+			content = []tuivory.Primitive{s.definitionTable, s.definitionText}
 		}
 		content = append(content, s.definitionSelectors...)
 		s.dialogTab(event, content...)
 		return nil
-	case tcell.KeyRune:
+	case tuivory.KeyRune:
 		if event.Modifiers() == 0 && event.Rune() >= '1' && event.Rune() <= '6' {
 			s.showDefinition(definitionSections[event.Rune()-'1'])
 			return nil

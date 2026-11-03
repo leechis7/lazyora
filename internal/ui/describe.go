@@ -1,15 +1,15 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"lazyora/internal/oracle"
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/leechis7/tuivory/go"
 )
 
-func objectAtCursor(editor *tview.TextArea) string {
+func objectAtCursor(editor *tuivory.TextArea) string {
 	selected, start, _ := editor.GetSelection()
 	if selected != "" {
 		return strings.TrimSpace(selected)
@@ -53,10 +53,10 @@ func (s *screen) describe(prompt bool) {
 		}
 	}
 	s.describeFocus = s.app.GetFocus()
-	form := tview.NewForm().AddInputField(s.tr("object_reference"), reference, 40, nil, nil)
+	form := tuivory.NewWidgetForm().AddInputField(s.tr("object_reference"), reference, 40, nil, nil)
 	s.describeForm = form
 	load := func() {
-		reference := strings.TrimSpace(form.GetFormItem(0).(*tview.InputField).GetText())
+		reference := strings.TrimSpace(form.GetFormItem(0).(*tuivory.InputField).GetText())
 		if _, _, err := oracle.ParseObjectReference(reference); err != nil {
 			form.SetTitle(s.tr("object_reference_error"))
 			return
@@ -82,8 +82,8 @@ func (s *screen) describe(prompt bool) {
 	s.styleForm(form)
 	s.clickable(form.GetButton(0))
 	s.clickable(form.GetButton(1))
-	form.GetFormItem(0).SetFinishedFunc(func(key tcell.Key) {
-		if key == tcell.KeyEnter {
+	form.GetFormItem(0).SetFinishedFunc(func(key tuivory.Key) {
+		if key == tuivory.KeyEnter {
 			load()
 		}
 	})

@@ -3,13 +3,11 @@ package ui
 import (
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/leechis7/tuivory/go"
-	"github.com/rivo/tview"
 )
 
 // Only the focused SQL/source editor may consume editor-map keys.
-func (s *screen) activeEditor() *tview.TextArea {
+func (s *screen) activeEditor() *tuivory.TextArea {
 	page, _ := s.pages.GetFrontPage()
 	if page == "main" && s.editor != nil && s.editor.HasFocus() {
 		return s.editor
@@ -20,58 +18,58 @@ func (s *screen) activeEditor() *tview.TextArea {
 	return nil
 }
 
-func (s *screen) nativeEditorKey(e *tview.TextArea, key tcell.Key) {
-	e.InputHandler()(tcell.NewEventKey(key, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+func (s *screen) nativeEditorKey(e *tuivory.TextArea, key tuivory.Key) {
+	e.InputHandler()(tuivory.NewEventKey(key, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 }
 
-func (s *screen) editorKey(event *tcell.EventKey) bool {
+func (s *screen) editorKey(event *tuivory.EventKey) bool {
 	e := s.activeEditor()
 	if s.editorPresetKey(e, event) {
 		return true
 	}
-	if e == nil || event.Modifiers()&tcell.ModAlt != 0 {
+	if e == nil || event.Modifiers()&tuivory.ModAlt != 0 {
 		return false
 	}
 	if s.busy && s.prefs.EditorKeymap != "" {
 		switch event.Key() {
-		case tcell.KeyRune, tcell.KeyBackspace, tcell.KeyBackspace2, tcell.KeyDelete, tcell.KeyCtrlD, tcell.KeyCtrlL, tcell.KeyCtrlR, tcell.KeyCtrlV, tcell.KeyCtrlX, tcell.KeyCtrlZ, tcell.KeyCtrlY, tcell.KeyCtrlT, tcell.KeyCtrlSpace:
+		case tuivory.KeyRune, tuivory.KeyBackspace, tuivory.KeyBackspace2, tuivory.KeyDelete, tuivory.KeyCtrlD, tuivory.KeyCtrlL, tuivory.KeyCtrlR, tuivory.KeyCtrlV, tuivory.KeyCtrlX, tuivory.KeyCtrlZ, tuivory.KeyCtrlY, tuivory.KeyCtrlT, tuivory.KeyCtrlSpace:
 			return true
 		}
 		return false
 	}
-	mod := event.Modifiers() &^ tcell.ModCtrl
+	mod := event.Modifiers() &^ tuivory.ModCtrl
 	if s.prefs.EditorKeymap == "notepad++" {
 		switch {
-		case event.Key() == tcell.KeyCtrlA && mod == 0:
+		case event.Key() == tuivory.KeyCtrlA && mod == 0:
 			e.Select(0, len(e.GetText()))
 			return true
-		case event.Key() == tcell.KeyCtrlD && mod == 0:
+		case event.Key() == tuivory.KeyCtrlD && mod == 0:
 			s.editorLineAction(e, "duplicate_line")
 			return true
-		case event.Key() == tcell.KeyCtrlL && mod == 0:
+		case event.Key() == tuivory.KeyCtrlL && mod == 0:
 			s.editorLineAction(e, "cut_line")
 			return true
-		case event.Key() == tcell.KeyCtrlL && mod == tcell.ModShift:
+		case event.Key() == tuivory.KeyCtrlL && mod == tuivory.ModShift:
 			s.editorLineAction(e, "delete_line")
 			return true
-		case event.Key() == tcell.KeyCtrlT && mod == 0:
+		case event.Key() == tuivory.KeyCtrlT && mod == 0:
 			s.editorLineAction(e, "transpose_line")
 			return true
-		case (event.Key() == tcell.KeyUp || event.Key() == tcell.KeyDown) && event.Modifiers() == tcell.ModCtrl|tcell.ModShift:
+		case (event.Key() == tuivory.KeyUp || event.Key() == tuivory.KeyDown) && event.Modifiers() == tuivory.ModCtrl|tuivory.ModShift:
 			action := "line_up"
-			if event.Key() == tcell.KeyDown {
+			if event.Key() == tuivory.KeyDown {
 				action = "line_down"
 			}
 			s.editorLineAction(e, action)
 			return true
-		case (event.Key() == tcell.KeyCtrlC || event.Key() == tcell.KeyCtrlX) && mod == 0 && !e.HasSelection():
+		case (event.Key() == tuivory.KeyCtrlC || event.Key() == tuivory.KeyCtrlX) && mod == 0 && !e.HasSelection():
 			action := "copy_line"
-			if event.Key() == tcell.KeyCtrlX {
+			if event.Key() == tuivory.KeyCtrlX {
 				action = "cut_line"
 			}
 			s.editorLineAction(e, action)
 			return true
-		case event.Key() == tcell.KeyCtrlSpace || event.Key() == tcell.KeyRune && event.Rune() == ' ' && event.Modifiers() == tcell.ModCtrl:
+		case event.Key() == tuivory.KeyCtrlSpace || event.Key() == tuivory.KeyRune && event.Rune() == ' ' && event.Modifiers() == tuivory.ModCtrl:
 			s.showCompletion(false)
 			return true
 		}
@@ -83,14 +81,14 @@ func (s *screen) editorKey(event *tcell.EventKey) bool {
 	page, _ := s.pages.GetFrontPage()
 	if page == "source" {
 		switch {
-		case event.Key() == tcell.KeyCtrlF && mod == 0:
+		case event.Key() == tuivory.KeyCtrlF && mod == 0:
 			s.showSearch(false)
 			return true
-		case event.Key() == tcell.KeyCtrlR && mod == 0 && s.prefs.EditorKeymap == "notepad++":
+		case event.Key() == tuivory.KeyCtrlR && mod == 0 && s.prefs.EditorKeymap == "notepad++":
 			s.showSearch(true)
 			return true
-		case event.Key() == tcell.KeyF3:
-			s.findEditor(e, event.Modifiers()&tcell.ModShift != 0)
+		case event.Key() == tuivory.KeyF3:
+			s.findEditor(e, event.Modifiers()&tuivory.ModShift != 0)
 			return true
 		}
 	}
@@ -117,7 +115,7 @@ func selectedLines(text string, a, b int) (int, int) {
 }
 
 // One Replace per operation retains the editor's undo history and original text.
-func (s *screen) editorLineAction(e *tview.TextArea, action string) {
+func (s *screen) editorLineAction(e *tuivory.TextArea, action string) {
 	if action == "duplicate_line" && s.prefs.EditorKeymap == "vscode" {
 		s.copyEditorLines(e, false)
 		return
@@ -316,7 +314,7 @@ func (s *screen) showSourceEdit() {
 	s.app.SetFocus(s.sourceActions)
 }
 
-func (s *screen) sourceEditAction(e *tview.TextArea, id string) {
+func (s *screen) sourceEditAction(e *tuivory.TextArea, id string) {
 	switch id {
 	case "undo", "redo", "cut", "paste", "select_all":
 		if id == "cut" && lineClipboardKeymap(s.prefs.EditorKeymap) && !e.HasSelection() {

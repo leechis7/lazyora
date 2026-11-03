@@ -1,16 +1,16 @@
 package ui
 
 import (
+	"lazyora/internal/oracle"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestExplainKeyUsesCursorSQLAndPreservesResult(t *testing.T) {
 	s := fileTestScreen(t)
 	s.editor.SetText("SELECT 1 FROM dual;\nDELETE FROM sample_rows;", false).Select(0, 0)
-	s.key(tcell.NewEventKey(tcell.KeyCtrlE, 0, tcell.ModCtrl))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlE, 0, tuivory.ModCtrl))
 	j := <-s.jobs
 	if j.action != "plan" || j.text != "SELECT 1 FROM dual;" {
 		t.Fatal("explain did not use cursor SQL")
@@ -22,9 +22,9 @@ func TestExplainKeyUsesCursorSQLAndPreservesResult(t *testing.T) {
 		t.Fatal("plan hierarchy incorrect")
 	}
 	s.planTree.SetCurrentNode(root.GetChildren()[0].GetChildren()[0])
-	s.key(tcell.NewEventKey(tcell.KeyF1, 0, 0))
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyF1, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if s.planTree != nil || !s.pendingChanges || s.table.GetCell(0, 0).Text != "keep result" || len(s.jobs) != 0 {
 		t.Fatal("plan display modified results or DB")
 	}

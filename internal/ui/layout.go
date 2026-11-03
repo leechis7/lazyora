@@ -1,6 +1,6 @@
 package ui
 
-import "github.com/rivo/tview"
+import "github.com/leechis7/tuivory/go"
 
 type panelOffsets struct{ editorRow, editorCol, resultRow, resultCol int }
 
@@ -94,7 +94,7 @@ func (s *screen) cyclePanel(reverse bool) {
 		}
 		return
 	}
-	panels := []tview.Primitive{s.editor, s.table}
+	panels := []tuivory.Primitive{s.editor, s.table}
 	if s.browser != nil && !s.browserHidden {
 		panels = append(panels, s.browserUsers, s.browserTypes, s.browserSearch, s.browser)
 	}

@@ -2,11 +2,10 @@ package ui
 
 import (
 	"fmt"
+	"lazyora/internal/oracle"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 const outputHistoryBytes = 1024 * 1024
@@ -84,12 +83,12 @@ func (s *screen) showOutput() {
 	s.outputText.SetTextColor(s.colors().text)
 	s.outputInfo = s.newTextView(textHint).SetWrap(true).SetWordWrap(true)
 	s.outputInfo.SetTextColor(s.colors().muted).SetBackgroundColor(s.colors().background)
-	s.outputToggle = s.clickable(tview.NewButton("").SetSelectedFunc(s.requestOutputToggle))
-	copy := s.clickable(tview.NewButton(s.tr("output_copy") + " (Ctrl+C)").SetSelectedFunc(func() { s.sendClipboard(s.outputContents()) }))
-	clear := s.clickable(tview.NewButton(s.tr("output_clear") + " (Alt+D)").SetSelectedFunc(s.clearOutput))
-	close := s.clickable(tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeOutput))
+	s.outputToggle = s.clickable(tuivory.NewWidgetButton("").SetSelectedFunc(s.requestOutputToggle))
+	copy := s.clickable(tuivory.NewWidgetButton(s.tr("output_copy") + " (Ctrl+C)").SetSelectedFunc(func() { s.sendClipboard(s.outputContents()) }))
+	clear := s.clickable(tuivory.NewWidgetButton(s.tr("output_clear") + " (Alt+D)").SetSelectedFunc(s.clearOutput))
+	close := s.clickable(tuivory.NewWidgetButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeOutput))
 	buttons := s.newFlex().AddItem(s.outputToggle, 0, 1, false).AddItem(copy, 0, 1, false).AddItem(clear, 0, 1, false).AddItem(close, 0, 1, false)
-	root := s.newFlex().SetDirection(tview.FlexRow).AddItem(s.outputInfo, 6, 0, false).AddItem(s.outputText, 0, 1, true).AddItem(buttons, 1, 0, false)
+	root := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(s.outputInfo, 6, 0, false).AddItem(s.outputText, 0, 1, true).AddItem(buttons, 1, 0, false)
 	s.pages.AddPage("output", root, true, true)
 	s.refreshOutput()
 	s.app.SetFocus(s.outputText)
@@ -104,22 +103,22 @@ func (s *screen) closeOutput() {
 	s.outputFocus = nil
 }
 
-func (s *screen) outputKey(event *tcell.EventKey) *tcell.EventKey {
+func (s *screen) outputKey(event *tuivory.EventKey) *tuivory.EventKey {
 	switch event.Key() {
-	case tcell.KeyEscape:
+	case tuivory.KeyEscape:
 		s.closeOutput()
 		return nil
-	case tcell.KeyF1:
+	case tuivory.KeyF1:
 		s.showHelp()
 		return nil
-	case tcell.KeyCtrlC:
+	case tuivory.KeyCtrlC:
 		s.sendClipboard(s.outputContents())
 		return nil
-	case tcell.KeyTab, tcell.KeyBacktab:
+	case tuivory.KeyTab, tuivory.KeyBacktab:
 		s.dialogTab(event, s.outputText)
 		return nil
-	case tcell.KeyRune:
-		if event.Modifiers()&tcell.ModAlt != 0 {
+	case tuivory.KeyRune:
+		if event.Modifiers()&tuivory.ModAlt != 0 {
 			switch event.Rune() {
 			case 'e', 'E':
 				s.requestOutputToggle()

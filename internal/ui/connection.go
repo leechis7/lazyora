@@ -3,14 +3,13 @@ package ui
 import (
 	"errors"
 	"fmt"
+	"lazyora/internal/oracle"
+	"lazyora/internal/settings"
 	"os"
 	"strconv"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
-	"lazyora/internal/settings"
+	"github.com/leechis7/tuivory/go"
 )
 
 func env(name, fallback string) string {
@@ -40,10 +39,10 @@ func (s *screen) localizeConnection() {
 		if i == connectionMode {
 			form.GetFormItem(i).(*choiceField).SetLabel(s.tr(key))
 		} else {
-			form.GetFormItem(i).(*tview.InputField).SetLabel(s.tr(key))
+			form.GetFormItem(i).(*tuivory.InputField).SetLabel(s.tr(key))
 		}
 	}
-	form.GetFormItem(connectionSavePassword).(*tview.Checkbox).SetLabel(s.tr("save_password"))
+	form.GetFormItem(connectionSavePassword).(*tuivory.Checkbox).SetLabel(s.tr("save_password"))
 	environmentChoice := form.GetFormItem(connectionEnvironment).(*choiceField)
 	environmentIndex, _ := environmentChoice.GetCurrentOption()
 	environmentChoice.SetLabel(s.tr("environment"))
@@ -66,7 +65,7 @@ func (s *screen) closeConnection() {
 		return
 	}
 	if s.connectForm != nil {
-		s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).SetText("")
+		s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).SetText("")
 	}
 	s.clearConnectionSecret = nil
 	s.reloadConnectionProfiles = nil
@@ -85,7 +84,7 @@ func (s *screen) closeConnection() {
 
 func (s *screen) connectionForm() {
 	s.connectFocus = s.app.GetFocus()
-	form := tview.NewForm().SetItemPadding(1)
+	form := tuivory.NewWidgetForm().SetItemPadding(1)
 	s.connectForm = form
 	mode := "service"
 	autofilled := false
@@ -107,7 +106,7 @@ func (s *screen) connectionForm() {
 	form.AddCheckbox(s.tr("save_password"), false, nil)
 	environments := []string{"", "dev", "test", "prod"}
 	form.AddFormItem(s.newChoice(s.tr("environment"), []string{s.tr("environment_none"), s.tr("environment_dev"), s.tr("environment_test"), s.tr("environment_prod")}, 0, nil))
-	password := form.GetFormItem(connectionPassword).(*tview.InputField)
+	password := form.GetFormItem(connectionPassword).(*tuivory.InputField)
 	invalidateSecret = func() {
 		if autofilled {
 			password.SetText("")
@@ -115,7 +114,7 @@ func (s *screen) connectionForm() {
 		}
 	}
 	for _, index := range []int{connectionHost, connectionPort, connectionUser, connectionName} {
-		form.GetFormItem(index).(*tview.InputField).SetChangedFunc(func(string) { invalidateSecret() })
+		form.GetFormItem(index).(*tuivory.InputField).SetChangedFunc(func(string) { invalidateSecret() })
 	}
 	password.SetChangedFunc(func(string) { autofilled = false })
 	s.clearConnectionSecret = func() { password.SetText(""); autofilled = false }
@@ -125,18 +124,18 @@ func (s *screen) connectionForm() {
 	for _, profile := range profiles {
 		options = append(options, profile.Alias)
 	}
-	selector := tview.NewForm().AddFormItem(s.newChoice("", options, 0, nil))
+	selector := tuivory.NewWidgetForm().AddFormItem(s.newChoice("", options, 0, nil))
 	s.connectProfiles = selector
 	selector.SetBorder(true)
 	s.styleForm(selector)
 	selectProfile := func(_ string, index int) {
 		// Always discard the previous password, including environment defaults.
-		form.GetFormItem(connectionSavePassword).(*tview.Checkbox).SetChecked(false)
+		form.GetFormItem(connectionSavePassword).(*tuivory.Checkbox).SetChecked(false)
 		form.GetFormItem(connectionEnvironment).(*choiceField).SetCurrentOption(0)
-		form.GetFormItem(connectionPassword).(*tview.InputField).SetText("")
+		form.GetFormItem(connectionPassword).(*tuivory.InputField).SetText("")
 		if index <= 0 {
 			for i, value := range map[int]string{connectionAlias: "", connectionHost: env("LAZYORA_HOST", "localhost"), connectionPort: env("LAZYORA_PORT", "1521"), connectionUser: os.Getenv("LAZYORA_USER"), connectionName: os.Getenv("LAZYORA_NAME")} {
-				form.GetFormItem(i).(*tview.InputField).SetText(value)
+				form.GetFormItem(i).(*tuivory.InputField).SetText(value)
 			}
 			form.GetFormItem(connectionMode).(*choiceField).SetCurrentOption(0)
 			return
@@ -148,7 +147,7 @@ func (s *screen) connectionForm() {
 			}
 		}
 		for i, value := range map[int]string{connectionHost: p.Host, connectionPort: strconv.Itoa(p.Port), connectionUser: p.User, connectionName: p.Name, connectionAlias: p.Alias} {
-			form.GetFormItem(i).(*tview.InputField).SetText(value)
+			form.GetFormItem(i).(*tuivory.InputField).SetText(value)
 		}
 		modeIndex := 0
 		if p.Mode == "sid" {
@@ -156,7 +155,7 @@ func (s *screen) connectionForm() {
 		}
 		form.GetFormItem(connectionMode).(*choiceField).SetCurrentOption(modeIndex)
 		if p.SavedPassword {
-			form.GetFormItem(connectionSavePassword).(*tview.Checkbox).SetChecked(true)
+			form.GetFormItem(connectionSavePassword).(*tuivory.Checkbox).SetChecked(true)
 			s.ensurePasswords(func() {
 				value, found, err := s.vault.Get(p.ID, p.Binding())
 				if err != nil {
@@ -189,18 +188,18 @@ func (s *screen) connectionForm() {
 		}
 		profiles = next
 		s.connectionOptions()
-		form.GetFormItem(connectionSavePassword).(*tview.Checkbox).SetChecked(false)
+		form.GetFormItem(connectionSavePassword).(*tuivory.Checkbox).SetChecked(false)
 		return nil
 	}
 	readConfig := func() (oracle.Config, bool) {
-		port, err := oracle.ParsePort(form.GetFormItem(connectionPort).(*tview.InputField).GetText())
+		port, err := oracle.ParsePort(form.GetFormItem(connectionPort).(*tuivory.InputField).GetText())
 		if err != nil {
 			form.SetTitle(" " + s.tr("port_error") + " ")
 			return oracle.Config{}, false
 		}
-		config := oracle.Config{Host: strings.TrimSpace(form.GetFormItem(connectionHost).(*tview.InputField).GetText()), Port: port,
-			User: form.GetFormItem(connectionUser).(*tview.InputField).GetText(), Password: form.GetFormItem(connectionPassword).(*tview.InputField).GetText(),
-			Mode: mode, Name: strings.TrimSpace(form.GetFormItem(connectionName).(*tview.InputField).GetText())}
+		config := oracle.Config{Host: strings.TrimSpace(form.GetFormItem(connectionHost).(*tuivory.InputField).GetText()), Port: port,
+			User: form.GetFormItem(connectionUser).(*tuivory.InputField).GetText(), Password: form.GetFormItem(connectionPassword).(*tuivory.InputField).GetText(),
+			Mode: mode, Name: strings.TrimSpace(form.GetFormItem(connectionName).(*tuivory.InputField).GetText())}
 		if _, err = config.DSN(); err != nil {
 			form.SetTitle(" " + s.tr("required") + " ")
 			return oracle.Config{}, false
@@ -216,7 +215,7 @@ func (s *screen) connectionForm() {
 			return
 		}
 		environment, _ := form.GetFormItem(connectionEnvironment).(*choiceField).GetCurrentOption()
-		s.pendingIdentity = settings.Connection{Alias: strings.TrimSpace(form.GetFormItem(connectionAlias).(*tview.InputField).GetText()), Environment: environments[environment]}
+		s.pendingIdentity = settings.Connection{Alias: strings.TrimSpace(form.GetFormItem(connectionAlias).(*tuivory.InputField).GetText()), Environment: environments[environment]}
 		s.requestReconnect(config)
 	}
 	saveProfile := func() {
@@ -228,7 +227,7 @@ func (s *screen) connectionForm() {
 		if !ok {
 			return
 		}
-		alias := strings.TrimSpace(form.GetFormItem(connectionAlias).(*tview.InputField).GetText())
+		alias := strings.TrimSpace(form.GetFormItem(connectionAlias).(*tuivory.InputField).GetText())
 		if alias == "" {
 			form.SetTitle(" " + s.tr("alias_required") + " ")
 			return
@@ -254,7 +253,7 @@ func (s *screen) connectionForm() {
 				return
 			}
 		}
-		savePassword := form.GetFormItem(connectionSavePassword).(*tview.Checkbox).IsChecked()
+		savePassword := form.GetFormItem(connectionSavePassword).(*tuivory.Checkbox).IsChecked()
 		// Keep the public profile marked as not saved until encrypted persistence
 		// succeeds. A failure can leave updated public metadata, never plaintext.
 		profile.SavedPassword = false
@@ -305,7 +304,7 @@ func (s *screen) connectionForm() {
 		dropdown := selector.GetFormItem(0).(*choiceField)
 		s.connectionOptions()
 		dropdown.SetSelectedFunc(nil).SetCurrentOption(index + 1).SetSelectedFunc(selectProfile)
-		form.GetFormItem(connectionAlias).(*tview.InputField).SetText(alias)
+		form.GetFormItem(connectionAlias).(*tuivory.InputField).SetText(alias)
 		message := "connection_saved"
 		if savePassword {
 			message = "connection_secret_saved"
@@ -317,7 +316,7 @@ func (s *screen) connectionForm() {
 			saveProfile()
 			return
 		}
-		if form.GetFormItem(connectionSavePassword).(*tview.Checkbox).IsChecked() {
+		if form.GetFormItem(connectionSavePassword).(*tuivory.Checkbox).IsChecked() {
 			config, ok := readConfig()
 			if !ok {
 				return
@@ -326,13 +325,13 @@ func (s *screen) connectionForm() {
 				form.SetTitle(s.tr("vault_password_required"))
 				return
 			}
-			if strings.TrimSpace(form.GetFormItem(connectionAlias).(*tview.InputField).GetText()) == "" {
+			if strings.TrimSpace(form.GetFormItem(connectionAlias).(*tuivory.InputField).GetText()) == "" {
 				form.SetTitle(s.tr("alias_required"))
 				return
 			}
 			s.ensurePasswords(saveProfile)
 		} else {
-			alias := strings.TrimSpace(form.GetFormItem(connectionAlias).(*tview.InputField).GetText())
+			alias := strings.TrimSpace(form.GetFormItem(connectionAlias).(*tuivory.InputField).GetText())
 			for _, p := range profiles {
 				if p.Alias == alias && p.SavedPassword {
 					s.ensurePasswords(saveProfile)
@@ -367,7 +366,7 @@ func (s *screen) connectionForm() {
 	}
 	gap := s.newBox()
 	s.setSurface(gap, surfacePanel)
-	content := s.newFlex().SetDirection(tview.FlexRow).AddItem(selector, 5, 0, false).AddItem(gap, 1, 0, false).AddItem(form, 0, 1, true)
+	content := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(selector, 5, 0, false).AddItem(gap, 1, 0, false).AddItem(form, 0, 1, true)
 	root := s.formPopup(content, 90, 30, func(width, height int) {
 		spacing := 1
 		if height < 29 {
@@ -425,18 +424,18 @@ func (s *screen) showConnectionSaveError(err error) {
 }
 
 // Keep the profile picker separate while retaining a single Tab cycle.
-func (s *screen) connectionTab(event *tcell.EventKey) bool {
-	if event.Key() != tcell.KeyTab && event.Key() != tcell.KeyBacktab {
+func (s *screen) connectionTab(event *tuivory.EventKey) bool {
+	if event.Key() != tuivory.KeyTab && event.Key() != tuivory.KeyBacktab {
 		return false
 	}
-	for _, form := range []*tview.Form{s.connectProfiles, s.connectForm} {
+	for _, form := range []*tuivory.WidgetForm{s.connectProfiles, s.connectForm} {
 		for i := 0; i < form.GetFormItemCount(); i++ {
 			if dropdown, ok := form.GetFormItem(i).(*choiceField); ok && dropdown.IsOpen() {
 				return false
 			}
 		}
 	}
-	backwards := event.Key() == tcell.KeyBacktab
+	backwards := event.Key() == tuivory.KeyBacktab
 	if s.connectProfiles.HasFocus() {
 		index := 0
 		if backwards {

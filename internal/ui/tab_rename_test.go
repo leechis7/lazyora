@@ -1,10 +1,10 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"strings"
 	"testing"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestTabRenamePreservesWorkAndFileNameWins(t *testing.T) {
@@ -14,8 +14,8 @@ func TestTabRenamePreservesWorkAndFileNameWins(t *testing.T) {
 	before := s.editor.GetText()
 	row := s.resultRows[0][1]
 	s.showTabRename()
-	s.renameForm.GetFormItem(0).(*tview.InputField).SetText("한글 [red] 조회")
-	s.renameForm.GetButton(0).InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(tview.Primitive) {})
+	s.renameForm.GetFormItem(0).(*tuivory.InputField).SetText("한글 [red] 조회")
+	s.renameForm.GetButton(0).InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(tuivory.Primitive) {})
 	if s.tabs[0].name != "한글 [red] 조회" || s.editor.GetText() != before || s.resultRows[0][1] != row {
 		t.Fatal("rename altered work")
 	}

@@ -5,14 +5,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestLegacyShiftFunctionKeysMatchExplicitModifiers(t *testing.T) {
 	for _, keymap := range []string{"", "vim", "notepad++"} {
 		for number := 1; number <= 12; number++ {
 			t.Run(fmt.Sprintf("%s/Shift+F%d", keymap, number), func(t *testing.T) {
-				snapshot := func(event *tcell.EventKey) string {
+				snapshot := func(event *tuivory.EventKey) string {
 					s, _ := resultScreen(t)
 					s.prefs.EditorKeymap = keymap
 					s.demo, s.connected = false, true
@@ -36,8 +36,8 @@ func TestLegacyShiftFunctionKeysMatchExplicitModifiers(t *testing.T) {
 						s.fullscreen, s.maximized, s.editor.HasFocus(), s.table.HasFocus(), s.menuIndex,
 						s.editor.GetText(), start, end, selected, strings.Join(jobs, ","), s.status.GetText(false))
 				}
-				want := snapshot(tcell.NewEventKey(tcell.KeyF1+tcell.Key(number-1), 0, tcell.ModShift))
-				got := snapshot(tcell.NewEventKey(tcell.KeyF13+tcell.Key(number-1), 0, 0))
+				want := snapshot(tuivory.NewEventKey(tuivory.KeyF1+tuivory.Key(number-1), 0, tuivory.ModShift))
+				got := snapshot(tuivory.NewEventKey(tuivory.KeyF13+tuivory.Key(number-1), 0, 0))
 				if got != want {
 					t.Fatalf("legacy and modified function keys differ\nlegacy: %s\nmodern: %s", got, want)
 				}
@@ -48,10 +48,10 @@ func TestLegacyShiftFunctionKeysMatchExplicitModifiers(t *testing.T) {
 
 func TestModifiedHigherFunctionKeysAreNotReinterpreted(t *testing.T) {
 	s, _ := resultScreen(t)
-	for key := tcell.KeyF13; key <= tcell.KeyF24; key++ {
-		event := tcell.NewEventKey(key, 0, tcell.ModCtrl)
+	for key := tuivory.KeyF13; key <= tuivory.KeyF24; key++ {
+		event := tuivory.NewEventKey(key, 0, tuivory.ModCtrl)
 		forwarded := s.key(event)
-		if forwarded == nil || forwarded.Key() != key || forwarded.Modifiers() != tcell.ModCtrl {
+		if forwarded == nil || forwarded.Key() != key || forwarded.Modifiers() != tuivory.ModCtrl {
 			t.Fatalf("modified higher key %v was reinterpreted", key)
 		}
 	}

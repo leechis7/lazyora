@@ -1,14 +1,13 @@
 package ui
 
 import (
+	"lazyora/internal/sqlfile"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/sqlfile"
+	"github.com/leechis7/tuivory/go"
 )
 
 func fileTestScreen(t *testing.T) *screen {
@@ -16,18 +15,18 @@ func fileTestScreen(t *testing.T) *screen {
 	s := shortcutScreen(t)
 	s.initDocument()
 	s.pendingChanges = true
-	s.table.SetCell(0, 0, tview.NewTableCell("keep result"))
+	s.table.SetCell(0, 0, tuivory.NewTableCell("keep result"))
 	return s
 }
 
 func fileInput(s *screen, path string) {
-	s.fileDialog.form.GetFormItem(0).(*tview.InputField).SetText(path)
+	s.fileDialog.form.GetFormItem(0).(*tuivory.InputField).SetText(path)
 	s.fileDialog.apply()
 }
 
-func modalChoice(s *screen, modal *tview.Modal, index int) {
+func modalChoice(s *screen, modal *tuivory.Modal, index int) {
 	modal.SetFocus(index)
-	modal.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	modal.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 }
 
 func TestSQLFilesSaveOpenAndDirtyTitle(t *testing.T) {
@@ -36,7 +35,7 @@ func TestSQLFilesSaveOpenAndDirtyTitle(t *testing.T) {
 	if !strings.Contains(s.editor.GetTitle(), "*") {
 		t.Fatal("dirty marker missing")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyCtrlS, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlS, 0, 0))
 	if s.fileDialog == nil || s.fileDialog.mode != "save" {
 		t.Fatal("unnamed Save did not request path")
 	}
@@ -46,7 +45,7 @@ func TestSQLFilesSaveOpenAndDirtyTitle(t *testing.T) {
 		t.Fatal("save did not update document and title")
 	}
 	s.editor.SetText("new SQL", false)
-	s.key(tcell.NewEventKey(tcell.KeyCtrlS, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlS, 0, 0))
 	raw, _ := os.ReadFile(path)
 	if string(raw) != "new SQL" {
 		t.Fatal("Ctrl+S did not save current file")
@@ -56,16 +55,16 @@ func TestSQLFilesSaveOpenAndDirtyTitle(t *testing.T) {
 	if s.document.Dirty(s.editor.GetText()) || strings.Contains(s.editor.GetTitle(), "*") {
 		t.Fatal("restoring original text still dirty")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyCtrlN, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlN, 0, 0))
 	if s.document.Path != "" || s.editor.GetText() != "" {
 		t.Fatal("New did not create empty document")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyCtrlO, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlO, 0, 0))
 	fileInput(s, path)
 	if s.editor.GetText() != "new SQL" || s.document.Path != path {
 		t.Fatal("open did not load saved document")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyCtrlS, 0, tcell.ModShift))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlS, 0, tuivory.ModShift))
 	if s.fileDialog == nil || s.fileDialog.mode != "save" {
 		t.Fatal("Save As shortcut missing")
 	}
@@ -128,7 +127,7 @@ func TestSQLFilesQuitKeepsDocumentAndDBDecisionsSeparate(t *testing.T) {
 		if s.documentModal == nil || s.exitDialog != nil {
 			t.Fatal("quit did not ask about SQL first")
 		}
-		if event := s.key(tcell.NewEventKey(tcell.KeyCtrlC, 0, 0)); event != nil {
+		if event := s.key(tuivory.NewEventKey(tuivory.KeyCtrlC, 0, 0)); event != nil {
 			t.Fatal("Ctrl+C could bypass guard")
 		}
 		modalChoice(s, s.documentModal, choice)
@@ -154,14 +153,14 @@ func TestSQLFilesQuitKeepsDocumentAndDBDecisionsSeparate(t *testing.T) {
 	s.editor.SetText("unsaved", false)
 	s.requestQuit()
 	modalChoice(s, s.documentModal, 0)
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if s.fileDialog != nil || s.exitDialog != nil || s.editor.GetText() != "unsaved" {
 		t.Fatal("cancel Save As did not abort quit")
 	}
 	// Esc and default Enter both cancel the unsaved prompt.
-	for _, key := range []tcell.Key{tcell.KeyEscape, tcell.KeyEnter} {
+	for _, key := range []tuivory.Key{tuivory.KeyEscape, tuivory.KeyEnter} {
 		s.requestQuit()
-		s.documentModal.InputHandler()(tcell.NewEventKey(key, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+		s.documentModal.InputHandler()(tuivory.NewEventKey(key, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 		if s.documentModal != nil || s.exitDialog != nil {
 			t.Fatal("default guard action did not cancel")
 		}
@@ -224,7 +223,7 @@ func TestSQLFilesFailuresPreserveEditorAndAbortContinuation(t *testing.T) {
 		t.Fatal("save failure lost document or continued")
 	}
 	s.fileDialog.close()
-	s.key(tcell.NewEventKey(tcell.KeyCtrlW, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlW, 0, 0))
 	if s.documentModal == nil {
 		t.Fatal("Close did not protect edits")
 	}
@@ -261,28 +260,28 @@ func TestSQLFilesPickerKeyboardNavigationAndHelp(t *testing.T) {
 	if dialog.directory != dir {
 		t.Fatal("directory path did not navigate")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyTab, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyTab, 0, 0))
 	if !dialog.list.HasFocus() {
 		t.Fatal("Tab did not reach list")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyTab, 0, 0))
-	if _, ok := s.app.GetFocus().(*tview.Button); !ok {
+	s.key(tuivory.NewEventKey(tuivory.KeyTab, 0, 0))
+	if _, ok := s.app.GetFocus().(*tuivory.WidgetButton); !ok {
 		t.Fatal("Tab did not reach buttons")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyRight, 0, 0))
-	s.key(tcell.NewEventKey(tcell.KeyF1, 0, 0))
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyRight, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyF1, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if page, _ := s.pages.GetFrontPage(); page != "file" || s.fileDialog != dialog {
 		t.Fatal("help did not restore picker")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if s.fileDialog != nil || !s.editor.HasFocus() {
 		t.Fatal("cancel did not restore editor focus")
 	}
 }
 
 func TestSQLFilesPickerMouseAtSmallTerminal(t *testing.T) {
-	terminal := tcell.NewSimulationScreen("UTF-8")
+	terminal := tuivory.NewSimulationScreen("UTF-8")
 	if err := terminal.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -306,18 +305,18 @@ func TestSQLFilesPickerMouseAtSmallTerminal(t *testing.T) {
 		x, y, _, _ := list.GetInnerRect()
 		// The parent entry is followed by the SQL file. Click the file to
 		// populate Path, then click Open; selecting a file alone never executes it.
-		root.MouseHandler()(tview.MouseLeftClick, tcell.NewEventMouse(x+1, y+1, tcell.ButtonNone, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
-		if got := s.fileDialog.form.GetFormItem(0).(*tview.InputField).GetText(); got != path {
+		root.MouseHandler()(tuivory.MouseLeftClick, tuivory.NewEventMouse(x+1, y+1, tuivory.ButtonNone, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
+		if got := s.fileDialog.form.GetFormItem(0).(*tuivory.InputField).GetText(); got != path {
 			t.Fatalf("file click selected %q", got)
 		}
-		content := root.content.(*tview.Flex)
-		buttons := content.GetItem(content.GetItemCount() - 1).(*tview.Flex)
-		open := buttons.GetItem(0).(*tview.Button)
+		content := root.content.(*tuivory.Flex)
+		buttons := content.GetItem(content.GetItemCount() - 1).(*tuivory.Flex)
+		open := buttons.GetItem(0).(*tuivory.WidgetButton)
 		x, y, width, height := open.GetRect()
 		if x < 0 || x+width > 80 || height != 1 || y >= 21 {
 			t.Fatal("file action button off screen")
 		}
-		root.MouseHandler()(tview.MouseLeftClick, tcell.NewEventMouse(x+width/2, y, tcell.ButtonNone, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+		root.MouseHandler()(tuivory.MouseLeftClick, tuivory.NewEventMouse(x+width/2, y, tuivory.ButtonNone, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 		if s.fileDialog != nil || s.document.Path != path || len(s.jobs) != 0 || !s.pendingChanges {
 			t.Fatal("mouse open failed or affected DB state")
 		}
@@ -328,12 +327,12 @@ func TestSQLFilesCtrlCInHelpCannotBypassExitGuard(t *testing.T) {
 	s := fileTestScreen(t)
 	s.editor.SetText("unsaved SQL", false)
 	s.showHelp()
-	original := tcell.NewEventKey(tcell.KeyCtrlC, 0, tcell.ModCtrl)
+	original := tuivory.NewEventKey(tuivory.KeyCtrlC, 0, tuivory.ModCtrl)
 	forwarded := s.key(original)
 	if forwarded == original {
 		t.Fatal("tview would stop immediately and bypass unsaved SQL confirmation")
 	}
-	if forwarded != nil && forwarded.Key() != tcell.KeyCtrlC {
+	if forwarded != nil && forwarded.Key() != tuivory.KeyCtrlC {
 		t.Fatal("copy key changed")
 	}
 	if s.editor.GetText() != "unsaved SQL" || !s.pendingChanges || len(s.jobs) != 0 {

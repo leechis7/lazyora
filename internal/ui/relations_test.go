@@ -1,17 +1,17 @@
 package ui
 
 import (
+	"lazyora/internal/oracle"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestRelationNavigationAndBackPreserveOriginalObjectAndSQL(t *testing.T) {
 	s := definitionScreen(t)
 	original, sql := s.object, s.editor.GetText()
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'g', tuivory.ModAlt))
 	if s.definitionSection != "grants" {
 		t.Fatal("object grant shortcut not connected")
 	}
@@ -27,11 +27,11 @@ func TestRelationNavigationAndBackPreserveOriginalObjectAndSQL(t *testing.T) {
 	if s.definitionObject != target || len(s.definitionTrail) != 1 || s.object != original || s.editor.GetText() != sql {
 		t.Fatal("navigation changed original object/editor")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyLeft, 0, tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyLeft, 0, tuivory.ModAlt))
 	if s.definitionObject != original || s.definitionSection != "dependents" || len(s.definitionRows) != 1 || len(s.definitionTrail) != 0 {
 		t.Fatal("back lost metadata/history")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if s.object != original || !s.objectTable.HasFocus() || len(s.jobs) != 0 {
 		t.Fatal("close lost original object focus or executed SQL")
 	}

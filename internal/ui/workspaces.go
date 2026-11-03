@@ -2,14 +2,13 @@ package ui
 
 import (
 	"fmt"
-	"strings"
-	"unicode"
-
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"lazyora/internal/credentials"
 	"lazyora/internal/oracle"
 	"lazyora/internal/settings"
+	"strings"
+	"unicode"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 const maxWorkspaces = 8
@@ -17,7 +16,7 @@ const maxWorkspaces = 8
 // Every screen owns its widgets, SQL tabs and worker. Only the terminal and
 // application event loop are shared; Oracle sessions never cross this boundary.
 type workspaceSet struct {
-	app        *tview.Application
+	app        *tuivory.Application
 	screens    []*screen
 	active     *screen
 	factory    func(settings.Config) *screen
@@ -244,11 +243,11 @@ func (s *screen) showWorkspaces() {
 		return
 	}
 	s.workspaceFocusBefore = s.app.GetFocus()
-	list := tview.NewList().ShowSecondaryText(true).SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetSelectedStyle(s.focusStyle())
+	list := tuivory.NewWidgetList().ShowSecondaryText(true).SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetSelectedStyle(s.focusStyle())
 	s.workspaceList = list
 	s.styleList(list)
 	list.SetBackgroundColor(s.colors().surface)
-	list.SetMainTextStyle(tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().surface)).SetSecondaryTextStyle(tcell.StyleDefault.Foreground(s.colors().muted).Background(s.colors().surface))
+	list.SetMainTextStyle(tuivory.StyleDefault.Foreground(s.colors().text).Background(s.colors().surface)).SetSecondaryTextStyle(tuivory.StyleDefault.Foreground(s.colors().muted).Background(s.colors().surface))
 	list.SetBorder(true).SetTitle(s.tr("workspaces"))
 	snapshot := append([]*screen(nil), s.workspaces.screens...)
 	selected := 0
@@ -265,7 +264,7 @@ func (s *screen) showWorkspaces() {
 		if item.transactionUncertain {
 			note = s.tr("workspace_uncertain")
 		}
-		list.AddItem(tview.Escape(label), note, 0, nil)
+		list.AddItem(tuivory.Escape(label), note, 0, nil)
 	}
 	list.SetCurrentItem(selected)
 	activate := func() {
@@ -284,20 +283,20 @@ func (s *screen) showWorkspaces() {
 		s.closeWorkspaces()
 		s.workspaces.closeOne(snapshot[index])
 	}
-	list.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
-		if e.Key() == tcell.KeyEnter && e.Modifiers() == 0 {
+	list.SetInputCapture(func(e *tuivory.EventKey) *tuivory.EventKey {
+		if e.Key() == tuivory.KeyEnter && e.Modifiers() == 0 {
 			activate()
 			return nil
 		}
 		return e
 	})
-	list.SetMouseCapture(func(action tview.MouseAction, e *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
-		if action == tview.MouseLeftDoubleClick {
-			action = tview.MouseLeftClick
+	list.SetMouseCapture(func(action tuivory.MouseAction, e *tuivory.EventMouse) (tuivory.MouseAction, *tuivory.EventMouse) {
+		if action == tuivory.MouseLeftDoubleClick {
+			action = tuivory.MouseLeftClick
 		}
 		return action, e
 	})
-	controls := tview.NewForm().AddButton(s.tr("workspace_activate"), activate).
+	controls := tuivory.NewWidgetForm().AddButton(s.tr("workspace_activate"), activate).
 		AddButton(s.tr("workspace_new"), func() { s.closeWorkspaces(); s.workspaces.addNew() }).
 		AddButton(s.tr("workspace_close"), closeSelected).AddButton(s.tr("cancel"), s.closeWorkspaces)
 	s.styleForm(controls)
@@ -305,7 +304,7 @@ func (s *screen) showWorkspaces() {
 		s.clickable(controls.GetButton(i))
 	}
 	fit := formLayout(controls)
-	content := s.newFlex().SetDirection(tview.FlexRow).AddItem(list, 0, 1, true).AddItem(s.newTextView(textHint).SetText(s.tr("workspace_shared_tabs")).SetWrap(true), 2, 0, false).AddItem(controls, 5, 0, false)
+	content := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(list, 0, 1, true).AddItem(s.newTextView(textHint).SetText(s.tr("workspace_shared_tabs")).SetWrap(true), 2, 0, false).AddItem(controls, 5, 0, false)
 	root := s.formPopup(content, 104, 24, func(w, h int) { fit(w, 5) })
 	s.pages.AddPage("workspaces", root, true, true)
 	s.app.SetFocus(list)
@@ -316,38 +315,38 @@ func (s *screen) closeWorkspaces() {
 	s.app.SetFocus(s.workspaceFocusBefore)
 	s.workspaceFocusBefore = nil
 }
-func (s *screen) workspaceKey(e *tcell.EventKey) *tcell.EventKey {
+func (s *screen) workspaceKey(e *tuivory.EventKey) *tuivory.EventKey {
 	switch e.Key() {
-	case tcell.KeyF1:
+	case tuivory.KeyF1:
 		s.showHelp()
 		return nil
-	case tcell.KeyEscape:
+	case tuivory.KeyEscape:
 		s.closeWorkspaces()
 		return nil
-	case tcell.KeyCtrlQ:
+	case tuivory.KeyCtrlQ:
 		s.closeWorkspaces()
 		s.requestQuit()
 		return nil
-	case tcell.KeyTab, tcell.KeyBacktab:
+	case tuivory.KeyTab, tuivory.KeyBacktab:
 		_, root := s.pages.GetFrontPage()
 		popup := root.(*formPopupLayer)
-		content := popup.content.(*tview.Flex)
-		form := content.GetItem(2).(*tview.Form)
+		content := popup.content.(*tuivory.Flex)
+		form := content.GetItem(2).(*tuivory.WidgetForm)
 		if s.workspaceList.HasFocus() {
 			index := 0
-			if e.Key() == tcell.KeyBacktab {
+			if e.Key() == tuivory.KeyBacktab {
 				index = form.GetButtonCount() - 1
 			}
 			focusForm(s, form, index)
 			return nil
 		}
-		if e.Key() == tcell.KeyTab && form.GetButton(form.GetButtonCount()-1).HasFocus() || e.Key() == tcell.KeyBacktab && form.GetButton(0).HasFocus() {
+		if e.Key() == tuivory.KeyTab && form.GetButton(form.GetButtonCount()-1).HasFocus() || e.Key() == tuivory.KeyBacktab && form.GetButton(0).HasFocus() {
 			s.app.SetFocus(s.workspaceList)
 			return nil
 		}
 		return e
 
-	case tcell.KeyDelete:
+	case tuivory.KeyDelete:
 		index := s.workspaceList.GetCurrentItem()
 		if index >= 0 && index < len(s.workspaces.screens) {
 			target := s.workspaces.screens[index]
@@ -355,7 +354,7 @@ func (s *screen) workspaceKey(e *tcell.EventKey) *tcell.EventKey {
 			s.workspaces.closeOne(target)
 		}
 		return nil
-	case tcell.KeyRune:
+	case tuivory.KeyRune:
 		if e.Rune() == 'n' && e.Modifiers() == 0 && s.workspaceList.HasFocus() {
 			s.closeWorkspaces()
 			s.workspaces.addNew()

@@ -2,13 +2,12 @@ package ui
 
 import (
 	"fmt"
+	"lazyora/internal/oracle"
+	"lazyora/internal/settings"
 	"path/filepath"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
-	"lazyora/internal/settings"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestBlackWhiteThemeRendersWithoutChromaticColors(t *testing.T) {
@@ -29,7 +28,7 @@ func TestBlackWhiteThemeRendersWithoutChromaticColors(t *testing.T) {
 				case "source":
 					s.browserTypes.SetCurrentOption(3)
 					s.activateBrowser(s.browser.GetCurrentNode())
-					s.key(tcell.NewEventKey(tcell.KeyRune, 's', tcell.ModAlt))
+					s.key(tuivory.NewEventKey(tuivory.KeyRune, 's', tuivory.ModAlt))
 				case "confirm":
 					s.showProgramConfirm("Review changes?", func() {})
 				case "help":
@@ -43,7 +42,7 @@ func TestBlackWhiteThemeRendersWithoutChromaticColors(t *testing.T) {
 				case "dropdown":
 					s.connectionForm()
 					focusForm(s, s.connectForm, connectionMode)
-					s.connectForm.GetFormItem(connectionMode).(*choiceField).InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+					s.connectForm.GetFormItem(connectionMode).(*choiceField).InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 				case "settings":
 					s.settingsForm()
 				case "output":
@@ -60,7 +59,7 @@ func TestBlackWhiteThemeRendersWithoutChromaticColors(t *testing.T) {
 					for x := 0; x < 120; x++ {
 						_, _, style, _ := terminal.GetContent(x, y)
 						fg, bg, _ := style.Decompose()
-						for _, color := range []tcell.Color{fg, bg} {
+						for _, color := range []tuivory.Color{fg, bg} {
 							r, g, b := color.RGB()
 							if r != g || g != b {
 								t.Fatalf("chromatic color %v at %d,%d", color, x, y)

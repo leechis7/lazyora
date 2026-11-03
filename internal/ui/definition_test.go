@@ -2,12 +2,11 @@ package ui
 
 import (
 	"errors"
+	"lazyora/internal/oracle"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 func definitionScreen(t *testing.T) *screen {
@@ -18,7 +17,7 @@ func definitionScreen(t *testing.T) *screen {
 func TestDefinitionReadonlyDDLAndVisibleTabNavigation(t *testing.T) {
 	s := definitionScreen(t)
 	sql := s.editor.GetText()
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'd', tuivory.ModAlt))
 	if page, _ := s.pages.GetFrontPage(); page != "definition" {
 		t.Fatal("DDL window missing")
 	}
@@ -26,17 +25,17 @@ func TestDefinitionReadonlyDDLAndVisibleTabNavigation(t *testing.T) {
 		t.Fatal("finished metadata still showed loading")
 	}
 	ddl := s.definitionDDL
-	s.key(tcell.NewEventKey(tcell.KeyCtrlC, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlC, 0, 0))
 	if s.clipboardText != ddl || s.editor.GetText() != sql || len(s.jobs) != 0 {
 		t.Fatal("preview mutated editor or submitted SQL")
 	}
 	for i := 0; i < 8; i++ {
-		s.key(tcell.NewEventKey(tcell.KeyTab, 0, 0))
+		s.key(tuivory.NewEventKey(tuivory.KeyTab, 0, 0))
 		if s.definitionTable.HasFocus() {
 			t.Fatal("DDL Tab focused invisible table")
 		}
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if page, _ := s.pages.GetFrontPage(); page != "object" || !s.objectTable.HasFocus() {
 		t.Fatal("preview close lost object focus")
 	}
@@ -46,7 +45,7 @@ func TestDefinitionRawRowsConditionsAndErrors(t *testing.T) {
 	s.showDefinition("constraints")
 	data := oracle.ObjectDefinition{Constraints: []oracle.Constraint{{Name: "검사[red]", Kind: "C", Status: "ENABLED", Columns: []string{"이름"}, Condition: "\"이름\" <> 'a\tb'"}}, Limited: true}
 	s.acceptDefinition(s.definitionObject, "constraints", data, nil)
-	s.key(tcell.NewEventKey(tcell.KeyCtrlC, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlC, 0, 0))
 	if !strings.Contains(s.clipboardText, "검사[red]") || !strings.Contains(s.definitionInfo.GetText(false), s.tr("definition_limited")) {
 		t.Fatal("raw copy/limit notice missing")
 	}
@@ -55,10 +54,10 @@ func TestDefinitionRawRowsConditionsAndErrors(t *testing.T) {
 	if !strings.Contains(s.clipboardText, data.Constraints[0].Condition) {
 		t.Fatal("condition detail missing")
 	}
-	buttons := s.definitionRoot.GetItem(s.definitionRoot.GetItemCount() - 1).(*tview.Flex)
-	copyButton := buttons.GetItem(0).(*tview.Button)
+	buttons := s.definitionRoot.GetItem(s.definitionRoot.GetItemCount() - 1).(*tuivory.Flex)
+	copyButton := buttons.GetItem(0).(*tuivory.WidgetButton)
 	s.app.SetFocus(copyButton)
-	copyButton.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	copyButton.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	if !strings.Contains(s.clipboardText, data.Constraints[0].Condition) {
 		t.Fatal("copy button lost last detail focus")
 	}
@@ -103,7 +102,7 @@ func TestDefinitionLazyRefreshAndHelpKeepFocus(t *testing.T) {
 	if j.text != "ddl" {
 		t.Fatal("refresh targeted wrong section")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if page, _ := s.pages.GetFrontPage(); page != "definition" {
 		t.Fatal("busy escape closed preview instead of cancelling")
 	}

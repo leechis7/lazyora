@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/rivo/tview"
 	"lazyora/internal/oracle"
 	"net/url"
 	"strings"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func safeProbeError(err error, password string) string {
@@ -27,7 +28,7 @@ func safeProbeError(err error, password string) string {
 	if len(runes) > 400 {
 		text = string(runes[:400]) + "…"
 	}
-	return tview.Escape(text)
+	return tuivory.Escape(text)
 }
 func (s *screen) acceptConnectionProbe(err error, config oracle.Config) {
 	s.testingConnection = false

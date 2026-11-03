@@ -1,17 +1,16 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 )
 
 type panelSizing struct {
 	sql, schema          int
-	horizontal, vertical *tview.Box
-	result               tview.Primitive
+	horizontal, vertical *tuivory.Box
+	result               tuivory.Primitive
 	drag                 string
 	keyboard             bool
-	keyboardFocus        tview.Primitive
+	keyboardFocus        tuivory.Primitive
 }
 
 func panelSize(total, percent, minimum int) int {
@@ -25,9 +24,9 @@ func (s *screen) initPanelSizing() {
 	if s.sizing.sql == 0 {
 		s.sizing.sql, s.sizing.schema = 40, 25
 	}
-	divider := func(horizontal bool) *tview.Box {
+	divider := func(horizontal bool) *tuivory.Box {
 		box := s.newBox()
-		box.SetDrawFunc(func(screen tcell.Screen, x, y, w, h int) (int, int, int, int) {
+		box.SetDrawFunc(func(screen tuivory.Screen, x, y, w, h int) (int, int, int, int) {
 			style := s.tuivoryStyles().SplitterStyle()
 			char := '│'
 			if horizontal {
@@ -44,7 +43,7 @@ func (s *screen) initPanelSizing() {
 	}
 	if s.sizing.horizontal == nil {
 		s.sizing.horizontal, s.sizing.vertical = divider(true), divider(false)
-		s.queryLayout.SetDrawFunc(func(_ tcell.Screen, x, y, w, h int) (int, int, int, int) {
+		s.queryLayout.SetDrawFunc(func(_ tuivory.Screen, x, y, w, h int) (int, int, int, int) {
 			if s.maximized == "" {
 				reserved := 3
 				if s.tabBar != nil {
@@ -54,7 +53,7 @@ func (s *screen) initPanelSizing() {
 			}
 			return x, y, w, h
 		})
-		s.mainLayout.SetDrawFunc(func(_ tcell.Screen, x, y, w, h int) (int, int, int, int) {
+		s.mainLayout.SetDrawFunc(func(_ tuivory.Screen, x, y, w, h int) (int, int, int, int) {
 			if s.maximized == "" && !s.browserHidden {
 				s.mainLayout.ResizeItem(s.browserPanel, panelSize(max(0, w-1), s.sizing.schema, 18), 0)
 			}
@@ -82,34 +81,34 @@ func (s *screen) finishPanelSizing() {
 	}
 	s.setStatus("resize_panels_done")
 }
-func (s *screen) resizePanelKey(e *tcell.EventKey) bool {
+func (s *screen) resizePanelKey(e *tuivory.EventKey) bool {
 	if !s.sizing.keyboard {
 		return false
 	}
 	switch e.Key() {
-	case tcell.KeyEscape, tcell.KeyEnter:
+	case tuivory.KeyEscape, tuivory.KeyEnter:
 		s.finishPanelSizing()
-	case tcell.KeyUp:
+	case tuivory.KeyUp:
 		s.sizing.sql = max(10, s.sizing.sql-5)
-	case tcell.KeyDown:
+	case tuivory.KeyDown:
 		s.sizing.sql = min(90, s.sizing.sql+5)
-	case tcell.KeyLeft:
+	case tuivory.KeyLeft:
 		s.sizing.schema = max(10, s.sizing.schema-5)
-	case tcell.KeyRight:
+	case tuivory.KeyRight:
 		s.sizing.schema = min(70, s.sizing.schema+5)
-	case tcell.KeyHome:
+	case tuivory.KeyHome:
 		s.sizing.sql, s.sizing.schema = 40, 25
 	}
 	return true
 }
-func (s *screen) resizePanelMouse(event *tcell.EventMouse, action tview.MouseAction) bool {
+func (s *screen) resizePanelMouse(event *tuivory.EventMouse, action tuivory.MouseAction) bool {
 	page, _ := s.pages.GetFrontPage()
 	if page != "main" || s.maximized != "" {
 		s.sizing.drag = ""
 		return false
 	}
 	x, y := event.Position()
-	if action == tview.MouseLeftDown {
+	if action == tuivory.MouseLeftDown {
 		if s.sizing.horizontal != nil && s.sizing.horizontal.InRect(x, y) {
 			s.sizing.drag = "sql"
 		}
@@ -120,7 +119,7 @@ func (s *screen) resizePanelMouse(event *tcell.EventMouse, action tview.MouseAct
 	if s.sizing.drag == "" {
 		return false
 	}
-	if action == tview.MouseMove || action == tview.MouseLeftDown {
+	if action == tuivory.MouseMove || action == tuivory.MouseLeftDown {
 		if s.sizing.drag == "sql" {
 			_, top, _, height := s.queryLayout.GetInnerRect()
 			reserved := 3
@@ -134,7 +133,7 @@ func (s *screen) resizePanelMouse(event *tcell.EventMouse, action tview.MouseAct
 			s.sizing.schema = max(10, min(70, 100*(x-left)/max(1, width-1)))
 		}
 	}
-	if action == tview.MouseLeftUp || event.Buttons()&tcell.Button1 == 0 && action == tview.MouseMove {
+	if action == tuivory.MouseLeftUp || event.Buttons()&tuivory.Button1 == 0 && action == tuivory.MouseMove {
 		s.sizing.drag = ""
 	}
 	return true

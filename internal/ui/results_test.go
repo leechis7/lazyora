@@ -3,16 +3,16 @@ package ui
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"lazyora/internal/oracle"
 	"strings"
 	"testing"
+
+	"github.com/leechis7/tuivory/go"
 )
 
-func resultScreen(t *testing.T) (*screen, tcell.SimulationScreen) {
+func resultScreen(t *testing.T) (*screen, tuivory.SimulationScreen) {
 	s := demoBrowserScreen(t)
-	terminal := tcell.NewSimulationScreen("UTF-8")
+	terminal := tuivory.NewSimulationScreen("UTF-8")
 	if err := terminal.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -30,7 +30,7 @@ func resultScreen(t *testing.T) (*screen, tcell.SimulationScreen) {
 func TestCopyRawRowsAndKeyboardRange(t *testing.T) {
 	s, terminal := resultScreen(t)
 	s.table.Select(2, 2)
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'y', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'y', tuivory.ModAlt))
 	// Parse as TSV, including embedded tabs/newlines and quotes.
 	reader := csv.NewReader(strings.NewReader(s.clipboardText))
 	reader.Comma = '\t'
@@ -42,9 +42,9 @@ func TestCopyRawRowsAndKeyboardRange(t *testing.T) {
 		t.Fatal("clipboard payload differs")
 	}
 	s.table.Select(1, 1)
-	s.key(tcell.NewEventKey(tcell.KeyRight, 0, tcell.ModShift))
-	s.key(tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModShift))
-	s.key(tcell.NewEventKey(tcell.KeyCtrlC, 0, tcell.ModCtrl))
+	s.key(tuivory.NewEventKey(tuivory.KeyRight, 0, tuivory.ModShift))
+	s.key(tuivory.NewEventKey(tuivory.KeyDown, 0, tuivory.ModShift))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlC, 0, tuivory.ModCtrl))
 	reader = csv.NewReader(strings.NewReader(s.clipboardText))
 	reader.Comma = '\t'
 	records, err = reader.ReadAll()
@@ -54,7 +54,7 @@ func TestCopyRawRowsAndKeyboardRange(t *testing.T) {
 	if s.exitDialog != nil {
 		t.Fatal("Ctrl+C attempted exit")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if s.resultSelection.active {
 		t.Fatal("Escape did not clear range")
 	}
@@ -65,11 +65,11 @@ func TestDragRangeCopyAndPreviewRestoresFocus(t *testing.T) {
 	handler := s.table.MouseHandler()
 	x1, y1, _ := s.resultCellRect(1, 0)
 	x2, y2, _ := s.resultCellRect(3, 1)
-	focus := func(p tview.Primitive) { s.app.SetFocus(p) }
-	handler(tview.MouseLeftDown, tcell.NewEventMouse(x1, y1, tcell.Button1, 0), focus)
-	handler(tview.MouseMove, tcell.NewEventMouse(x2, y2, tcell.Button1, 0), focus)
-	handler(tview.MouseLeftUp, tcell.NewEventMouse(x2, y2, 0, 0), focus)
-	handler(tview.MouseLeftClick, tcell.NewEventMouse(x2, y2, 0, 0), focus)
+	focus := func(p tuivory.Primitive) { s.app.SetFocus(p) }
+	handler(tuivory.MouseLeftDown, tuivory.NewEventMouse(x1, y1, tuivory.Button1, 0), focus)
+	handler(tuivory.MouseMove, tuivory.NewEventMouse(x2, y2, tuivory.Button1, 0), focus)
+	handler(tuivory.MouseLeftUp, tuivory.NewEventMouse(x2, y2, 0, 0), focus)
+	handler(tuivory.MouseLeftClick, tuivory.NewEventMouse(x2, y2, 0, 0), focus)
 	r1, c1, r2, c2 := s.resultBounds()
 	if r1 != 1 || c1 != 0 || r2 != 3 || c2 != 1 {
 		t.Fatalf("drag bounds: %d,%d-%d,%d", r1, c1, r2, c2)
@@ -81,12 +81,12 @@ func TestDragRangeCopyAndPreviewRestoresFocus(t *testing.T) {
 	if page, _ := s.pages.GetFrontPage(); page != "copy" {
 		t.Fatal("copy preview missing")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if !s.table.HasFocus() || s.clipboardText != before {
 		t.Fatal("preview changed selection/copy")
 	}
 	s.prefs.Mouse = false
-	handler(tview.MouseLeftDown, tcell.NewEventMouse(x2, y2, tcell.Button1, 0), focus)
+	handler(tuivory.MouseLeftDown, tuivory.NewEventMouse(x2, y2, tuivory.Button1, 0), focus)
 	if a, _, _, _ := s.resultBounds(); a != 1 {
 		t.Fatal("disabled mouse changed range")
 	}
@@ -106,8 +106,8 @@ func TestCopyFromScrolledResultUsesActualRowAndFullValue(t *testing.T) {
 	s.table.Select(501, 0).SetOffset(500, 0)
 	s.resultGrid().Draw(terminal)
 	x, y, _ := s.resultCellRect(501, 1)
-	s.table.MouseHandler()(tview.MouseLeftDown, tcell.NewEventMouse(x, y, tcell.Button1, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
-	s.table.MouseHandler()(tview.MouseLeftUp, tcell.NewEventMouse(x, y, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	s.table.MouseHandler()(tuivory.MouseLeftDown, tuivory.NewEventMouse(x, y, tuivory.Button1, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
+	s.table.MouseHandler()(tuivory.MouseLeftUp, tuivory.NewEventMouse(x, y, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	s.copyResults("row")
 	reader := csv.NewReader(strings.NewReader(s.clipboardText))
 	reader.Comma = '\t'

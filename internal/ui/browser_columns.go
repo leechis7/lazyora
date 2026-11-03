@@ -1,8 +1,9 @@
 package ui
 
 import (
-	"github.com/rivo/tview"
 	"lazyora/internal/oracle"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func (s *screen) browserObjectCount() int {
@@ -18,7 +19,7 @@ func (s *screen) browserObjectCount() int {
 	return count
 }
 
-func (s *screen) expandBrowser(n *tview.TreeNode) {
+func (s *screen) expandBrowser(n *tuivory.WidgetTreeNode) {
 	d, ok := n.GetReference().(*browserNode)
 	if !ok || d.kind != "object" || !d.object.HasColumns() || d.loaded {
 		return
@@ -46,7 +47,7 @@ func (s *screen) expandBrowser(n *tview.TreeNode) {
 	s.submit(job{action: "browser_columns", object: d.object, node: n})
 }
 
-func (s *screen) acceptBrowserColumns(n *tview.TreeNode, columns []oracle.Column, err error) {
+func (s *screen) acceptBrowserColumns(n *tuivory.WidgetTreeNode, columns []oracle.Column, err error) {
 	if n == nil {
 		return
 	}

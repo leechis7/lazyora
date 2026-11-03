@@ -2,9 +2,9 @@ package ui
 
 import (
 	"fmt"
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"testing"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestPopupCardsEraseUnderlyingBordersAndPadding(t *testing.T) {
@@ -28,7 +28,7 @@ func TestPopupCardsEraseUnderlyingBordersAndPadding(t *testing.T) {
 						terminal.SetSize(size[0], size[1])
 						for y := 0; y < size[1]; y++ {
 							for x := 0; x < size[0]; x++ {
-								terminal.SetContent(x, y, '╳', nil, tcell.StyleDefault.Background(tcell.ColorRed))
+								terminal.SetContent(x, y, '╳', nil, tuivory.StyleDefault.Background(tuivory.ColorRed))
 							}
 						}
 						popup.SetRect(0, 0, size[0], size[1])
@@ -38,7 +38,7 @@ func TestPopupCardsEraseUnderlyingBordersAndPadding(t *testing.T) {
 							for px := x; px < x+w; px++ {
 								r, _, style, _ := terminal.GetContent(px, py)
 								_, bg, attrs := style.Decompose()
-								if r == '╳' || bg == tcell.ColorRed || attrs&tcell.AttrDim != 0 {
+								if r == '╳' || bg == tuivory.ColorRed || attrs&tuivory.AttrDim != 0 {
 									t.Fatalf("background leaked inside %v popup at %d,%d", size, px, py)
 								}
 							}
@@ -56,7 +56,7 @@ func TestFormPopupsResizeSpacingAndButtonAccess(t *testing.T) {
 			t.Run(language+"/"+page, func(t *testing.T) {
 				s, terminal := resultScreen(t)
 				s.prefs.Language = language
-				var form *tview.Form
+				var form *tuivory.WidgetForm
 				if page == "connect" {
 					s.connectionForm()
 					form = s.connectForm
@@ -111,22 +111,22 @@ func TestPopupBackdropClickDoesNotActivateUnderlyingUI(t *testing.T) {
 	root.SetRect(0, 0, 120, 36)
 	root.Draw(terminal)
 	focus := s.app.GetFocus()
-	consumed, _ := root.MouseHandler()(tview.MouseLeftClick, tcell.NewEventMouse(0, 0, tcell.Button1, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	consumed, _ := root.MouseHandler()(tuivory.MouseLeftClick, tuivory.NewEventMouse(0, 0, tuivory.Button1, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	if !consumed || s.app.GetFocus() != focus || len(s.jobs) != 0 {
 		t.Fatal("backdrop click escaped popup")
 	}
 	focusForm(s, s.connectProfiles, 0)
 	dropdown := s.connectProfiles.GetFormItem(0).(*choiceField)
-	dropdown.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	dropdown.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	root.Draw(terminal)
 	if !dropdown.IsOpen() {
 		t.Fatal("profile picker did not open")
 	}
-	root.MouseHandler()(tview.MouseLeftDown, tcell.NewEventMouse(0, 0, tcell.Button1, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	root.MouseHandler()(tuivory.MouseLeftDown, tuivory.NewEventMouse(0, 0, tuivory.Button1, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	if dropdown.IsOpen() || !s.pages.HasPage("connect") {
 		t.Fatal("outside click did not close only the picker")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if s.pages.HasPage("connect") {
 		t.Fatal("popup escape failed")
 	}
@@ -163,7 +163,7 @@ func TestSharedFormDialogLongLabelsButtonsAndScrolling(t *testing.T) {
 	for _, count := range []int{1, 9, 30} {
 		t.Run(fmt.Sprint(count), func(t *testing.T) {
 			s, terminal := resultScreen(t)
-			form := tview.NewForm()
+			form := tuivory.NewWidgetForm()
 			for i := 0; i < count; i++ {
 				form.AddInputField("매우 긴 입력 항목 이름 / Long parameter name", "preserved", 40, nil, nil)
 			}
@@ -171,7 +171,7 @@ func TestSharedFormDialogLongLabelsButtonsAndScrolling(t *testing.T) {
 				form.AddButton("긴 작업 버튼 / Long action", func() {})
 			}
 			styleForm(form)
-			info := tview.NewTextView().SetText("설명 / validation error\nSecond line")
+			info := tuivory.NewWidgetTextView().SetText("설명 / validation error\nSecond line")
 			root := s.formDialog(form, info, 200)
 			s.pages.AddPage("test_form", root, true, true)
 			for _, size := range [][2]int{{200, 36}, {80, 24}, {40, 16}, {200, 36}} {
@@ -186,7 +186,7 @@ func TestSharedFormDialogLongLabelsButtonsAndScrolling(t *testing.T) {
 						if fx >= x+w-1 || fy < y || fy >= y+h-1 {
 							t.Fatalf("field %d clipped at %v", i, size)
 						}
-						if form.GetFormItem(i).(*tview.InputField).GetText() != "preserved" {
+						if form.GetFormItem(i).(*tuivory.InputField).GetText() != "preserved" {
 							t.Fatal("resize changed data")
 						}
 					} else {
@@ -197,7 +197,7 @@ func TestSharedFormDialogLongLabelsButtonsAndScrolling(t *testing.T) {
 					}
 				}
 				focusForm(s, form, count)
-				if !s.buttonArrow(tcell.NewEventKey(tcell.KeyRight, 0, 0)) || !form.GetButton(1).HasFocus() {
+				if !s.buttonArrow(tuivory.NewEventKey(tuivory.KeyRight, 0, 0)) || !form.GetButton(1).HasFocus() {
 					t.Fatal("popup button navigation failed")
 				}
 			}

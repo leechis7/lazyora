@@ -4,9 +4,7 @@ import (
 	"encoding/csv"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/leechis7/tuivory/go"
-	"github.com/rivo/tview"
 )
 
 type resultSelection struct {
@@ -40,9 +38,9 @@ func (s *screen) clearResultSelection() {
 
 // The app intercepts Oracle editing/context commands; all pointer selection,
 // hit testing and range geometry come from the common Grid.
-func (s *screen) resultMouse(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
+func (s *screen) resultMouse(action tuivory.MouseAction, event *tuivory.EventMouse) (tuivory.MouseAction, *tuivory.EventMouse) {
 	if !s.prefs.Mouse {
-		return tview.MouseConsumed, nil
+		return tuivory.MouseConsumed, nil
 	}
 	page, _ := s.pages.GetFrontPage()
 	if page != "main" && page != "routine_grid" {
@@ -51,14 +49,14 @@ func (s *screen) resultMouse(action tview.MouseAction, event *tcell.EventMouse) 
 	s.prepareResultGrid()
 	x, y := event.Position()
 	left, top, w, h := s.table.GetInnerRect()
-	if action == tview.MouseRightClick {
+	if action == tuivory.MouseRightClick {
 		if page == "main" {
 			s.app.SetFocus(s.table)
 			s.showContextMenu()
 		}
-		return tview.MouseConsumed, nil
+		return tuivory.MouseConsumed, nil
 	}
-	pointer := map[tview.MouseAction]string{tview.MouseLeftDown: "down", tview.MouseLeftUp: "up", tview.MouseMove: "move", tview.MouseLeftClick: "click", tview.MouseLeftDoubleClick: "double", tview.MouseScrollUp: "wheel_up", tview.MouseScrollDown: "wheel_down", tview.MouseScrollLeft: "wheel_left", tview.MouseScrollRight: "wheel_right"}[action]
+	pointer := map[tuivory.MouseAction]string{tuivory.MouseLeftDown: "down", tuivory.MouseLeftUp: "up", tuivory.MouseMove: "move", tuivory.MouseLeftClick: "click", tuivory.MouseLeftDoubleClick: "double", tuivory.MouseScrollUp: "wheel_up", tuivory.MouseScrollDown: "wheel_down", tuivory.MouseScrollLeft: "wheel_left", tuivory.MouseScrollRight: "wheel_right"}[action]
 	if pointer == "" {
 		return action, event
 	}
@@ -75,13 +73,13 @@ func (s *screen) resultMouse(action tview.MouseAction, event *tcell.EventMouse) 
 				s.showCellDetail()
 			}
 		}
-		return tview.MouseConsumed, nil
+		return tuivory.MouseConsumed, nil
 	}
 	p := s.grid.presentation
 	if pointer != "move" && pointer != "up" || pointer == "move" && p.pointer {
 		s.app.SetFocus(s.table)
 	}
-	eventResult := p.model.Pointer(pointer, x-left, y-top, w, h, event.Modifiers()&tcell.ModShift != 0)
+	eventResult := p.model.Pointer(pointer, x-left, y-top, w, h, event.Modifiers()&tuivory.ModShift != 0)
 	if pointer == "down" && eventResult.Kind != "" {
 		p.pointer = true
 	}
@@ -89,11 +87,11 @@ func (s *screen) resultMouse(action tview.MouseAction, event *tcell.EventMouse) 
 		p.pointer = false
 	}
 	s.resultGridEvent(eventResult)
-	return tview.MouseConsumed, nil
+	return tuivory.MouseConsumed, nil
 }
-func (s *screen) extendResultSelection(key tcell.Key) {
+func (s *screen) extendResultSelection(key tuivory.Key) {
 	s.prepareResultGrid()
-	action := tuivory.GridKey(tcell.NewEventKey(key, 0, tcell.ModShift))
+	action := tuivory.GridKey(tuivory.NewEventKey(key, 0, tuivory.ModShift))
 	_, _, _, h := s.table.GetInnerRect()
 	s.resultGridEvent(s.grid.presentation.model.Handle(action, h))
 }
@@ -168,7 +166,7 @@ func (s *screen) copyPreview() {
 	s.textSurface(text, surfaceField)
 
 	s.copyText = text
-	root := s.newFlex().SetDirection(tview.FlexRow).AddItem(s.newTextView(textHint).SetText(s.tr("copy_preview_hint")).SetWrap(true), 2, 0, false).AddItem(text, 0, 1, true)
+	root := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(s.newTextView(textHint).SetText(s.tr("copy_preview_hint")).SetWrap(true), 2, 0, false).AddItem(text, 0, 1, true)
 	s.pages.AddPage("copy", root, true, true)
 	s.app.SetFocus(text)
 	// Terminal selection works on clients without OSC 52.

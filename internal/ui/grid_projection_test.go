@@ -2,14 +2,13 @@ package ui
 
 import (
 	"fmt"
+	"lazyora/internal/oracle"
 	"reflect"
 	"slices"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestHiddenRowIDKeepsOriginalEditColumnAndRowIdentity(t *testing.T) {
@@ -70,16 +69,16 @@ func TestHiddenRowIDKeepsOriginalEditColumnAndRowIdentity(t *testing.T) {
 			if !strings.Contains(s.footer.GetText(false), "Alt+D") {
 				t.Fatal("dialog shortcut missing from footer")
 			}
-			s.key(tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModAlt))
+			s.key(tuivory.NewEventKey(tuivory.KeyRune, 'd', tuivory.ModAlt))
 			if s.editForm == nil || s.editChange.Row != 1 || s.editChange.Column != s.resultSourceColumn(1) {
 				t.Fatal("Alt+D mapped to the wrong original cell")
 			}
-			s.editForm.GetFormItem(0).(*tview.InputField).SetText("new")
+			s.editForm.GetFormItem(0).(*tuivory.InputField).SetText("new")
 			s.previewGridEdit()
 			if len(s.jobs) != 0 {
 				t.Fatal("preview applied before confirmation")
 			}
-			s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+			s.programModal.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 			select {
 			case j := <-s.jobs:
 				if j.edit.Column != s.resultSourceColumn(1) || j.edit.Row != 1 || j.editKey.rowID != "rid2" || j.editKey.column != "TITLE" || j.query != query {

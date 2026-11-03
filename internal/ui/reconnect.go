@@ -2,10 +2,9 @@ package ui
 
 import (
 	"fmt"
-
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"lazyora/internal/oracle"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func (s *screen) requestReconnect(config oracle.Config) {
@@ -28,8 +27,8 @@ func (s *screen) requestReconnect(config oracle.Config) {
 		messageKey = "reconnect_uncertain"
 		labels = []string{s.tr("reconnect_discard"), s.tr("cancel")}
 	}
-	message := fmt.Sprintf(s.tr(messageKey), tview.Escape(config.User), tview.Escape(config.Host), config.Port, tview.Escape(config.Name))
-	s.reconnectDialog = tview.NewModal().SetText(message).AddButtons(labels).
+	message := fmt.Sprintf(s.tr(messageKey), tuivory.Escape(config.User), tuivory.Escape(config.Host), config.Port, tuivory.Escape(config.Name))
+	s.reconnectDialog = tuivory.NewModal().SetText(message).AddButtons(labels).
 		SetBackgroundColor(s.colors().background).SetTextColor(s.colors().text).
 		SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(s.buttonFocusStyle())
 	s.styleModal(s.reconnectDialog)
@@ -48,9 +47,9 @@ func (s *screen) requestReconnect(config oracle.Config) {
 		}
 		connect(resolution)
 	})
-	s.reconnectDialog.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
-		if action == tview.MouseLeftDoubleClick {
-			action = tview.MouseLeftClick
+	s.reconnectDialog.SetMouseCapture(func(action tuivory.MouseAction, event *tuivory.EventMouse) (tuivory.MouseAction, *tuivory.EventMouse) {
+		if action == tuivory.MouseLeftDoubleClick {
+			action = tuivory.MouseLeftClick
 		}
 		return action, event
 	})

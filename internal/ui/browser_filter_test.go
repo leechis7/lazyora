@@ -1,10 +1,10 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"lazyora/internal/oracle"
 	"testing"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestBrowserFilterMatchesOriginalObjectsWithoutQueries(t *testing.T) {
@@ -32,7 +32,7 @@ func TestBrowserFilterMatchesOriginalObjectsWithoutQueries(t *testing.T) {
 	if !s.browserSearch.HasFocus() {
 		t.Fatal("search shortcut target")
 	}
-	s.browserSearch.InputHandler()(tcell.NewEventKey(tcell.KeyDown, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	s.browserSearch.InputHandler()(tuivory.NewEventKey(tuivory.KeyDown, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	if !s.browser.HasFocus() {
 		t.Fatal("cannot reach results")
 	}

@@ -2,12 +2,11 @@ package ui
 
 import (
 	"fmt"
+	"lazyora/internal/oracle"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestGridVisibleStatesAndColumnSeparators(t *testing.T) {
@@ -24,7 +23,7 @@ func TestGridVisibleStatesAndColumnSeparators(t *testing.T) {
 			grid := s.resultGrid()
 			grid.SetRect(0, 0, 100, 12)
 			grid.Draw(terminal)
-			background := func(row, col int) tcell.Color {
+			background := func(row, col int) tuivory.Color {
 				x, y, _ := s.resultCellRect(row, col)
 				_, _, style, _ := terminal.GetContent(x, y)
 				_, bg, _ := style.Decompose()
@@ -34,7 +33,7 @@ func TestGridVisibleStatesAndColumnSeparators(t *testing.T) {
 			if active == selection || active == current || selection == regular || (!s.ansiColors() && current == regular) {
 				t.Fatalf("active/range/current/regular colors: %v %v %v %v", active, selection, current, regular)
 			}
-			if s.table.GetCell(1, 0).Align != tview.AlignRight {
+			if s.table.GetCell(1, 0).Align != tuivory.AlignRight {
 				t.Fatal("formatted NUMBER metadata was not right aligned")
 			}
 			x, y, width := s.resultCellRect(1, 1)
@@ -72,7 +71,7 @@ func TestGridVisibleStatesAndColumnSeparators(t *testing.T) {
 
 // Include terminal drawing, not just selection bookkeeping, in this measure.
 func BenchmarkGridDraw1000Rows(b *testing.B) {
-	s := &screen{table: tview.NewTable().SetSelectable(true, true).SetFixed(1, 0)}
+	s := &screen{table: tuivory.NewTable().SetSelectable(true, true).SetFixed(1, 0)}
 	data := oracle.Result{Columns: strings.Fields(strings.Repeat("COLUMN ", 20))}
 	for i := 0; i < 1000; i++ {
 		row := make([]string, 20)
@@ -82,7 +81,7 @@ func BenchmarkGridDraw1000Rows(b *testing.B) {
 		data.Rows = append(data.Rows, row)
 	}
 	s.render(data)
-	terminal := tcell.NewSimulationScreen("UTF-8")
+	terminal := tuivory.NewSimulationScreen("UTF-8")
 	if err := terminal.Init(); err != nil {
 		b.Fatal(err)
 	}

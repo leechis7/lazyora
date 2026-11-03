@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestDemoInterfaceAndConnectionForm(t *testing.T) {
 	t.Setenv("LAZYORA_CONFIG", filepath.Join(t.TempDir(), "settings.json"))
 	t.Setenv("LC_ALL", "C")
-	terminal := tcell.NewSimulationScreen("UTF-8")
+	terminal := tuivory.NewSimulationScreen("UTF-8")
 	if err := terminal.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -25,7 +25,7 @@ func TestDemoInterfaceAndConnectionForm(t *testing.T) {
 	go func() {
 		finished <- run(true, terminal, func(s *screen) {
 			ui = s
-			s.app.SetAfterDrawFunc(func(tcell.Screen) { once.Do(func() { close(drawn) }) })
+			s.app.SetAfterDrawFunc(func(tuivory.Screen) { once.Do(func() { close(drawn) }) })
 		})
 	}()
 	select {
@@ -39,13 +39,13 @@ func TestDemoInterfaceAndConnectionForm(t *testing.T) {
 		t.Fatal("missing demo result")
 	}
 	// Exercise real key dispatch, not just the widget construction.
-	ui.app.QueueEvent(tcell.NewEventKey(tcell.KeyF9, 0, tcell.ModNone))
-	ui.app.QueueEvent(tcell.NewEventKey(tcell.KeyRune, 's', tcell.ModAlt))
-	ui.app.QueueEvent(tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone))
-	ui.app.QueueEvent(tcell.NewEventKey(tcell.KeyEscape, 0, tcell.ModNone))
-	ui.app.QueueEvent(tcell.NewEventKey(tcell.KeyCtrlQ, 0, tcell.ModNone))
-	ui.app.QueueEvent(tcell.NewEventKey(tcell.KeyLeft, 0, tcell.ModNone))
-	ui.app.QueueEvent(tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone))
+	ui.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyF9, 0, tuivory.ModNone))
+	ui.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyRune, 's', tuivory.ModAlt))
+	ui.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyEnter, 0, tuivory.ModNone))
+	ui.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyEscape, 0, tuivory.ModNone))
+	ui.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyCtrlQ, 0, tuivory.ModNone))
+	ui.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyLeft, 0, tuivory.ModNone))
+	ui.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyEnter, 0, tuivory.ModNone))
 	select {
 	case err := <-finished:
 		if err != nil {

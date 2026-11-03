@@ -2,9 +2,9 @@ package ui
 
 import (
 	"fmt"
-	"github.com/gdamore/tcell/v2"
-	"github.com/leechis7/tuivory/go"
 	"strings"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 const (
@@ -139,10 +139,26 @@ func (s *screen) openMenuModel(model *tuivory.Menu, root string) {
 	card.SetBorderPadding(0, 0, 0, 0)
 	s.menuCard = card
 	rootView := s.newFlex().AddItem(card, 0, 1, true)
-	rootView.SetDrawFunc(func(_ tcell.Screen, x, y, w, h int) (int, int, int, int) {
+	rootView.SetDrawFunc(func(_ tuivory.Screen, x, y, w, h int) (int, int, int, int) {
 		cw, ch := model.ContentSize()
-		width := min(w, min(64, cw+2))
-		left := min(max(0, s.menuIndex)*w/len(menuGroups), max(0, w-width))
+		viewport := tuivory.CellRect{X: x, Y: y, Width: w, Height: h}
+		anchor := tuivory.CellRect{X: x, Y: y}
+		if s.menuIndex >= 0 {
+			barX, barY, barWidth, barHeight := x, y, w, 0
+			if s.menuBarView != nil {
+				bx, by, bw, bh := s.menuBarView.GetInnerRect()
+				if bw > 0 && bh == 1 { // Ignore a not-yet-laid-out widget's default rectangle.
+					barX, barY, barWidth, barHeight = bx, by, bw, bh
+				}
+			}
+			for _, cell := range model.BarLayout(barWidth).Cells {
+				if cell.ID == menuRoot(s.menuIndex) {
+					anchor = tuivory.CellRect{X: barX + cell.Start, Y: barY, Width: cell.Width, Height: barHeight}
+					break
+				}
+			}
+		}
+		placement := tuivory.MenuPlacement(anchor, viewport, min(64, cw+2), ch+2)
 		title := model.Title()
 		if title == "" {
 			title = s.menuTitle
@@ -152,7 +168,7 @@ func (s *screen) openMenuModel(model *tuivory.Menu, root string) {
 		card.SetTitle(title)
 		view.ASCII = s.asciiDisplay()
 		_ = view.SetPalette(s.componentPalette())
-		return x + left, y, width, min(h, ch+2)
+		return placement.X, placement.Y, placement.Width, placement.Height
 	})
 	s.pages.AddPage("menu", rootView, true, true)
 	s.app.SetFocus(s.menuList)
@@ -195,9 +211,9 @@ func (s *screen) closeMenu() {
 		s.app.SetFocus(s.menuFocus)
 	}
 }
-func (s *screen) menuKey(event *tcell.EventKey) *tcell.EventKey {
+func (s *screen) menuKey(event *tuivory.EventKey) *tuivory.EventKey {
 	switch event.Key() {
-	case tcell.KeyF10:
+	case tuivory.KeyF10:
 		if event.Modifiers() == 0 {
 			if s.menuIndex < 0 {
 				s.showMenu(menuFile)
@@ -206,7 +222,7 @@ func (s *screen) menuKey(event *tcell.EventKey) *tcell.EventKey {
 			}
 			return nil
 		}
-		if event.Modifiers() == tcell.ModShift {
+		if event.Modifiers() == tuivory.ModShift {
 			context := s.menuIndex < 0
 			s.closeMenu()
 			if !context {
@@ -214,10 +230,10 @@ func (s *screen) menuKey(event *tcell.EventKey) *tcell.EventKey {
 			}
 			return nil
 		}
-	case tcell.KeyLeft:
+	case tuivory.KeyLeft:
 		s.menuEvent(s.menuModel.Handle("left", "", 1))
 		return nil
-	case tcell.KeyRight:
+	case tuivory.KeyRight:
 		// Preserve LazyOra's adjacent top-level navigation, including grouped menus.
 		// Enter opens children; context menus never jump into the main menu bar.
 		if s.menuIndex >= 0 {
@@ -225,7 +241,7 @@ func (s *screen) menuKey(event *tcell.EventKey) *tcell.EventKey {
 			s.menuEvent(s.menuModel.Open(e.ID, s.menuModel.ReturnID()))
 		}
 		return nil
-	case tcell.KeyEscape:
+	case tuivory.KeyEscape:
 		s.menuEvent(s.menuModel.Back())
 		return nil
 	}

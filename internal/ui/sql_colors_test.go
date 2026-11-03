@@ -2,13 +2,11 @@ package ui
 
 import (
 	"fmt"
-	"github.com/leechis7/tuivory/go"
 	"reflect"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 	"github.com/rivo/uniseg"
 )
 
@@ -50,9 +48,9 @@ func TestOracleSQLColorTokens(t *testing.T) {
 	}
 }
 
-func colorTestTerminal(t *testing.T, width, height int) tcell.SimulationScreen {
+func colorTestTerminal(t *testing.T, width, height int) tuivory.SimulationScreen {
 	t.Helper()
-	terminal := tcell.NewSimulationScreen("UTF-8")
+	terminal := tuivory.NewSimulationScreen("UTF-8")
 	if err := terminal.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -117,30 +115,30 @@ func TestSQLColorsFollowScrolledEditedPieceOffsets(t *testing.T) {
 	editor.Draw(terminal)
 	r, _, style, _ := terminal.GetContent(0, 0)
 	fg, _, _ := style.Decompose()
-	if r != 'S' || fg != tcell.GetColor("#204a87") {
+	if r != 'S' || fg != tuivory.GetColor("#204a87") {
 		t.Fatalf("scrolled SELECT lost its absolute source style: %q %v", r, fg)
 	}
 	_, _, style, _ = terminal.GetContent(7, 0)
 	fg, _, _ = style.Decompose()
-	if fg != tcell.GetColor("#8b4f00") {
+	if fg != tuivory.GetColor("#8b4f00") {
 		t.Fatal("scrolled bind variable lost its style")
 	}
 	editor.SetOffset(2, 8)
 	editor.Draw(terminal)
 	r, _, style, _ = terminal.GetContent(0, 0)
 	fg, _, _ = style.Decompose()
-	if r != 'i' || fg != tcell.GetColor("#8b4f00") {
+	if r != 'i' || fg != tuivory.GetColor("#8b4f00") {
 		t.Fatalf("horizontal scroll lost bind style: %q %v", r, fg)
 	}
 }
 
 func TestColoringPreservesWrappedGraphemesAndUndo(t *testing.T) {
 	for _, width := range []int{8, 17, 40} {
-		plain, colored := tview.NewTextArea(), tview.NewTextArea()
+		plain, colored := tuivory.NewTextArea(), tuivory.NewTextArea()
 		s := shortcutScreen(t)
 		s.colorEditor(colored, nil)
 		text := "SELECT\t'한글 e\u0301 👨‍👩‍👧' AS 값;\r\n/* 주석\nSELECT */\nSELECT :id FROM dual;"
-		for _, editor := range []*tview.TextArea{plain, colored} {
+		for _, editor := range []*tuivory.TextArea{plain, colored} {
 			editor.SetRect(0, 0, width, 12)
 			editor.SetTextStyle(fieldStyle()).SetSelectedStyle(focusStyle()).SetText(text, false)
 			editor.Replace(7, 7, "42 + ")
@@ -160,8 +158,8 @@ func TestColoringPreservesWrappedGraphemesAndUndo(t *testing.T) {
 				}
 			}
 		}
-		for _, editor := range []*tview.TextArea{plain, colored} {
-			editor.InputHandler()(tcell.NewEventKey(tcell.KeyCtrlZ, 0, 0), func(tview.Primitive) {})
+		for _, editor := range []*tuivory.TextArea{plain, colored} {
+			editor.InputHandler()(tuivory.NewEventKey(tuivory.KeyCtrlZ, 0, 0), func(tuivory.Primitive) {})
 			if editor.GetText() != text {
 				t.Fatal("color rendering broke undo")
 			}
@@ -223,13 +221,13 @@ func BenchmarkSQLColors(b *testing.B) {
 }
 
 func BenchmarkSQLColorRedraw(b *testing.B) {
-	terminal := tcell.NewSimulationScreen("UTF-8")
+	terminal := tuivory.NewSimulationScreen("UTF-8")
 	if err := terminal.Init(); err != nil {
 		b.Fatal(err)
 	}
 	defer terminal.Fini()
 	terminal.SetSize(100, 20)
-	editor := tview.NewTextArea().SetText(strings.Repeat("SELECT :id FROM dual; -- comment\n", 80000), false)
+	editor := tuivory.NewTextArea().SetText(strings.Repeat("SELECT :id FROM dual; -- comment\n", 80000), false)
 	editor.SetRect(0, 0, 100, 20)
 	s := &screen{}
 	s.colorEditor(editor, nil)
@@ -291,7 +289,7 @@ var palette = (&screen{}).colors()
 
 // Compatibility helper for display-lexer tests; the running editor uses its
 // screen's theme/profile through profileSQLStyle.
-func sqlTokenStyle(kind sqlColorKind, limited bool, base tcell.Style) tcell.Style {
+func sqlTokenStyle(kind sqlColorKind, limited bool, base tuivory.Style) tuivory.Style {
 	theme, profile := "light", "truecolor"
 	_, bg, _ := base.Decompose()
 	r, g, b := bg.RGB()

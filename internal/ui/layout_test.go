@@ -2,12 +2,12 @@ package ui
 
 import (
 	"fmt"
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"lazyora/internal/oracle"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestMaximizeSwitchRestorePreservesPanelState(t *testing.T) {
@@ -23,7 +23,7 @@ func TestMaximizeSwitchRestorePreservesPanelState(t *testing.T) {
 	if s.maximized != "sql" || s.browserHidden {
 		t.Fatal("SQL maximize changed browser preference")
 	}
-	terminal := tcell.NewSimulationScreen("UTF-8")
+	terminal := tuivory.NewSimulationScreen("UTF-8")
 	if err := terminal.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +35,7 @@ func TestMaximizeSwitchRestorePreservesPanelState(t *testing.T) {
 	if x != 0 || w != 100 {
 		t.Fatal("SQL did not fill work area")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyTab, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyTab, 0, 0))
 	if s.maximized != "results" || !s.table.HasFocus() {
 		t.Fatal("Tab did not switch maximized panel")
 	}
@@ -46,8 +46,8 @@ func TestMaximizeSwitchRestorePreservesPanelState(t *testing.T) {
 	if x != 0 || w != 80 {
 		t.Fatal("maximized result did not resize")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF1, 0, 0))
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyF1, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if s.maximized != "results" || !s.table.HasFocus() {
 		t.Fatal("help lost panel focus")
 	}
@@ -85,15 +85,15 @@ func TestEscapeRestoresFullscreenWithoutChangingWork(t *testing.T) {
 				node := s.browser.GetCurrentNode()
 				rows := fmt.Sprint(s.resultRows)
 				s.pendingChanges = true
-				key := tcell.NewEventKey(tcell.KeyF2, 0, 0)
+				key := tuivory.NewEventKey(tuivory.KeyF2, 0, 0)
 				if panel == "results" {
-					key = tcell.NewEventKey(tcell.KeyF2, 0, tcell.ModShift)
+					key = tuivory.NewEventKey(tuivory.KeyF2, 0, tuivory.ModShift)
 				}
 				s.key(key)
 				if !s.fullscreen || s.maximized != panel {
 					t.Fatal("fullscreen entry failed")
 				}
-				s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+				s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 				if s.fullscreen || s.maximized != "" || s.browser.GetCurrentNode() != node || s.browserHidden != hidden {
 					t.Fatal("Escape did not restore split and schema visibility")
 				}
@@ -117,52 +117,52 @@ func TestEscapeRestoresFullscreenWithoutChangingWork(t *testing.T) {
 
 func TestFullscreenEscapeCancelsRunningQueryBeforeRestoringLayout(t *testing.T) {
 	s, _ := resultScreen(t)
-	s.key(tcell.NewEventKey(tcell.KeyF2, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyF2, 0, 0))
 	cancelled := false
 	s.busy = true
 	s.cancel = func() { cancelled = true }
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if !cancelled || !s.fullscreen || s.maximized != "sql" {
 		t.Fatal("Escape must cancel the query before restoring fullscreen")
 	}
 	s.busy = false
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if s.fullscreen || s.maximized != "" {
 		t.Fatal("Escape did not restore after the query finished")
 	}
 }
 
 func TestResultFullscreenAliasesRestoreAndPreserveModalPriority(t *testing.T) {
-	for _, key := range []tcell.Key{tcell.KeyF14, tcell.KeyF12} {
+	for _, key := range []tuivory.Key{tuivory.KeyF14, tuivory.KeyF12} {
 		for _, keymap := range []string{"", "vim", "notepad++"} {
 			t.Run(fmt.Sprintf("%v/%s", key, keymap), func(t *testing.T) {
 				s, _ := resultScreen(t)
 				s.prefs.EditorKeymap = keymap
 				s.app.SetFocus(s.editor)
 				text := s.editor.GetText()
-				s.key(tcell.NewEventKey(key, 0, 0))
+				s.key(tuivory.NewEventKey(key, 0, 0))
 				if !s.fullscreen || s.maximized != "results" || !s.table.HasFocus() {
 					t.Fatal("result fullscreen alias did not act as Shift+F2")
 				}
 				s.showHelp()
-				s.key(tcell.NewEventKey(key, 0, 0))
+				s.key(tuivory.NewEventKey(key, 0, 0))
 				if page, _ := s.pages.GetFrontPage(); page != "help" || !s.fullscreen || s.maximized != "results" {
 					t.Fatal("legacy key changed layout behind help")
 				}
 				s.closeHelp()
-				s.key(tcell.NewEventKey(key, 0, 0))
+				s.key(tuivory.NewEventKey(key, 0, 0))
 				if s.fullscreen || s.maximized != "" || s.editor.GetText() != text || len(s.jobs) != 0 {
 					t.Fatal("legacy key failed to restore split or changed work")
 				}
-				s.key(tcell.NewEventKey(tcell.KeyF2, 0, 0))
+				s.key(tuivory.NewEventKey(tuivory.KeyF2, 0, 0))
 				if s.maximized != "sql" {
 					t.Fatal("legacy alias changed normal F2")
 				}
-				s.key(tcell.NewEventKey(key, 0, 0))
+				s.key(tuivory.NewEventKey(key, 0, 0))
 				if s.maximized != "results" || !s.fullscreen {
 					t.Fatal("legacy key did not switch fullscreen SQL to results")
 				}
-				s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+				s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 				if s.fullscreen || s.maximized != "" {
 					t.Fatal("Escape no longer restores split")
 				}
@@ -173,7 +173,7 @@ func TestResultFullscreenAliasesRestoreAndPreserveModalPriority(t *testing.T) {
 
 func TestFullscreenOccupiesEntireTerminalAndRestoresChrome(t *testing.T) {
 	t.Setenv("LAZYORA_CONFIG", filepath.Join(t.TempDir(), "settings.json"))
-	terminal := tcell.NewSimulationScreen("UTF-8")
+	terminal := tuivory.NewSimulationScreen("UTF-8")
 	if err := terminal.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -212,7 +212,7 @@ func TestFullscreenOccupiesEntireTerminalAndRestoresChrome(t *testing.T) {
 		t.Fatal("layout condition not reached")
 	}
 	s.app.QueueUpdateDraw(func() { terminal.SetSize(100, 30) })
-	fills := func(p tview.Primitive, w, h int) bool {
+	fills := func(p tuivory.Primitive, w, h int) bool {
 		x, y, width, height := p.GetRect()
 		return x == 0 && y == 0 && width == w && height == h
 	}
@@ -233,48 +233,48 @@ func TestFullscreenOccupiesEntireTerminalAndRestoresChrome(t *testing.T) {
 		}
 	})
 	// Switching modes keeps the same panel; pressing its key again restores split.
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF2, 0, 0))
+	s.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyF2, 0, 0))
 	wait(func() bool { return s.fullscreen && fills(s.editor, 100, 30) })
 	s.app.QueueUpdateDraw(func() { s.invoke("maximize") })
 	wait(func() bool { return !s.fullscreen && !s.chromeHidden && s.maximized == "sql" })
 	s.app.QueueUpdateDraw(func() { s.invoke("maximize") })
 	wait(func() bool { return s.maximized == "" })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF2, 0, 0))
+	s.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyF2, 0, 0))
 	wait(func() bool { return s.chromeHidden && fills(s.editor, 100, 30) })
 	s.app.QueueUpdate(func() {
-		for _, p := range []tview.Primitive{s.menuLayout, s.tabBar, s.footer, s.footerBar, s.status, s.table, s.browser} {
+		for _, p := range []tuivory.Primitive{s.menuLayout, s.tabBar, s.footer, s.footerBar, s.status, s.table, s.browser} {
 			_, _, w, h := p.GetRect()
 			if w != 0 || h != 0 {
 				t.Error("unrelated UI still occupies fullscreen")
 			}
 		}
 	})
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF1, 0, 0))
+	s.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyF1, 0, 0))
 	wait(func() bool { page, _ := s.pages.GetFrontPage(); return page == "help" && !s.chromeHidden })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	wait(func() bool { return s.chromeHidden && fills(s.editor, 100, 30) })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	wait(func() bool { return !s.chromeHidden && !s.fullscreen && s.maximized == "" })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF2, 0, 0))
+	s.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyF2, 0, 0))
 	wait(func() bool { return s.chromeHidden && fills(s.editor, 100, 30) })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyRune, 'm', tcell.ModAlt))
+	s.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyRune, 'm', tuivory.ModAlt))
 	wait(func() bool { return s.menuList != nil && !s.chromeHidden })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	wait(func() bool { return s.chromeHidden && fills(s.editor, 100, 30) })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF6, 0, 0))
+	s.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyF6, 0, 0))
 	wait(func() bool { return s.maximized == "results" && fills(s.table, 100, 30) })
 	s.app.QueueUpdateDraw(func() { terminal.SetSize(80, 24) })
 	wait(func() bool { return fills(s.table, 80, 24) })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyCtrlQ, 0, 0))
+	s.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyCtrlQ, 0, 0))
 	wait(func() bool { return s.exitDialog != nil && !s.chromeHidden })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	wait(func() bool { return s.chromeHidden && fills(s.table, 80, 24) })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	wait(func() bool { return !s.chromeHidden && !s.fullscreen && s.maximized == "" })
 	// Keep the original toggle-key restoration covered as well.
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF2, 0, tcell.ModShift))
+	s.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyF2, 0, tuivory.ModShift))
 	wait(func() bool { return s.chromeHidden && fills(s.table, 80, 24) })
-	s.app.QueueEvent(tcell.NewEventKey(tcell.KeyF2, 0, tcell.ModShift))
+	s.app.QueueEvent(tuivory.NewEventKey(tuivory.KeyF2, 0, tuivory.ModShift))
 	wait(func() bool {
 		_, y, _, h := s.footerBar.GetRect()
 		return !s.chromeHidden && s.maximized == "" && y == 23 && h == 1

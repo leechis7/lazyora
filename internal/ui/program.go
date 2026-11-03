@@ -2,9 +2,9 @@ package ui
 
 import (
 	"fmt"
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"lazyora/internal/oracle"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func (s *screen) sourceDirty() bool {
@@ -20,13 +20,13 @@ func (s *screen) showProgramConfirmFocused(message string, action func(), button
 		return
 	}
 	s.programFocus = s.app.GetFocus()
-	s.programModal = tview.NewModal().SetText(message).AddButtons([]string{s.tr("proceed"), s.tr("cancel")}).
+	s.programModal = tuivory.NewModal().SetText(message).AddButtons([]string{s.tr("proceed"), s.tr("cancel")}).
 		SetBackgroundColor(s.colors().background).SetTextColor(s.colors().text).
 		SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(s.buttonFocusStyle()).SetFocus(button)
 	s.styleModal(s.programModal)
-	s.programModal.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
-		if action == tview.MouseLeftDoubleClick {
-			action = tview.MouseLeftClick
+	s.programModal.SetMouseCapture(func(action tuivory.MouseAction, event *tuivory.EventMouse) (tuivory.MouseAction, *tuivory.EventMouse) {
+		if action == tuivory.MouseLeftDoubleClick {
+			action = tuivory.MouseLeftClick
 		}
 		return action, event
 	})
@@ -63,13 +63,13 @@ func (s *screen) showSource() {
 	s.sourceInfo.SetBackgroundColor(s.colors().background)
 	s.sourceInfo.SetTextColor(s.colors().text)
 	s.sourceInfo.SetText(s.tr("browser_loading"))
-	s.sourceEditor = tview.NewTextArea()
+	s.sourceEditor = tuivory.NewTextArea()
 	s.sourceEditor.SetClipboard(s.sendClipboard, func() string { return s.clipboardText })
 	s.sourceEditor.SetBorder(true)
 	s.styleBox(s.sourceEditor.Box)
 	s.styleEditor(s.sourceEditor)
 	s.colorEditor(s.sourceEditor, s.refreshSourceTitle)
-	s.sourceEditor.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	s.sourceEditor.SetInputCapture(func(event *tuivory.EventKey) *tuivory.EventKey {
 		if !s.sourceLoaded || s.busy {
 			return nil
 		}
@@ -86,9 +86,9 @@ func (s *screen) showSource() {
 	}{
 		{"compile_button", s.requestCompile}, {"source_edit", s.showSourceEdit}, {"format_code", func() { s.app.SetFocus(s.sourceEditor); s.formatCode() }}, {"reload_button", s.reloadSource}, {"close", s.closeSource},
 	} {
-		buttons.AddItem(s.clickable(tview.NewButton(s.tr(item.label)).SetSelectedFunc(item.action)), 0, 1, false)
+		buttons.AddItem(s.clickable(tuivory.NewWidgetButton(s.tr(item.label)).SetSelectedFunc(item.action)), 0, 1, false)
 	}
-	root := s.newFlex().SetDirection(tview.FlexRow).AddItem(s.sourceInfo, 2, 0, false).
+	root := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(s.sourceInfo, 2, 0, false).
 		AddItem(s.sourceEditor, 0, 3, true).AddItem(s.sourceDiagnostics, 0, 1, false).AddItem(buttons, 1, 0, false)
 	s.pages.AddPage("source", root, true, true)
 	s.app.SetFocus(s.sourceEditor)
@@ -104,9 +104,9 @@ func (s *screen) refreshSourceTitle() {
 	if s.sourceDirty() {
 		mark = " *"
 	}
-	title := " " + s.tr("source") + " " + tview.Escape(s.object.Owner+"."+s.object.Name) + mark + " "
+	title := " " + s.tr("source") + " " + tuivory.Escape(s.object.Owner+"."+s.object.Name) + mark + " "
 	if badge := s.connectionTitleBadge(); badge != "" {
-		title = " " + tview.Escape(badge) + " · " + title
+		title = " " + tuivory.Escape(badge) + " · " + title
 	}
 	s.sourceEditor.SetTitle(title)
 }
@@ -168,11 +168,11 @@ func (s *screen) requestCompile() {
 func (s *screen) renderDiagnostics(diagnostics []oracle.Diagnostic) {
 	s.sourceDiagnostics.Clear().SetTitle(s.tr("diagnostics"))
 	for i, key := range []string{"line", "position", "object_type", "message"} {
-		s.sourceDiagnostics.SetCell(0, i, tview.NewTableCell(s.tr(key)).SetTextColor(s.colors().accent).SetSelectable(false))
+		s.sourceDiagnostics.SetCell(0, i, tuivory.NewTableCell(s.tr(key)).SetTextColor(s.colors().accent).SetSelectable(false))
 	}
 	for row, diagnostic := range diagnostics {
 		for col, text := range []string{fmt.Sprint(diagnostic.Line), fmt.Sprint(diagnostic.Position), diagnostic.Attribute, diagnostic.Text} {
-			s.sourceDiagnostics.SetCell(row+1, col, tview.NewTableCell(tview.Escape(text)).SetTextColor(s.colors().text))
+			s.sourceDiagnostics.SetCell(row+1, col, tuivory.NewTableCell(tuivory.Escape(text)).SetTextColor(s.colors().text))
 		}
 	}
 }
@@ -189,9 +189,9 @@ func (s *screen) showArguments() {
 	s.argumentTable.SetBorder(true)
 	s.styleBox(s.argumentTable.Box)
 	s.argumentTable.SetTitle(s.tr("arguments"))
-	close := s.clickable(tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeArguments))
-	root := s.newFlex().SetDirection(tview.FlexRow).AddItem(s.argumentInfo, 2, 0, false).
-		AddItem(s.argumentTable, 0, 1, true).AddItem(s.newFlex().AddItem(s.clickable(tview.NewButton(s.tr("routine_button")).SetSelectedFunc(func() { s.showRoutine(s.object, "") })), 0, 1, false).AddItem(close, 0, 1, false), 1, 0, false)
+	close := s.clickable(tuivory.NewWidgetButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeArguments))
+	root := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(s.argumentInfo, 2, 0, false).
+		AddItem(s.argumentTable, 0, 1, true).AddItem(s.newFlex().AddItem(s.clickable(tuivory.NewWidgetButton(s.tr("routine_button")).SetSelectedFunc(func() { s.showRoutine(s.object, "") })), 0, 1, false).AddItem(close, 0, 1, false), 1, 0, false)
 	s.pages.AddPage("arguments", root, true, true)
 	s.app.SetFocus(s.argumentTable)
 	if s.demo && !s.connected {
@@ -204,7 +204,7 @@ func (s *screen) showArguments() {
 func (s *screen) renderArguments(arguments []oracle.Argument) {
 	s.argumentTable.Clear()
 	for i, key := range []string{"member", "overload", "position", "argument", "direction", "data_type", "depth"} {
-		s.argumentTable.SetCell(0, i, tview.NewTableCell(s.tr(key)).SetTextColor(s.colors().accent).SetSelectable(false))
+		s.argumentTable.SetCell(0, i, tuivory.NewTableCell(s.tr(key)).SetTextColor(s.colors().accent).SetSelectable(false))
 	}
 	for row, argument := range arguments {
 		name := argument.Name
@@ -212,7 +212,7 @@ func (s *screen) renderArguments(arguments []oracle.Argument) {
 			name = s.tr("return_value")
 		}
 		for col, text := range []string{argument.Member, argument.Overload, fmt.Sprint(argument.Position), name, argument.Direction, argument.DataType, fmt.Sprint(argument.Depth)} {
-			s.argumentTable.SetCell(row+1, col, tview.NewTableCell(tview.Escape(text)).SetTextColor(s.colors().text))
+			s.argumentTable.SetCell(row+1, col, tuivory.NewTableCell(tuivory.Escape(text)).SetTextColor(s.colors().text))
 		}
 	}
 	s.argumentInfo.SetText(s.object.Owner + "." + s.object.Name)

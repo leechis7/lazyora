@@ -1,10 +1,10 @@
 package ui
 
 import (
+	"lazyora/internal/oracle"
 	"strings"
 
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 func (s *screen) clearSQL() {
@@ -62,14 +62,14 @@ func (s *screen) recordSQLHistory(text string) {
 
 func (s *screen) showHistory() {
 	s.historyFocus = s.app.GetFocus()
-	list := tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
+	list := tuivory.NewWidgetList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
 	list.SetBorder(true).SetTitle(s.tr("history"))
 	s.styleList(list)
 	s.historyList = list
 	for i := len(s.sqlHistory) - 1; i >= 0; i-- {
 		sql := s.sqlHistory[i]
 		summary := strings.Join(strings.Fields(sql), " ")
-		list.AddItem(tview.Escape(summary), "", 0, func() {
+		list.AddItem(tuivory.Escape(summary), "", 0, func() {
 			s.closeHistory()
 			apply := func() { s.editor.SetText(sql, false); s.focusPanel("sql") }
 			if s.editor.GetText() != sql && s.editor.GetText() != "" {
@@ -100,22 +100,22 @@ func (s *screen) showSearch(replace bool) {
 		return
 	}
 	s.searchFocus = s.app.GetFocus()
-	form := tview.NewForm().AddInputField(s.tr("find_text"), s.findText, 40, nil, nil)
+	form := tuivory.NewWidgetForm().AddInputField(s.tr("find_text"), s.findText, 40, nil, nil)
 	if selected, _, _ := editor.GetSelection(); selected != "" && !strings.Contains(selected, "\n") {
-		form.GetFormItem(0).(*tview.InputField).SetText(selected)
+		form.GetFormItem(0).(*tuivory.InputField).SetText(selected)
 	}
 	s.searchForm = form
 	if replace {
 		form.AddInputField(s.tr("replace_text"), s.replaceText, 40, nil, nil)
 	}
 	s.searchAction = func(action string) {
-		s.findText = form.GetFormItem(0).(*tview.InputField).GetText()
+		s.findText = form.GetFormItem(0).(*tuivory.InputField).GetText()
 		if s.findText == "" {
 			form.SetTitle(s.tr("find_empty"))
 			return
 		}
 		if replace {
-			s.replaceText = form.GetFormItem(1).(*tview.InputField).GetText()
+			s.replaceText = form.GetFormItem(1).(*tuivory.InputField).GetText()
 		}
 		s.closeSearch()
 		if action == "submit" {
@@ -171,11 +171,11 @@ func (s *screen) closeSearch() {
 
 func (s *screen) findSQL(previous bool) { s.findEditor(s.editor, previous) }
 
-func (s *screen) findEditor(editor *tview.TextArea, previous bool) {
+func (s *screen) findEditor(editor *tuivory.TextArea, previous bool) {
 	s.findEditorFrom(editor, previous, true)
 }
 
-func (s *screen) findEditorFrom(editor *tview.TextArea, previous, skipCaret bool) {
+func (s *screen) findEditorFrom(editor *tuivory.TextArea, previous, skipCaret bool) {
 	if s.findText == "" {
 		s.showSearch(false)
 		return

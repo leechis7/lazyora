@@ -6,20 +6,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"lazyora/internal/oracle"
+	"lazyora/internal/settings"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
-	"lazyora/internal/settings"
+	"github.com/leechis7/tuivory/go"
 )
 
 type auditTerminal struct {
-	tcell.SimulationScreen
+	tuivory.SimulationScreen
 	count int
 }
 
@@ -51,22 +50,22 @@ type auditOutput struct {
 	Roles []auditRole
 }
 
-var auditPalettes = map[int][]tcell.Color{}
+var auditPalettes = map[int][]tuivory.Color{}
 var auditMapped = map[struct {
-	Color tcell.Color
+	Color tuivory.Color
 	Count int
-}]tcell.Color{}
+}]tuivory.Color{}
 
-func auditMapColor(c tcell.Color, count int) tcell.Color {
+func auditMapColor(c tuivory.Color, count int) tuivory.Color {
 	if count > 256 && c.IsRGB() {
 		return c
 	}
 	n := min(count, 256)
-	if !c.IsRGB() && int(c&^tcell.ColorValid) < n {
+	if !c.IsRGB() && int(c&^tuivory.ColorValid) < n {
 		return c
 	}
 	key := struct {
-		Color tcell.Color
+		Color tuivory.Color
 		Count int
 	}{c, count}
 	if mapped, ok := auditMapped[key]; ok {
@@ -75,35 +74,38 @@ func auditMapColor(c tcell.Color, count int) tcell.Color {
 	palette := auditPalettes[n]
 	if palette == nil {
 		for i := 0; i < n; i++ {
-			palette = append(palette, tcell.PaletteColor(i))
+			palette = append(palette, tuivory.PaletteColor(i))
 		}
 		auditPalettes[n] = palette
 	}
-	mapped := tcell.FindColor(c, palette)
+	mapped := tuivory.FindColor(c, palette)
 	auditMapped[key] = mapped
 	return mapped
 }
-func auditRGB(c tcell.Color) string { r, g, b := c.RGB(); return fmt.Sprintf("#%02x%02x%02x", r, g, b) }
-func auditStyleOf(style tcell.Style, count int) auditStyle {
+func auditRGB(c tuivory.Color) string {
+	r, g, b := c.RGB()
+	return fmt.Sprintf("#%02x%02x%02x", r, g, b)
+}
+func auditStyleOf(style tuivory.Style, count int) auditStyle {
 	fg, bg, a := style.Decompose()
 	if !fg.Valid() {
-		fg = tcell.ColorSilver
+		fg = tuivory.ColorSilver
 	}
 	if !bg.Valid() {
-		bg = tcell.ColorBlack
+		bg = tuivory.ColorBlack
 	}
 	mappedFG, mappedBG := auditMapColor(fg, count), auditMapColor(bg, count)
 	brightFG := mappedFG
-	if a&tcell.AttrBold != 0 && !mappedFG.IsRGB() && int(mappedFG&^tcell.ColorValid) < 8 {
-		brightFG = tcell.PaletteColor(int(mappedFG&^tcell.ColorValid) + 8)
+	if a&tuivory.AttrBold != 0 && !mappedFG.IsRGB() && int(mappedFG&^tuivory.ColorValid) < 8 {
+		brightFG = tuivory.PaletteColor(int(mappedFG&^tuivory.ColorValid) + 8)
 	}
 	fgHex, bgHex := auditRGB(mappedFG), auditRGB(mappedBG)
 	brightFGHex, brightBGHex := auditRGB(brightFG), bgHex
-	if a&tcell.AttrReverse != 0 {
+	if a&tuivory.AttrReverse != 0 {
 		fgHex, bgHex = bgHex, fgHex
 		brightFGHex, brightBGHex = brightBGHex, brightFGHex
 	}
-	return auditStyle{FG: int64(fg), BG: int64(bg), Bold: a&tcell.AttrBold != 0, Dim: a&tcell.AttrDim != 0, Reverse: a&tcell.AttrReverse != 0, Underline: a&tcell.AttrUnderline != 0, FGHex: fgHex, BGHex: bgHex, BrightFGHex: brightFGHex, BrightBGHex: brightBGHex, SourceFGHex: auditRGB(fg), SourceBGHex: auditRGB(bg)}
+	return auditStyle{FG: int64(fg), BG: int64(bg), Bold: a&tuivory.AttrBold != 0, Dim: a&tuivory.AttrDim != 0, Reverse: a&tuivory.AttrReverse != 0, Underline: a&tuivory.AttrUnderline != 0, FGHex: fgHex, BGHex: bgHex, BrightFGHex: brightFGHex, BrightBGHex: brightBGHex, SourceFGHex: auditRGB(fg), SourceBGHex: auditRGB(bg)}
 }
 
 func TestThemeAudit(t *testing.T) {
@@ -126,9 +128,9 @@ func TestThemeAudit(t *testing.T) {
 			for _, scene := range scenes {
 				for _, language := range []string{"ko", "en"} {
 					t.Run(fmt.Sprintf("%d/%s/%s/%s", count, theme, scene, language), func(t *testing.T) {
-						base := tcell.NewSimulationScreen("UTF-8")
+						base := tuivory.NewSimulationScreen("UTF-8")
 						terminal := auditTerminal{base, count}
-						app := tview.NewApplication().SetScreen(terminal)
+						app := tuivory.NewApplication().SetScreen(terminal)
 						prefs := settings.Config{Language: language, Mouse: true, Theme: theme}
 						s := newWorkspaceScreen(app, terminal, prefs, filepath.Join(t.TempDir(), "settings.json"), true, nil)
 						s.stopWorker()
@@ -207,7 +209,7 @@ func TestThemeAudit(t *testing.T) {
 							result.Shots = append(result.Shots, shot)
 						}
 						if scene == "main" && language == "ko" {
-							roles := map[string]tcell.Style{"body": tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().surface), "hint": tcell.StyleDefault.Foreground(s.colors().muted).Background(s.colors().background), "field": s.fieldStyle(), "placeholder": tcell.StyleDefault.Foreground(s.colors().placeholder).Background(s.colors().field), "selection": s.focusStyle(), "button": s.buttonStyle(), "button_focus": s.buttonFocusStyle(), "editor": s.editorStyle(), "grid_base": s.gridBaseStyle(3, 1), "grid_null": s.gridBaseStyle(2, 3), "grid_header": s.gridHeaderStyle(false), "grid_active": s.gridActiveStyle(true), "edited_cell": s.editedCellStyle()}
+							roles := map[string]tuivory.Style{"body": tuivory.StyleDefault.Foreground(s.colors().text).Background(s.colors().surface), "hint": tuivory.StyleDefault.Foreground(s.colors().muted).Background(s.colors().background), "field": s.fieldStyle(), "placeholder": tuivory.StyleDefault.Foreground(s.colors().placeholder).Background(s.colors().field), "selection": s.focusStyle(), "button": s.buttonStyle(), "button_focus": s.buttonFocusStyle(), "editor": s.editorStyle(), "grid_base": s.gridBaseStyle(3, 1), "grid_null": s.gridBaseStyle(2, 3), "grid_header": s.gridHeaderStyle(false), "grid_active": s.gridActiveStyle(true), "edited_cell": s.editedCellStyle()}
 							for kind := sqlKeyword; kind <= sqlBind; kind++ {
 								roles[fmt.Sprintf("sql_token_%d", kind)] = s.profileSQLStyle(kind, s.editorStyle())
 							}
@@ -251,7 +253,7 @@ func auditObject(s *screen, program bool) {
 	s.activateBrowser(s.browser.GetCurrentNode())
 }
 func auditPrepare(t *testing.T, s *screen, scene, fixture string) {
-	delegate := func(p tview.Primitive) { s.app.SetFocus(p) }
+	delegate := func(p tuivory.Primitive) { s.app.SetFocus(p) }
 	r := auditResult()
 	s.render(r)
 	switch scene {
@@ -294,13 +296,13 @@ func auditPrepare(t *testing.T, s *screen, scene, fixture string) {
 		}
 		if scene == "connect_choice" {
 			focusForm(s, s.connectForm, connectionMode)
-			s.connectForm.GetFormItem(connectionMode).(*choiceField).InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), delegate)
+			s.connectForm.GetFormItem(connectionMode).(*choiceField).InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), delegate)
 		}
 	case "settings", "theme_choice":
 		s.settingsForm()
 		if scene == "theme_choice" {
 			focusForm(s, s.prefsForm, 3)
-			s.prefsForm.GetFormItem(3).(*choiceField).InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), delegate)
+			s.prefsForm.GetFormItem(3).(*choiceField).InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), delegate)
 		}
 	case "help", "help_body":
 		s.showHelp()
@@ -371,7 +373,7 @@ func auditPrepare(t *testing.T, s *screen, scene, fixture string) {
 	case "routine_results", "routine_grid":
 		s.showRoutineResults(oracle.RoutineResult{Routine: "SAMPLE_PROCEDURE", Scalars: r})
 		if scene == "routine_grid" {
-			s.routineResultList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), delegate)
+			s.routineResultList.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), delegate)
 		}
 	case "copy":
 		s.clipboardText = "ID\tTITLE\n1\t샘플 데이터"

@@ -1,10 +1,10 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"strings"
 	"unicode"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 type editorPresetBinding struct {
@@ -22,68 +22,68 @@ func editorPresetBindings(keymap string) []editorPresetBinding {
 		return nil
 	}
 	keys := []editorPresetBinding{
-		{"editor_document_start", binding{"Ctrl+Home", tcell.KeyHome, tcell.ModCtrl, 0}},
-		{"editor_document_end", binding{"Ctrl+End", tcell.KeyEnd, tcell.ModCtrl, 0}},
-		{"select_all", binding{"Ctrl+A", tcell.KeyCtrlA, 0, 0}},
-		{"complete", binding{"Ctrl+Space", tcell.KeyCtrlSpace, 0, 0}},
-		{"copy", binding{"Ctrl+C", tcell.KeyCtrlC, 0, 0}},
-		{"cut", binding{"Ctrl+X", tcell.KeyCtrlX, 0, 0}},
-		{"paste", binding{"Ctrl+V", tcell.KeyCtrlV, 0, 0}},
-		{"undo", binding{"Ctrl+Z", tcell.KeyCtrlZ, 0, 0}},
-		{"redo", binding{"Ctrl+Shift+Z", tcell.KeyCtrlZ, tcell.ModShift, 0}},
-		{"find", binding{"Ctrl+F", tcell.KeyCtrlF, 0, 0}},
-		{"replace", binding{"Ctrl+R", tcell.KeyCtrlR, 0, 0}},
+		{"editor_document_start", binding{"Ctrl+Home", tuivory.KeyHome, tuivory.ModCtrl, 0}},
+		{"editor_document_end", binding{"Ctrl+End", tuivory.KeyEnd, tuivory.ModCtrl, 0}},
+		{"select_all", binding{"Ctrl+A", tuivory.KeyCtrlA, 0, 0}},
+		{"complete", binding{"Ctrl+Space", tuivory.KeyCtrlSpace, 0, 0}},
+		{"copy", binding{"Ctrl+C", tuivory.KeyCtrlC, 0, 0}},
+		{"cut", binding{"Ctrl+X", tuivory.KeyCtrlX, 0, 0}},
+		{"paste", binding{"Ctrl+V", tuivory.KeyCtrlV, 0, 0}},
+		{"undo", binding{"Ctrl+Z", tuivory.KeyCtrlZ, 0, 0}},
+		{"redo", binding{"Ctrl+Shift+Z", tuivory.KeyCtrlZ, tuivory.ModShift, 0}},
+		{"find", binding{"Ctrl+F", tuivory.KeyCtrlF, 0, 0}},
+		{"replace", binding{"Ctrl+R", tuivory.KeyCtrlR, 0, 0}},
 	}
 	if keymap == "vscode" {
 		return append(keys,
-			editorPresetBinding{"redo", binding{"Ctrl+Y", tcell.KeyCtrlY, 0, 0}},
-			editorPresetBinding{"duplicate_line", binding{"Alt+Shift+Down", tcell.KeyDown, tcell.ModAlt | tcell.ModShift, 0}},
-			editorPresetBinding{"duplicate_above", binding{"Alt+Shift+Up", tcell.KeyUp, tcell.ModAlt | tcell.ModShift, 0}},
-			editorPresetBinding{"duplicate_line", binding{"Ctrl+Alt+Shift+Down", tcell.KeyDown, tcell.ModCtrl | tcell.ModAlt | tcell.ModShift, 0}},
-			editorPresetBinding{"duplicate_above", binding{"Ctrl+Alt+Shift+Up", tcell.KeyUp, tcell.ModCtrl | tcell.ModAlt | tcell.ModShift, 0}},
-			editorPresetBinding{"line_up", binding{"Alt+Up", tcell.KeyUp, tcell.ModAlt, 0}},
-			editorPresetBinding{"line_down", binding{"Alt+Down", tcell.KeyDown, tcell.ModAlt, 0}},
-			editorPresetBinding{"delete_line", binding{"Ctrl+Shift+K", tcell.KeyCtrlK, tcell.ModShift, 0}},
-			editorPresetBinding{"format_code", binding{"Ctrl+Shift+I", tcell.KeyCtrlI, tcell.ModShift, 0}},
-			editorPresetBinding{"format_code", binding{"Alt+Shift+F", tcell.KeyRune, tcell.ModAlt | tcell.ModShift, 'f'}},
-			editorPresetBinding{"unsupported_multicaret", binding{"", tcell.KeyCtrlD, 0, 0}},
+			editorPresetBinding{"redo", binding{"Ctrl+Y", tuivory.KeyCtrlY, 0, 0}},
+			editorPresetBinding{"duplicate_line", binding{"Alt+Shift+Down", tuivory.KeyDown, tuivory.ModAlt | tuivory.ModShift, 0}},
+			editorPresetBinding{"duplicate_above", binding{"Alt+Shift+Up", tuivory.KeyUp, tuivory.ModAlt | tuivory.ModShift, 0}},
+			editorPresetBinding{"duplicate_line", binding{"Ctrl+Alt+Shift+Down", tuivory.KeyDown, tuivory.ModCtrl | tuivory.ModAlt | tuivory.ModShift, 0}},
+			editorPresetBinding{"duplicate_above", binding{"Ctrl+Alt+Shift+Up", tuivory.KeyUp, tuivory.ModCtrl | tuivory.ModAlt | tuivory.ModShift, 0}},
+			editorPresetBinding{"line_up", binding{"Alt+Up", tuivory.KeyUp, tuivory.ModAlt, 0}},
+			editorPresetBinding{"line_down", binding{"Alt+Down", tuivory.KeyDown, tuivory.ModAlt, 0}},
+			editorPresetBinding{"delete_line", binding{"Ctrl+Shift+K", tuivory.KeyCtrlK, tuivory.ModShift, 0}},
+			editorPresetBinding{"format_code", binding{"Ctrl+Shift+I", tuivory.KeyCtrlI, tuivory.ModShift, 0}},
+			editorPresetBinding{"format_code", binding{"Alt+Shift+F", tuivory.KeyRune, tuivory.ModAlt | tuivory.ModShift, 'f'}},
+			editorPresetBinding{"unsupported_multicaret", binding{"", tuivory.KeyCtrlD, 0, 0}},
 		)
 	}
 	return append(keys,
-		editorPresetBinding{"duplicate_line", binding{"Ctrl+D", tcell.KeyCtrlD, 0, 0}},
-		editorPresetBinding{"delete_line", binding{"Ctrl+Y", tcell.KeyCtrlY, 0, 0}},
-		editorPresetBinding{"format_code", binding{"Ctrl+Alt+L", tcell.KeyCtrlL, tcell.ModAlt, 0}},
-		editorPresetBinding{"line_up", binding{"Ctrl+Alt+Shift+Up", tcell.KeyUp, tcell.ModCtrl | tcell.ModAlt | tcell.ModShift, 0}},
-		editorPresetBinding{"line_down", binding{"Ctrl+Alt+Shift+Down", tcell.KeyDown, tcell.ModCtrl | tcell.ModAlt | tcell.ModShift, 0}},
+		editorPresetBinding{"duplicate_line", binding{"Ctrl+D", tuivory.KeyCtrlD, 0, 0}},
+		editorPresetBinding{"delete_line", binding{"Ctrl+Y", tuivory.KeyCtrlY, 0, 0}},
+		editorPresetBinding{"format_code", binding{"Ctrl+Alt+L", tuivory.KeyCtrlL, tuivory.ModAlt, 0}},
+		editorPresetBinding{"line_up", binding{"Ctrl+Alt+Shift+Up", tuivory.KeyUp, tuivory.ModCtrl | tuivory.ModAlt | tuivory.ModShift, 0}},
+		editorPresetBinding{"line_down", binding{"Ctrl+Alt+Shift+Down", tuivory.KeyDown, tuivory.ModCtrl | tuivory.ModAlt | tuivory.ModShift, 0}},
 	)
 }
-func normalizedEditorMod(e *tcell.EventKey) tcell.ModMask {
+func normalizedEditorMod(e *tuivory.EventKey) tuivory.ModMask {
 	mod := e.Modifiers()
-	if e.Key() >= tcell.KeyCtrlA && e.Key() <= tcell.KeyCtrlZ || e.Key() == tcell.KeyCtrlSpace {
-		mod &^= tcell.ModCtrl
+	if e.Key() >= tuivory.KeyCtrlA && e.Key() <= tuivory.KeyCtrlZ || e.Key() == tuivory.KeyCtrlSpace {
+		mod &^= tuivory.ModCtrl
 	}
 	return mod
 }
-func (s *screen) editorPresetKey(e *tview.TextArea, event *tcell.EventKey) bool {
+func (s *screen) editorPresetKey(e *tuivory.TextArea, event *tuivory.EventKey) bool {
 	if e == nil {
 		return false
 	}
 	// Extended terminal protocols keep Ctrl+Shift/Alt letters as runes, while
 	// legacy C0 inputs use KeyCtrl*. Match both without changing other widgets.
-	if event.Key() == tcell.KeyRune && event.Modifiers()&tcell.ModCtrl != 0 {
+	if event.Key() == tuivory.KeyRune && event.Modifiers()&tuivory.ModCtrl != 0 {
 		r := unicode.ToLower(event.Rune())
 		if r >= 'a' && r <= 'z' {
-			event = tcell.NewEventKey(tcell.KeyCtrlA+tcell.Key(r-'a'), 0, event.Modifiers())
+			event = tuivory.NewEventKey(tuivory.KeyCtrlA+tuivory.Key(r-'a'), 0, event.Modifiers())
 		}
 	}
 	for _, key := range editorPresetBindings(s.prefs.EditorKeymap) {
-		if key.key == tcell.KeyCtrlSpace && event.Key() == tcell.KeyRune && event.Rune() == ' ' && event.Modifiers() == tcell.ModCtrl {
+		if key.key == tuivory.KeyCtrlSpace && event.Key() == tuivory.KeyRune && event.Rune() == ' ' && event.Modifiers() == tuivory.ModCtrl {
 			if !s.busy {
 				s.editorPresetAction(e, key.action)
 			}
 			return true
 		}
-		if event.Key() != key.key || normalizedEditorMod(event) != key.mod || key.key == tcell.KeyRune && unicode.ToLower(event.Rune()) != key.char {
+		if event.Key() != key.key || normalizedEditorMod(event) != key.mod || key.key == tuivory.KeyRune && unicode.ToLower(event.Rune()) != key.char {
 			continue
 		}
 		if !s.busy {
@@ -93,7 +93,7 @@ func (s *screen) editorPresetKey(e *tview.TextArea, event *tcell.EventKey) bool 
 	}
 	return false
 }
-func (s *screen) editorPresetAction(e *tview.TextArea, action string) {
+func (s *screen) editorPresetAction(e *tuivory.TextArea, action string) {
 	switch action {
 	case "editor_document_start":
 		e.Select(0, 0)
@@ -106,9 +106,9 @@ func (s *screen) editorPresetAction(e *tview.TextArea, action string) {
 	case "find", "replace":
 		s.showSearch(action == "replace")
 	case "undo":
-		s.nativeEditorKey(e, tcell.KeyCtrlZ)
+		s.nativeEditorKey(e, tuivory.KeyCtrlZ)
 	case "redo":
-		s.nativeEditorKey(e, tcell.KeyCtrlY)
+		s.nativeEditorKey(e, tuivory.KeyCtrlY)
 	case "copy", "cut":
 		if !e.HasSelection() {
 			s.editorLineAction(e, action+"_line")
@@ -116,10 +116,10 @@ func (s *screen) editorPresetAction(e *tview.TextArea, action string) {
 			selected, _, _ := e.GetSelection()
 			s.sendClipboard(selected)
 		} else {
-			s.nativeEditorKey(e, tcell.KeyCtrlX)
+			s.nativeEditorKey(e, tuivory.KeyCtrlX)
 		}
 	case "paste":
-		s.nativeEditorKey(e, tcell.KeyCtrlV)
+		s.nativeEditorKey(e, tuivory.KeyCtrlV)
 	case "format_code":
 		s.formatCode()
 	case "duplicate_above":
@@ -130,7 +130,7 @@ func (s *screen) editorPresetAction(e *tview.TextArea, action string) {
 		s.editorLineAction(e, action)
 	}
 }
-func (s *screen) copyEditorLines(e *tview.TextArea, above bool) {
+func (s *screen) copyEditorLines(e *tuivory.TextArea, above bool) {
 	text := e.GetText()
 	_, a, b := e.GetSelection()
 	start, end := selectedLines(text, a, b)

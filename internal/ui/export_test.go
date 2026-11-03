@@ -1,15 +1,14 @@
 package ui
 
 import (
+	"lazyora/internal/oracle"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestExportScopesKeepRawNULLAndLiteralValues(t *testing.T) {
@@ -40,7 +39,7 @@ func TestExportUIOverwriteCancelAndJobSnapshot(t *testing.T) {
 	if err := os.WriteFile(path, []byte("keep"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	form.GetFormItem(1).(*tview.InputField).SetText(path)
+	form.GetFormItem(1).(*tuivory.InputField).SetText(path)
 	s.exportSubmit()
 	if s.programModal == nil || len(s.jobs) != 0 {
 		t.Fatal("overwrite not confirmed")
@@ -57,7 +56,7 @@ func TestExportUIOverwriteCancelAndJobSnapshot(t *testing.T) {
 		t.Fatal("export job lost snapshot or touched DB")
 	}
 	s.busy = false
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if s.exportForm != nil {
 		t.Fatal("Esc did not close export")
 	}
@@ -66,7 +65,7 @@ func TestExportUIOverwriteCancelAndJobSnapshot(t *testing.T) {
 func TestExportKeyboardAndInsertTargetRequired(t *testing.T) {
 	s := fileTestScreen(t)
 	s.render(oracle.Result{Columns: []string{"N"}, Rows: [][]string{{"1"}}})
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'w', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'w', tuivory.ModAlt))
 	if s.exportForm == nil {
 		t.Fatal("export shortcut missing")
 	}
@@ -75,12 +74,12 @@ func TestExportKeyboardAndInsertTargetRequired(t *testing.T) {
 	if len(s.jobs) != 0 || s.exportForm == nil {
 		t.Fatal("INSERT guessed target table")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF1, 0, 0))
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyF1, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if page, _ := s.pages.GetFrontPage(); page != "export" {
 		t.Fatal("help lost export page")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if !s.pendingChanges || len(s.jobs) != 0 {
 		t.Fatal("export cancel resolved DB work")
 	}
@@ -92,7 +91,7 @@ func TestExportWorkerWithoutDBAndHelpDuringSave(t *testing.T) {
 	s.app.QueueUpdateDraw(func() {
 		s.showExport()
 		s.exportForm.GetFormItem(0).(*choiceField).SetCurrentOption(2)
-		s.exportForm.GetFormItem(1).(*tview.InputField).SetText(path)
+		s.exportForm.GetFormItem(1).(*tuivory.InputField).SetText(path)
 		s.exportSubmit()
 		s.showHelp()
 	})
@@ -135,19 +134,19 @@ func TestFullExportReplaysReviewedQueryAndDefaultsToCancel(t *testing.T) {
 	values["N"] = oracle.BindValue{Kind: "text", Text: "later value"}
 	s.showExport()
 	path := filepath.Join(t.TempDir(), "all.csv")
-	s.exportForm.GetFormItem(1).(*tview.InputField).SetText(path)
+	s.exportForm.GetFormItem(1).(*tuivory.InputField).SetText(path)
 	s.exportForm.GetFormItem(2).(*choiceField).SetCurrentOption(exportFullScope)
 	s.exportSubmit()
 	if s.sqlConfirmText == nil || len(s.jobs) != 0 || !strings.Contains(s.sqlConfirmText.GetText(false), query.Text) || strings.Contains(s.sqlConfirmText.GetText(false), "secret original") {
 		t.Fatal("requery wasn't reviewed or bind value leaked")
 	}
-	warningKey(s, tcell.NewEventKey(tcell.KeyEnter, 0, 0))
+	warningKey(s, tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
 	if len(s.jobs) != 0 || s.sqlConfirmText != nil || s.exportForm == nil {
 		t.Fatal("default requery action is not Cancel")
 	}
 	s.exportSubmit()
-	warningKey(s, tcell.NewEventKey(tcell.KeyLeft, 0, 0))
-	warningKey(s, tcell.NewEventKey(tcell.KeyEnter, 0, 0))
+	warningKey(s, tuivory.NewEventKey(tuivory.KeyLeft, 0, 0))
+	warningKey(s, tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
 	j := <-s.jobs
 	defer s.cancel()
 	if j.query == nil || j.query.Text != query.Text || j.query.Bindings["N"].Text != "secret original" || len(j.dataset.Rows) != 0 || j.path != path {
@@ -178,7 +177,7 @@ func TestFullExportTabAndClearLifecycle(t *testing.T) {
 	s.scriptReport = oracle.ScriptReport{Steps: []oracle.ScriptStep{{Result: oracle.Result{Query: query}}}}
 	s.clearBindValues() // Also used on successful reconnect.
 	s.showExport()
-	s.exportForm.GetFormItem(1).(*tview.InputField).SetText(filepath.Join(t.TempDir(), "all.csv"))
+	s.exportForm.GetFormItem(1).(*tuivory.InputField).SetText(filepath.Join(t.TempDir(), "all.csv"))
 	s.exportForm.GetFormItem(2).(*choiceField).SetCurrentOption(exportFullScope)
 	s.exportSubmit()
 	if s.resultQuery != nil || s.scriptReport.Steps[0].Result.Query != nil || len(s.jobs) != 0 || s.sqlConfirmText != nil {
@@ -203,12 +202,12 @@ func TestExportBusyFreezesFieldsAndCancels(t *testing.T) {
 	s.busy = true
 	cancelled := false
 	s.cancel = func() { cancelled = true }
-	for _, event := range []*tcell.EventKey{tcell.NewEventKey(tcell.KeyRune, 'x', 0), tcell.NewEventKey(tcell.KeyCtrlS, 0, 0), tcell.NewEventKey(tcell.KeyEnter, 0, 0)} {
+	for _, event := range []*tuivory.EventKey{tuivory.NewEventKey(tuivory.KeyRune, 'x', 0), tuivory.NewEventKey(tuivory.KeyCtrlS, 0, 0), tuivory.NewEventKey(tuivory.KeyEnter, 0, 0)} {
 		if s.exportKey(event) != nil {
 			t.Fatal("fields/buttons remain editable during export")
 		}
 	}
-	s.exportKey(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.exportKey(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if !cancelled || s.exportForm == nil {
 		t.Fatal("Esc did not request cancellation or discarded progress before worker completed")
 	}

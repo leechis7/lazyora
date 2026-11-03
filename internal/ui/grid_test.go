@@ -3,12 +3,11 @@ package ui
 import (
 	"encoding/csv"
 	"fmt"
+	"lazyora/internal/oracle"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestGridDecorationPreservesRawCopyHitTestingAndRowNumbers(t *testing.T) {
@@ -23,7 +22,7 @@ func TestGridDecorationPreservesRawCopyHitTestingAndRowNumbers(t *testing.T) {
 				grid.SetRect(0, 0, width, 12)
 				grid.Draw(terminal)
 			}
-			if s.table.GetCell(1, 0).Align != tview.AlignRight || strings.TrimSpace(s.table.GetCell(1, 2).Text) != "∅ NULL" || !strings.Contains(s.table.GetCell(1, 1).Text, "…") {
+			if s.table.GetCell(1, 0).Align != tuivory.AlignRight || strings.TrimSpace(s.table.GetCell(1, 2).Text) != "∅ NULL" || !strings.Contains(s.table.GetCell(1, 1).Text, "…") {
 				t.Fatal("typed preview/alignment missing")
 			}
 			x, y, _ := s.resultCellRect(1, 0)
@@ -37,7 +36,7 @@ func TestGridDecorationPreservesRawCopyHitTestingAndRowNumbers(t *testing.T) {
 			if r != '1' {
 				t.Fatalf("row number missing: %q", r)
 			}
-			s.resultMouse(tview.MouseLeftDown, tcell.NewEventMouse(ix-2, y, tcell.Button1, 0))
+			s.resultMouse(tuivory.MouseLeftDown, tuivory.NewEventMouse(ix-2, y, tuivory.Button1, 0))
 			s.copyResults("selection")
 			reader := csv.NewReader(strings.NewReader(s.clipboardText))
 			reader.Comma = '\t'
@@ -96,7 +95,7 @@ func TestGridScrolledGutterTracksActualDataAndTabWidths(t *testing.T) {
 }
 
 func BenchmarkGridMoveAcross1000Rows(b *testing.B) {
-	s := &screen{table: tview.NewTable()}
+	s := &screen{table: tuivory.NewTable()}
 	rows := make([][]string, 1000)
 	for i := range rows {
 		rows[i] = make([]string, 20)

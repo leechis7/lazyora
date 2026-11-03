@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 )
 
 func sqlSummary(sql string, limit int) string {
@@ -18,7 +18,7 @@ func sqlSummary(sql string, limit int) string {
 func (s *screen) exitMessage(key string) string {
 	message := s.tr(key)
 	if badge := s.connectionBadge(); badge != "" {
-		message = tview.Escape(badge) + "\n\n" + message
+		message = tuivory.Escape(badge) + "\n\n" + message
 	}
 	if key != "exit_pending" && key != "workspace_exit_pending" {
 		return message
@@ -26,7 +26,7 @@ func (s *screen) exitMessage(key string) string {
 	records := s.pendingWork.Statements
 	message += "\n\n" + fmt.Sprintf(s.tr("pending_count"), len(records)+s.pendingWork.Omitted)
 	if len(records) > 0 {
-		message += "\n" + s.tr("pending_latest") + ": " + tview.Escape(sqlSummary(records[len(records)-1].SQL, 80))
+		message += "\n" + s.tr("pending_latest") + ": " + tuivory.Escape(sqlSummary(records[len(records)-1].SQL, 80))
 	}
 	return message + "\n" + s.tr("pending_view_hint")
 }
@@ -44,7 +44,7 @@ func (s *screen) showPendingWork() {
 	s.pendingTable.SetBorder(true).SetTitle(s.tr("pending_work"))
 	s.styleBox(s.pendingTable.Box)
 	for col, key := range []string{"pending_number", "pending_time", "pending_outcome", "pending_rows", "pending_sql"} {
-		s.pendingTable.SetCell(0, col, tview.NewTableCell(s.tr(key)).SetSelectable(false).SetTextColor(s.colors().accent))
+		s.pendingTable.SetCell(0, col, tuivory.NewTableCell(s.tr(key)).SetSelectable(false).SetTextColor(s.colors().accent))
 	}
 	for i, record := range s.pendingWork.Statements {
 		outcome := s.tr("pending_success")
@@ -56,7 +56,7 @@ func (s *screen) showPendingWork() {
 			rows = fmt.Sprint(record.Affected)
 		}
 		for col, text := range []string{fmt.Sprint(i + 1 + s.pendingWork.Omitted), record.At.Format("15:04:05"), outcome, rows, sqlSummary(record.SQL, 80)} {
-			s.pendingTable.SetCell(i+1, col, tview.NewTableCell(tview.Escape(text)).SetTextColor(s.colors().text))
+			s.pendingTable.SetCell(i+1, col, tuivory.NewTableCell(tuivory.Escape(text)).SetTextColor(s.colors().text))
 		}
 	}
 	s.pendingTable.SetSelectionChangedFunc(func(row, col int) { s.selectPendingStatement(row) })
@@ -67,8 +67,8 @@ func (s *screen) showPendingWork() {
 		text += "\n" + fmt.Sprintf(s.tr("pending_omitted"), s.pendingWork.Omitted)
 	}
 	info.SetText(text)
-	close := s.clickable(tview.NewButton(s.tr("back") + " (Esc)").SetSelectedFunc(s.closePendingWork))
-	root := s.newFlex().SetDirection(tview.FlexRow).AddItem(info, 5, 0, false).
+	close := s.clickable(tuivory.NewWidgetButton(s.tr("back") + " (Esc)").SetSelectedFunc(s.closePendingWork))
+	root := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(info, 5, 0, false).
 		AddItem(s.pendingTable, 0, 2, true).AddItem(s.pendingSQL, 0, 3, false).AddItem(close, 1, 0, false)
 	s.pages.AddPage("pending", root, true, true)
 	if len(s.pendingWork.Statements) > 0 {

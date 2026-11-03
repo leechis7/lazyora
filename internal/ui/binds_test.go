@@ -3,8 +3,7 @@ package ui
 import (
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestBindPromptCancelAndSubmitSnapshot(t *testing.T) {
@@ -19,9 +18,9 @@ func TestBindPromptCancelAndSubmitSnapshot(t *testing.T) {
 		t.Fatal("cancel submitted SQL or saved values")
 	}
 	s.executeSQL()
-	s.bindForm.GetFormItem(1).(*tview.InputField).SetText("private value")
+	s.bindForm.GetFormItem(1).(*tuivory.InputField).SetText("private value")
 	s.editor.SetText("DROP TABLE other;", false)
-	s.key(tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModCtrl))
+	s.key(tuivory.NewEventKey(tuivory.KeyEnter, 0, tuivory.ModCtrl))
 	j := <-s.jobs
 	if j.text != "SELECT :name, :NAME FROM dual;" || j.bindings["NAME"].Text != "private value" {
 		t.Fatal("bind input lost submitted snapshot")
@@ -32,7 +31,7 @@ func TestBindPromptCancelAndSubmitSnapshot(t *testing.T) {
 	s.busy = false
 	s.editor.SetText(j.text, false)
 	s.executeSQL()
-	if s.bindForm.GetFormItem(1).(*tview.InputField).GetText() != "private value" {
+	if s.bindForm.GetFormItem(1).(*tuivory.InputField).GetText() != "private value" {
 		t.Fatal("same tab/SQL did not reuse value")
 	}
 	s.bindCancel()
@@ -47,12 +46,12 @@ func TestBindInvalidTypeAndNull(t *testing.T) {
 	s.editor.SetText("SELECT :n FROM dual;", false)
 	s.executeSQL()
 	s.bindForm.GetFormItem(0).(*choiceField).SetCurrentOption(1)
-	s.bindForm.GetFormItem(1).(*tview.InputField).SetText("invalid")
+	s.bindForm.GetFormItem(1).(*tuivory.InputField).SetText("invalid")
 	s.bindSubmit()
 	if len(s.jobs) != 0 || s.bindForm == nil {
 		t.Fatal("invalid value submitted")
 	}
-	s.bindForm.GetFormItem(2).(*tview.Checkbox).SetChecked(true)
+	s.bindForm.GetFormItem(2).(*tuivory.Checkbox).SetChecked(true)
 	s.bindSubmit()
 	if j := <-s.jobs; !j.bindings["N"].Null {
 		t.Fatal("NULL value not submitted")

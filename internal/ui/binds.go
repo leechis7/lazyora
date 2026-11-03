@@ -1,9 +1,9 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"lazyora/internal/oracle"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 var bindKinds = []string{"text", "number", "date", "timestamp"}
@@ -41,7 +41,7 @@ func (s *screen) withBinds(text string, next func(map[string]oracle.BindValue)) 
 		return
 	}
 	focus := s.app.GetFocus()
-	form := tview.NewForm().SetItemPadding(0)
+	form := tuivory.NewWidgetForm().SetItemPadding(0)
 	for _, name := range names {
 		value := oracle.BindValue{Kind: "text"}
 		if s.bindSQL == text {
@@ -70,9 +70,9 @@ func (s *screen) withBinds(text string, next func(map[string]oracle.BindValue)) 
 		values := map[string]oracle.BindValue{}
 		for i, name := range names {
 			kind, _ := form.GetFormItem(i * 3).(*choiceField).GetCurrentOption()
-			value := oracle.BindValue{Kind: bindKinds[kind], Text: form.GetFormItem(i*3 + 1).(*tview.InputField).GetText(), Null: form.GetFormItem(i*3 + 2).(*tview.Checkbox).IsChecked()}
+			value := oracle.BindValue{Kind: bindKinds[kind], Text: form.GetFormItem(i*3 + 1).(*tuivory.InputField).GetText(), Null: form.GetFormItem(i*3 + 2).(*tuivory.Checkbox).IsChecked()}
 			if _, err := value.Value(); err != nil {
-				form.SetTitle(s.tr("bind_title") + " · :" + name + " · " + tview.Escape(err.Error()))
+				form.SetTitle(s.tr("bind_title") + " · :" + name + " · " + tuivory.Escape(err.Error()))
 				return
 			}
 			values[name] = value
@@ -85,8 +85,8 @@ func (s *screen) withBinds(text string, next func(map[string]oracle.BindValue)) 
 	form.AddButton(s.tr("execute"), s.bindSubmit).AddButton(s.tr("bind_clear"), func() {
 		s.clearBindValues()
 		for i := range names {
-			form.GetFormItem(i*3 + 1).(*tview.InputField).SetText("")
-			form.GetFormItem(i*3 + 2).(*tview.Checkbox).SetChecked(false)
+			form.GetFormItem(i*3 + 1).(*tuivory.InputField).SetText("")
+			form.GetFormItem(i*3 + 2).(*tuivory.Checkbox).SetChecked(false)
 		}
 	}).AddButton(s.tr("cancel"), close)
 	form.SetBorder(true).SetTitle(s.tr("bind_title"))
@@ -102,16 +102,16 @@ func (s *screen) withBinds(text string, next func(map[string]oracle.BindValue)) 
 	s.app.SetFocus(form)
 }
 
-func (s *screen) bindKey(event *tcell.EventKey) *tcell.EventKey {
+func (s *screen) bindKey(event *tuivory.EventKey) *tuivory.EventKey {
 	switch event.Key() {
-	case tcell.KeyEscape:
+	case tuivory.KeyEscape:
 		s.bindCancel()
 		return nil
-	case tcell.KeyF1:
+	case tuivory.KeyF1:
 		s.showHelp()
 		return nil
-	case tcell.KeyEnter:
-		if event.Modifiers()&(tcell.ModCtrl|tcell.ModAlt) != 0 {
+	case tuivory.KeyEnter:
+		if event.Modifiers()&(tuivory.ModCtrl|tuivory.ModAlt) != 0 {
 			s.bindSubmit()
 			return nil
 		}

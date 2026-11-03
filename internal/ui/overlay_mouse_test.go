@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestDocumentationMouseDoesNotReachSchema(t *testing.T) {
@@ -30,8 +29,8 @@ func TestDocumentationMouseDoesNotReachSchema(t *testing.T) {
 				s.rootLayout.Draw(terminal)
 				if kind == "about" {
 					focus := s.app.GetFocus()
-					for _, action := range []tview.MouseAction{tview.MouseLeftDown, tview.MouseLeftUp, tview.MouseLeftClick} {
-						s.rootLayout.MouseHandler()(action, tcell.NewEventMouse(12, 3, tcell.Button1, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+					for _, action := range []tuivory.MouseAction{tuivory.MouseLeftDown, tuivory.MouseLeftUp, tuivory.MouseLeftClick} {
+						s.rootLayout.MouseHandler()(action, tuivory.NewEventMouse(12, 3, tuivory.Button1, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 					}
 					if s.browserUsers.IsOpen() || s.browserTypes.IsOpen() || s.app.GetFocus() != focus || len(s.jobs) != 0 {
 						t.Fatal("About backdrop clicks reached the schema browser")
@@ -44,28 +43,28 @@ func TestDocumentationMouseDoesNotReachSchema(t *testing.T) {
 				}
 				topics.SetCurrentItem(0)
 				s.rootLayout.Draw(terminal)
-				var captured tview.Primitive
-				focus := func(p tview.Primitive) { s.app.SetFocus(p) }
+				var captured tuivory.Primitive
+				focus := func(p tuivory.Primitive) { s.app.SetFocus(p) }
 				// Application captures the primitive returned by MouseLeftDown.
 				// A click-only test misses the hidden dropdown stealing the release.
-				deliver := func(action tview.MouseAction, x, y int) {
-					target := tview.Primitive(s.rootLayout)
+				deliver := func(action tuivory.MouseAction, x, y int) {
+					target := tuivory.Primitive(s.rootLayout)
 					if captured != nil {
 						target = captured
 					}
-					_, captured = target.MouseHandler()(action, tcell.NewEventMouse(x, y, tcell.Button1, 0), focus)
+					_, captured = target.MouseHandler()(action, tuivory.NewEventMouse(x, y, tuivory.Button1, 0), focus)
 				}
 				x, y, _, h := topics.GetInnerRect()
 				for _, index := range []int{0, 1, 2, 3, 1, 0} {
 					if index >= h {
 						continue
 					}
-					deliver(tview.MouseLeftDown, x+12, y+index)
+					deliver(tuivory.MouseLeftDown, x+12, y+index)
 					if s.browserUsers.IsOpen() || s.browserTypes.IsOpen() {
 						t.Fatalf("contents row %d opened background schema dropdown (capture %T)", index, captured)
 					}
-					deliver(tview.MouseLeftUp, x+12, y+index)
-					deliver(tview.MouseLeftClick, x+12, y+index)
+					deliver(tuivory.MouseLeftUp, x+12, y+index)
+					deliver(tuivory.MouseLeftClick, x+12, y+index)
 					if topics.GetCurrentItem() != index {
 						t.Fatalf("contents row %d was not selected (got %d)", index, topics.GetCurrentItem())
 					}
@@ -74,9 +73,9 @@ func TestDocumentationMouseDoesNotReachSchema(t *testing.T) {
 				// Borders and blank areas must not redirect focus into the editor
 				// or result grid beneath a full-page document.
 				focusBefore := s.app.GetFocus()
-				deliver(tview.MouseLeftDown, x, y-1)
-				deliver(tview.MouseLeftUp, x, y-1)
-				deliver(tview.MouseLeftClick, x, y-1)
+				deliver(tuivory.MouseLeftDown, x, y-1)
+				deliver(tuivory.MouseLeftUp, x, y-1)
+				deliver(tuivory.MouseLeftClick, x, y-1)
 				if s.browserUsers.IsOpen() || s.browserTypes.IsOpen() || s.editor.HasFocus() || s.table.HasFocus() {
 					t.Fatalf("document border passed through to background (was %T)", focusBefore)
 				}

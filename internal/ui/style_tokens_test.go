@@ -5,13 +5,12 @@ import (
 	"math"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 )
 
 func referenceContrast(fg, bg string) float64 {
 	lum := func(hex string) float64 {
-		r, g, b := tcell.GetColor(hex).RGB()
+		r, g, b := tuivory.GetColor(hex).RGB()
 		linear := func(v int32) float64 {
 			f := float64(v) / 255
 			if f <= 0.04045 {
@@ -38,12 +37,12 @@ func TestStyleProfilesKeepContentReadable(t *testing.T) {
 				s.terminal = auditTerminal{base, count}
 				s.limitedColors = count <= 16
 				s.prefs.Theme = theme
-				styles := map[string]tcell.Style{
-					"accent":  tcell.StyleDefault.Foreground(s.colors().accent).Background(s.colors().surface),
-					"version": tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().footer),
-					"warning": tcell.StyleDefault.Foreground(s.colors().warning).Background(s.colors().surface),
-					"body":    tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().surface),
-					"hint":    tcell.StyleDefault.Foreground(s.colors().muted).Background(s.colors().surface),
+				styles := map[string]tuivory.Style{
+					"accent":  tuivory.StyleDefault.Foreground(s.colors().accent).Background(s.colors().surface),
+					"version": tuivory.StyleDefault.Foreground(s.colors().text).Background(s.colors().footer),
+					"warning": tuivory.StyleDefault.Foreground(s.colors().warning).Background(s.colors().surface),
+					"body":    tuivory.StyleDefault.Foreground(s.colors().text).Background(s.colors().surface),
+					"hint":    tuivory.StyleDefault.Foreground(s.colors().muted).Background(s.colors().surface),
 					"input":   s.fieldStyle(), "selection": s.focusStyle(), "button": s.buttonStyle(),
 					"focused button": s.buttonFocusStyle(), "disabled": s.disabledStyle(), "edited": s.editedCellStyle(),
 					"grid": s.gridBaseStyle(1, 1), "grid null": s.gridBaseStyle(1, 2), "active": s.gridActiveStyle(true),
@@ -54,8 +53,8 @@ func TestStyleProfilesKeepContentReadable(t *testing.T) {
 				for name, style := range styles {
 					if count <= 16 {
 						fg, bg, _ := style.Decompose()
-						for _, color := range []tcell.Color{fg, bg} {
-							if color.IsRGB() || int(color&^tcell.ColorValid) >= count {
+						for _, color := range []tuivory.Color{fg, bg} {
+							if color.IsRGB() || int(color&^tuivory.ColorValid) >= count {
 								t.Errorf("%s exceeds %d-color profile: %v", name, count, color)
 							}
 						}
@@ -89,7 +88,7 @@ func TestReadOnlyFormDescriptionsAndCopyTitleRemainVisible(t *testing.T) {
 				s.prefs.Theme = theme
 				s.applyTheme("dark")
 				// Reproduce the original Form.AddTextView input-color leak at render time.
-				form := tview.NewForm().AddTextView("", "Read-only 안내문", 0, 2, true, false).AddInputField("Value", "keep", 20, nil, nil)
+				form := tuivory.NewWidgetForm().AddTextView("", "Read-only 안내문", 0, 2, true, false).AddInputField("Value", "keep", 20, nil, nil)
 				s.styleForm(form)
 				s.pages.AddPage("read-only-regression", form, true, true)
 				form.SetRect(0, 0, 90, 12)
@@ -122,7 +121,7 @@ func TestReadOnlyFormDescriptionsAndCopyTitleRemainVisible(t *testing.T) {
 					s.copyText.SetRect(0, 0, 90, 12)
 					s.refreshBorders()
 					s.copyText.Draw(base)
-					var titleStyle tcell.Style
+					var titleStyle tuivory.Style
 					foundTitle := false
 					for x := 0; x < 90; x++ {
 						r, _, st, _ := base.GetContent(x, 0)
@@ -153,9 +152,9 @@ func TestThemeRoundTripKeepsActiveTabFocusAndStyles(t *testing.T) {
 	s.initDocument()
 	s.initTabs()
 	s.newTab()
-	var active *tview.Button
+	var active *tuivory.WidgetButton
 	for i := 0; i < s.tabBar.GetItemCount(); i++ {
-		if b, ok := s.tabBar.GetItem(i).(*tview.Button); ok {
+		if b, ok := s.tabBar.GetItem(i).(*tuivory.WidgetButton); ok {
 			active = b
 		}
 	}
@@ -164,7 +163,7 @@ func TestThemeRoundTripKeepsActiveTabFocusAndStyles(t *testing.T) {
 	}
 	s.app.SetFocus(active)
 	s.editor.SetText("SELECT 'unchanged' FROM dual", false)
-	paint := func() tcell.Style {
+	paint := func() tuivory.Style {
 		base.Clear()
 		active.SetRect(0, 0, 50, 1)
 		active.Draw(base)

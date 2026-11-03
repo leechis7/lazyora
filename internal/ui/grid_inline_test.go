@@ -1,13 +1,13 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"lazyora/internal/oracle"
 	"testing"
+
+	"github.com/leechis7/tuivory/go"
 )
 
-func inlineFixture(t *testing.T) (*screen, tcell.SimulationScreen) {
+func inlineFixture(t *testing.T) (*screen, tuivory.SimulationScreen) {
 	t.Helper()
 	s, terminal := resultScreen(t)
 	s.connected = true
@@ -22,11 +22,11 @@ func confirmInline(t *testing.T, s *screen, proceed bool) {
 	if s.programModal == nil || len(s.jobs) != 0 {
 		t.Fatal("missing confirmation or premature UPDATE")
 	}
-	delegate := func(p tview.Primitive) { s.app.SetFocus(p) }
+	delegate := func(p tuivory.Primitive) { s.app.SetFocus(p) }
 	if !proceed {
-		s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyRight, 0, 0), delegate)
+		s.programModal.InputHandler()(tuivory.NewEventKey(tuivory.KeyRight, 0, 0), delegate)
 	}
-	s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), delegate)
+	s.programModal.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), delegate)
 }
 func TestInlineCellEditConfirmationAndCancel(t *testing.T) {
 	s, _ := inlineFixture(t)
@@ -37,17 +37,17 @@ func TestInlineCellEditConfirmationAndCancel(t *testing.T) {
 	s.table.Select(1, 1)
 	s.sortResult(true)
 	s.table.Select(1, 1)
-	s.key(tcell.NewEventKey(tcell.KeyEnter, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
 	if s.inlineEdit == nil || s.inlineEdit.GetText() != "second" || s.inlineEdit.change.Row != 1 {
 		t.Fatal("inline input lost sorted row mapping")
 	}
 	s.inlineEdit.SetText("new")
-	s.key(tcell.NewEventKey(tcell.KeyEnter, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
 	confirmInline(t, s, false)
 	if s.inlineEdit == nil || s.inlineEdit.GetText() != "new" {
 		t.Fatal("cancel confirmation lost draft")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEnter, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
 	confirmInline(t, s, true)
 	j := <-s.jobs
 	if j.edit.Row != 1 || j.edit.Text != "new" || j.editKey.rowID != "rid2" || j.editKey.column != "TITLE" || s.inlineEdit != nil {
@@ -61,7 +61,7 @@ func TestInlineCellEditConfirmationAndCancel(t *testing.T) {
 	}
 	s.startInlineEdit(nil)
 	s.inlineEdit.SetText("discard")
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if s.inlineEdit != nil || len(s.jobs) != 0 || s.resultBrowser.source.Rows[1][1] != "second" {
 		t.Fatal("Esc changed data")
 	}
@@ -73,7 +73,7 @@ func TestInlineCellEditConfirmationAndCancel(t *testing.T) {
 }
 func TestInlineReplaceNullAndModalInputIsolation(t *testing.T) {
 	s, terminal := inlineFixture(t)
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'X', 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'X', 0))
 	if s.inlineEdit == nil || s.inlineEdit.GetText() != "X" {
 		t.Fatal("typing did not start replacement")
 	}
@@ -87,11 +87,11 @@ func TestInlineReplaceNullAndModalInputIsolation(t *testing.T) {
 			t.Fatal("inline widget outside grid")
 		}
 	}
-	s.key(tcell.NewEventKey(tcell.KeyDelete, 0, tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyDelete, 0, tuivory.ModAlt))
 	if !s.inlineEdit.change.Null {
 		t.Fatal("NULL action missing")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEnter, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
 	confirmInline(t, s, true)
 	j := <-s.jobs
 	if !j.edit.Null {
@@ -101,14 +101,14 @@ func TestInlineReplaceNullAndModalInputIsolation(t *testing.T) {
 	s.cancel = nil
 	s.busy = false
 	s.startInlineEdit(nil)
-	s.key(tcell.NewEventKey(tcell.KeyTab, 0, 0))
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyTab, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'j', tuivory.ModAlt))
 	if s.inlineEdit == nil {
 		t.Fatal("application shortcut escaped editor")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	s.startInlineEdit(nil)
-	s.key(tcell.NewEventKey(tcell.KeyEnter, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
 	if s.inlineEdit != nil || s.programModal != nil || len(s.jobs) != 0 {
 		t.Fatal("unchanged value generated UPDATE")
 	}
@@ -161,8 +161,8 @@ func TestInlineDoubleClickAndFocusedModifiedCellColor(t *testing.T) {
 	s.table.SetRect(0, 0, 120, 25)
 	s.resultGrid().Draw(terminal)
 	x, y, _ := s.resultCellRect(1, 1)
-	action, _ := s.resultMouse(tview.MouseLeftDoubleClick, tcell.NewEventMouse(x, y, 0, 0))
-	if action != tview.MouseConsumed || s.inlineEdit == nil || s.inlineEdit.GetText() != "first" {
+	action, _ := s.resultMouse(tuivory.MouseLeftDoubleClick, tuivory.NewEventMouse(x, y, 0, 0))
+	if action != tuivory.MouseConsumed || s.inlineEdit == nil || s.inlineEdit.GetText() != "first" {
 		t.Fatal("double-click did not open inline editor")
 	}
 	s.closeInlineEdit()
@@ -171,7 +171,7 @@ func TestInlineDoubleClickAndFocusedModifiedCellColor(t *testing.T) {
 	x, y, _ = s.resultCellRect(1, 1)
 	_, _, style, _ := terminal.GetContent(x, y)
 	_, bg, _ := style.Decompose()
-	if bg != tcell.ColorOlive {
+	if bg != tuivory.ColorOlive {
 		t.Fatalf("selected modified cell lost background: %v", bg)
 	}
 	// Other tabs in the same workspace observe transaction-wide markers, and
@@ -187,7 +187,7 @@ func TestInlineDoubleClickAndFocusedModifiedCellColor(t *testing.T) {
 	s.clearEditedCells()
 	s.switchTab(0)
 	_, bg, _ = s.table.GetCell(1, 1).Style.Decompose()
-	if s.isEditedCell(1, 1) || bg == tcell.ColorOlive {
+	if s.isEditedCell(1, 1) || bg == tuivory.ColorOlive {
 		t.Fatal("inactive tab retained transaction marker")
 	}
 }

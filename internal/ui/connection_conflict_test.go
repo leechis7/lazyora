@@ -2,14 +2,13 @@ package ui
 
 import (
 	"bytes"
+	"lazyora/internal/credentials"
+	"lazyora/internal/settings"
 	"os"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/credentials"
-	"lazyora/internal/settings"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestConnectionSaveConflictPreservesOtherInstanceAndInputs(t *testing.T) {
@@ -31,20 +30,20 @@ func TestConnectionSaveConflictPreservesOtherInstanceAndInputs(t *testing.T) {
 				t.Fatal(err)
 			}
 			fillConnection(b, "first", "service")
-			b.connectForm.GetFormItem(connectionHost).(*tview.InputField).SetText("stale-edit.example")
+			b.connectForm.GetFormItem(connectionHost).(*tuivory.InputField).SetText("stale-edit.example")
 			b.saveConnection()
 			after, err := os.ReadFile(path)
 			if err != nil || !bytes.Equal(before, after) || !strings.Contains(b.connectForm.GetTitle(), b.tr("connections_changed")) {
 				t.Fatal("stale instance lost another profile or did not report conflict", err)
 			}
-			if b.connectForm.GetFormItem(connectionHost).(*tview.InputField).GetText() != "stale-edit.example" || b.connectForm.GetFormItem(connectionPassword).(*tview.InputField).GetText() != "secret-only-in-memory" {
+			if b.connectForm.GetFormItem(connectionHost).(*tuivory.InputField).GetText() != "stale-edit.example" || b.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).GetText() != "secret-only-in-memory" {
 				t.Fatal("conflict discarded typed inputs")
 			}
 			// Explicitly reopen/review the latest list, then save the edited profile.
 			b.closeConnection()
 			b.connectionForm()
 			fillConnection(b, "first", "service")
-			b.connectForm.GetFormItem(connectionHost).(*tview.InputField).SetText("reviewed-edit.example")
+			b.connectForm.GetFormItem(connectionHost).(*tuivory.InputField).SetText("reviewed-edit.example")
 			b.saveConnection()
 			profiles, err := settings.LoadConnections(path)
 			if err != nil || len(profiles) != 2 || profiles[0].Host != "reviewed-edit.example" || profiles[1].Alias != "second" {
@@ -68,7 +67,7 @@ func savedConnectionScreen(t *testing.T) (*screen, *credentials.Store) {
 	s.vault = store
 	s.connectionForm()
 	fillConnection(s, "saved", "service")
-	s.connectForm.GetFormItem(connectionSavePassword).(*tview.Checkbox).SetChecked(true)
+	s.connectForm.GetFormItem(connectionSavePassword).(*tuivory.Checkbox).SetChecked(true)
 	s.saveConnection()
 	return s, store
 }
@@ -94,13 +93,13 @@ func TestProfileLockPreventsPasswordSaveAndReset(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer writer.Close()
-	s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).SetText("new password must stay in memory")
+	s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).SetText("new password must stay in memory")
 	s.saveConnection()
 	if !strings.Contains(s.connectForm.GetTitle(), s.tr("connections_busy")) {
 		t.Fatal("busy profile writer was ignored")
 	}
 	s.passwordManager()
-	s.vaultForm.GetButton(3).InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(tview.Primitive) {})
+	s.vaultForm.GetButton(3).InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(tuivory.Primitive) {})
 	modalChoice(s, s.programModal, 0)
 	if !strings.Contains(s.vaultForm.GetTitle(), s.tr("connections_busy")) {
 		t.Fatal("reset ignored another profile writer")
@@ -139,7 +138,7 @@ func TestCredentialConflictRestoresProfilesWithoutLosingOtherSecrets(t *testing.
 	if err != nil {
 		t.Fatal(err)
 	}
-	s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).SetText("new-secret-never-written")
+	s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).SetText("new-secret-never-written")
 	s.saveConnection()
 	after, err := os.ReadFile(path)
 	if err != nil || !bytes.Equal(before, after) || !strings.Contains(s.connectForm.GetTitle(), s.tr("vault_changed")) {
@@ -149,7 +148,7 @@ func TestCredentialConflictRestoresProfilesWithoutLosingOtherSecrets(t *testing.
 	if err != nil || !bytes.Equal(secretsBefore, secretsAfter) || bytes.Contains(after, []byte("new-secret")) {
 		t.Fatal("failed recovery lost another instance's encrypted secret", err)
 	}
-	if s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).GetText() != "new-secret-never-written" {
+	if s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).GetText() != "new-secret-never-written" {
 		t.Fatal("failed save discarded typed password")
 	}
 	if _, err := os.Stat(path + ".lock"); !os.IsNotExist(err) {

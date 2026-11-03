@@ -1,24 +1,23 @@
 package ui
 
 import (
+	"lazyora/internal/oracle"
+	"lazyora/internal/settings"
 	"strings"
 	"testing"
 	"unicode/utf8"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
-	"lazyora/internal/settings"
+	"github.com/leechis7/tuivory/go"
 )
 
-func editorEvent(s *screen, event *tcell.EventKey) {
+func editorEvent(s *screen, event *tuivory.EventKey) {
 	if forwarded := s.key(event); forwarded != nil {
-		s.app.GetFocus().InputHandler()(forwarded, func(p tview.Primitive) { s.app.SetFocus(p) })
+		s.app.GetFocus().InputHandler()(forwarded, func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	}
 }
 func editorText(s *screen, text string) {
 	for _, r := range text {
-		editorEvent(s, tcell.NewEventKey(tcell.KeyRune, r, 0))
+		editorEvent(s, tuivory.NewEventKey(tuivory.KeyRune, r, 0))
 	}
 }
 func mappedScreen(t *testing.T, keymap, text string) *screen {
@@ -44,7 +43,7 @@ func TestDefaultMapAndSettingsSwitchKeepTextAndUndo(t *testing.T) {
 			t.Fatal("keymap selection lost document or was not persisted")
 		}
 	}
-	editorEvent(s, tcell.NewEventKey(tcell.KeyCtrlZ, 0, 0))
+	editorEvent(s, tuivory.NewEventKey(tuivory.KeyCtrlZ, 0, 0))
 	if s.editor.GetText() != "한글 SELECT" {
 		t.Fatal("settings switch cleared undo")
 	}
@@ -52,24 +51,24 @@ func TestDefaultMapAndSettingsSwitchKeepTextAndUndo(t *testing.T) {
 func TestNotepadKeysDuplicateMoveAndUndoUnicode(t *testing.T) {
 	s := mappedScreen(t, "notepad++", "첫째\n둘째\n셋째")
 	s.editor.Select(len("첫째\n"), len("첫째\n"))
-	editorEvent(s, tcell.NewEventKey(tcell.KeyCtrlD, 0, 0))
+	editorEvent(s, tuivory.NewEventKey(tuivory.KeyCtrlD, 0, 0))
 	if s.editor.GetText() != "첫째\n둘째\n둘째\n셋째" {
 		t.Fatalf("duplicate: %q", s.editor.GetText())
 	}
-	editorEvent(s, tcell.NewEventKey(tcell.KeyCtrlZ, 0, 0))
+	editorEvent(s, tuivory.NewEventKey(tuivory.KeyCtrlZ, 0, 0))
 	s.editor.Select(len("첫째\n"), len("첫째\n둘째"))
-	editorEvent(s, tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModCtrl|tcell.ModShift))
+	editorEvent(s, tuivory.NewEventKey(tuivory.KeyDown, 0, tuivory.ModCtrl|tuivory.ModShift))
 	selected, _, _ := s.editor.GetSelection()
 	if s.editor.GetText() != "첫째\n셋째\n둘째" || selected != "둘째" {
 		t.Fatalf("move: %q selected %q", s.editor.GetText(), selected)
 	}
-	editorEvent(s, tcell.NewEventKey(tcell.KeyCtrlZ, 0, 0))
+	editorEvent(s, tuivory.NewEventKey(tuivory.KeyCtrlZ, 0, 0))
 	s.editor.Select(len("첫째\n"), len("첫째\n"))
-	editorEvent(s, tcell.NewEventKey(tcell.KeyCtrlT, 0, 0))
+	editorEvent(s, tuivory.NewEventKey(tuivory.KeyCtrlT, 0, 0))
 	if s.editor.GetText() != "둘째\n첫째\n셋째" {
 		t.Fatal("Ctrl+T did not transpose")
 	}
-	editorEvent(s, tcell.NewEventKey(tcell.KeyCtrlA, 0, 0))
+	editorEvent(s, tuivory.NewEventKey(tuivory.KeyCtrlA, 0, 0))
 	selected, _, _ = s.editor.GetSelection()
 	if selected != s.editor.GetText() {
 		t.Fatal("Ctrl+A did not select all")
@@ -77,22 +76,22 @@ func TestNotepadKeysDuplicateMoveAndUndoUnicode(t *testing.T) {
 }
 func TestNotepadClipboardAndReadOnlyPanels(t *testing.T) {
 	s := mappedScreen(t, "notepad++", "한글\nlast")
-	editorEvent(s, tcell.NewEventKey(tcell.KeyCtrlC, 0, 0))
+	editorEvent(s, tuivory.NewEventKey(tuivory.KeyCtrlC, 0, 0))
 	if s.clipboardText != "한글\n" {
 		t.Fatal("line copy missing")
 	}
-	editorEvent(s, tcell.NewEventKey(tcell.KeyCtrlL, 0, 0))
+	editorEvent(s, tuivory.NewEventKey(tuivory.KeyCtrlL, 0, 0))
 	if s.editor.GetText() != "last" {
 		t.Fatal("line cut failed")
 	}
-	editorEvent(s, tcell.NewEventKey(tcell.KeyCtrlZ, 0, 0))
+	editorEvent(s, tuivory.NewEventKey(tuivory.KeyCtrlZ, 0, 0))
 	before := s.editor.GetText()
 	s.app.SetFocus(s.table)
-	if s.editorKey(tcell.NewEventKey(tcell.KeyCtrlD, 0, 0)) || s.editor.GetText() != before {
+	if s.editorKey(tuivory.NewEventKey(tuivory.KeyCtrlD, 0, 0)) || s.editor.GetText() != before {
 		t.Fatal("map leaked into results")
 	}
 	s.connectionForm()
-	if s.editorKey(tcell.NewEventKey(tcell.KeyCtrlA, 0, 0)) {
+	if s.editorKey(tuivory.NewEventKey(tuivory.KeyCtrlA, 0, 0)) {
 		t.Fatal("map leaked into connection form")
 	}
 }
@@ -110,12 +109,12 @@ func TestVimModesGraphemesSelectionAndUndo(t *testing.T) {
 	if s.editor.GetText() != "가e\u0301👩‍💻Z" {
 		t.Fatal("undo failed")
 	}
-	editorEvent(s, tcell.NewEventKey(tcell.KeyCtrlR, 0, 0))
+	editorEvent(s, tuivory.NewEventKey(tuivory.KeyCtrlR, 0, 0))
 	if s.editor.GetText() != "e\u0301👩‍💻Z" {
 		t.Fatal("redo failed")
 	}
 	editorText(s, "i한글")
-	editorEvent(s, tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	editorEvent(s, tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if s.vim.mode != "NORMAL" || !strings.HasPrefix(s.editor.GetText(), "한글") {
 		t.Fatal("insert/escape failed")
 	}
@@ -141,7 +140,7 @@ func TestVimWordsCountsLineYankAndPaste(t *testing.T) {
 	}
 }
 func TestVimDoesNotConsumeExecutionHelpOrBusyCancel(t *testing.T) {
-	for _, event := range []*tcell.EventKey{tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModCtrl), tcell.NewEventKey(tcell.KeyF9, 0, 0)} {
+	for _, event := range []*tuivory.EventKey{tuivory.NewEventKey(tuivory.KeyEnter, 0, tuivory.ModCtrl), tuivory.NewEventKey(tuivory.KeyF9, 0, 0)} {
 		s := mappedScreen(t, "vim", "SELECT 1 FROM dual")
 		s.connected = true
 		s.key(event)
@@ -150,11 +149,11 @@ func TestVimDoesNotConsumeExecutionHelpOrBusyCancel(t *testing.T) {
 		}
 	}
 	s := mappedScreen(t, "vim", "SELECT 1")
-	s.key(tcell.NewEventKey(tcell.KeyF1, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyF1, 0, 0))
 	if page, _ := s.pages.GetFrontPage(); page != "help" {
 		t.Fatal("Vim swallowed help")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if page, _ := s.pages.GetFrontPage(); page != "main" {
 		t.Fatal("help escape entered editor map")
 	}
@@ -165,7 +164,7 @@ func TestVimSourceEscapeAndFindStayInSource(t *testing.T) {
 	sql := s.editor.GetText()
 	original := s.sourceEditor.GetText()
 	editorText(s, "i-- 한글")
-	editorEvent(s, tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	editorEvent(s, tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if page, _ := s.pages.GetFrontPage(); page != "source" || s.programModal != nil {
 		t.Fatal("Vim Escape closed source")
 	}
@@ -176,7 +175,7 @@ func TestVimSourceEscapeAndFindStayInSource(t *testing.T) {
 		t.Fatal("source find changed hidden SQL")
 	}
 	s.sourceEditor.SetText(original, false)
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'x', tuivory.ModAlt))
 	if s.sourceEditor != nil {
 		t.Fatal("Alt+X did not close source")
 	}
@@ -185,13 +184,13 @@ func TestVimSourceEscapeAndFindStayInSource(t *testing.T) {
 func TestVimSearchDirectionAndChangeWord(t *testing.T) {
 	s := mappedScreen(t, "vim", "one two one")
 	editorText(s, "cwX")
-	editorEvent(s, tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	editorEvent(s, tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if s.editor.GetText() != "X two one" {
 		t.Fatalf("cw ate separator: %q", s.editor.GetText())
 	}
 	s = mappedScreen(t, "vim", "one two one")
 	editorText(s, "?")
-	s.searchForm.GetFormItem(0).(*tview.InputField).SetText("one")
+	s.searchForm.GetFormItem(0).(*tuivory.InputField).SetText("one")
 	s.searchAction("submit")
 	_, at, _ := s.editor.GetSelection()
 	if at != 8 {
@@ -228,7 +227,7 @@ func TestKeymapBusyAndEditorTabsAreIsolated(t *testing.T) {
 		s.prefs.EditorKeymap = keymap
 		s.render(oracle.Result{Columns: []string{"C"}, Rows: [][]string{{"unchanged"}}})
 		s.app.SetFocus(s.table)
-		if s.editorKey(tcell.NewEventKey(tcell.KeyRune, 'j', 0)) {
+		if s.editorKey(tuivory.NewEventKey(tuivory.KeyRune, 'j', 0)) {
 			t.Fatal("editor map consumed result-grid key")
 		}
 	}
@@ -239,20 +238,20 @@ func TestSourceEditMenuAlternativeAndCompletionBinding(t *testing.T) {
 	s.prefs.EditorKeymap = "notepad++"
 	sql := s.editor.GetText()
 	before := s.sourceEditor.GetText()
-	s.key(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModShift))
+	s.key(tuivory.NewEventKey(tuivory.KeyF10, 0, tuivory.ModShift))
 	page, root := s.pages.GetFrontPage()
 	if page != "editor_actions" {
 		t.Fatal("source menu did not open")
 	}
 	_ = root // The source menu is now a shared popup, not a native tview.List.
 	s.sourceActions.model.Focus("duplicate_line")
-	s.sourceActions.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	s.sourceActions.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 
 	if s.sourceEditor.GetText() == before || s.editor.GetText() != sql || !s.sourceEditor.HasFocus() {
 		t.Fatal("source edit menu targeted wrong editor")
 	}
 	s.sourceEditor.SetText("SEL", false).Select(3, 3)
-	s.key(tcell.NewEventKey(tcell.KeyCtrlSpace, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlSpace, 0, 0))
 	if page, _ := s.pages.GetFrontPage(); page != "completion" {
 		t.Fatal("NPP completion unavailable")
 	}
@@ -283,7 +282,7 @@ func TestLineEditsAtDocumentEdgesAndMultilineSelection(t *testing.T) {
 		if s.editor.GetText() != tc.want {
 			t.Fatalf("%s %q: %q", tc.action, tc.text, s.editor.GetText())
 		}
-		s.nativeEditorKey(s.editor, tcell.KeyCtrlZ)
+		s.nativeEditorKey(s.editor, tuivory.KeyCtrlZ)
 		if s.editor.GetText() != tc.text {
 			t.Fatalf("undo %s: %q", tc.action, s.editor.GetText())
 		}
@@ -300,16 +299,16 @@ func TestLineEditsAtDocumentEdgesAndMultilineSelection(t *testing.T) {
 func TestVimReplaceMenuUsesCursorAndDoesNotSkipFollowingMatch(t *testing.T) {
 	s := mappedScreen(t, "vim", "aa")
 	s.showSearch(true)
-	s.searchForm.GetFormItem(0).(*tview.InputField).SetText("a")
-	s.searchForm.GetFormItem(1).(*tview.InputField).SetText("b")
+	s.searchForm.GetFormItem(0).(*tuivory.InputField).SetText("a")
+	s.searchForm.GetFormItem(1).(*tuivory.InputField).SetText("b")
 	s.searchAction("replace")
 	_, at, _ := s.editor.GetSelection()
 	if s.editor.GetText() != "ba" || at != 1 {
 		t.Fatalf("replace next match: %q %d", s.editor.GetText(), at)
 	}
 	s.showSearch(true)
-	s.searchForm.GetFormItem(0).(*tview.InputField).SetText("a")
-	s.searchForm.GetFormItem(1).(*tview.InputField).SetText("")
+	s.searchForm.GetFormItem(0).(*tuivory.InputField).SetText("a")
+	s.searchForm.GetFormItem(1).(*tuivory.InputField).SetText("")
 	s.searchAction("replace")
 	if s.editor.GetText() != "b" {
 		t.Fatal("empty replacement failed")

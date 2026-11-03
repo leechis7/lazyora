@@ -6,7 +6,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/leechis7/tuivory/go"
 )
 
 // tcell emits DECSCUSR even for its default cursor. Older SecureCRT sessions
@@ -21,7 +21,7 @@ var win32InputEnable = []byte("\x1b[?9001h")
 var win32InputDisable = []byte("\x1b[?9001l")
 
 type compatibleTTY struct {
-	tcell.Tty
+	tuivory.Tty
 	pending []byte
 }
 
@@ -69,13 +69,13 @@ func (t *compatibleTTY) Stop() error {
 	return stopErr
 }
 
-func newCompatibleScreen() (tcell.Screen, error) {
+func newCompatibleScreen() (tuivory.Screen, error) {
 	// Windows consoles need tcell's console fallback when TERM is unset.
 	if runtime.GOOS == "windows" {
-		return tcell.NewScreen()
+		return tuivory.NewScreen()
 	}
 
-	tty, err := tcell.NewDevTty()
+	tty, err := tuivory.NewDevTty()
 	if err != nil {
 		return nil, err
 	}
@@ -87,15 +87,15 @@ func newCompatibleScreen() (tcell.Screen, error) {
 	return screen, nil
 }
 
-func newCompatibleScreenFromTTY(tty tcell.Tty) (tcell.Screen, error) {
+func newCompatibleScreenFromTTY(tty tuivory.Tty) (tuivory.Screen, error) {
 	if os.Getenv("TERM") == "" {
 		// Select a conservative fallback locally, without modifying the process
 		// environment or replacing an explicitly configured terminal protocol.
-		info, err := tcell.LookupTerminfo("ansi")
+		info, err := tuivory.LookupTerminfo("ansi")
 		if err != nil {
 			return nil, err
 		}
-		return tcell.NewTerminfoScreenFromTtyTerminfo(tty, info)
+		return tuivory.NewTerminfoScreenFromTtyTerminfo(tty, info)
 	}
-	return tcell.NewTerminfoScreenFromTty(tty)
+	return tuivory.NewTerminfoScreenFromTty(tty)
 }

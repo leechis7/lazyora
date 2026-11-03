@@ -2,11 +2,11 @@ package ui
 
 import (
 	"context"
+	"lazyora/internal/oracle"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestOutputViewerCopiesRawTextWithoutChangingResultsOrTransaction(t *testing.T) {
@@ -16,7 +16,7 @@ func TestOutputViewerCopiesRawTextWithoutChangingResultsOrTransaction(t *testing
 		s.pendingChanges = true
 		before := s.resultRows[0][1]
 		s.addOutput(oracle.Output{Lines: []string{"한글 [red]", "", "tail"}})
-		s.key(tcell.NewEventKey(tcell.KeyRune, 'p', tcell.ModAlt))
+		s.key(tuivory.NewEventKey(tuivory.KeyRune, 'p', tuivory.ModAlt))
 		if s.outputText == nil || s.outputText.GetText(false) != "한글 [red]\n\ntail\n" {
 			t.Fatal("viewer changed raw output")
 		}
@@ -36,15 +36,15 @@ func TestOutputViewerCopiesRawTextWithoutChangingResultsOrTransaction(t *testing
 		if !strings.Contains(rendered.String(), "한글 [red]") {
 			t.Fatal("drawing interpreted output as color tags")
 		}
-		s.key(tcell.NewEventKey(tcell.KeyCtrlC, 0, 0))
+		s.key(tuivory.NewEventKey(tuivory.KeyCtrlC, 0, 0))
 		if s.clipboardText != "한글 [red]\n\ntail\n" {
 			t.Fatal("copy changed raw output")
 		}
-		s.key(tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModAlt))
+		s.key(tuivory.NewEventKey(tuivory.KeyRune, 'd', tuivory.ModAlt))
 		if s.outputText.GetText(false) != "" || s.outputSize != 0 {
 			t.Fatal("clear left retained output")
 		}
-		s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+		s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 		if !s.table.HasFocus() || !s.pendingChanges || s.resultRows[0][1] != before || len(s.jobs) != 0 {
 			t.Fatal("viewer changed query/transaction/focus")
 		}
@@ -56,12 +56,12 @@ func TestClosingOutputDuringBusySQLDoesNotCancelIt(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	s.busy, s.cancel = true, cancel
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'p', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'p', tuivory.ModAlt))
 	s.refreshFooter()
 	if strings.Contains(s.footer.GetText(false), s.tr("footer_busy")) || !s.outputToggle.IsDisabled() {
 		t.Fatal("output viewer advertised SQL cancellation or allowed busy toggle")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if ctx.Err() != nil || !s.busy || !s.editor.HasFocus() {
 		t.Fatal("closing output cancelled SQL or lost focus")
 	}
@@ -86,7 +86,7 @@ func TestOutputHistoryKeepsRecentLinesWithinBudget(t *testing.T) {
 func TestOutputToggleUsesWorkerAndIsDisabledWithoutConnection(t *testing.T) {
 	s := shortcutScreen(t)
 	s.showOutput()
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'e', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'e', tuivory.ModAlt))
 	if len(s.jobs) != 1 || !s.busy || !s.outputToggle.IsDisabled() {
 		t.Fatal("toggle did not lock and submit to worker")
 	}
@@ -99,7 +99,7 @@ func TestOutputToggleUsesWorkerAndIsDisabledWithoutConnection(t *testing.T) {
 	s.busy = false
 	s.connected = false
 	s.showOutput()
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'e', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'e', tuivory.ModAlt))
 	if len(s.jobs) != 0 || !s.outputToggle.IsDisabled() {
 		t.Fatal("disconnected toggle submitted DB work")
 	}

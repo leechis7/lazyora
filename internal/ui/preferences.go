@@ -2,9 +2,9 @@ package ui
 
 import (
 	"fmt"
-
-	"github.com/rivo/tview"
 	"lazyora/internal/settings"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func (s *screen) closeSettings() {
@@ -20,7 +20,7 @@ func (s *screen) closeSettings() {
 
 func (s *screen) settingsForm() {
 	s.prefsFocus = s.app.GetFocus()
-	form := tview.NewForm()
+	form := tuivory.NewWidgetForm()
 	s.prefsForm = form
 	selected := 0
 	if s.prefs.Language == "ko" {
@@ -65,7 +65,7 @@ func (s *screen) settingsForm() {
 		if index == 1 {
 			language = "ko"
 		}
-		prefs := settings.Config{Language: language, Mouse: form.GetFormItem(1).(*tview.Checkbox).IsChecked()}
+		prefs := settings.Config{Language: language, Mouse: form.GetFormItem(1).(*tuivory.Checkbox).IsChecked()}
 		keymapIndex, _ := form.GetFormItem(2).(*choiceField).GetCurrentOption()
 		prefs.EditorKeymap = keymaps[keymapIndex]
 		themeIndex, _ := form.GetFormItem(3).(*choiceField).GetCurrentOption()
@@ -94,7 +94,7 @@ func (s *screen) settingsForm() {
 	s.clickable(form.GetButton(1))
 	form.SetBorder(true).SetTitle(s.tr("settings_title"))
 	s.styleForm(form)
-	content := s.newFlex().SetDirection(tview.FlexRow).AddItem(form, 0, 1, true).AddItem(info, 3, 0, false)
+	content := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(form, 0, 1, true).AddItem(info, 3, 0, false)
 	root := s.formPopup(content, 84, 26, func(width, height int) {
 		infoHeight := min(3, max(0, height-12))
 		content.ResizeItem(info, infoHeight, 0)
@@ -106,11 +106,11 @@ func (s *screen) settingsForm() {
 		spacing := max(0, min(2, (height-7)/form.GetFormItemCount()-1))
 		form.SetItemPadding(spacing)
 		if width < 60 {
-			form.GetFormItem(1).(*tview.Checkbox).SetLabel(s.tr("mouse"))
+			form.GetFormItem(1).(*tuivory.Checkbox).SetLabel(s.tr("mouse"))
 			form.GetButton(0).SetLabel(s.tr("save"))
 			form.GetButton(1).SetLabel(s.tr("cancel"))
 		} else {
-			form.GetFormItem(1).(*tview.Checkbox).SetLabel(s.tr("mouse") + " — " + s.tr("mouse_label"))
+			form.GetFormItem(1).(*tuivory.Checkbox).SetLabel(s.tr("mouse") + " — " + s.tr("mouse_label"))
 			form.GetButton(0).SetLabel(s.tr("save") + " (Ctrl+S)")
 			form.GetButton(1).SetLabel(s.tr("cancel") + " (Esc)")
 		}

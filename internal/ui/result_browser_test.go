@@ -2,12 +2,11 @@ package ui
 
 import (
 	"errors"
+	"lazyora/internal/oracle"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestLocalResultSortFilterPreservesTypesRawCopyAndReplay(t *testing.T) {
@@ -84,15 +83,15 @@ func TestResultFilterCancelAndHelpKeepPendingWork(t *testing.T) {
 	s.pendingChanges = true
 	s.showResultFilter()
 	_, root := s.pages.GetFrontPage()
-	form := root.(*formPopupLayer).content.(*tview.Flex).GetItem(0).(*tview.Form)
+	form := root.(*formPopupLayer).content.(*tuivory.Flex).GetItem(0).(*tuivory.WidgetForm)
 	previous := s.app.GetFocus()
-	form.GetFormItem(0).(*tview.InputField).SetText("not applied")
-	s.key(tcell.NewEventKey(tcell.KeyF1, 0, 0))
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	form.GetFormItem(0).(*tuivory.InputField).SetText("not applied")
+	s.key(tuivory.NewEventKey(tuivory.KeyF1, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if s.app.GetFocus() != previous {
 		t.Fatal("help lost filter form focus")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if s.resultBrowser.filter != "" || !s.pendingChanges || !s.table.HasFocus() || len(s.jobs) != 0 {
 		t.Fatal("cancel applied filter or changed pending work")
 	}

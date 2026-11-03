@@ -2,13 +2,12 @@ package ui
 
 import (
 	"fmt"
+	"lazyora/internal/oracle"
+	"lazyora/internal/sqlfile"
 	"path/filepath"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
-	"lazyora/internal/sqlfile"
+	"github.com/leechis7/tuivory/go"
 )
 
 // Tabs share one DB connection/transaction. Executions lock tab switching and
@@ -21,8 +20,8 @@ type sqlTab struct {
 	bindSQL    string
 	bindValues map[string]oracle.BindValue
 	script     oracle.ScriptReport
-	editor     *tview.TextArea
-	table      *tview.Table
+	editor     *tuivory.TextArea
+	table      *tuivory.Table
 	document   *sqlfile.Document
 	rows       [][]string
 	headers    []string
@@ -93,20 +92,20 @@ func (s *screen) newTab() {
 		return
 	}
 	s.stashTab()
-	editor := tview.NewTextArea()
+	editor := tuivory.NewTextArea()
 	editor.SetBorder(true)
 	s.styleBox(editor.Box)
 	s.styleEditor(editor)
 	editor.SetClipboard(s.sendClipboard, func() string { return s.clipboardText })
-	editor.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
-		if action == tview.MouseRightClick {
+	editor.SetMouseCapture(func(action tuivory.MouseAction, event *tuivory.EventMouse) (tuivory.MouseAction, *tuivory.EventMouse) {
+		if action == tuivory.MouseRightClick {
 			s.app.SetFocus(s.editor)
 			s.showContextMenu()
-			return tview.MouseConsumed, nil
+			return tuivory.MouseConsumed, nil
 		}
 		return action, event
 	})
-	table := tview.NewTable().SetFixed(1, 0).SetSelectable(true, true).SetSelectedStyle(s.focusStyle())
+	table := tuivory.NewTable().SetFixed(1, 0).SetSelectable(true, true).SetSelectedStyle(s.focusStyle())
 	table.SetBorder(true)
 	s.styleBox(table.Box)
 	table.SetTitle(s.tr("results_title"))
@@ -214,7 +213,7 @@ func (s *screen) refreshTabs() {
 	start := max(0, s.activeTab-3)
 	end := min(len(s.tabs), start+4)
 	if len(s.tabs) > 4 {
-		s.tabBar.AddItem(s.clickable(tview.NewButton("<").SetSelectedFunc(func() { s.cycleTab(-1) })), 3, 0, false)
+		s.tabBar.AddItem(s.clickable(tuivory.NewWidgetButton("<").SetSelectedFunc(func() { s.cycleTab(-1) })), 3, 0, false)
 	}
 	for i := start; i < end; i++ {
 		tab := s.tabs[i]
@@ -233,19 +232,19 @@ func (s *screen) refreshTabs() {
 		if doc.Dirty(tab.editor.GetText()) {
 			mark = "*"
 		}
-		label := fmt.Sprintf("%d %s%s", i+1, tview.Escape(name), mark)
+		label := fmt.Sprintf("%d %s%s", i+1, tuivory.Escape(name), mark)
 		if i == s.activeTab {
 			label = "> " + label
 		}
 		index := i
-		button := s.clickable(tview.NewButton(label).SetSelectedFunc(func() { s.switchTab(index) }))
+		button := s.clickable(tuivory.NewWidgetButton(label).SetSelectedFunc(func() { s.switchTab(index) }))
 		if i == s.activeTab {
 			button.SetStyle(s.buttonFocusStyle())
 		}
 		s.tabBar.AddItem(button, 0, 1, false)
 	}
 	if len(s.tabs) > 4 {
-		s.tabBar.AddItem(s.clickable(tview.NewButton(">").SetSelectedFunc(func() { s.cycleTab(1) })), 3, 0, false)
+		s.tabBar.AddItem(s.clickable(tuivory.NewWidgetButton(">").SetSelectedFunc(func() { s.cycleTab(1) })), 3, 0, false)
 	}
 }
 
@@ -255,7 +254,7 @@ func (s *screen) styleTabs() {
 		return
 	}
 	for i := 0; i < s.tabBar.GetItemCount(); i++ {
-		if b, ok := s.tabBar.GetItem(i).(*tview.Button); ok {
+		if b, ok := s.tabBar.GetItem(i).(*tuivory.WidgetButton); ok {
 			s.tuivoryWidgets().Tab(b, strings.HasPrefix(b.GetLabel(), "> "))
 		}
 	}

@@ -2,13 +2,12 @@ package ui
 
 import (
 	"fmt"
+	resources "lazyora"
+	"lazyora/internal/appinfo"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	resources "lazyora"
-	"lazyora/internal/appinfo"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestReferenceMenuAndOfflineVersionHistory(t *testing.T) {
@@ -34,7 +33,7 @@ func TestReferenceMenuAndOfflineVersionHistory(t *testing.T) {
 	if r.articles[0].title != s.tr("release_unreleased") {
 		t.Fatal("development notes not distinguished")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyCtrlC, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlC, 0, 0))
 	if !strings.HasPrefix(s.clipboardText, "["+appinfo.Version+"]") || len(s.jobs) != 0 {
 		t.Fatal("history copy changed state")
 	}
@@ -65,13 +64,13 @@ func TestReferenceGuidesFocusResizeThemeAndRunningSQL(t *testing.T) {
 						t.Fatalf("unreadable guide at %v: %dx%d", size, w, h)
 					}
 				}
-				s.key(tcell.NewEventKey(tcell.KeyRight, 0, 0))
-				s.key(tcell.NewEventKey(tcell.KeyBacktab, 0, 0))
+				s.key(tuivory.NewEventKey(tuivory.KeyRight, 0, 0))
+				s.key(tuivory.NewEventKey(tuivory.KeyBacktab, 0, 0))
 				if !r.topics.HasFocus() {
 					t.Fatal("contents unreachable")
 				}
 				r.topics.SetCurrentItem(2)
-				s.key(tcell.NewEventKey(tcell.KeyF1, 0, 0))
+				s.key(tuivory.NewEventKey(tuivory.KeyF1, 0, 0))
 				s.closeHelp()
 				if !r.topics.HasFocus() {
 					t.Fatal("nested help did not restore focus")
@@ -88,7 +87,7 @@ func TestReferenceGuidesFocusResizeThemeAndRunningSQL(t *testing.T) {
 				if !strings.Contains(r.text.GetText(true), r.articles[2].title) {
 					t.Fatal("theme switch lost article")
 				}
-				s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+				s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 				if s.reference != nil || !s.editor.HasFocus() || cancelled || !s.busy || !s.pendingChanges || len(s.jobs) != 0 {
 					t.Fatal("guide disturbed active SQL")
 				}
@@ -110,7 +109,7 @@ func TestDiagnosticsAllowlistAndIssueCopy(t *testing.T) {
 	t.Setenv("TERM", "xterm[red]\n\x1b[0m")
 	s.showDiagnostics()
 	text := s.reference.text.GetText(true)
-	s.key(tcell.NewEventKey(tcell.KeyCtrlC, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlC, 0, 0))
 	copy := s.clipboardText
 	for _, value := range []string{"secret-config", "private_sql", "secret_table", "secret-alias", "secret-host", "secret-user", "secret-password", "secret-value"} {
 		if strings.Contains(copy, value) {
@@ -122,18 +121,18 @@ func TestDiagnosticsAllowlistAndIssueCopy(t *testing.T) {
 	}
 	s.closeReference()
 	s.showIssueReport()
-	s.key(tcell.NewEventKey(tcell.KeyCtrlC, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlC, 0, 0))
 	if !strings.Contains(s.clipboardText, appinfo.ProjectURL+"/issues") || !strings.Contains(s.clipboardText, "Steps to reproduce:") || !strings.Contains(s.reference.text.GetText(true), "OS/CPU:") {
 		t.Fatal("issue form/preview missing")
 	}
 	// Tab through every action, and activate the URL button without opening a browser.
-	s.key(tcell.NewEventKey(tcell.KeyTab, 0, 0))
-	s.key(tcell.NewEventKey(tcell.KeyRight, 0, 0))
-	button, ok := s.app.GetFocus().(*tview.Button)
+	s.key(tuivory.NewEventKey(tuivory.KeyTab, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyRight, 0, 0))
+	button, ok := s.app.GetFocus().(*tuivory.WidgetButton)
 	if !ok {
 		t.Fatal("copy URL button unreachable")
 	}
-	button.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	button.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	if s.clipboardText != appinfo.ProjectURL+"/issues" {
 		t.Fatal("URL action did not copy just the URL")
 	}

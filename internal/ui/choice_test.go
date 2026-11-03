@@ -1,15 +1,15 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"testing"
+
+	"github.com/leechis7/tuivory/go"
 )
 
-func formFieldCell(form *tview.Form, index int) (int, int) {
+func formFieldCell(form *tuivory.WidgetForm, index int) (int, int) {
 	labelWidth := 0
 	for i := 0; i < form.GetFormItemCount(); i++ {
-		if width := tview.TaggedStringWidth(form.GetFormItem(i).GetLabel()); width > labelWidth {
+		if width := tuivory.TaggedStringWidth(form.GetFormItem(i).GetLabel()); width > labelWidth {
 			labelWidth = width
 		}
 	}
@@ -22,7 +22,7 @@ func TestRenderedChoicesStayDistinctFromTextInputs(t *testing.T) {
 		s := shortcutScreen(t)
 		s.limitedColors = limited
 		s.connectionForm()
-		terminal := tcell.NewSimulationScreen("UTF-8")
+		terminal := tuivory.NewSimulationScreen("UTF-8")
 		if err := terminal.Init(); err != nil {
 			t.Fatal(err)
 		}
@@ -42,7 +42,7 @@ func TestRenderedChoicesStayDistinctFromTextInputs(t *testing.T) {
 			if inputBackground != s.colors().field {
 				t.Fatal("text input lost white background")
 			}
-			for _, form := range []*tview.Form{s.connectForm, s.connectProfiles} {
+			for _, form := range []*tuivory.WidgetForm{s.connectForm, s.connectProfiles} {
 				index := 0
 				if form == s.connectForm {
 					index = connectionMode
@@ -94,11 +94,11 @@ func TestOpenChoiceErasesWideCharacterCrossingItsLeftEdge(t *testing.T) {
 	c := s.newChoice("", []string{"다크", "라이트", "흑백 (Black / White)"}, 1, nil)
 	c.SetRect(10, 2, 35, 1)
 	s.app.SetFocus(c)
-	c.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	c.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	// A button behind the list ends in a two-cell Hangul glyph straddling
 	// the list's left edge. The physical terminal skips the overlaid first
 	// character unless the old glyph's first cell is erased too.
-	terminal.SetContent(9, 5, '취', nil, tcell.StyleDefault)
+	terminal.SetContent(9, 5, '취', nil, tuivory.StyleDefault)
 	c.Draw(terminal)
 	terminal.Show()
 	cells, width, _ := terminal.GetContents()

@@ -2,11 +2,10 @@ package ui
 
 import (
 	"fmt"
+	"lazyora/internal/oracle"
 	"strconv"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 func (s *screen) executeScript() {
@@ -36,7 +35,7 @@ func (s *screen) showScriptReport() {
 		return
 	}
 	s.scriptFocus = s.app.GetFocus()
-	list := tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
+	list := tuivory.NewWidgetList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
 	list.SetBorder(true).SetTitle(s.tr("script_report"))
 	s.styleList(list)
 	table := s.newDataTable().SetFixed(1, 0).SetSelectable(true, true).SetSelectedStyle(s.focusStyle())
@@ -52,11 +51,11 @@ func (s *screen) showScriptReport() {
 		preview.SetText(step.Statement.Text + "\n\n" + step.Error)
 		table.Clear()
 		for col, name := range step.Result.Columns {
-			table.SetCell(0, col, tview.NewTableCell(tview.Escape(name)).SetSelectable(false).SetTextColor(s.colors().accent))
+			table.SetCell(0, col, tuivory.NewTableCell(tuivory.Escape(name)).SetSelectable(false).SetTextColor(s.colors().accent))
 		}
 		for row, values := range step.Result.Rows {
 			for col, value := range values {
-				table.SetCell(row+1, col, tview.NewTableCell(tview.Escape(value)).SetTextColor(s.colors().text))
+				table.SetCell(row+1, col, tuivory.NewTableCell(tuivory.Escape(value)).SetTextColor(s.colors().text))
 			}
 		}
 	}
@@ -73,7 +72,7 @@ func (s *screen) showScriptReport() {
 	}
 	list.SetChangedFunc(func(index int, _, _ string, _ rune) { selectResult(index) })
 	selectResult(0)
-	use := s.clickable(tview.NewButton(s.tr("script_use_result")).SetSelectedFunc(func() {
+	use := s.clickable(tuivory.NewWidgetButton(s.tr("script_use_result")).SetSelectedFunc(func() {
 		step := s.scriptReport.Steps[list.GetCurrentItem()]
 		if len(step.Result.Columns) > 0 {
 			s.render(step.Result)
@@ -81,9 +80,9 @@ func (s *screen) showScriptReport() {
 			s.focusPanel("results")
 		}
 	}))
-	close := s.clickable(tview.NewButton(s.tr("close")).SetSelectedFunc(s.closeScriptReport))
+	close := s.clickable(tuivory.NewWidgetButton(s.tr("close")).SetSelectedFunc(s.closeScriptReport))
 	buttons := s.newFlex().AddItem(use, 0, 1, false).AddItem(close, 0, 1, false)
-	root := s.newFlex().SetDirection(tview.FlexRow).AddItem(list, 0, 1, true).AddItem(preview, 0, 1, false).AddItem(table, 0, 2, false).AddItem(buttons, 1, 0, false)
+	root := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(list, 0, 1, true).AddItem(preview, 0, 1, false).AddItem(table, 0, 2, false).AddItem(buttons, 1, 0, false)
 	s.pages.AddPage("script", root, true, true)
 	s.app.SetFocus(list)
 }
@@ -98,21 +97,21 @@ func (s *screen) closeScriptReport() {
 	}
 }
 
-func (s *screen) scriptKey(event *tcell.EventKey) *tcell.EventKey {
+func (s *screen) scriptKey(event *tuivory.EventKey) *tuivory.EventKey {
 	if s.listDetailArrow(event, s.scriptList, s.scriptText) {
 		return nil
 	}
 	switch event.Key() {
-	case tcell.KeyEscape:
+	case tuivory.KeyEscape:
 		s.closeScriptReport()
 		return nil
-	case tcell.KeyF1:
+	case tuivory.KeyF1:
 		s.showHelp()
 		return nil
-	case tcell.KeyTab, tcell.KeyBacktab:
+	case tuivory.KeyTab, tuivory.KeyBacktab:
 		s.dialogTab(event, s.scriptList, s.scriptText, s.scriptResult)
 		return nil
-	case tcell.KeyCtrlC:
+	case tuivory.KeyCtrlC:
 		s.sendClipboard(s.scriptReport.Summary())
 		return nil
 	}

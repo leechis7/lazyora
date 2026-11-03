@@ -1,47 +1,46 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/leechis7/tuivory/go"
-	"github.com/rivo/tview"
 	"reflect"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 // Product adapters retain the existing field names; palette resolution lives in Tuivory.
 type themeColors struct {
-	background, surface, footer, field, text, muted, accent, button    tcell.Color
-	editor, editorText, fieldText, selectionText, placeholder, warning tcell.Color
+	background, surface, footer, field, text, muted, accent, button    tuivory.Color
+	editor, editorText, fieldText, selectionText, placeholder, warning tuivory.Color
 }
 
-func (s *screen) fieldStyle() tcell.Style {
+func (s *screen) fieldStyle() tuivory.Style {
 	return s.tuivoryStyles().TextStyle(tuivory.Field, tuivory.Body)
 }
 
-func (s *screen) focusStyle() tcell.Style {
+func (s *screen) focusStyle() tuivory.Style {
 	return s.tuivoryStyles().SelectionStyle()
 }
 
 // Standalone helpers share the same Tuivory defaults as application tuivory.
-func buttonFocusStyle() tcell.Style {
+func buttonFocusStyle() tuivory.Style {
 	return (&screen{}).buttonFocusStyle()
 }
 
 func (s *screen) monochrome() bool { return s.prefs.Theme == "blackwhite" }
 
-func (s *screen) buttonFocusStyle() tcell.Style {
+func (s *screen) buttonFocusStyle() tuivory.Style {
 	return s.tuivoryStyles().ButtonFocusStyle()
 }
 
-func (s *screen) buttonStyle() tcell.Style {
+func (s *screen) buttonStyle() tuivory.Style {
 	return s.tuivoryStyles().ButtonStyle()
 }
 
-func (s *screen) styleBox(box *tview.Box) {
+func (s *screen) styleBox(box *tuivory.Box) {
 	s.setSurface(box, s.surfaceRoles[box])
 	s.tuivoryWidgets().Box(box, s.surfaceColor(s.surfaceRoles[box]), s.surfaceText(s.surfaceRoles[box]))
 }
 
-func (s *screen) styleForm(form *tview.Form) {
+func (s *screen) styleForm(form *tuivory.WidgetForm) {
 	s.setSurface(form.Box, surfacePanel)
 	s.tuivoryWidgets().Form(form)
 	for i := 0; i < form.GetFormItemCount(); i++ {
@@ -65,11 +64,11 @@ func (s *screen) styleScreen() {
 // Refresh every visible widget family, including nested popup cards. Focused
 // boxes use tview's native double border; inactive boxes retain a single border.
 func (s *screen) refreshBorders() {
-	seen := map[tview.Primitive]bool{}
-	liveBoxes := map[*tview.Box]bool{}
-	liveNodes := map[*tview.TreeNode]bool{}
-	var visit func(tview.Primitive)
-	visit = func(p tview.Primitive) {
+	seen := map[tuivory.Primitive]bool{}
+	liveBoxes := map[*tuivory.Box]bool{}
+	liveNodes := map[*tuivory.WidgetTreeNode]bool{}
+	var visit func(tuivory.Primitive)
+	visit = func(p tuivory.Primitive) {
 		if p == nil || reflect.ValueOf(p).IsNil() || seen[p] {
 			return
 		}
@@ -78,16 +77,16 @@ func (s *screen) refreshBorders() {
 			liveBoxes[box] = true
 		}
 		if box, ok := p.(interface {
-			GetBackgroundColor() tcell.Color
-			SetBorderStyle(tcell.Style) *tview.Box
-			SetTitleColor(tcell.Color) *tview.Box
+			GetBackgroundColor() tuivory.Color
+			SetBorderStyle(tuivory.Style) *tuivory.Box
+			SetTitleColor(tuivory.Color) *tuivory.Box
 		}); ok {
 			focused := p.HasFocus()
 			bg := box.GetBackgroundColor()
 			color := s.borderColor(focused, bg)
-			box.SetBorderStyle(tcell.StyleDefault.Foreground(color).Background(bg))
+			box.SetBorderStyle(tuivory.StyleDefault.Foreground(color).Background(bg))
 			title := s.colors().text
-			if b, ok := p.(interface{ GetBackgroundColor() tcell.Color }); ok {
+			if b, ok := p.(interface{ GetBackgroundColor() tuivory.Color }); ok {
 				if b.GetBackgroundColor() == s.colors().field {
 					title = s.colors().fieldText
 				}
@@ -109,23 +108,23 @@ func (s *screen) refreshBorders() {
 			visit(w.Child)
 		case *resultGrid:
 			visit(w.Table)
-		case *tview.Pages:
+		case *tuivory.Pages:
 			for _, name := range w.GetPageNames(false) {
 				visit(w.GetPage(name))
 			}
-		case *tview.Flex:
+		case *tuivory.Flex:
 			for i := 0; i < w.GetItemCount(); i++ {
 				visit(w.GetItem(i))
 			}
 		case *browserTree:
 			if root := w.GetRoot(); root != nil {
-				root.Walk(func(n, parent *tview.TreeNode) bool { liveNodes[n] = true; return true })
+				root.Walk(func(n, parent *tuivory.WidgetTreeNode) bool { liveNodes[n] = true; return true })
 			}
-		case *tview.TreeView:
+		case *tuivory.WidgetTreeView:
 			if root := w.GetRoot(); root != nil {
-				root.Walk(func(n, parent *tview.TreeNode) bool { liveNodes[n] = true; return true })
+				root.Walk(func(n, parent *tuivory.WidgetTreeNode) bool { liveNodes[n] = true; return true })
 			}
-		case *tview.Form:
+		case *tuivory.WidgetForm:
 			for i := 0; i < w.GetFormItemCount(); i++ {
 				visit(w.GetFormItem(i))
 			}
@@ -166,12 +165,12 @@ func (s *screen) refreshBorders() {
 	}
 }
 
-func (s *screen) borderColor(focused bool, background tcell.Color) tcell.Color {
+func (s *screen) borderColor(focused bool, background tuivory.Color) tuivory.Color {
 	return tuivory.BorderColor(s.tuivoryStyles().Theme(), s.tuivoryProfile(), s.tuivoryStyles(), focused, background)
 }
 
 // Confirmation cards share the form surface while retaining their safe default.
-func (s *screen) styleModal(modal *tview.Modal) {
+func (s *screen) styleModal(modal *tuivory.Modal) {
 	s.setSurface(modal.Box, surfacePanel)
 	s.tuivoryWidgets().Modal(modal)
 }
@@ -180,16 +179,16 @@ func (s *screen) colors() themeColors { return s.tokens().themeColors }
 
 // Defaults retained for small standalone widgets and tests; application widgets
 // always use their screen's theme, with no process-wide mutable theme state.
-func styleBox(b *tview.Box)    { (&screen{}).styleBox(b) }
-func styleForm(f *tview.Form)  { (&screen{}).styleForm(f) }
-func fieldStyle() tcell.Style  { return (&screen{}).fieldStyle() }
-func focusStyle() tcell.Style  { return (&screen{}).focusStyle() }
-func buttonStyle() tcell.Style { return (&screen{}).buttonStyle() }
+func styleBox(b *tuivory.Box)         { (&screen{}).styleBox(b) }
+func styleForm(f *tuivory.WidgetForm) { (&screen{}).styleForm(f) }
+func fieldStyle() tuivory.Style       { return (&screen{}).fieldStyle() }
+func focusStyle() tuivory.Style       { return (&screen{}).focusStyle() }
+func buttonStyle() tuivory.Style      { return (&screen{}).buttonStyle() }
 
-func (s *screen) editorStyle() tcell.Style {
+func (s *screen) editorStyle() tuivory.Style {
 	return s.tuivoryStyles().EditorStyle()
 }
-func (s *screen) styleEditor(editor *tview.TextArea) {
+func (s *screen) styleEditor(editor *tuivory.TextArea) {
 	s.setSurface(editor.Box, surfaceEditor)
 	s.tuivoryWidgets().Editor(editor)
 }

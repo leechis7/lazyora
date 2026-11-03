@@ -3,26 +3,25 @@ package ui
 import (
 	"unicode"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 )
 
-func focusForm(s *screen, form *tview.Form, index int) {
+func focusForm(s *screen, form *tuivory.WidgetForm, index int) {
 	form.SetFocus(index)
 	s.app.SetFocus(form)
 }
 
-func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
+func (s *screen) key(event *tuivory.EventKey) *tuivory.EventKey {
 	// Legacy terminal mappings report Shift+F1..F12 as F13..F24. Keep those
 	// aliases equivalent to explicit modifiers; preserve modified higher keys.
-	if event.Key() >= tcell.KeyF13 && event.Key() <= tcell.KeyF24 && event.Modifiers() == 0 {
-		event = tcell.NewEventKey(tcell.KeyF1+event.Key()-tcell.KeyF13, 0, tcell.ModShift)
+	if event.Key() >= tuivory.KeyF13 && event.Key() <= tuivory.KeyF24 && event.Modifiers() == 0 {
+		event = tuivory.NewEventKey(tuivory.KeyF1+event.Key()-tuivory.KeyF13, 0, tuivory.ModShift)
 	}
 	// tview treats an unchanged Ctrl+C event as an immediate application stop.
 	// Forward a copy for text widgets so dialogs cannot bypass the SQL-file
 	// and DB exit confirmations; explicit exit continues to use Ctrl+Q.
-	if event.Key() == tcell.KeyCtrlC {
-		event = tcell.NewEventKey(event.Key(), event.Rune(), event.Modifiers())
+	if event.Key() == tuivory.KeyCtrlC {
+		event = tuivory.NewEventKey(event.Key(), event.Rune(), event.Modifiers())
 	}
 	page, _ := s.pages.GetFrontPage()
 	if page == "keymap_compare" {
@@ -34,13 +33,13 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if s.vaultBusy {
 		return nil
 	}
-	if s.workspaces != nil && event.Key() == tcell.KeyRune && event.Modifiers()&tcell.ModAlt != 0 && unicode.ToLower(event.Rune()) == 'j' {
+	if s.workspaces != nil && event.Key() == tuivory.KeyRune && event.Modifiers()&tuivory.ModAlt != 0 && unicode.ToLower(event.Rune()) == 'j' {
 		s.showWorkspaces()
 		return nil
 	}
 	// tcell reports legacy ESC CR as Ctrl+Alt+m rather than KeyEnter+Alt.
-	if event.Key() == tcell.KeyRune && event.Rune() == 'm' && event.Modifiers()&(tcell.ModAlt|tcell.ModCtrl) == tcell.ModAlt|tcell.ModCtrl {
-		event = tcell.NewEventKey(tcell.KeyEnter, 0, event.Modifiers()&^tcell.ModCtrl)
+	if event.Key() == tuivory.KeyRune && event.Rune() == 'm' && event.Modifiers()&(tuivory.ModAlt|tuivory.ModCtrl) == tuivory.ModAlt|tuivory.ModCtrl {
+		event = tuivory.NewEventKey(tuivory.KeyEnter, 0, event.Modifiers()&^tuivory.ModCtrl)
 	}
 
 	page, _ = s.pages.GetFrontPage()
@@ -65,38 +64,38 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if page == "cell" {
 		return s.cellKey(event)
 	}
-	if page == "main" && s.table.HasFocus() && event.Key() == tcell.KeyEnter && event.Modifiers() == 0 {
+	if page == "main" && s.table.HasFocus() && event.Key() == tuivory.KeyEnter && event.Modifiers() == 0 {
 		if !s.startInlineEdit(nil) {
 			s.showCellDetail()
 		}
 		return nil
 	}
 	if page == "result_filter" {
-		if event.Key() == tcell.KeyEscape {
+		if event.Key() == tuivory.KeyEscape {
 			s.pages.RemovePage("result_filter")
 			s.app.SetFocus(s.table)
 			return nil
 		}
-		if event.Key() == tcell.KeyF1 {
+		if event.Key() == tuivory.KeyF1 {
 			s.showHelp()
 			return nil
 		}
 		return event
 	}
-	executeEnter := event.Key() == tcell.KeyEnter && event.Modifiers()&(tcell.ModCtrl|tcell.ModAlt) != 0
-	alt := event.Modifiers()&tcell.ModAlt != 0
+	executeEnter := event.Key() == tuivory.KeyEnter && event.Modifiers()&(tuivory.ModCtrl|tuivory.ModAlt) != 0
+	alt := event.Modifiers()&tuivory.ModAlt != 0
 	letter := unicode.ToLower(event.Rune())
-	if event.Key() == tcell.KeyCtrlQ {
+	if event.Key() == tuivory.KeyCtrlQ {
 		s.action("quit")
 		return nil
 	}
 	if page == "reconnect" {
-		if event.Key() == tcell.KeyEscape {
+		if event.Key() == tuivory.KeyEscape {
 			s.cancelReconnect()
 			return nil
 		}
 		// Modified Enter is the connection shortcut, never implicit approval.
-		if executeEnter || event.Key() == tcell.KeyCtrlC || event.Key() == tcell.KeyF1 {
+		if executeEnter || event.Key() == tuivory.KeyCtrlC || event.Key() == tuivory.KeyF1 {
 			return nil
 		}
 		return event
@@ -111,15 +110,15 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return s.definitionKey(event)
 	}
 	if page == "editor_actions" {
-		if event.Key() == tcell.KeyEscape || event.Key() == tcell.KeyF10 && event.Modifiers() == tcell.ModShift {
+		if event.Key() == tuivory.KeyEscape || event.Key() == tuivory.KeyF10 && event.Modifiers() == tuivory.ModShift {
 			s.closeSourceEdit()
 			return nil
 		}
-		if event.Key() == tcell.KeyF1 {
+		if event.Key() == tuivory.KeyF1 {
 			s.showHelp()
 			return nil
 		}
-		if event.Key() == tcell.KeyCtrlC {
+		if event.Key() == tuivory.KeyCtrlC {
 			return nil
 		}
 		return event
@@ -149,10 +148,10 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return s.fileKey(event)
 	}
 	if page == "file_unsaved" {
-		if event.Key() == tcell.KeyCtrlC {
+		if event.Key() == tuivory.KeyCtrlC {
 			return nil
 		}
-		if event.Key() == tcell.KeyF1 {
+		if event.Key() == tuivory.KeyF1 {
 			s.showHelp()
 			return nil
 		}
@@ -167,7 +166,7 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if s.editorPresetKey(s.activeEditor(), event) {
 		return nil
 	}
-	if event.Key() == tcell.KeyTab || event.Key() == tcell.KeyBacktab {
+	if event.Key() == tuivory.KeyTab || event.Key() == tuivory.KeyBacktab {
 		switch page {
 		case "help":
 			s.dialogTab(event, s.helpTopics, s.helpText)
@@ -187,7 +186,7 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		}
 	}
 	if page == "main" || page == "menu" {
-		if page == "main" && event.Key() == tcell.KeyF10 && event.Modifiers() == 0 {
+		if page == "main" && event.Key() == tuivory.KeyF10 && event.Modifiers() == 0 {
 			s.showMenu(menuFile)
 			return nil
 		}
@@ -207,51 +206,51 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if page == "menu" {
 		return s.menuKey(event)
 	}
-	if (page == "copy" || page == "describe") && event.Key() == tcell.KeyF1 {
+	if (page == "copy" || page == "describe") && event.Key() == tuivory.KeyF1 {
 		s.showHelp()
 		return nil
 	}
-	if page == "pending" && event.Key() != tcell.KeyF1 {
-		if event.Key() == tcell.KeyEscape {
+	if page == "pending" && event.Key() != tuivory.KeyF1 {
+		if event.Key() == tuivory.KeyEscape {
 			s.closePendingWork()
 			return nil
 		}
-		if event.Key() == tcell.KeyCtrlC {
+		if event.Key() == tuivory.KeyCtrlC {
 			s.sendClipboard(s.pendingSQL.GetText(false))
 			return nil
 		}
 		return event
 	}
 	if page == "copy" {
-		if event.Key() == tcell.KeyEscape {
+		if event.Key() == tuivory.KeyEscape {
 			s.closeCopyPreview()
 			return nil
 		}
 		return event
 	}
 	if page == "describe" {
-		if event.Key() == tcell.KeyEnter && s.describeForm.GetFormItem(0).HasFocus() {
+		if event.Key() == tuivory.KeyEnter && s.describeForm.GetFormItem(0).HasFocus() {
 			s.describeAction()
 			return nil
 		}
-		if event.Key() == tcell.KeyEscape {
+		if event.Key() == tuivory.KeyEscape {
 			s.closeDescribe()
 			return nil
 		}
 		return event
 	}
 	if page == "search" {
-		if event.Key() == tcell.KeyEscape {
+		if event.Key() == tuivory.KeyEscape {
 			s.closeSearch()
 			return nil
 		}
-		if event.Key() == tcell.KeyEnter && s.searchForm.GetFormItem(0).HasFocus() {
+		if event.Key() == tuivory.KeyEnter && s.searchForm.GetFormItem(0).HasFocus() {
 			s.searchAction("submit")
 			return nil
 		}
-		if event.Key() == tcell.KeyF3 {
+		if event.Key() == tuivory.KeyF3 {
 			action := "next"
-			if event.Modifiers()&tcell.ModShift != 0 {
+			if event.Modifiers()&tuivory.ModShift != 0 {
 				action = "previous"
 			}
 			s.searchAction(action)
@@ -260,13 +259,13 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return event
 	}
 	if page == "history" {
-		if event.Key() == tcell.KeyEscape || event.Key() == tcell.KeyF8 {
+		if event.Key() == tuivory.KeyEscape || event.Key() == tuivory.KeyF8 {
 			s.closeHistory()
 			return nil
 		}
 		return event
 	}
-	if page == "main" && s.browserHasFocus() && (s.browserUsers.IsOpen() || s.browserTypes.IsOpen()) && event.Key() == tcell.KeyEscape {
+	if page == "main" && s.browserHasFocus() && (s.browserUsers.IsOpen() || s.browserTypes.IsOpen()) && event.Key() == tuivory.KeyEscape {
 		return event
 	}
 	// Help owns its close keys even while a background operation is running.
@@ -279,23 +278,23 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		if s.listDetailArrow(event, s.helpTopics, s.helpText) {
 			return nil
 		}
-		if event.Key() == tcell.KeyRune && event.Modifiers() == 0 && event.Rune() >= '0' && event.Rune() <= '9' {
+		if event.Key() == tuivory.KeyRune && event.Modifiers() == 0 && event.Rune() >= '0' && event.Rune() <= '9' {
 			s.helpJump(int(event.Rune() - '0'))
 			return nil
 		}
-		if event.Key() == tcell.KeyEscape || event.Key() == tcell.KeyF1 || (alt && letter == 'x') {
+		if event.Key() == tuivory.KeyEscape || event.Key() == tuivory.KeyF1 || (alt && letter == 'x') {
 			s.closeHelp()
 			return nil
 		}
 		return event
 	}
-	if s.busy && event.Key() == tcell.KeyEscape && page != "exit" && page != "program_confirm" {
+	if s.busy && event.Key() == tuivory.KeyEscape && page != "exit" && page != "program_confirm" {
 		s.action("cancel")
 		return nil
 	}
 	// Dialogs and running queries own Escape first. On the idle main page,
 	// restore fullscreen before editor keymaps or result-range clearing handle it.
-	if page == "main" && event.Key() == tcell.KeyEscape && event.Modifiers() == 0 && s.fullscreen && s.maximized != "" {
+	if page == "main" && event.Key() == tuivory.KeyEscape && event.Modifiers() == 0 && s.fullscreen && s.maximized != "" {
 		s.toggleFullscreen()
 		return nil
 	}
@@ -303,12 +302,12 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return s.exitKey(event)
 	}
 	if page == "program_confirm" {
-		if event.Key() == tcell.KeyCtrlC {
+		if event.Key() == tuivory.KeyCtrlC {
 			return nil
 		}
 		return event
 	}
-	if event.Key() == tcell.KeyF1 {
+	if event.Key() == tuivory.KeyF1 {
 		s.showHelp()
 		return nil
 	}
@@ -345,10 +344,10 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 			return nil
 		}
 		switch event.Key() {
-		case tcell.KeyEscape:
+		case tuivory.KeyEscape:
 			s.closeObject()
 			return nil
-		case tcell.KeyCtrlR:
+		case tuivory.KeyCtrlR:
 			if !s.busy {
 				s.openObject(s.object)
 			}
@@ -361,7 +360,7 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return event
 	}
 	if page == "source" {
-		if event.Key() == tcell.KeyF10 && event.Modifiers() == tcell.ModShift {
+		if event.Key() == tuivory.KeyF10 && event.Modifiers() == tuivory.ModShift {
 			s.showSourceEdit()
 			return nil
 		}
@@ -373,23 +372,23 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 			s.reloadSource()
 			return nil
 		}
-		if event.Key() == tcell.KeyCtrlF && event.Modifiers()&tcell.ModShift != 0 {
+		if event.Key() == tuivory.KeyCtrlF && event.Modifiers()&tuivory.ModShift != 0 {
 			s.formatCode()
 			return nil
 		}
-		if event.Key() == tcell.KeyCtrlT {
+		if event.Key() == tuivory.KeyCtrlT {
 			s.showCompletion(false)
 			return nil
 		}
-		if event.Key() == tcell.KeyEscape {
+		if event.Key() == tuivory.KeyEscape {
 			s.closeSource()
 			return nil
 		}
-		if event.Key() == tcell.KeyCtrlR {
+		if event.Key() == tuivory.KeyCtrlR {
 			s.reloadSource()
 			return nil
 		}
-		if event.Key() == tcell.KeyF9 && event.Modifiers() == tcell.ModNone {
+		if event.Key() == tuivory.KeyF9 && event.Modifiers() == tuivory.ModNone {
 			s.requestCompile()
 			return nil
 		}
@@ -404,18 +403,18 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 			s.showRoutine(s.object, "")
 			return nil
 		}
-		if event.Key() == tcell.KeyEscape {
+		if event.Key() == tuivory.KeyEscape {
 			s.closeArguments()
 			return nil
 		}
 		return event
 	}
 	if page == "settings" {
-		if event.Key() == tcell.KeyEscape || (alt && letter == 'x') {
+		if event.Key() == tuivory.KeyEscape || (alt && letter == 'x') {
 			s.closeSettings()
 			return nil
 		}
-		if event.Key() == tcell.KeyCtrlS || (alt && letter == 's') {
+		if event.Key() == tuivory.KeyCtrlS || (alt && letter == 's') {
 			s.savePrefs()
 			return nil
 		}
@@ -442,7 +441,7 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	}
 	if page == "connect" {
 		if s.testingConnection {
-			if event.Key() == tcell.KeyEscape || alt && letter == 'x' {
+			if event.Key() == tuivory.KeyEscape || alt && letter == 'x' {
 				s.action("cancel")
 			}
 			return nil
@@ -458,11 +457,11 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		if s.connectionTab(event) {
 			return nil
 		}
-		if event.Key() == tcell.KeyCtrlS || (alt && letter == 's') {
+		if event.Key() == tuivory.KeyCtrlS || (alt && letter == 's') {
 			s.saveConnection()
 			return nil
 		}
-		if event.Key() == tcell.KeyEscape || (alt && letter == 'x') {
+		if event.Key() == tuivory.KeyEscape || (alt && letter == 'x') {
 			s.closeConnection()
 			return nil
 		}
@@ -491,25 +490,25 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	if page != "main" {
 		return event
 	}
-	if event.Modifiers()&tcell.ModCtrl != 0 && (event.Key() == tcell.KeyTab || event.Key() == tcell.KeyBacktab) {
+	if event.Modifiers()&tuivory.ModCtrl != 0 && (event.Key() == tuivory.KeyTab || event.Key() == tuivory.KeyBacktab) {
 		step := 1
-		if event.Key() == tcell.KeyBacktab || event.Modifiers()&tcell.ModShift != 0 {
+		if event.Key() == tuivory.KeyBacktab || event.Modifiers()&tuivory.ModShift != 0 {
 			step = -1
 		}
 		s.cycleTab(step)
 		return nil
 	}
 	if s.browserHasFocus() {
-		if (s.browserUsers.IsOpen() || s.browserTypes.IsOpen()) && event.Modifiers()&(tcell.ModCtrl|tcell.ModAlt) == 0 {
+		if (s.browserUsers.IsOpen() || s.browserTypes.IsOpen()) && event.Modifiers()&(tuivory.ModCtrl|tuivory.ModAlt) == 0 {
 			return event
 		}
-		if event.Key() == tcell.KeyCtrlR {
+		if event.Key() == tuivory.KeyCtrlR {
 			s.refreshBrowser()
 			return nil
 		}
 	}
 
-	if page == "main" && s.table.HasFocus() && event.Key() == tcell.KeyRune && event.Modifiers() & ^tcell.ModShift == 0 {
+	if page == "main" && s.table.HasFocus() && event.Key() == tuivory.KeyRune && event.Modifiers() & ^tuivory.ModShift == 0 {
 		r := event.Rune()
 		if s.startInlineEdit(&r) {
 			return nil
@@ -517,13 +516,13 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 	}
 	if s.table.HasFocus() {
 		switch event.Key() {
-		case tcell.KeyUp, tcell.KeyDown, tcell.KeyLeft, tcell.KeyRight:
-			if event.Modifiers()&tcell.ModShift != 0 {
+		case tuivory.KeyUp, tuivory.KeyDown, tuivory.KeyLeft, tuivory.KeyRight:
+			if event.Modifiers()&tuivory.ModShift != 0 {
 				s.extendResultSelection(event.Key())
 				return nil
 			}
 			s.clearResultSelection()
-		case tcell.KeyEscape:
+		case tuivory.KeyEscape:
 			s.clearResultSelection()
 			return nil
 		}
@@ -532,8 +531,8 @@ func (s *screen) key(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 	}
 	switch event.Key() {
-	case tcell.KeyTab, tcell.KeyBacktab:
-		s.cyclePanel(event.Key() == tcell.KeyBacktab)
+	case tuivory.KeyTab, tuivory.KeyBacktab:
+		s.cyclePanel(event.Key() == tuivory.KeyBacktab)
 		return nil
 	}
 	return event

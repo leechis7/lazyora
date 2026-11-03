@@ -2,12 +2,11 @@ package ui
 
 import (
 	"fmt"
+	"lazyora/internal/oracle"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestTuivoryMenuGridProfilesPreserveDataAndFocus(t *testing.T) {
@@ -60,16 +59,16 @@ func TestTuivoryGridNavigationResizeAndHostFunctionKeys(t *testing.T) {
 	s, terminal := resultScreen(t)
 	s.table.SetInputCapture(s.resultGridKey)
 	s.app.SetFocus(s.editor)
-	s.resultMouse(tview.MouseMove, tcell.NewEventMouse(20, 5, 0, 0))
+	s.resultMouse(tuivory.MouseMove, tuivory.NewEventMouse(20, 5, 0, 0))
 	if !s.editor.HasFocus() {
 		t.Fatal("hover stole cross-component focus")
 	}
 	s.app.SetFocus(s.table)
-	press := func(k tcell.Key) {
-		s.table.InputHandler()(tcell.NewEventKey(k, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	press := func(k tuivory.Key) {
+		s.table.InputHandler()(tuivory.NewEventKey(k, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	}
-	press(tcell.KeyDown)
-	press(tcell.KeyRight)
+	press(tuivory.KeyDown)
+	press(tuivory.KeyRight)
 	if r, c := s.table.GetSelection(); r != 2 || c != 1 {
 		t.Fatalf("common navigation: %d,%d", r, c)
 	}
@@ -77,22 +76,22 @@ func TestTuivoryGridNavigationResizeAndHostFunctionKeys(t *testing.T) {
 	x, y, width := s.resultCellRect(0, 1)
 	before := s.grid.widths[1]
 	grid := s.resultGrid()
-	handled, capture := grid.MouseHandler()(tview.MouseLeftDown, tcell.NewEventMouse(x+width, y, tcell.Button1, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	handled, capture := grid.MouseHandler()(tuivory.MouseLeftDown, tuivory.NewEventMouse(x+width, y, tuivory.Button1, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	if !handled || capture != grid {
 		t.Fatal("header drag did not capture pointer")
 	}
 
-	s.resultMouse(tview.MouseMove, tcell.NewEventMouse(x+width+6, y, tcell.Button1, 0))
-	s.resultMouse(tview.MouseLeftUp, tcell.NewEventMouse(x+width+6, y, 0, 0))
+	s.resultMouse(tuivory.MouseMove, tuivory.NewEventMouse(x+width+6, y, tuivory.Button1, 0))
+	s.resultMouse(tuivory.MouseLeftUp, tuivory.NewEventMouse(x+width+6, y, 0, 0))
 	if s.grid.widths[1] != before+6 {
 		t.Fatal("header resize not retained in host state", before, s.grid.widths[1])
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF10, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyF10, 0, 0))
 	if !s.pages.HasPage("menu") {
 		t.Fatal("generic grid range key replaced application F10")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF10, 0, 0))
-	s.key(tcell.NewEventKey(tcell.KeyF12, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyF10, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyF12, 0, 0))
 	if !s.table.HasFocus() || s.maximized != "results" {
 		t.Fatal("generic grid detail key replaced result maximization")
 	}

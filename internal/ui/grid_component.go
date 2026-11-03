@@ -3,7 +3,6 @@ package ui
 import (
 	"strconv"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/leechis7/tuivory/go"
 )
 
@@ -134,10 +133,10 @@ func (s *screen) resultGridEvent(e tuivory.GridEvent) {
 	s.highlightResults()
 	s.refreshResultPosition()
 }
-func (s *screen) resultGridKey(e *tcell.EventKey) *tcell.EventKey {
+func (s *screen) resultGridKey(e *tuivory.EventKey) *tuivory.EventKey {
 	action := ""
 	switch e.Key() {
-	case tcell.KeyUp, tcell.KeyDown, tcell.KeyLeft, tcell.KeyRight, tcell.KeyHome, tcell.KeyEnd, tcell.KeyPgUp, tcell.KeyPgDn:
+	case tuivory.KeyUp, tuivory.KeyDown, tuivory.KeyLeft, tuivory.KeyRight, tuivory.KeyHome, tuivory.KeyEnd, tuivory.KeyPgUp, tuivory.KeyPgDn:
 		action = tuivory.GridKey(e)
 	}
 	if action == "" {

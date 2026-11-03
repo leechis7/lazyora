@@ -2,9 +2,9 @@ package ui
 
 import (
 	"fmt"
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"lazyora/internal/appinfo"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func (s *screen) aboutContent() string {
@@ -17,11 +17,11 @@ func (s *screen) showAbout() {
 	s.styleBox(text.Box)
 	s.textSurface(text, surfacePanel)
 	s.aboutText = text
-	close := tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeAbout).SetStyle(s.buttonStyle()).SetActivatedStyle(s.buttonFocusStyle())
+	close := tuivory.NewWidgetButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeAbout).SetStyle(s.buttonStyle()).SetActivatedStyle(s.buttonFocusStyle())
 	s.clickable(close)
 	buttons := s.newFlex().AddItem(nil, 0, 1, false).AddItem(close, 20, 0, false).AddItem(nil, 0, 1, false)
 	s.setSurface(buttons.Box, surfacePanel)
-	content := s.newFlex().SetDirection(tview.FlexRow).AddItem(text, 0, 1, true).AddItem(buttons, 1, 0, false)
+	content := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(text, 0, 1, true).AddItem(buttons, 1, 0, false)
 	s.styleBox(content.Box)
 	s.setSurface(content.Box, surfacePanel)
 	content.SetBorder(true).SetTitle(s.tr("about"))
@@ -43,23 +43,23 @@ func (s *screen) closeAbout() {
 	}
 	s.aboutFocus = nil
 }
-func (s *screen) aboutKey(e *tcell.EventKey) *tcell.EventKey {
+func (s *screen) aboutKey(e *tuivory.EventKey) *tuivory.EventKey {
 	if s.buttonArrow(e) {
 		return nil
 	}
 	switch e.Key() {
-	case tcell.KeyEscape:
+	case tuivory.KeyEscape:
 		s.closeAbout()
 		return nil
-	case tcell.KeyF1:
+	case tuivory.KeyF1:
 		s.showHelp()
 		return nil
-	case tcell.KeyCtrlC:
+	case tuivory.KeyCtrlC:
 		s.sendClipboard(s.aboutContent())
 		return nil
-	case tcell.KeyCtrlQ:
+	case tuivory.KeyCtrlQ:
 		return nil
-	case tcell.KeyTab, tcell.KeyBacktab:
+	case tuivory.KeyTab, tuivory.KeyBacktab:
 		s.dialogTab(e, s.aboutText)
 		return nil
 	}

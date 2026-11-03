@@ -1,13 +1,12 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
 	"github.com/leechis7/tuivory/go"
 )
 
-func stylePair(st tcell.Style) tuivory.Pair {
+func stylePair(st tuivory.Style) tuivory.Pair {
 	fg, bg, attrs := st.Decompose()
-	return tuivory.Pair{FG: fg, BG: bg, Bold: attrs&tcell.AttrBold != 0}
+	return tuivory.Pair{FG: fg, BG: bg, Bold: attrs&tuivory.AttrBold != 0}
 }
 
 // Adapt published semantic styles to component roles without a second palette.
@@ -28,7 +27,7 @@ func (s *screen) resultPalette() tuivory.Palette {
 	p := s.tuivoryStyles()
 	out := s.componentPalette()
 	out["surface"] = stylePair(p.GridCellStyle(tuivory.CellState{Row: 1}))
-	for role, style := range map[string]tcell.Style{
+	for role, style := range map[string]tuivory.Style{
 		"grid.base":        p.GridCellStyle(tuivory.CellState{Row: 1}),
 		"grid.stripe":      p.GridCellStyle(tuivory.CellState{Row: 2}),
 		"grid.current-row": p.GridCellStyle(tuivory.CellState{Row: 1, CurrentRow: true}),

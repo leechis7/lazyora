@@ -1,10 +1,10 @@
 package ui
 
 import (
+	"lazyora/internal/oracle"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestSQLTabsPreserveWidgetsAndResults(t *testing.T) {
@@ -20,17 +20,17 @@ func TestSQLTabsPreserveWidgetsAndResults(t *testing.T) {
 	}
 	s.editor.SetText("SELECT 333 FROM dual;", false)
 	s.render(oracle.Result{Columns: []string{"N"}, Rows: [][]string{{"333"}}})
-	s.key(tcell.NewEventKey(tcell.KeyPgUp, 0, tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyPgUp, 0, tuivory.ModAlt))
 	selected, _, _ := s.editor.GetSelection()
 	row, _ := s.table.GetSelection()
 	if s.editor != firstEditor || s.table != firstTable || selected != "111" || row != 2 || s.resultRows[1][0] != "222" {
 		t.Fatal("switch lost editor/result state")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyTab, 0, tcell.ModCtrl))
+	s.key(tuivory.NewEventKey(tuivory.KeyTab, 0, tuivory.ModCtrl))
 	if s.activeTab != 1 || s.resultRows[0][0] != "333" {
 		t.Fatal("next tab failed")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyTab, 0, tcell.ModCtrl|tcell.ModShift))
+	s.key(tuivory.NewEventKey(tuivory.KeyTab, 0, tuivory.ModCtrl|tuivory.ModShift))
 	if s.activeTab != 0 {
 		t.Fatal("previous tab failed")
 	}

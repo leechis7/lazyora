@@ -3,11 +3,10 @@ package ui
 import (
 	"bytes"
 	"errors"
-
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"lazyora/internal/credentials"
 	"lazyora/internal/settings"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func (s *screen) passwordStore() error {
@@ -51,7 +50,7 @@ func (s *screen) lockPasswords() {
 func (s *screen) lockWorkspacePasswords() {
 	if s.masterForm != nil {
 		for i := 1; i < s.masterForm.GetFormItemCount(); i++ {
-			s.masterForm.GetFormItem(i).(*tview.InputField).SetText("")
+			s.masterForm.GetFormItem(i).(*tuivory.InputField).SetText("")
 		}
 	}
 	if s.vault != nil {
@@ -107,7 +106,7 @@ func (s *screen) masterDialog(mode string, done func()) {
 		return
 	}
 	focus := s.app.GetFocus()
-	form := tview.NewForm().SetItemPadding(0)
+	form := tuivory.NewWidgetForm().SetItemPadding(0)
 	s.masterForm = form
 	form.AddTextView("", s.tr("vault_master_hint"), 0, 4, true, false)
 	form.AddPasswordField(s.tr("master_password"), "", 40, '*', nil)
@@ -116,7 +115,7 @@ func (s *screen) masterDialog(mode string, done func()) {
 	}
 	closeDialog := func() {
 		for i := 1; i < form.GetFormItemCount(); i++ {
-			form.GetFormItem(i).(*tview.InputField).SetText("")
+			form.GetFormItem(i).(*tuivory.InputField).SetText("")
 		}
 		s.pages.RemovePage("master")
 		s.masterForm = nil
@@ -129,9 +128,9 @@ func (s *screen) masterDialog(mode string, done func()) {
 		if s.vaultBusy {
 			return
 		}
-		master := []byte(form.GetFormItem(1).(*tview.InputField).GetText())
+		master := []byte(form.GetFormItem(1).(*tuivory.InputField).GetText())
 		if mode != "unlock" {
-			confirmation := []byte(form.GetFormItem(2).(*tview.InputField).GetText())
+			confirmation := []byte(form.GetFormItem(2).(*tuivory.InputField).GetText())
 			matches := bytes.Equal(master, confirmation)
 			clear(confirmation)
 			if !matches {
@@ -146,7 +145,7 @@ func (s *screen) masterDialog(mode string, done func()) {
 			}
 		}
 		for i := 1; i < form.GetFormItemCount(); i++ {
-			form.GetFormItem(i).(*tview.InputField).SetText("")
+			form.GetFormItem(i).(*tuivory.InputField).SetText("")
 		}
 		s.vaultBusy = true
 		form.SetTitle(s.tr("vault_working"))
@@ -194,7 +193,7 @@ func (s *screen) passwordManager() {
 		return
 	}
 	s.vaultFocus = s.app.GetFocus()
-	form := tview.NewForm().SetItemPadding(0)
+	form := tuivory.NewWidgetForm().SetItemPadding(0)
 	s.vaultForm = form
 	form.AddTextView("", s.tr("vault_hint"), 0, 7, true, false)
 	refresh := func() {
@@ -271,15 +270,15 @@ func (s *screen) passwordManager() {
 	focusForm(s, form, 1)
 }
 
-func (s *screen) vaultKey(event *tcell.EventKey, page string) *tcell.EventKey {
-	if event.Key() == tcell.KeyF1 {
+func (s *screen) vaultKey(event *tuivory.EventKey, page string) *tuivory.EventKey {
+	if event.Key() == tuivory.KeyF1 {
 		s.showHelp()
 		return nil
 	}
-	if event.Key() == tcell.KeyCtrlC {
+	if event.Key() == tuivory.KeyCtrlC {
 		return nil
 	}
-	if event.Key() == tcell.KeyEscape {
+	if event.Key() == tuivory.KeyEscape {
 		if page == "master" {
 			s.masterCancel()
 		} else {
@@ -287,7 +286,7 @@ func (s *screen) vaultKey(event *tcell.EventKey, page string) *tcell.EventKey {
 		}
 		return nil
 	}
-	if page == "master" && (event.Key() == tcell.KeyCtrlS || (event.Key() == tcell.KeyEnter && event.Modifiers()&(tcell.ModCtrl|tcell.ModAlt) != 0)) {
+	if page == "master" && (event.Key() == tuivory.KeyCtrlS || (event.Key() == tuivory.KeyEnter && event.Modifiers()&(tuivory.ModCtrl|tuivory.ModAlt) != 0)) {
 		s.masterSubmit()
 		return nil
 	}

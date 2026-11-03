@@ -2,11 +2,10 @@ package ui
 
 import (
 	"fmt"
+	"lazyora/internal/oracle"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 type browserNode struct {
@@ -58,13 +57,13 @@ func (s *screen) toggleBrowser() {
 	}
 }
 
-func (s *screen) newBrowser() *tview.Flex {
+func (s *screen) newBrowser() *tuivory.Flex {
 	s.browser = s.newBrowserTree()
 	s.browserUsers = s.newChoice(s.tr("browser_user_label"), nil, -1, func(_ string, index int) { s.selectBrowserUser(index) })
 	s.browserTypes = s.newChoice(s.tr("browser_type_label"), nil, -1, func(_ string, index int) { s.selectBrowserType(index) })
 	s.browserUsers.SetFieldWidth(0)
 	s.browserTypes.SetFieldWidth(0)
-	s.browserSearch = tview.NewInputField().SetLabel(s.tr("browser_search")).SetFieldWidth(0)
+	s.browserSearch = tuivory.NewInputField().SetLabel(s.tr("browser_search")).SetFieldWidth(0)
 	s.browserSearch.SetChangedFunc(func(string) {
 		if root := s.browser.GetRoot(); root != nil {
 			if data, ok := root.GetReference().(*browserNode); ok && data.loaded {
@@ -72,22 +71,22 @@ func (s *screen) newBrowser() *tview.Flex {
 			}
 		}
 	})
-	s.browserSearch.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
+	s.browserSearch.SetInputCapture(func(e *tuivory.EventKey) *tuivory.EventKey {
 		switch e.Key() {
-		case tcell.KeyDown, tcell.KeyEnter:
+		case tuivory.KeyDown, tuivory.KeyEnter:
 			s.app.SetFocus(s.browser)
 			return nil
-		case tcell.KeyEscape:
+		case tuivory.KeyEscape:
 			s.browserSearch.SetText("")
 			s.app.SetFocus(s.browser)
 			return nil
 		}
 		return e
 	})
-	s.browserForm = tview.NewForm().SetItemPadding(0).AddFormItem(s.browserUsers).AddFormItem(s.browserTypes).AddFormItem(s.browserSearch)
+	s.browserForm = tuivory.NewWidgetForm().SetItemPadding(0).AddFormItem(s.browserUsers).AddFormItem(s.browserTypes).AddFormItem(s.browserSearch)
 	s.styleForm(s.browserForm)
 	s.browserForm.SetBorder(true).SetTitle(s.tr("browser_title"))
-	s.browserPanel = s.newFlex().SetDirection(tview.FlexRow).AddItem(s.browserForm, 7, 0, false).AddItem(s.browser, 0, 1, true)
+	s.browserPanel = s.newFlex().SetDirection(tuivory.FlexRow).AddItem(s.browserForm, 7, 0, false).AddItem(s.browser, 0, 1, true)
 	s.resetBrowser()
 	return s.browserPanel
 }
@@ -146,7 +145,7 @@ func (s *screen) loadBrowserUser(owner string) {
 	}
 	s.browserOwner = owner
 	s.browserObjects = nil
-	s.browserNodes = map[oracle.Object]*tview.TreeNode{}
+	s.browserNodes = map[oracle.Object]*tuivory.WidgetTreeNode{}
 	root := s.treeNode(owner, &browserNode{kind: "schema", object: oracle.Object{Owner: owner}}).SetSelectable(false)
 	root.AddChild(s.treeMessage("browser_loading"))
 	s.browser.SetRoot(root).SetCurrentNode(nil)
@@ -170,13 +169,13 @@ func (s *screen) renderBrowserObjects() {
 		}
 	}
 	root.ClearChildren().SetExpanded(true)
-	var first *tview.TreeNode
+	var first *tuivory.WidgetTreeNode
 	for _, object := range s.browserObjects {
 		if object.Kind != objectGroups[s.browserKind].kind || s.browserSearch != nil && !strings.Contains(strings.ToLower(object.Name), strings.ToLower(s.browserSearch.GetText())) {
 			continue
 		}
 		if s.browserNodes == nil {
-			s.browserNodes = map[oracle.Object]*tview.TreeNode{}
+			s.browserNodes = map[oracle.Object]*tuivory.WidgetTreeNode{}
 		}
 		node := s.browserNodes[object]
 		if node == nil {
@@ -199,11 +198,11 @@ func (s *screen) renderBrowserObjects() {
 	s.browser.SetTitle(fmt.Sprintf(" %s (%d) ", s.tr(objectGroups[s.browserKind].label), s.browserObjectCount()))
 }
 
-func (s *screen) treeNode(text string, data *browserNode) *tview.TreeNode {
-	return s.newTreeNode(tview.Escape(text)).SetReference(data)
+func (s *screen) treeNode(text string, data *browserNode) *tuivory.WidgetTreeNode {
+	return s.newTreeNode(tuivory.Escape(text)).SetReference(data)
 }
 
-func (s *screen) treeMessage(key string) *tview.TreeNode {
+func (s *screen) treeMessage(key string) *tuivory.WidgetTreeNode {
 	return s.treeNode(s.tr(key), &browserNode{kind: "message", label: key}).SetSelectable(false)
 }
 
@@ -211,7 +210,7 @@ func (s *screen) resetBrowser() {
 	root := s.treeNode(s.tr("schemas"), &browserNode{kind: "root", label: "schemas"}).SetSelectable(false)
 	root.AddChild(s.treeMessage("browser_connect"))
 	if s.connected {
-		root.SetChildren([]*tview.TreeNode{s.treeMessage("browser_retry")})
+		root.SetChildren([]*tuivory.WidgetTreeNode{s.treeMessage("browser_retry")})
 	}
 	s.browser.SetRoot(root).SetCurrentNode(nil)
 	s.browserOwner = ""
@@ -220,7 +219,7 @@ func (s *screen) resetBrowser() {
 	}
 	s.browserSchemas = nil
 	s.browserObjects = nil
-	s.browserNodes = map[oracle.Object]*tview.TreeNode{}
+	s.browserNodes = map[oracle.Object]*tuivory.WidgetTreeNode{}
 	s.browserKind = 0
 	s.browserUsers.SetSelectedFunc(nil).SetOptions(nil, nil).SetCurrentOption(-1).SetSelectedFunc(func(_ string, i int) { s.selectBrowserUser(i) })
 	s.localizeBrowser()
@@ -246,7 +245,7 @@ func (s *screen) populateSchemas(catalog oracle.Catalog) {
 	index := -1
 	var labels []string
 	for i, owner := range s.browserSchemas {
-		labels = append(labels, tview.Escape(owner))
+		labels = append(labels, tuivory.Escape(owner))
 		if owner == preferred {
 			index = i
 		}
@@ -265,7 +264,7 @@ func (s *screen) populateSchemas(catalog oracle.Catalog) {
 	}
 }
 
-func (s *screen) populateObjects(node *tview.TreeNode, objects []oracle.Object) {
+func (s *screen) populateObjects(node *tuivory.WidgetTreeNode, objects []oracle.Object) {
 	if node != s.browser.GetRoot() || node.GetReference().(*browserNode).object.Owner != s.browserOwner {
 		return
 	}
@@ -274,7 +273,7 @@ func (s *screen) populateObjects(node *tview.TreeNode, objects []oracle.Object) 
 	s.renderBrowserObjects()
 }
 
-func (s *screen) activateBrowser(node *tview.TreeNode) {
+func (s *screen) activateBrowser(node *tuivory.WidgetTreeNode) {
 	if node == nil {
 		return
 	}
@@ -303,9 +302,9 @@ func (s *screen) localizeBrowser() {
 	}
 	s.browserTypes.SetSelectedFunc(nil).SetOptions(types, nil).SetCurrentOption(s.browserKind).SetSelectedFunc(func(_ string, i int) { s.selectBrowserType(i) })
 	s.browser.SetTitle(fmt.Sprintf(" %s (%d) ", s.tr(objectGroups[s.browserKind].label), s.browserObjectCount()))
-	s.browser.GetRoot().Walk(func(node, parent *tview.TreeNode) bool {
+	s.browser.GetRoot().Walk(func(node, parent *tuivory.WidgetTreeNode) bool {
 		if data, ok := node.GetReference().(*browserNode); ok && data.label != "" {
-			node.SetText(tview.Escape(s.tr(data.label)))
+			node.SetText(tuivory.Escape(s.tr(data.label)))
 		}
 		return true
 	})
@@ -332,7 +331,7 @@ func (s *screen) openObject(object oracle.Object) {
 	s.objectTable.SetBorder(true)
 	s.styleBox(s.objectTable.Box)
 	s.renderObject(nil)
-	close := s.clickable(tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeObject))
+	close := s.clickable(tuivory.NewWidgetButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeObject))
 	buttons := s.newFlex()
 	for _, item := range []struct{ section, key string }{{"ddl", "Alt+D"}, {"constraints", "Alt+C"}, {"indexes", "Alt+I"}, {"grants", "Alt+G"}} {
 		if item.section == "constraints" && !object.HasColumns() {
@@ -341,17 +340,17 @@ func (s *screen) openObject(object oracle.Object) {
 		if item.section == "indexes" && !object.HasColumns() && object.Kind != "INDEX" {
 			continue
 		}
-		buttons.AddItem(s.clickable(tview.NewButton(s.tr(item.section)+" ("+item.key+")").SetSelectedFunc(func() { s.showDefinition(item.section) })), 0, 1, false)
+		buttons.AddItem(s.clickable(tuivory.NewWidgetButton(s.tr(item.section)+" ("+item.key+")").SetSelectedFunc(func() { s.showDefinition(item.section) })), 0, 1, false)
 	}
 	if object.HasSource() {
-		buttons.AddItem(s.clickable(tview.NewButton(s.tr("source_button")).SetSelectedFunc(s.showSource)), 0, 1, false)
+		buttons.AddItem(s.clickable(tuivory.NewWidgetButton(s.tr("source_button")).SetSelectedFunc(s.showSource)), 0, 1, false)
 	}
 	if object.HasArguments() {
-		buttons.AddItem(s.clickable(tview.NewButton(s.tr("arguments_button")).SetSelectedFunc(s.showArguments)), 0, 1, false)
-		buttons.AddItem(s.clickable(tview.NewButton(s.tr("routine_button")).SetSelectedFunc(func() { s.showRoutine(s.object, "") })), 0, 1, false)
+		buttons.AddItem(s.clickable(tuivory.NewWidgetButton(s.tr("arguments_button")).SetSelectedFunc(s.showArguments)), 0, 1, false)
+		buttons.AddItem(s.clickable(tuivory.NewWidgetButton(s.tr("routine_button")).SetSelectedFunc(func() { s.showRoutine(s.object, "") })), 0, 1, false)
 	}
 	buttons.AddItem(close, 0, 1, false)
-	root := s.newFlex().SetDirection(tview.FlexRow).
+	root := s.newFlex().SetDirection(tuivory.FlexRow).
 		AddItem(s.objectInfo, 2, 0, false).AddItem(s.objectTable, 0, 1, true).AddItem(buttons, 1, 0, false)
 	s.pages.AddPage("object", root, true, true)
 	s.app.SetFocus(s.objectTable)
@@ -377,18 +376,18 @@ func (s *screen) renderObject(columns []oracle.Column) {
 	if !s.object.HasColumns() {
 		s.objectTable.SetTitle(s.tr("object_details"))
 		for i, key := range []string{"property", "value"} {
-			s.objectTable.SetCell(0, i, tview.NewTableCell(s.tr(key)).SetTextColor(s.colors().accent).SetSelectable(false))
+			s.objectTable.SetCell(0, i, tuivory.NewTableCell(s.tr(key)).SetTextColor(s.colors().accent).SetSelectable(false))
 		}
 		for row, pair := range [][2]string{{s.tr("owner"), s.object.Owner}, {s.tr("object_name"), s.object.Name}, {s.tr("object_type"), s.object.Kind}, {s.tr("object_status"), s.object.Status}} {
 			for col, value := range pair {
-				s.objectTable.SetCell(row+1, col, tview.NewTableCell(tview.Escape(value)).SetTextColor(s.colors().text))
+				s.objectTable.SetCell(row+1, col, tuivory.NewTableCell(tuivory.Escape(value)).SetTextColor(s.colors().text))
 			}
 		}
 		s.objectInfo.SetText(s.objectInfo.GetText(false) + "\n" + s.tr("object_info_only"))
 		return
 	}
 	for i, key := range []string{"column_position", "column_name", "data_type", "nullable", "column_comment"} {
-		s.objectTable.SetCell(0, i, tview.NewTableCell(s.tr(key)).SetStyle(tcell.StyleDefault.Foreground(s.colors().accent).Background(s.colors().surface).Bold(true)).SetSelectable(false))
+		s.objectTable.SetCell(0, i, tuivory.NewTableCell(s.tr(key)).SetStyle(tuivory.StyleDefault.Foreground(s.colors().accent).Background(s.colors().surface).Bold(true)).SetSelectable(false))
 	}
 	for row, column := range columns {
 		nullable := "no"
@@ -396,7 +395,7 @@ func (s *screen) renderObject(columns []oracle.Column) {
 			nullable = "yes"
 		}
 		for col, value := range []string{fmt.Sprint(row + 1), column.Name, column.DataType, s.tr(nullable), column.Comment} {
-			s.objectTable.SetCell(row+1, col, tview.NewTableCell(tview.Escape(value)).SetTextColor(s.colors().text))
+			s.objectTable.SetCell(row+1, col, tuivory.NewTableCell(tuivory.Escape(value)).SetTextColor(s.colors().text))
 		}
 	}
 }

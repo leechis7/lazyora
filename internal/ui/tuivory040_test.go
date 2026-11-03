@@ -5,8 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestTuivory040DisabledMenuAndSurfaceText(t *testing.T) {
@@ -38,10 +37,10 @@ func TestTuivory040DisabledMenuAndSurfaceText(t *testing.T) {
 					_, _, style, _ := terminal.GetContent(x, y+at)
 					fg, bg, attrs := style.Decompose()
 					normal := s.componentPalette()["body"].FG
-					if fg == bg || fg == normal && attrs&tcell.AttrDim == 0 {
+					if fg == bg || fg == normal && attrs&tuivory.AttrDim == 0 {
 						t.Fatal("disabled control has no visible gray/Dim cue")
 					}
-					s.menuList.MouseHandler()(tview.MouseLeftClick, tcell.NewEventMouse(x+2, y+at, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+					s.menuList.MouseHandler()(tuivory.MouseLeftClick, tuivory.NewEventMouse(x+2, y+at, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 					if s.menuModel.FocusedID() != focus || !s.pages.HasPage("menu") || len(s.jobs) != 0 || s.editor.GetText() != before {
 						t.Fatal("disabled click focused or executed a command")
 					}

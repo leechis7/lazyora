@@ -1,15 +1,14 @@
 package ui
 
 import (
+	"lazyora/internal/oracle"
+	"lazyora/internal/settings"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
-	"lazyora/internal/settings"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestThemeSwitchPreservesWorkspaceAndCredentials(t *testing.T) {
@@ -23,12 +22,12 @@ func TestThemeSwitchPreservesWorkspaceAndCredentials(t *testing.T) {
 			s.render(oracle.Result{Columns: []string{"TEXT"}, Rows: [][]string{{"original value"}}})
 			s.pendingChanges = true
 			s.connectionForm()
-			input := s.connectForm.GetFormItem(connectionPassword).(*tview.InputField)
+			input := s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField)
 			input.SetText("not-for-config")
 			profile := s.connectProfiles.GetFormItem(0).(*choiceField)
 			for _, theme := range []string{"light", "dark", "light"} {
 				s.settingsForm()
-				s.key(tcell.NewEventKey(tcell.KeyRune, 't', tcell.ModAlt))
+				s.key(tuivory.NewEventKey(tuivory.KeyRune, 't', tuivory.ModAlt))
 				if !s.prefsForm.GetFormItem(3).HasFocus() {
 					t.Fatal("Alt+T did not focus theme")
 				}
@@ -141,10 +140,10 @@ func TestHiddenTabFollowsThemeWithoutSwitchingItsData(t *testing.T) {
 	s.prefs.Theme = "light"
 	s.applyTheme("dark")
 	fg, bg, _ := first.GetCell(1, 0).Style.Decompose()
-	if fg != tcell.ColorBlack || bg == tcell.ColorBlack {
+	if fg != tuivory.ColorBlack || bg == tuivory.ColorBlack {
 		t.Fatal("hidden ANSI result kept dark colors")
 	}
-	if first.GetBackgroundColor() != tcell.ColorWhite {
+	if first.GetBackgroundColor() != tuivory.ColorWhite {
 		t.Fatal("hidden grid background kept old theme")
 	}
 	s.switchTab(0)

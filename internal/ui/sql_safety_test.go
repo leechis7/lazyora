@@ -1,21 +1,20 @@
 package ui
 
 import (
+	"lazyora/internal/oracle"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
-func warningKey(s *screen, event *tcell.EventKey) {
+func warningKey(s *screen, event *tuivory.EventKey) {
 	if next := s.key(event); next != nil {
-		s.app.GetFocus().InputHandler()(next, func(p tview.Primitive) { s.app.SetFocus(p) })
+		s.app.GetFocus().InputHandler()(next, func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	}
 }
 func TestRiskySQLDefaultsToCancelAndPreservesState(t *testing.T) {
-	for _, key := range []*tcell.EventKey{tcell.NewEventKey(tcell.KeyF9, 0, 0), tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModCtrl), tcell.NewEventKey(tcell.KeyEscape, 0, 0)} {
+	for _, key := range []*tuivory.EventKey{tuivory.NewEventKey(tuivory.KeyF9, 0, 0), tuivory.NewEventKey(tuivory.KeyEnter, 0, tuivory.ModCtrl), tuivory.NewEventKey(tuivory.KeyEscape, 0, 0)} {
 		s := shortcutScreen(t)
 		s.editor.SetText("DELETE FROM demo", false)
 		s.render(oracle.Result{Columns: []string{"N"}, Rows: [][]string{{"keep"}}})
@@ -30,7 +29,7 @@ func TestRiskySQLDefaultsToCancelAndPreservesState(t *testing.T) {
 		// Repeating an execution shortcut must not automatically accept.
 		warningKey(s, key)
 		if page, _ := s.pages.GetFrontPage(); page == "sql_confirm" {
-			warningKey(s, tcell.NewEventKey(tcell.KeyEnter, 0, 0))
+			warningKey(s, tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
 		}
 		if len(s.jobs) != 0 || len(s.sqlHistory) != 0 || s.sqlConfirmText != nil {
 			t.Fatal("default confirmation executed SQL")
@@ -50,8 +49,8 @@ func TestRiskConfirmationExecutesReviewedSelectionOnly(t *testing.T) {
 	}
 	// Even if the editor is changed programmatically, execute the reviewed snapshot.
 	s.editor.SetText("DELETE FROM different_table", false)
-	warningKey(s, tcell.NewEventKey(tcell.KeyLeft, 0, 0))
-	warningKey(s, tcell.NewEventKey(tcell.KeyEnter, 0, 0))
+	warningKey(s, tuivory.NewEventKey(tuivory.KeyLeft, 0, 0))
+	warningKey(s, tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
 	select {
 	case j := <-s.jobs:
 		if j.action != "execute" || j.text != selected {
@@ -86,22 +85,22 @@ func TestWarningHelpTabAndLiteralPreview(t *testing.T) {
 	sql := "UPDATE demo SET name='[red]WHERE[white]'"
 	s.editor.SetText(sql, false)
 	s.executeSQL()
-	warningKey(s, tcell.NewEventKey(tcell.KeyTab, 0, 0))
+	warningKey(s, tuivory.NewEventKey(tuivory.KeyTab, 0, 0))
 	if !s.sqlConfirmText.HasFocus() {
 		t.Fatal("Tab did not reach SQL preview")
 	}
 	if s.sqlConfirmText.GetText(false) != sql {
 		t.Fatal("preview modified SQL")
 	}
-	warningKey(s, tcell.NewEventKey(tcell.KeyF1, 0, 0))
+	warningKey(s, tuivory.NewEventKey(tuivory.KeyF1, 0, 0))
 	if page, _ := s.pages.GetFrontPage(); page != "help" {
 		t.Fatal("help missing")
 	}
-	warningKey(s, tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	warningKey(s, tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if page, _ := s.pages.GetFrontPage(); page != "sql_confirm" {
 		t.Fatal("help did not restore warning")
 	}
-	warningKey(s, tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	warningKey(s, tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if len(s.jobs) != 0 {
 		t.Fatal("help/close executed SQL")
 	}
@@ -114,7 +113,7 @@ func TestWarningHelpTabAndLiteralPreview(t *testing.T) {
 }
 
 func TestSQLWarningMouseCancelAndSmallTerminal(t *testing.T) {
-	terminal := tcell.NewSimulationScreen("UTF-8")
+	terminal := tuivory.NewSimulationScreen("UTF-8")
 	if err := terminal.Init(); err != nil {
 		t.Fatal(err)
 	}
@@ -127,11 +126,11 @@ func TestSQLWarningMouseCancelAndSmallTerminal(t *testing.T) {
 		s.executeSQL()
 		_, page := s.pages.GetFrontPage()
 		popup := page.(*formPopupLayer)
-		root := popup.content.(*tview.Flex)
+		root := popup.content.(*tuivory.Flex)
 		popup.SetRect(0, 0, 80, 21)
 		popup.Draw(terminal)
-		buttons := root.GetItem(root.GetItemCount() - 1).(*tview.Flex)
-		cancel := buttons.GetItem(1).(*tview.Button)
+		buttons := root.GetItem(root.GetItemCount() - 1).(*tuivory.Flex)
+		cancel := buttons.GetItem(1).(*tuivory.WidgetButton)
 		x, y, width, height := cancel.GetRect()
 		if x < 0 || x+width > 80 || height != 1 || y >= 21 {
 			t.Fatal("confirmation button off screen")
@@ -139,7 +138,7 @@ func TestSQLWarningMouseCancelAndSmallTerminal(t *testing.T) {
 		if !cancel.HasFocus() {
 			t.Fatal("cancel not selected by default")
 		}
-		popup.MouseHandler()(tview.MouseLeftClick, tcell.NewEventMouse(x+width/2, y, tcell.ButtonNone, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+		popup.MouseHandler()(tuivory.MouseLeftClick, tuivory.NewEventMouse(x+width/2, y, tuivory.ButtonNone, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 		if s.sqlConfirmText != nil || len(s.jobs) != 0 {
 			t.Fatal("mouse cancel did not dismiss safely")
 		}

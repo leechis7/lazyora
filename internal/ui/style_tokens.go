@@ -1,9 +1,7 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
 	"github.com/leechis7/tuivory/go"
-	"github.com/rivo/tview"
 )
 
 // Profiles describe output capability, independently of the user's theme.
@@ -32,12 +30,12 @@ func (s *screen) ansiColors() bool {
 	p := s.colorProfile()
 	return p == profileANSI8 || p == profileANSI16
 }
-func indexed(i int) tcell.Color { return tcell.PaletteColor(i) }
+func indexed(i int) tuivory.Color { return tuivory.PaletteColor(i) }
 
 // Extended tokens keep content, input, selection and status roles independent.
 type styleTokens struct {
 	themeColors
-	selection, selectionFG, edited, editedFG, disabled, focus tcell.Color
+	selection, selectionFG, edited, editedFG, disabled, focus tuivory.Color
 }
 
 // Tuivory is the source of common style values. Legacy field names below are
@@ -61,7 +59,7 @@ func (s *screen) tuivoryStyles() tuivory.Styles {
 	return p
 }
 func (s *screen) tuivoryWidgets() tuivory.Styler { return tuivory.Styler{Styles: s.tuivoryStyles()} }
-func legacyColors(c tuivory.Colors, selectionFG tcell.Color) themeColors {
+func legacyColors(c tuivory.Colors, selectionFG tuivory.Color) themeColors {
 	return themeColors{c.Background, c.Surface, c.Footer, c.Field, c.Text, c.Muted, c.Accent, c.Button,
 		c.Editor, c.EditorText, c.FieldText, selectionFG, c.Placeholder, c.Warning}
 }
@@ -80,20 +78,20 @@ const (
 	surfaceEditor
 )
 
-func (s *screen) surfaceColor(role surfaceRole) tcell.Color {
+func (s *screen) surfaceColor(role surfaceRole) tuivory.Color {
 	return s.tuivoryStyles().SurfaceColor(tuivory.Surface(role))
 }
-func (s *screen) surfaceText(role surfaceRole) tcell.Color {
+func (s *screen) surfaceText(role surfaceRole) tuivory.Color {
 	return s.tuivoryStyles().SurfaceText(tuivory.Surface(role))
 }
-func (s *screen) setSurface(box *tview.Box, role surfaceRole) {
+func (s *screen) setSurface(box *tuivory.Box, role surfaceRole) {
 	if s.surfaceRoles == nil {
-		s.surfaceRoles = map[*tview.Box]surfaceRole{}
+		s.surfaceRoles = map[*tuivory.Box]surfaceRole{}
 	}
 	s.surfaceRoles[box] = role
 	box.SetBackgroundColor(s.surfaceColor(role))
 }
-func (s *screen) textSurface(view *tview.TextView, role surfaceRole) {
+func (s *screen) textSurface(view *tuivory.WidgetTextView, role surfaceRole) {
 	s.setSurface(view.Box, role)
 	palette := s.componentPalette()
 	palette["surface"] = tuivory.Pair{FG: s.surfaceText(role), BG: s.surfaceColor(role)}
@@ -108,11 +106,11 @@ func (s *screen) textSurface(view *tview.TextView, role surfaceRole) {
 	view.SetBackgroundColor(s.surfaceColor(role))
 	view.SetTextStyle(style)
 }
-func (s *screen) disabledStyle() tcell.Style {
+func (s *screen) disabledStyle() tuivory.Style {
 	return s.tuivoryStyles().DisabledStyle()
 }
 
-func widgetBox(p tview.Primitive) *tview.Box {
+func widgetBox(p tuivory.Primitive) *tuivory.Box {
 	switch w := p.(type) {
 	case *displayLayout:
 		return w.Box
@@ -122,35 +120,35 @@ func widgetBox(p tview.Primitive) *tview.Box {
 		return w.Table.Box
 	case *inlineCellEditor:
 		return w.InputField.Box
-	case *tview.Box:
+	case *tuivory.Box:
 		return w
-	case *tview.Flex:
+	case *tuivory.Flex:
 		return w.Box
-	case *tview.Pages:
+	case *tuivory.Pages:
 		return w.Box
-	case *tview.TextView:
+	case *tuivory.WidgetTextView:
 		return w.Box
-	case *tview.TextArea:
+	case *tuivory.TextArea:
 		return w.Box
-	case *tview.Form:
+	case *tuivory.WidgetForm:
 		return w.Box
 	case *choiceField:
 		return w.Box
-	case *tview.InputField:
+	case *tuivory.InputField:
 		return w.Box
-	case *tview.Checkbox:
+	case *tuivory.Checkbox:
 		return w.Box
-	case *tview.Table:
+	case *tuivory.Table:
 		return w.Box
 	case *browserTree:
 		return w.Box
-	case *tview.TreeView:
+	case *tuivory.WidgetTreeView:
 		return w.Box
-	case *tview.List:
+	case *tuivory.WidgetList:
 		return w.Box
-	case *tview.Button:
+	case *tuivory.WidgetButton:
 		return w.Box
-	case *tview.Modal:
+	case *tuivory.Modal:
 		return w.Box
 	}
 	return nil
@@ -158,13 +156,13 @@ func widgetBox(p tview.Primitive) *tview.Box {
 
 // Data-detail tables use semantic row roles from their first draw onward.
 // Main query grids and the keymap comparison own their richer state tuivory.
-func (s *screen) styleDataTable(table *tview.Table) {
+func (s *screen) styleDataTable(table *tuivory.Table) {
 	s.tuivoryWidgets().TableOn(table, tuivory.Surface(s.surfaceRoles[table.Box]))
 }
-func (s *screen) newDataTable() *tview.Table {
-	table := tview.NewTable()
+func (s *screen) newDataTable() *tuivory.Table {
+	table := tuivory.NewTable()
 	s.styleBox(table.Box)
-	table.SetDrawFunc(func(_ tcell.Screen, x, y, w, h int) (int, int, int, int) {
+	table.SetDrawFunc(func(_ tuivory.Screen, x, y, w, h int) (int, int, int, int) {
 		s.styleDataTable(table)
 		return x, y, w, h
 	})

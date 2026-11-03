@@ -2,19 +2,19 @@ package ui
 
 import (
 	"fmt"
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"lazyora/internal/appinfo"
 	"strings"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 // tview may report a rapid click on a different button as a double click.
 // Buttons should activate on either kind of click; text selection stays unchanged.
-func (s *screen) clickable(button *tview.Button) *tview.Button {
+func (s *screen) clickable(button *tuivory.WidgetButton) *tuivory.WidgetButton {
 	s.tuivoryWidgets().Button(button)
-	button.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
-		if action == tview.MouseLeftDoubleClick {
-			action = tview.MouseLeftClick
+	button.SetMouseCapture(func(action tuivory.MouseAction, event *tuivory.EventMouse) (tuivory.MouseAction, *tuivory.EventMouse) {
+		if action == tuivory.MouseLeftDoubleClick {
+			action = tuivory.MouseLeftClick
 		}
 		return action, event
 	})
@@ -23,22 +23,22 @@ func (s *screen) clickable(button *tview.Button) *tview.Button {
 
 type footerKey struct {
 	label, action string
-	key           tcell.Key
-	mod           tcell.ModMask
+	key           tuivory.Key
+	mod           tuivory.ModMask
 }
 
-func (s *screen) toolbar() *tview.Flex {
+func (s *screen) toolbar() *tuivory.Flex {
 	bar := s.newFlex()
 	s.footerBar = bar
 	for index := range 6 {
-		button := s.clickable(tview.NewButton("").SetSelectedFunc(func() {
+		button := s.clickable(tuivory.NewWidgetButton("").SetSelectedFunc(func() {
 			if index >= len(s.footerKeys) {
 				return
 			}
 			key := s.footerKeys[index]
 			if strings.HasPrefix(key.action, "resize_") {
 				if page, _ := s.pages.GetFrontPage(); page == "main" {
-					s.resizePanelKey(tcell.NewEventKey(key.key, 0, key.mod))
+					s.resizePanelKey(tuivory.NewEventKey(key.key, 0, key.mod))
 				}
 				return
 			}
@@ -85,12 +85,12 @@ func (s *screen) toolbar() *tview.Flex {
 			} else if page == "arguments" {
 				s.app.SetFocus(s.argumentTable)
 			}
-			s.app.QueueEvent(tcell.NewEventKey(key.key, 0, key.mod))
+			s.app.QueueEvent(tuivory.NewEventKey(key.key, 0, key.mod))
 		}))
 		s.tuivoryWidgets().FooterButton(button)
 		s.buttons = append(s.buttons, button)
 	}
-	version := s.newTextView().SetText("v" + appinfo.Version).SetTextAlign(tview.AlignRight).SetWrap(false)
+	version := s.newTextView().SetText("v" + appinfo.Version).SetTextAlign(tuivory.AlignRight).SetWrap(false)
 	s.textRoles[version] = textBody
 	s.textSurface(version, surfaceFooter)
 	s.footerVersion = version
@@ -103,65 +103,65 @@ func (s *screen) refreshFooter() {
 	}
 	page, _ := s.pages.GetFrontPage()
 	keys := []footerKey{
-		{"F1", "help", tcell.KeyF1, tcell.ModNone},
+		{"F1", "help", tuivory.KeyF1, tuivory.ModNone},
 		{"", "connect", 0, 0},
 		{"", "settings", 0, 0},
-		{"Ctrl+Q", "quit", tcell.KeyCtrlQ, tcell.ModNone},
+		{"Ctrl+Q", "quit", tuivory.KeyCtrlQ, tuivory.ModNone},
 	}
 	hint := "footer_sql"
 	switch page {
 	case "workspaces":
 		hint = "footer_workspaces"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Esc", "close", tuivory.KeyEscape, 0}}
 	case "about":
 		hint = "footer_about"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+C", "copy", tcell.KeyCtrlC, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Ctrl+C", "copy", tuivory.KeyCtrlC, 0}, {"Esc", "close", tuivory.KeyEscape, 0}}
 	case "reference":
 		hint = "footer_reference"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+C", "copy", tcell.KeyCtrlC, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Ctrl+C", "copy", tuivory.KeyCtrlC, 0}, {"Esc", "close", tuivory.KeyEscape, 0}}
 	case "keymap_compare":
 		hint = "comparison_keys"
-		keys = []footerKey{{"Ctrl+C", "copy", tcell.KeyCtrlC, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"Ctrl+C", "copy", tuivory.KeyCtrlC, 0}, {"Esc", "close", tuivory.KeyEscape, 0}}
 	case "grid_inline":
 		hint = "grid_inline_hint"
-		keys = []footerKey{{"Enter", "edit_preview", tcell.KeyEnter, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"Enter", "edit_preview", tuivory.KeyEnter, 0}, {"Esc", "cancel", tuivory.KeyEscape, 0}}
 	case "grid_edit":
 		hint = "footer_grid_edit"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+S", "edit_preview", tcell.KeyCtrlS, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Ctrl+S", "edit_preview", tuivory.KeyCtrlS, 0}, {"Esc", "cancel", tuivory.KeyEscape, 0}}
 	case "cell":
 		hint = "footer_cell"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+S", "save", tcell.KeyCtrlS, 0}, {"Ctrl+C", "copy", tcell.KeyCtrlC, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Ctrl+S", "save", tuivory.KeyCtrlS, 0}, {"Ctrl+C", "copy", tuivory.KeyCtrlC, 0}, {"Esc", "close", tuivory.KeyEscape, 0}}
 	case "result_filter":
 		hint = "footer_result_filter"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Esc", "close", tuivory.KeyEscape, 0}}
 	case "definition":
 		hint = "footer_definition"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+R", "reload", tcell.KeyCtrlR, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Ctrl+R", "reload", tuivory.KeyCtrlR, 0}, {"Esc", "close", tuivory.KeyEscape, 0}}
 	case "editor_actions":
 		hint = "menu_hint"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Esc", "close", tuivory.KeyEscape, 0}}
 	case "completion":
 		hint = "footer_completion"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+R", "completion_refresh", tcell.KeyCtrlR, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Ctrl+R", "completion_refresh", tuivory.KeyCtrlR, 0}, {"Esc", "cancel", tuivory.KeyEscape, 0}}
 	case "export":
 		hint = "footer_export"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+S", "export", tcell.KeyCtrlS, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Ctrl+S", "export", tuivory.KeyCtrlS, 0}, {"Esc", "cancel", tuivory.KeyEscape, 0}}
 		if s.busy {
 			hint = "footer_export_running"
-			keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
+			keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Esc", "cancel", tuivory.KeyEscape, 0}}
 		}
 	case "plan":
 		hint = "footer_plan"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Esc", "close", tuivory.KeyEscape, 0}}
 	case "routines", "routine_input", "routine_results", "routine_grid":
 		hint = "footer_routine"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Esc", "close", tuivory.KeyEscape, 0}}
 	case "bind":
 		hint = "footer_bind"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Ctrl+Enter", "execute", tcell.KeyEnter, tcell.ModCtrl}, {"Esc", "cancel", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Ctrl+Enter", "execute", tuivory.KeyEnter, tuivory.ModCtrl}, {"Esc", "cancel", tuivory.KeyEscape, 0}}
 	case "script":
 		hint = "footer_script"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Esc", "close", tuivory.KeyEscape, 0}}
 	case "main":
 		keys = nil
 		for _, id := range []string{"help", "connect", "commit", "rollback", "quit"} {
@@ -184,94 +184,94 @@ func (s *screen) refreshFooter() {
 		}
 	case "search":
 		hint = "footer_search"
-		keys = []footerKey{{"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"Esc", "close", tuivory.KeyEscape, 0}}
 	case "pending":
 		hint = "footer_pending"
-		keys = []footerKey{{"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"Esc", "close", tuivory.KeyEscape, 0}}
 	case "output":
 		hint = "footer_output"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Esc", "close", tuivory.KeyEscape, 0}}
 	case "history":
 		hint = "footer_history"
-		keys = []footerKey{{"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"Esc", "close", tuivory.KeyEscape, 0}}
 	case "menu":
 		hint = "menu_hint"
-		keys = []footerKey{{"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"Esc", "close", tuivory.KeyEscape, 0}}
 	case "copy":
 		hint = "copy_preview_hint"
-		keys = []footerKey{{"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"Esc", "close", tuivory.KeyEscape, 0}}
 	case "describe":
 		hint = "footer_describe"
-		keys = []footerKey{{"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"Esc", "close", tuivory.KeyEscape, 0}}
 	case "file":
 		hint = "footer_file"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Esc", "cancel", tuivory.KeyEscape, 0}}
 	case "file_unsaved":
 		hint = "footer_file_unsaved"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Esc", "cancel", tuivory.KeyEscape, 0}}
 	case "sql_confirm":
 		hint = "footer_sql_confirm"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Esc", "cancel", tuivory.KeyEscape, 0}}
 	case "master":
 		hint = "footer_master"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "cancel", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Esc", "cancel", tuivory.KeyEscape, 0}}
 	case "vault":
 		hint = "footer_vault"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, 0}, {"Esc", "close", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Esc", "close", tuivory.KeyEscape, 0}}
 	case "connect":
 		hint = "footer_connect"
-		keys[1] = footerKey{"Ctrl+Enter", "connect", tcell.KeyEnter, tcell.ModCtrl}
-		keys[2] = footerKey{"Ctrl+S", "save", tcell.KeyCtrlS, tcell.ModNone}
-		keys[3] = footerKey{"Esc", "cancel", tcell.KeyEscape, tcell.ModNone}
-		keys = append(keys, footerKey{"Alt+K", "passwords", tcell.KeyRune, tcell.ModAlt}, footerKey{"Alt+V", "connection_probe", tcell.KeyRune, tcell.ModAlt})
+		keys[1] = footerKey{"Ctrl+Enter", "connect", tuivory.KeyEnter, tuivory.ModCtrl}
+		keys[2] = footerKey{"Ctrl+S", "save", tuivory.KeyCtrlS, tuivory.ModNone}
+		keys[3] = footerKey{"Esc", "cancel", tuivory.KeyEscape, tuivory.ModNone}
+		keys = append(keys, footerKey{"Alt+K", "passwords", tuivory.KeyRune, tuivory.ModAlt}, footerKey{"Alt+V", "connection_probe", tuivory.KeyRune, tuivory.ModAlt})
 	case "reconnect":
 		hint = "footer_reconnect"
-		keys = []footerKey{{"Esc", "cancel", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"Esc", "cancel", tuivory.KeyEscape, 0}}
 	case "settings":
 		hint = "footer_settings"
-		keys[1] = footerKey{"Ctrl+S", "save", tcell.KeyCtrlS, tcell.ModNone}
-		keys[2] = footerKey{"Esc", "cancel", tcell.KeyEscape, tcell.ModNone}
+		keys[1] = footerKey{"Ctrl+S", "save", tuivory.KeyCtrlS, tuivory.ModNone}
+		keys[2] = footerKey{"Esc", "cancel", tuivory.KeyEscape, tuivory.ModNone}
 		keys = keys[:3]
 	case "help":
 		hint = "footer_help"
 		keys[0].action = "close"
-		keys[1] = footerKey{"PgUp", "previous_page", tcell.KeyPgUp, tcell.ModNone}
-		keys[2] = footerKey{"PgDn", "next_page", tcell.KeyPgDn, tcell.ModNone}
-		keys[3] = footerKey{"Esc", "close", tcell.KeyEscape, tcell.ModNone}
+		keys[1] = footerKey{"PgUp", "previous_page", tuivory.KeyPgUp, tuivory.ModNone}
+		keys[2] = footerKey{"PgDn", "next_page", tuivory.KeyPgDn, tuivory.ModNone}
+		keys[3] = footerKey{"Esc", "close", tuivory.KeyEscape, tuivory.ModNone}
 	case "object":
 		hint = "footer_object"
 		keys[0].action = "help"
-		keys[1] = footerKey{"PgUp", "previous_page", tcell.KeyPgUp, tcell.ModNone}
-		keys[2] = footerKey{"PgDn", "next_page", tcell.KeyPgDn, tcell.ModNone}
-		keys[3] = footerKey{"Esc", "close", tcell.KeyEscape, tcell.ModNone}
+		keys[1] = footerKey{"PgUp", "previous_page", tuivory.KeyPgUp, tuivory.ModNone}
+		keys[2] = footerKey{"PgDn", "next_page", tuivory.KeyPgDn, tuivory.ModNone}
+		keys[3] = footerKey{"Esc", "close", tuivory.KeyEscape, tuivory.ModNone}
 		if s.object.HasSource() {
-			keys[1] = footerKey{"Alt+S", "source", tcell.KeyRune, tcell.ModAlt}
+			keys[1] = footerKey{"Alt+S", "source", tuivory.KeyRune, tuivory.ModAlt}
 		}
 		if s.object.HasArguments() {
-			keys[2] = footerKey{"Alt+A", "arguments", tcell.KeyRune, tcell.ModAlt}
+			keys[2] = footerKey{"Alt+A", "arguments", tuivory.KeyRune, tuivory.ModAlt}
 		}
 	case "source":
 		hint = "footer_source"
-		keys = []footerKey{{"F9", "compile", tcell.KeyF9, 0}, {"Alt+R", "reload", tcell.KeyRune, tcell.ModAlt}, {"Alt+X", "close", tcell.KeyRune, tcell.ModAlt}}
+		keys = []footerKey{{"F9", "compile", tuivory.KeyF9, 0}, {"Alt+R", "reload", tuivory.KeyRune, tuivory.ModAlt}, {"Alt+X", "close", tuivory.KeyRune, tuivory.ModAlt}}
 	case "arguments":
 		hint = "footer_arguments"
-		keys = []footerKey{{"F1", "help", tcell.KeyF1, tcell.ModNone}, {"PgUp", "previous_page", tcell.KeyPgUp, tcell.ModNone}, {"PgDn", "next_page", tcell.KeyPgDn, tcell.ModNone}, {"Esc", "close", tcell.KeyEscape, tcell.ModNone}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, tuivory.ModNone}, {"PgUp", "previous_page", tuivory.KeyPgUp, tuivory.ModNone}, {"PgDn", "next_page", tuivory.KeyPgDn, tuivory.ModNone}, {"Esc", "close", tuivory.KeyEscape, tuivory.ModNone}}
 	case "program_confirm":
 		hint = "footer_confirm"
-		keys = []footerKey{{"Esc", "cancel", tcell.KeyEscape, tcell.ModNone}}
+		keys = []footerKey{{"Esc", "cancel", tuivory.KeyEscape, tuivory.ModNone}}
 	case "exit":
 		hint = "footer_exit"
-		keys = []footerKey{{"Esc", "exit_cancel", tcell.KeyEscape, tcell.ModNone}}
+		keys = []footerKey{{"Esc", "exit_cancel", tuivory.KeyEscape, tuivory.ModNone}}
 		if s.pendingChanges {
-			keys = append(keys, footerKey{"Alt+V", "pending_work", tcell.KeyRune, tcell.ModAlt})
+			keys = append(keys, footerKey{"Alt+V", "pending_work", tuivory.KeyRune, tuivory.ModAlt})
 			if !s.transactionUncertain {
-				keys = append(keys, footerKey{shortcut("commit"), "exit_commit", tcell.KeyRune, tcell.ModAlt}, footerKey{shortcut("rollback"), "exit_rollback", tcell.KeyRune, tcell.ModAlt})
+				keys = append(keys, footerKey{shortcut("commit"), "exit_commit", tuivory.KeyRune, tuivory.ModAlt}, footerKey{shortcut("rollback"), "exit_rollback", tuivory.KeyRune, tuivory.ModAlt})
 			}
 		}
 	}
 	if page == "main" && s.sizing.keyboard {
 		hint = "resize_panels_hint"
-		keys = []footerKey{{"Home", "resize_reset", tcell.KeyHome, 0}, {"Enter", "resize_finish", tcell.KeyEnter, 0}, {"Esc", "resize_end", tcell.KeyEscape, 0}}
+		keys = []footerKey{{"Home", "resize_reset", tuivory.KeyHome, 0}, {"Enter", "resize_finish", tuivory.KeyEnter, 0}, {"Esc", "resize_end", tuivory.KeyEscape, 0}}
 	}
 	text := s.tr(hint)
 	if hint == "footer_source" {
@@ -356,4 +356,6 @@ func (s *screen) action(action string) {
 	}
 }
 
-func clickable(button *tview.Button) *tview.Button { return (&screen{}).clickable(button) }
+func clickable(button *tuivory.WidgetButton) *tuivory.WidgetButton {
+	return (&screen{}).clickable(button)
+}

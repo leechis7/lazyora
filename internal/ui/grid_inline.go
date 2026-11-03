@@ -1,10 +1,10 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"lazyora/internal/oracle"
 	"time"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 // Physical identities keep pending-change markers attached to the right cell
@@ -47,20 +47,20 @@ func (s *screen) isEditedCell(row, col int) bool {
 	}
 	return s.editedCells[s.editedCellIdentity(s.resultBrowser.source, s.resultBrowser.visible[row-1], s.resultSourceColumn(col))]
 }
-func (s *screen) editedCellStyle() tcell.Style {
+func (s *screen) editedCellStyle() tuivory.Style {
 	return s.tuivoryStyles().EditedStyle()
 }
 
 // The page covers the input routing area, while Draw places the real input
 // widget over just the selected cell. It never paints an opaque full-screen box.
 type inlineCellEditor struct {
-	*tview.InputField
+	*tuivory.InputField
 	owner    *screen
 	change   oracle.EditChange
 	row, col int
 }
 
-func (e *inlineCellEditor) Draw(terminal tcell.Screen) {
+func (e *inlineCellEditor) Draw(terminal tuivory.Screen) {
 	table := e.owner.table
 	x, y, width := e.owner.resultCellRect(e.row, e.col)
 	left, top, w, h := table.GetInnerRect()
@@ -72,8 +72,8 @@ func (e *inlineCellEditor) Draw(terminal tcell.Screen) {
 	e.InputField.SetRect(x, y, width, 1)
 	e.InputField.Draw(terminal)
 }
-func (e *inlineCellEditor) MouseHandler() func(tview.MouseAction, *tcell.EventMouse, func(tview.Primitive)) (bool, tview.Primitive) {
-	return func(action tview.MouseAction, event *tcell.EventMouse, focus func(tview.Primitive)) (bool, tview.Primitive) {
+func (e *inlineCellEditor) MouseHandler() func(tuivory.MouseAction, *tuivory.EventMouse, func(tuivory.Primitive)) (bool, tuivory.Primitive) {
+	return func(action tuivory.MouseAction, event *tuivory.EventMouse, focus func(tuivory.Primitive)) (bool, tuivory.Primitive) {
 		e.InputField.MouseHandler()(action, event, focus)
 		return true, nil // Do not change the source cell or dismiss unconfirmed text.
 	}
@@ -108,7 +108,7 @@ func (s *screen) startInlineEdit(first *rune) bool {
 		value = string(*first)
 		change.Null = false
 	}
-	field := tview.NewInputField().SetText(value).SetFieldWidth(0).SetFieldStyle(s.editedCellStyle())
+	field := tuivory.NewInputField().SetText(value).SetFieldWidth(0).SetFieldStyle(s.editedCellStyle())
 	field.SetPlaceholderStyle(s.editedCellStyle().Dim(true))
 	editor := &inlineCellEditor{InputField: field, owner: s, change: change, row: row, col: col}
 	if change.Null {
@@ -130,17 +130,17 @@ func (s *screen) closeInlineEdit() {
 	s.inlineEdit = nil
 	s.app.SetFocus(s.table)
 }
-func (s *screen) inlineEditKey(event *tcell.EventKey) *tcell.EventKey {
+func (s *screen) inlineEditKey(event *tuivory.EventKey) *tuivory.EventKey {
 	editor := s.inlineEdit
 	if editor == nil {
 		return nil
 	}
 	switch event.Key() {
-	case tcell.KeyEscape:
+	case tuivory.KeyEscape:
 		s.closeInlineEdit()
 		s.resultScopeStatus()
 		return nil
-	case tcell.KeyEnter:
+	case tuivory.KeyEnter:
 		change := editor.change
 		change.Text = editor.GetText()
 		old := browserCell(s.resultBrowser.source, change.Row, change.Column)
@@ -150,8 +150,8 @@ func (s *screen) inlineEditKey(event *tcell.EventKey) *tcell.EventKey {
 		}
 		s.previewCellChange(change)
 		return nil
-	case tcell.KeyDelete:
-		if event.Modifiers()&tcell.ModAlt != 0 {
+	case tuivory.KeyDelete:
+		if event.Modifiers()&tuivory.ModAlt != 0 {
 			editor.SetText("")
 			editor.change.Null = true
 			editor.SetPlaceholder("NULL")
@@ -160,7 +160,7 @@ func (s *screen) inlineEditKey(event *tcell.EventKey) *tcell.EventKey {
 	}
 	// Keep all application commands inside this editor until Enter/Esc. Ctrl+U,
 	// cursor movement, backspace and paste retain InputField's native behavior.
-	if event.Key() == tcell.KeyTab || event.Key() == tcell.KeyBacktab {
+	if event.Key() == tuivory.KeyTab || event.Key() == tuivory.KeyBacktab {
 		return nil
 	}
 	return event

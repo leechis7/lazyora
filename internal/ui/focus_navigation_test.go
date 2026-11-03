@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestDocumentFocusBordersAndArrowNavigation(t *testing.T) {
@@ -36,13 +35,13 @@ func TestDocumentFocusBordersAndArrowNavigation(t *testing.T) {
 						s.refreshBorders()
 						s.rootLayout.SetRect(0, 0, 120, 40)
 						s.rootLayout.Draw(terminal)
-						colors := make([]tcell.Color, 0, 2)
-						for _, widget := range []tview.Primitive{list, text} {
+						colors := make([]tuivory.Color, 0, 2)
+						for _, widget := range []tuivory.Primitive{list, text} {
 							x, y, _, _ := widget.GetRect()
 							r, _, st, _ := terminal.GetContent(x, y)
-							want := tview.Borders.TopLeft
+							want := tuivory.GetBorders().TopLeft
 							if widget.HasFocus() {
-								want = tview.Borders.TopLeftFocus
+								want = tuivory.GetBorders().TopLeftFocus
 							}
 							if r != want {
 								t.Fatalf("%T focus=%v corner=%q expected=%q", widget, widget.HasFocus(), r, want)
@@ -54,34 +53,34 @@ func TestDocumentFocusBordersAndArrowNavigation(t *testing.T) {
 							t.Fatal("focused and inactive borders share a color")
 						}
 					}
-					deliver := func(key tcell.Key) {
-						e := s.key(tcell.NewEventKey(key, 0, 0))
+					deliver := func(key tuivory.Key) {
+						e := s.key(tuivory.NewEventKey(key, 0, 0))
 						if e != nil {
-							s.app.GetFocus().InputHandler()(e, func(p tview.Primitive) { s.app.SetFocus(p) })
+							s.app.GetFocus().InputHandler()(e, func(p tuivory.Primitive) { s.app.SetFocus(p) })
 						}
 					}
 					check()
 					before := list.GetCurrentItem()
-					deliver(tcell.KeyDown)
+					deliver(tuivory.KeyDown)
 					if list.GetCurrentItem() != before+1 {
 						t.Fatal("Down did not change topic")
 					}
-					deliver(tcell.KeyRight)
+					deliver(tuivory.KeyRight)
 					if !text.HasFocus() {
 						t.Fatal("Right did not enter article")
 					}
 					check()
-					deliver(tcell.KeyLeft)
+					deliver(tuivory.KeyLeft)
 					if !list.HasFocus() {
 						t.Fatal("Left did not return to contents")
 					}
 					check()
-					deliver(tcell.KeyTab)
+					deliver(tuivory.KeyTab)
 					if !text.HasFocus() {
 						t.Fatal("Tab did not enter article")
 					}
 					check()
-					deliver(tcell.KeyBacktab)
+					deliver(tuivory.KeyBacktab)
 					if !list.HasFocus() {
 						t.Fatal("Backtab did not return to contents")
 					}
@@ -98,13 +97,13 @@ func TestDocumentFocusBordersAndArrowNavigation(t *testing.T) {
 func TestPopupAndMainFocusBorderConsistency(t *testing.T) {
 	spaces, terminal := workspaceTestSet(t)
 	s := spaces.active
-	check := func(p tview.Primitive) {
+	check := func(p tuivory.Primitive) {
 		s.refreshBorders()
 		s.rootLayout.SetRect(0, 0, 120, 40)
 		s.rootLayout.Draw(terminal)
 		x, y, _, _ := p.GetRect()
 		r, _, _, _ := terminal.GetContent(x, y)
-		if r != tview.Borders.TopLeftFocus {
+		if r != tuivory.GetBorders().TopLeftFocus {
 			t.Fatalf("%T does not use focused double border: %q", p, r)
 		}
 	}

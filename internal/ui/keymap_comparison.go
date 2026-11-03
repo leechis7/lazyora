@@ -3,15 +3,15 @@ package ui
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"strings"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 type keymapComparison struct {
-	table  *tview.Table
-	detail *tview.TextView
-	focus  tview.Primitive
+	table  *tuivory.Table
+	detail *tuivory.WidgetTextView
+	focus  tuivory.Primitive
 	rows   [][]string
 }
 
@@ -50,7 +50,7 @@ func (s *screen) showKeymapComparison() {
 	}
 	c := &keymapComparison{focus: s.app.GetFocus()}
 	s.comparison = c
-	table := tview.NewTable().SetFixed(1, 1).SetSelectable(true, true).SetSeparator('│').SetSelectedStyle(s.focusStyle())
+	table := tuivory.NewTable().SetFixed(1, 1).SetSelectable(true, true).SetSeparator('│').SetSelectedStyle(s.focusStyle())
 	c.table = table
 	s.styleBox(table.Box)
 	table.SetBorder(true).SetTitle(s.tr("keymap_compare"))
@@ -66,7 +66,7 @@ func (s *screen) showKeymapComparison() {
 	}
 	c.rows = append(c.rows, headers)
 	for col, name := range headers {
-		table.SetCell(0, col, tview.NewTableCell(tview.Escape(name)).SetSelectable(false).SetMaxWidth(22))
+		table.SetCell(0, col, tuivory.NewTableCell(tuivory.Escape(name)).SetSelectable(false).SetMaxWidth(22))
 	}
 	row := 1
 	for _, group := range comparisonGroups {
@@ -76,7 +76,7 @@ func (s *screen) showKeymapComparison() {
 			if col == 0 {
 				label = s.tr(group.label)
 			}
-			table.SetCell(row, col, tview.NewTableCell(tview.Escape(label)).SetSelectable(false).SetMaxWidth(22))
+			table.SetCell(row, col, tuivory.NewTableCell(tuivory.Escape(label)).SetSelectable(false).SetMaxWidth(22))
 		}
 		row++
 		for _, action := range group.actions {
@@ -90,7 +90,7 @@ func (s *screen) showKeymapComparison() {
 			}
 			c.rows = append(c.rows, values)
 			for col, value := range values {
-				table.SetCell(row, col, tview.NewTableCell(tview.Escape(" "+value+" ")).SetMaxWidth(22))
+				table.SetCell(row, col, tuivory.NewTableCell(tuivory.Escape(" "+value+" ")).SetMaxWidth(22))
 			}
 			row++
 		}
@@ -103,8 +103,8 @@ func (s *screen) showKeymapComparison() {
 	table.SetSelectionChangedFunc(s.updateComparisonDetail)
 	table.Select(2, selected)
 	info := s.newTextView(textHint).SetText(s.tr("comparison_note")).SetWrap(true)
-	close := s.clickable(tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeKeymapComparison))
-	content := s.newFlex().SetDirection(tview.FlexRow).AddItem(table, 0, 1, true).AddItem(c.detail, 7, 0, false).AddItem(info, 4, 0, false).AddItem(close, 1, 0, false)
+	close := s.clickable(tuivory.NewWidgetButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeKeymapComparison))
+	content := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(table, 0, 1, true).AddItem(c.detail, 7, 0, false).AddItem(info, 4, 0, false).AddItem(close, 1, 0, false)
 	root := s.formPopup(content, 140, 38, func(w, h int) {
 		content.ResizeItem(c.detail, min(7, max(3, h/4)), 0)
 		content.ResizeItem(info, min(4, max(1, h/5)), 0)
@@ -154,12 +154,12 @@ func (s *screen) closeKeymapComparison() {
 		s.app.SetFocus(focus)
 	}
 }
-func (s *screen) keymapComparisonKey(e *tcell.EventKey) *tcell.EventKey {
+func (s *screen) keymapComparisonKey(e *tuivory.EventKey) *tuivory.EventKey {
 	switch e.Key() {
-	case tcell.KeyEscape:
+	case tuivory.KeyEscape:
 		s.closeKeymapComparison()
 		return nil
-	case tcell.KeyCtrlC:
+	case tuivory.KeyCtrlC:
 		var out strings.Builder
 		writer := csv.NewWriter(&out)
 		writer.Comma = '\t'
@@ -169,10 +169,10 @@ func (s *screen) keymapComparisonKey(e *tcell.EventKey) *tcell.EventKey {
 		writer.Flush()
 		s.sendClipboard(out.String())
 		return nil
-	case tcell.KeyTab, tcell.KeyBacktab:
+	case tuivory.KeyTab, tuivory.KeyBacktab:
 		s.dialogTab(e, s.comparison.table, s.comparison.detail)
 		return nil
-	case tcell.KeyEnter:
+	case tuivory.KeyEnter:
 		if s.comparison.table.HasFocus() {
 			s.app.SetFocus(s.comparison.detail)
 			return nil

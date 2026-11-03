@@ -5,13 +5,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 )
 
 // GetContent alone reports an intact border even when the physical renderer
 // skips that cell because a surviving wide glyph starts immediately before it.
-func assertPopupPhysicalCells(t *testing.T, terminal tcell.SimulationScreen, x, y, w, h int) {
+func assertPopupPhysicalCells(t *testing.T, terminal tuivory.SimulationScreen, x, y, w, h int) {
 	t.Helper()
 	terminal.Show()
 	cells, sw, sh := terminal.GetContents()
@@ -62,13 +61,13 @@ func TestPopupWideGlyphsDoNotHidePhysicalBorders(t *testing.T) {
 								terminal.Clear()
 								for py := y; py < y+h; py++ {
 									if x > 0 {
-										terminal.SetContent(x-1, py, glyph, []rune{'\u0301'}, tcell.StyleDefault)
+										terminal.SetContent(x-1, py, glyph, []rune{'\u0301'}, tuivory.StyleDefault)
 									}
-									terminal.SetContent(x+w-1, py, glyph, nil, tcell.StyleDefault)
+									terminal.SetContent(x+w-1, py, glyph, nil, tuivory.StyleDefault)
 								}
 								// The bottom shadow starts one column to the right of the card.
 								if y+h < size[1] {
-									terminal.SetContent(x, y+h, glyph, nil, tcell.StyleDefault)
+									terminal.SetContent(x, y+h, glyph, nil, tuivory.StyleDefault)
 								}
 								terminal.Show()
 								for frame := 0; frame < 2; frame++ {
@@ -94,22 +93,22 @@ func TestPopupWideBoundaryPreservesOutsideContentAndRestoresOnClose(t *testing.T
 		terminal.Clear()
 		for y := 0; y < 24; y++ {
 			for x := 0; x < 80; x += 2 {
-				terminal.SetContent(x, y, '한', nil, tcell.StyleDefault.Foreground(tcell.ColorGreen))
+				terminal.SetContent(x, y, '한', nil, tuivory.StyleDefault.Foreground(tuivory.ColorGreen))
 			}
 		}
 	}
 	background()
 	terminal.Show()
 	original, _, _ := terminal.GetContents()
-	baseline := append([]tcell.SimCell(nil), original...)
-	popup := s.formPopup(tview.NewBox().SetBorder(true), 40, 10, nil)
+	baseline := append([]tuivory.SimCell(nil), original...)
+	popup := s.formPopup(tuivory.NewBox().SetBorder(true), 40, 10, nil)
 	popup.SetRect(0, 0, 80, 24)
 	popup.Draw(terminal)
 	x, y, w, h := popup.content.GetRect()
 	// Both ordinary and shadow boundaries cut through a wide glyph.
 	assertPopupPhysicalCells(t, terminal, x, y, w+1, h+1)
 	r, _, style, cw := terminal.GetContent(x-2, y+2)
-	wantStyle := tcell.StyleDefault.Foreground(tcell.ColorGreen).Dim(true)
+	wantStyle := tuivory.StyleDefault.Foreground(tuivory.ColorGreen).Dim(true)
 	if r != '한' || cw != 2 || style != wantStyle {
 		t.Fatal("intact wide glyph outside popup was erased")
 	}

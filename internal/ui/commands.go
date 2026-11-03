@@ -1,16 +1,15 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/leechis7/tuivory/go"
-	"github.com/rivo/tview"
 	"strings"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 type binding struct {
 	label string
-	key   tcell.Key
-	mod   tcell.ModMask
+	key   tuivory.Key
+	mod   tuivory.ModMask
 	char  rune
 }
 type command struct {
@@ -20,64 +19,64 @@ type command struct {
 }
 
 var commands = []command{
-	{"file_new", "file_new", menuTabs, []binding{{"Ctrl+N", tcell.KeyCtrlN, 0, 0}}},
-	{"file_open", "file_open", menuFile, []binding{{"Ctrl+O", tcell.KeyCtrlO, 0, 0}}},
-	{"file_save", "file_save", menuFile, []binding{{"Ctrl+S", tcell.KeyCtrlS, 0, 0}}},
-	{"file_save_as", "file_save_as", menuFile, []binding{{"Ctrl+Shift+S", tcell.KeyCtrlS, tcell.ModShift, 0}}},
-	{"file_close", "file_close", menuTabs, []binding{{"Ctrl+W", tcell.KeyCtrlW, 0, 0}}},
+	{"file_new", "file_new", menuTabs, []binding{{"Ctrl+N", tuivory.KeyCtrlN, 0, 0}}},
+	{"file_open", "file_open", menuFile, []binding{{"Ctrl+O", tuivory.KeyCtrlO, 0, 0}}},
+	{"file_save", "file_save", menuFile, []binding{{"Ctrl+S", tuivory.KeyCtrlS, 0, 0}}},
+	{"file_save_as", "file_save_as", menuFile, []binding{{"Ctrl+Shift+S", tuivory.KeyCtrlS, tuivory.ModShift, 0}}},
+	{"file_close", "file_close", menuTabs, []binding{{"Ctrl+W", tuivory.KeyCtrlW, 0, 0}}},
 	{"tab_rename", "tab_rename", menuTabs, nil},
-	{"tab_next", "tab_next", menuTabs, []binding{{"Ctrl+Tab", tcell.KeyTab, tcell.ModCtrl, 0}, {"Alt+PgDn", tcell.KeyPgDn, tcell.ModAlt, 0}}},
-	{"tab_previous", "tab_previous", menuTabs, []binding{{"Ctrl+Shift+Tab", tcell.KeyBacktab, tcell.ModCtrl, 0}, {"Alt+PgUp", tcell.KeyPgUp, tcell.ModAlt, 0}}},
-	{"quit", "quit", menuFile, []binding{{"Ctrl+Q", tcell.KeyCtrlQ, 0, 0}}},
-	{"undo", "undo", menuEdit, []binding{{"Ctrl+Z", tcell.KeyCtrlZ, 0, 0}}},
-	{"redo", "redo", menuEdit, []binding{{"Ctrl+Y", tcell.KeyCtrlY, 0, 0}}},
-	{"cut", "cut", menuEdit, []binding{{"Ctrl+X", tcell.KeyCtrlX, 0, 0}}},
-	{"paste", "paste", menuEdit, []binding{{"Ctrl+V", tcell.KeyCtrlV, 0, 0}}},
-	{"select_all", "select_all", menuEdit, []binding{{"Ctrl+L", tcell.KeyCtrlL, 0, 0}}},
-	{"copy", "copy_selection", menuEdit, []binding{{"Ctrl+C", tcell.KeyCtrlC, 0, 0}}},
-	{"copy_row", "copy_row", menuEdit, []binding{{"Alt+Y", tcell.KeyRune, tcell.ModAlt, 'y'}}},
-	{"export", "export", menuEdit, []binding{{"Ctrl+Shift+E", tcell.KeyCtrlE, tcell.ModShift, 0}, {"Alt+W", tcell.KeyRune, tcell.ModAlt, 'w'}}},
+	{"tab_next", "tab_next", menuTabs, []binding{{"Ctrl+Tab", tuivory.KeyTab, tuivory.ModCtrl, 0}, {"Alt+PgDn", tuivory.KeyPgDn, tuivory.ModAlt, 0}}},
+	{"tab_previous", "tab_previous", menuTabs, []binding{{"Ctrl+Shift+Tab", tuivory.KeyBacktab, tuivory.ModCtrl, 0}, {"Alt+PgUp", tuivory.KeyPgUp, tuivory.ModAlt, 0}}},
+	{"quit", "quit", menuFile, []binding{{"Ctrl+Q", tuivory.KeyCtrlQ, 0, 0}}},
+	{"undo", "undo", menuEdit, []binding{{"Ctrl+Z", tuivory.KeyCtrlZ, 0, 0}}},
+	{"redo", "redo", menuEdit, []binding{{"Ctrl+Y", tuivory.KeyCtrlY, 0, 0}}},
+	{"cut", "cut", menuEdit, []binding{{"Ctrl+X", tuivory.KeyCtrlX, 0, 0}}},
+	{"paste", "paste", menuEdit, []binding{{"Ctrl+V", tuivory.KeyCtrlV, 0, 0}}},
+	{"select_all", "select_all", menuEdit, []binding{{"Ctrl+L", tuivory.KeyCtrlL, 0, 0}}},
+	{"copy", "copy_selection", menuEdit, []binding{{"Ctrl+C", tuivory.KeyCtrlC, 0, 0}}},
+	{"copy_row", "copy_row", menuEdit, []binding{{"Alt+Y", tuivory.KeyRune, tuivory.ModAlt, 'y'}}},
+	{"export", "export", menuEdit, []binding{{"Ctrl+Shift+E", tuivory.KeyCtrlE, tuivory.ModShift, 0}, {"Alt+W", tuivory.KeyRune, tuivory.ModAlt, 'w'}}},
 	{"copy_preview", "copy_preview", menuEdit, nil},
 	{"table_edit_load", "table_edit_load", menuEdit, nil},
-	{"grid_edit", "grid_edit", menuEdit, []binding{{"Alt+D", tcell.KeyRune, tcell.ModAlt, 'd'}}},
+	{"grid_edit", "grid_edit", menuEdit, []binding{{"Alt+D", tuivory.KeyRune, tuivory.ModAlt, 'd'}}},
 	{"grid_inline", "grid_inline", menuEdit, nil},
-	{"find", "find", menuEdit, []binding{{"Ctrl+F", tcell.KeyCtrlF, 0, 0}}},
-	{"find_next", "find_next", menuEdit, []binding{{"F3", tcell.KeyF3, 0, 0}}},
-	{"find_previous", "find_previous", menuEdit, []binding{{"Shift+F3", tcell.KeyF3, tcell.ModShift, 0}}},
-	{"replace", "replace", menuEdit, []binding{{"Ctrl+R", tcell.KeyCtrlR, 0, 0}}},
-	{"clear_sql", "clear_sql", menuEdit, []binding{{"F7", tcell.KeyF7, 0, 0}}},
-	{"connect", "connect", menuSession, []binding{{"Alt+L", tcell.KeyRune, tcell.ModAlt, 'l'}}},
-	{"commit", "commit", menuSession, []binding{{"Alt+C", tcell.KeyRune, tcell.ModAlt, 'c'}}},
-	{"rollback", "rollback", menuSession, []binding{{"Alt+R", tcell.KeyRune, tcell.ModAlt, 'r'}}},
+	{"find", "find", menuEdit, []binding{{"Ctrl+F", tuivory.KeyCtrlF, 0, 0}}},
+	{"find_next", "find_next", menuEdit, []binding{{"F3", tuivory.KeyF3, 0, 0}}},
+	{"find_previous", "find_previous", menuEdit, []binding{{"Shift+F3", tuivory.KeyF3, tuivory.ModShift, 0}}},
+	{"replace", "replace", menuEdit, []binding{{"Ctrl+R", tuivory.KeyCtrlR, 0, 0}}},
+	{"clear_sql", "clear_sql", menuEdit, []binding{{"F7", tuivory.KeyF7, 0, 0}}},
+	{"connect", "connect", menuSession, []binding{{"Alt+L", tuivory.KeyRune, tuivory.ModAlt, 'l'}}},
+	{"commit", "commit", menuSession, []binding{{"Alt+C", tuivory.KeyRune, tuivory.ModAlt, 'c'}}},
+	{"rollback", "rollback", menuSession, []binding{{"Alt+R", tuivory.KeyRune, tuivory.ModAlt, 'r'}}},
 	{"pending_work", "pending_work", menuSession, nil},
 	{"output_toggle", "output_toggle", menuSession, nil},
-	{"execute", "execute", menuExecute, []binding{{"F9", tcell.KeyF9, 0, 0}, {"Ctrl+Enter", tcell.KeyEnter, tcell.ModCtrl, 0}, {"Alt+Enter", tcell.KeyEnter, tcell.ModAlt, 0}, {"Shift+F9", tcell.KeyF9, tcell.ModShift, 0}}},
-	{"script", "script", menuExecute, []binding{{"F5", tcell.KeyF5, 0, 0}}},
-	{"plan", "plan", menuExecute, []binding{{"Ctrl+E", tcell.KeyCtrlE, 0, 0}}},
+	{"execute", "execute", menuExecute, []binding{{"F9", tuivory.KeyF9, 0, 0}, {"Ctrl+Enter", tuivory.KeyEnter, tuivory.ModCtrl, 0}, {"Alt+Enter", tuivory.KeyEnter, tuivory.ModAlt, 0}, {"Shift+F9", tuivory.KeyF9, tuivory.ModShift, 0}}},
+	{"script", "script", menuExecute, []binding{{"F5", tuivory.KeyF5, 0, 0}}},
+	{"plan", "plan", menuExecute, []binding{{"Ctrl+E", tuivory.KeyCtrlE, 0, 0}}},
 	{"script_report", "script_report", menuView, nil},
-	{"parse", "parse_unavailable", menuExecute, []binding{{"Ctrl+F9", tcell.KeyF9, tcell.ModCtrl, 0}}},
-	{"debug_continue", "debug_unavailable", menuExecute, []binding{{"F11", tcell.KeyF11, 0, 0}}},
-	{"cancel", "cancel_execution", menuExecute, []binding{{"Esc", tcell.KeyEscape, 0, 0}}},
-	{"history", "history", menuView, []binding{{"F8", tcell.KeyF8, 0, 0}}},
-	{"output_view", "output_view", menuView, []binding{{"Alt+P", tcell.KeyRune, tcell.ModAlt, 'p'}}},
-	{"fullscreen_sql", "fullscreen_sql", menuView, []binding{{"F2", tcell.KeyF2, 0, 0}}},
-	{"fullscreen_results", "fullscreen_results", menuView, []binding{{"Shift+F2", tcell.KeyF2, tcell.ModShift, 0}, {"F12", tcell.KeyF12, 0, 0}}},
-	{"focus_toggle", "focus_toggle", menuView, []binding{{"F6", tcell.KeyF6, 0, 0}}},
-	{"context_menu", "context_menu", menuView, []binding{{"Shift+F10", tcell.KeyF10, tcell.ModShift, 0}}},
+	{"parse", "parse_unavailable", menuExecute, []binding{{"Ctrl+F9", tuivory.KeyF9, tuivory.ModCtrl, 0}}},
+	{"debug_continue", "debug_unavailable", menuExecute, []binding{{"F11", tuivory.KeyF11, 0, 0}}},
+	{"cancel", "cancel_execution", menuExecute, []binding{{"Esc", tuivory.KeyEscape, 0, 0}}},
+	{"history", "history", menuView, []binding{{"F8", tuivory.KeyF8, 0, 0}}},
+	{"output_view", "output_view", menuView, []binding{{"Alt+P", tuivory.KeyRune, tuivory.ModAlt, 'p'}}},
+	{"fullscreen_sql", "fullscreen_sql", menuView, []binding{{"F2", tuivory.KeyF2, 0, 0}}},
+	{"fullscreen_results", "fullscreen_results", menuView, []binding{{"Shift+F2", tuivory.KeyF2, tuivory.ModShift, 0}, {"F12", tuivory.KeyF12, 0, 0}}},
+	{"focus_toggle", "focus_toggle", menuView, []binding{{"F6", tuivory.KeyF6, 0, 0}}},
+	{"context_menu", "context_menu", menuView, []binding{{"Shift+F10", tuivory.KeyF10, tuivory.ModShift, 0}}},
 	{"maximize", "maximize", menuView, nil},
-	{"resize_panels", "resize_panels", menuView, []binding{{"Alt+F8", tcell.KeyF8, tcell.ModAlt, 0}}},
-	{"browser", "schemas", menuView, []binding{{"Alt+B", tcell.KeyRune, tcell.ModAlt, 'b'}}},
-	{"browser_search", "browser_search", menuView, []binding{{"Alt+I", tcell.KeyRune, tcell.ModAlt, 'i'}}},
-	{"browser_user", "browser_user", menuView, []binding{{"Alt+U", tcell.KeyRune, tcell.ModAlt, 'u'}}},
-	{"browser_type", "browser_type", menuView, []binding{{"Alt+O", tcell.KeyRune, tcell.ModAlt, 'o'}}},
+	{"resize_panels", "resize_panels", menuView, []binding{{"Alt+F8", tuivory.KeyF8, tuivory.ModAlt, 0}}},
+	{"browser", "schemas", menuView, []binding{{"Alt+B", tuivory.KeyRune, tuivory.ModAlt, 'b'}}},
+	{"browser_search", "browser_search", menuView, []binding{{"Alt+I", tuivory.KeyRune, tuivory.ModAlt, 'i'}}},
+	{"browser_user", "browser_user", menuView, []binding{{"Alt+U", tuivory.KeyRune, tuivory.ModAlt, 'u'}}},
+	{"browser_type", "browser_type", menuView, []binding{{"Alt+O", tuivory.KeyRune, tuivory.ModAlt, 'o'}}},
 	{"browser_refresh", "browser_refresh", menuView, nil},
-	{"describe", "describe", menuView, []binding{{"F4", tcell.KeyF4, 0, 0}}},
-	{"quick_describe", "quick_describe", menuView, []binding{{"Ctrl+D", tcell.KeyCtrlD, 0, 0}}},
-	{"workspaces", "workspaces", menuSession, []binding{{"Alt+J", tcell.KeyRune, tcell.ModAlt, 'j'}}},
+	{"describe", "describe", menuView, []binding{{"F4", tuivory.KeyF4, 0, 0}}},
+	{"quick_describe", "quick_describe", menuView, []binding{{"Ctrl+D", tuivory.KeyCtrlD, 0, 0}}},
+	{"workspaces", "workspaces", menuSession, []binding{{"Alt+J", tuivory.KeyRune, tuivory.ModAlt, 'j'}}},
 	{"workspace_new", "workspace_new", menuSession, nil},
 	{"workspace_close", "workspace_close", menuSession, nil},
 	{"settings", "settings", menuTools, nil},
-	{"passwords", "passwords", menuTools, []binding{{"Alt+K", tcell.KeyRune, tcell.ModAlt, 'k'}}},
+	{"passwords", "passwords", menuTools, []binding{{"Alt+K", tuivory.KeyRune, tuivory.ModAlt, 'k'}}},
 	{"routine_execute", "routine_execute", menuExecute, nil},
 	{"routine_results", "routine_results", menuView, nil},
 	{"grid_widen", "grid_widen", menuView, nil},
@@ -89,7 +88,7 @@ var commands = []command{
 	{"result_filter", "result_filter", menuView, nil},
 	{"result_view_reset", "result_view_reset", menuView, nil},
 	{"cell_detail", "cell_detail", menuView, nil},
-	{"complete", "completion", menuEdit, []binding{{"Ctrl+T", tcell.KeyCtrlT, 0, 0}}},
+	{"complete", "completion", menuEdit, []binding{{"Ctrl+T", tuivory.KeyCtrlT, 0, 0}}},
 	{"complete_refresh", "completion_refresh", menuEdit, nil},
 	{"duplicate_line", "duplicate_line", menuEdit, nil},
 	{"copy_line", "copy_line", menuEdit, nil},
@@ -98,8 +97,8 @@ var commands = []command{
 	{"line_up", "line_up", menuEdit, nil},
 	{"line_down", "line_down", menuEdit, nil},
 	{"transpose_line", "transpose_line", menuEdit, nil},
-	{"format_code", "format_code", menuEdit, []binding{{"Ctrl+Shift+F", tcell.KeyCtrlF, tcell.ModShift, 0}}},
-	{"help", "keyboard_help", menuHelp, []binding{{"F1", tcell.KeyF1, 0, 0}}},
+	{"format_code", "format_code", menuEdit, []binding{{"Ctrl+Shift+F", tuivory.KeyCtrlF, tuivory.ModShift, 0}}},
+	{"help", "keyboard_help", menuHelp, []binding{{"F1", tuivory.KeyF1, 0, 0}}},
 	{"guide", "guide", menuHelp, nil},
 	{"release_history", "release_history", menuHelp, nil},
 	{"diagnostic_info", "diagnostic_info", menuHelp, nil},
@@ -302,7 +301,7 @@ func (s *screen) invoke(id string) {
 		}
 		// Dispatch directly to the editor to retain its selection and undo history.
 		// Going through the global key handler would invoke this command again.
-		s.editor.InputHandler()(tcell.NewEventKey(commandFor(id).bindings[0].key, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+		s.editor.InputHandler()(tuivory.NewEventKey(commandFor(id).bindings[0].key, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	case "browser_refresh":
 		s.refreshBrowser()
 	case "export":
@@ -386,15 +385,15 @@ func (s *screen) invoke(id string) {
 	}
 }
 
-func (s *screen) commandKey(event *tcell.EventKey) bool {
+func (s *screen) commandKey(event *tuivory.EventKey) bool {
 	for _, cmd := range commands {
 		for _, key := range cmd.bindings {
 			// tcell normalizes C0 control keys to include ModCtrl.
 			mod := event.Modifiers()
-			if event.Key() >= tcell.KeyCtrlA && event.Key() <= tcell.KeyCtrlZ && event.Key() != tcell.KeyEnter && event.Key() != tcell.KeyTab {
-				mod &^= tcell.ModCtrl
+			if event.Key() >= tuivory.KeyCtrlA && event.Key() <= tuivory.KeyCtrlZ && event.Key() != tuivory.KeyEnter && event.Key() != tuivory.KeyTab {
+				mod &^= tuivory.ModCtrl
 			}
-			if event.Key() == key.key && mod == key.mod && (key.key != tcell.KeyRune || event.Rune() == key.char) {
+			if event.Key() == key.key && mod == key.mod && (key.key != tuivory.KeyRune || event.Rune() == key.char) {
 				s.invoke(cmd.id)
 				return true
 			}
@@ -403,7 +402,7 @@ func (s *screen) commandKey(event *tcell.EventKey) bool {
 	return false
 }
 
-func (s *screen) menuBar() *tview.Flex {
+func (s *screen) menuBar() *tuivory.Flex {
 	s.refreshMenuLabels()
 	view, err := tuivory.NewMenuBarView(s.mainMenu, s.componentPalette(), func(e tuivory.MenuEvent) {
 		if e.Kind != "open_request" {
@@ -422,8 +421,8 @@ func (s *screen) menuBar() *tview.Flex {
 	// Component hit testing/navigation is retained; menu-bar clicks act on
 	// the existing panel rather than transferring application focus to the bar.
 	mouse := view.Mouse
-	view.Mouse = func(a tview.MouseAction, e *tcell.EventMouse, _ func(tview.Primitive)) (bool, tview.Primitive) {
-		return mouse(a, e, func(tview.Primitive) {})
+	view.Mouse = func(a tuivory.MouseAction, e *tuivory.EventMouse, _ func(tuivory.Primitive)) (bool, tuivory.Primitive) {
+		return mouse(a, e, func(tuivory.Primitive) {})
 	}
 
 	s.menuBarView = view

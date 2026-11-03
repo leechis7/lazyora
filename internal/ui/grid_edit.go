@@ -2,9 +2,9 @@ package ui
 
 import (
 	"fmt"
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"lazyora/internal/oracle"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func (s *screen) editTableTarget() oracle.Object {
@@ -53,9 +53,9 @@ func (s *screen) showGridEdit() {
 	if old.Null {
 		value = ""
 	}
-	s.editInfo = s.newTextView().SetWrap(true).SetText(fmt.Sprintf("%s · %s (%s)\n%s: %s\n%s", tview.Escape(oracle.QualifiedObject(source.EditObject)), tview.Escape(source.Columns[col]), old.Type, s.tr("edit_old"), tview.Escape(old.Text), s.tr("edit_hint"))).SetDynamicColors(true)
+	s.editInfo = s.newTextView().SetWrap(true).SetText(fmt.Sprintf("%s · %s (%s)\n%s: %s\n%s", tuivory.Escape(oracle.QualifiedObject(source.EditObject)), tuivory.Escape(source.Columns[col]), old.Type, s.tr("edit_old"), tuivory.Escape(old.Text), s.tr("edit_hint"))).SetDynamicColors(true)
 	s.styleBox(s.editInfo.Box)
-	form := tview.NewForm().AddInputField(s.tr("edit_new"), value, 50, nil, nil).AddCheckbox("NULL", old.Null, nil)
+	form := tuivory.NewWidgetForm().AddInputField(s.tr("edit_new"), value, 50, nil, nil).AddCheckbox("NULL", old.Null, nil)
 	s.editForm = form
 	form.AddButton(s.tr("edit_preview"), s.previewGridEdit).AddButton(s.tr("cancel"), s.closeGridEdit)
 	s.styleForm(form)
@@ -71,8 +71,8 @@ func (s *screen) previewGridEdit() {
 		return
 	}
 	change := s.editChange
-	change.Text = s.editForm.GetFormItem(0).(*tview.InputField).GetText()
-	change.Null = s.editForm.GetFormItem(1).(*tview.Checkbox).IsChecked()
+	change.Text = s.editForm.GetFormItem(0).(*tuivory.InputField).GetText()
+	change.Null = s.editForm.GetFormItem(1).(*tuivory.Checkbox).IsChecked()
 	s.previewCellChange(change)
 }
 
@@ -86,7 +86,7 @@ func (s *screen) previewCellChange(change oracle.EditChange) {
 	if change.Null {
 		next = "NULL"
 	}
-	message := fmt.Sprintf("%s\n%s · %s\n%s: %s\n%s: %s\n\n%s", s.tr("edit_preview"), tview.Escape(oracle.QualifiedObject(source.EditObject)), tview.Escape(source.Columns[change.Column]), s.tr("edit_old"), tview.Escape(old.Text), s.tr("edit_new"), tview.Escape(next), s.tr("edit_confirm"))
+	message := fmt.Sprintf("%s\n%s · %s\n%s: %s\n%s: %s\n\n%s", s.tr("edit_preview"), tuivory.Escape(oracle.QualifiedObject(source.EditObject)), tuivory.Escape(source.Columns[change.Column]), s.tr("edit_old"), tuivory.Escape(old.Text), s.tr("edit_new"), tuivory.Escape(next), s.tr("edit_confirm"))
 	object := source.EditObject
 	key := s.editedCellIdentity(source, change.Row, change.Column)
 	s.showProgramConfirmFocused(message, func() {
@@ -105,12 +105,12 @@ func (s *screen) closeGridEdit() {
 	s.editChange = oracle.EditChange{}
 	s.app.SetFocus(s.table)
 }
-func (s *screen) gridEditKey(e *tcell.EventKey) *tcell.EventKey {
-	if e.Key() == tcell.KeyF1 {
+func (s *screen) gridEditKey(e *tuivory.EventKey) *tuivory.EventKey {
+	if e.Key() == tuivory.KeyF1 {
 		s.showHelp()
 		return nil
 	}
-	if e.Key() == tcell.KeyEscape {
+	if e.Key() == tuivory.KeyEscape {
 		s.closeGridEdit()
 		return nil
 	}
@@ -120,7 +120,7 @@ func (s *screen) gridEditKey(e *tcell.EventKey) *tcell.EventKey {
 	if s.buttonArrow(e) {
 		return nil
 	}
-	if e.Key() == tcell.KeyCtrlS {
+	if e.Key() == tuivory.KeyCtrlS {
 		s.previewGridEdit()
 		return nil
 	}

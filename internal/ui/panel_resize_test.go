@@ -1,10 +1,10 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"strings"
 	"testing"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestPanelResizeMouseKeyboardAndFullscreenPreserveWork(t *testing.T) {
@@ -13,21 +13,21 @@ func TestPanelResizeMouseKeyboardAndFullscreenPreserveWork(t *testing.T) {
 	draw := func(w, h int) { terminal.SetSize(w, h); s.mainLayout.SetRect(0, 0, w, h); s.mainLayout.Draw(terminal) }
 	draw(120, 35)
 	_, _, _, oldHeight := s.editor.GetRect()
-	s.key(tcell.NewEventKey(tcell.KeyF8, 0, tcell.ModAlt))
-	s.key(tcell.NewEventKey(tcell.KeyDown, 0, 0))
-	s.key(tcell.NewEventKey(tcell.KeyRight, 0, 0))
-	s.key(tcell.NewEventKey(tcell.KeyEnter, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyF8, 0, tuivory.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyDown, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyRight, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
 	draw(120, 35)
 	_, _, _, height := s.editor.GetRect()
 	if height <= oldHeight || s.sizing.schema != 30 {
 		t.Fatalf("keyboard sizing not applied: old=%d new=%d sql=%d schema=%d mode=%v", oldHeight, height, s.sizing.sql, s.sizing.schema, s.sizing.keyboard)
 	}
 	x, y, _, _ := s.sizing.vertical.GetRect()
-	if !s.resizePanelMouse(tcell.NewEventMouse(x, y, tcell.Button1, 0), tview.MouseLeftDown) {
+	if !s.resizePanelMouse(tuivory.NewEventMouse(x, y, tuivory.Button1, 0), tuivory.MouseLeftDown) {
 		t.Fatal("divider not draggable")
 	}
-	s.resizePanelMouse(tcell.NewEventMouse(60, y, tcell.Button1, 0), tview.MouseMove)
-	s.resizePanelMouse(tcell.NewEventMouse(60, y, 0, 0), tview.MouseLeftUp)
+	s.resizePanelMouse(tuivory.NewEventMouse(60, y, tuivory.Button1, 0), tuivory.MouseMove)
+	s.resizePanelMouse(tuivory.NewEventMouse(60, y, 0, 0), tuivory.MouseLeftUp)
 	draw(120, 35)
 	if s.sizing.schema < 45 || s.sizing.drag != "" {
 		t.Fatal("drag did not update width/release")
@@ -37,7 +37,7 @@ func TestPanelResizeMouseKeyboardAndFullscreenPreserveWork(t *testing.T) {
 	sql, schema := s.sizing.sql, s.sizing.schema
 	s.togglePanelFullscreen("results")
 	draw(120, 35)
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	draw(120, 35)
 	row, col := s.table.GetSelection()
 	if s.sizing.sql != sql || s.sizing.schema != schema || row != 2 || col != 1 || s.editor.GetText() != "select 'keep';" {
@@ -61,12 +61,12 @@ func TestPanelResizeFooterShowsOneHintAndWorkingModeButtons(t *testing.T) {
 		before := s.status.GetText(false)
 		s.refreshFooter()
 		normal := append([]footerKey(nil), s.footerKeys...)
-		s.key(tcell.NewEventKey(tcell.KeyF8, 0, tcell.ModAlt))
+		s.key(tuivory.NewEventKey(tuivory.KeyF8, 0, tuivory.ModAlt))
 		s.refreshFooter()
 		if s.status.GetText(false) != before || strings.Count(s.status.GetText(false)+s.footer.GetText(false), s.tr("resize_panels_hint")) != 1 {
 			t.Fatal("resize hint duplicated or replaced the result status")
 		}
-		if len(s.footerKeys) != 3 || s.footerKeys[0].key != tcell.KeyHome || s.footerKeys[1].key != tcell.KeyEnter || s.footerKeys[2].key != tcell.KeyEscape {
+		if len(s.footerKeys) != 3 || s.footerKeys[0].key != tuivory.KeyHome || s.footerKeys[1].key != tuivory.KeyEnter || s.footerKeys[2].key != tuivory.KeyEscape {
 			t.Fatal("missing resize mode buttons")
 		}
 		s.footerBar.SetRect(0, 0, 120, 1)
@@ -75,7 +75,7 @@ func TestPanelResizeFooterShowsOneHintAndWorkingModeButtons(t *testing.T) {
 		click := func(index int) {
 			button := s.buttons[index]
 			x, y, _, _ := button.GetRect()
-			button.MouseHandler()(tview.MouseLeftClick, tcell.NewEventMouse(x+1, y, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+			button.MouseHandler()(tuivory.MouseLeftClick, tuivory.NewEventMouse(x+1, y, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 		}
 		click(0)
 		if !s.sizing.keyboard || s.sizing.sql != 40 || s.sizing.schema != 25 || len(s.jobs) != 0 {

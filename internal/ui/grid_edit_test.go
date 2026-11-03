@@ -1,11 +1,11 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"lazyora/internal/oracle"
 	"strings"
 	"testing"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestGridEditMapsSortedFilteredRowsAndRequiresConfirmation(t *testing.T) {
@@ -24,19 +24,19 @@ func TestGridEditMapsSortedFilteredRowsAndRequiresConfirmation(t *testing.T) {
 	if s.editChange.Row != 1 || s.editChange.ID != 77 {
 		t.Fatal("sorted view changed another source row")
 	}
-	s.editForm.GetFormItem(0).(*tview.InputField).SetText("' ; DELETE FROM x; --")
+	s.editForm.GetFormItem(0).(*tuivory.InputField).SetText("' ; DELETE FROM x; --")
 	s.previewGridEdit()
 	if s.programModal == nil || len(s.jobs) != 0 {
 		t.Fatal("preview ran SQL")
 	}
 	// Explicit cancel must never submit an update; Proceed is the default.
-	s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyRight, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
-	s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	s.programModal.InputHandler()(tuivory.NewEventKey(tuivory.KeyRight, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
+	s.programModal.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	if len(s.jobs) != 0 || !s.pages.HasPage("grid_edit") {
 		t.Fatal("cancel confirmation applied changes")
 	}
 	s.previewGridEdit()
-	s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	s.programModal.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	select {
 	case j := <-s.jobs:
 		if j.action != "edit_apply" || j.edit.Row != 1 || !strings.Contains(j.edit.Text, "DELETE") {
@@ -80,9 +80,9 @@ func TestSelectRowIDEditMasksColumnsAndKeepsOriginalQuery(t *testing.T) {
 		t.Fatal("original column edit command disabled")
 	}
 	s.showGridEdit()
-	s.editForm.GetFormItem(0).(*tview.InputField).SetText("new")
+	s.editForm.GetFormItem(0).(*tuivory.InputField).SetText("new")
 	s.previewGridEdit()
-	s.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(tview.Primitive) {})
+	s.programModal.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(tuivory.Primitive) {})
 	j := <-s.jobs
 	if j.action != "edit_apply" || j.query != query || j.edit.Column != 1 || j.edit.Row != 0 || j.edit.Text != "new" {
 		t.Fatal("SELECT edit did not retain the query, bind values and source cell")
@@ -112,11 +112,11 @@ func TestGridEditModalNarrowDrawAndButtonArrows(t *testing.T) {
 		root.Draw(terminal)
 	}
 	focusForm(s, s.editForm, 2)
-	s.gridEditKey(tcell.NewEventKey(tcell.KeyRight, 0, 0))
+	s.gridEditKey(tuivory.NewEventKey(tuivory.KeyRight, 0, 0))
 	if !s.editForm.GetButton(1).HasFocus() {
 		t.Fatal("button arrows failed")
 	}
-	s.gridEditKey(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.gridEditKey(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if s.app.GetFocus() != s.table {
 		t.Fatal("edit close focus")
 	}

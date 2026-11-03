@@ -3,21 +3,20 @@ package ui
 import (
 	"errors"
 	"fmt"
+	"lazyora/internal/sqlfile"
 	"os"
 	"path/filepath"
 	"sort"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/sqlfile"
+	"github.com/leechis7/tuivory/go"
 )
 
 type fileDialog struct {
-	form            *tview.Form
-	list            *tview.List
-	info            *tview.TextView
+	form            *tuivory.WidgetForm
+	list            *tuivory.WidgetList
+	info            *tuivory.WidgetTextView
 	directory, mode string
-	focus           tview.Primitive
+	focus           tuivory.Primitive
 	apply, close    func()
 }
 
@@ -39,10 +38,10 @@ func (s *screen) refreshDocumentTitle() {
 		if s.document.Dirty(s.editor.GetText()) {
 			mark = " *"
 		}
-		title += "[" + tview.Escape(name) + mark + "] "
+		title += "[" + tuivory.Escape(name) + mark + "] "
 	}
 	if badge := s.connectionTitleBadge(); badge != "" {
-		title = " " + tview.Escape(badge) + " · " + title
+		title = " " + tuivory.Escape(badge) + " · " + title
 	}
 	s.editor.SetTitle(title)
 	s.refreshTabs()
@@ -77,13 +76,13 @@ func (s *screen) guardDocument(next func()) {
 		return
 	}
 	focus := s.app.GetFocus()
-	modal := tview.NewModal().SetText(s.tr("file_unsaved")).AddButtons([]string{s.tr("save"), s.tr("file_discard"), s.tr("cancel")}).SetFocus(2)
+	modal := tuivory.NewModal().SetText(s.tr("file_unsaved")).AddButtons([]string{s.tr("save"), s.tr("file_discard"), s.tr("cancel")}).SetFocus(2)
 	modal.SetBackgroundColor(s.colors().background)
 	modal.SetTextColor(s.colors().text).SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(s.buttonFocusStyle())
 	s.styleModal(modal)
-	modal.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
-		if action == tview.MouseLeftDoubleClick {
-			action = tview.MouseLeftClick
+	modal.SetMouseCapture(func(action tuivory.MouseAction, event *tuivory.EventMouse) (tuivory.MouseAction, *tuivory.EventMouse) {
+		if action == tuivory.MouseLeftDoubleClick {
+			action = tuivory.MouseLeftClick
 		}
 		return action, event
 	})
@@ -135,7 +134,7 @@ func (s *screen) writeDocument(path string, expected sqlfile.Snapshot, next func
 			s.fileError(inspectErr)
 			return
 		}
-		s.showProgramConfirm(fmt.Sprintf(s.tr("file_external_confirm"), tview.Escape(path)), func() { s.writeDocument(path, current, next) })
+		s.showProgramConfirm(fmt.Sprintf(s.tr("file_external_confirm"), tuivory.Escape(path)), func() { s.writeDocument(path, current, next) })
 		return
 	}
 	if err != nil {
@@ -194,9 +193,9 @@ func (s *screen) showFileDialog(mode string, next func()) {
 	}
 	dialog := &fileDialog{directory: directory, mode: mode, focus: s.app.GetFocus()}
 	s.fileDialog = dialog
-	dialog.form = tview.NewForm().SetItemPadding(0).AddInputField(s.tr("file_path"), path, 0, nil, nil)
+	dialog.form = tuivory.NewWidgetForm().SetItemPadding(0).AddInputField(s.tr("file_path"), path, 0, nil, nil)
 	s.styleForm(dialog.form)
-	dialog.list = tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
+	dialog.list = tuivory.NewWidgetList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
 	dialog.list.SetBackgroundColor(s.colors().background)
 	dialog.list.SetMainTextColor(s.colors().text)
 	dialog.list.SetBorder(true)
@@ -205,7 +204,7 @@ func (s *screen) showFileDialog(mode string, next func()) {
 	dialog.info.SetBackgroundColor(s.colors().background)
 	dialog.info.SetTextColor(s.colors().text)
 	dialog.close = func() { s.pages.RemovePage("file"); s.fileDialog = nil; s.app.SetFocus(dialog.focus) }
-	pathField := dialog.form.GetFormItem(0).(*tview.InputField)
+	pathField := dialog.form.GetFormItem(0).(*tuivory.InputField)
 	var browse func(string)
 	browse = func(dir string) {
 		entries, err := os.ReadDir(dir)
@@ -215,7 +214,7 @@ func (s *screen) showFileDialog(mode string, next func()) {
 		}
 		dialog.directory = dir
 		pathField.SetText(dir + string(os.PathSeparator))
-		dialog.list.Clear().SetTitle(tview.Escape(dir))
+		dialog.list.Clear().SetTitle(tuivory.Escape(dir))
 		parent := filepath.Dir(dir)
 		if parent != dir {
 			dialog.list.AddItem("../", "", 0, func() { browse(parent) })
@@ -233,9 +232,9 @@ func (s *screen) showFileDialog(mode string, next func()) {
 			name := entry.Name()
 			destination := filepath.Join(dir, name)
 			if entry.IsDir() {
-				dialog.list.AddItem(tview.Escape(name)+"/", "", 0, func() { browse(destination) })
+				dialog.list.AddItem(tuivory.Escape(name)+"/", "", 0, func() { browse(destination) })
 			} else if entry.Type().IsRegular() {
-				dialog.list.AddItem(tview.Escape(name), "", 0, func() { pathField.SetText(destination); s.app.SetFocus(dialog.form) })
+				dialog.list.AddItem(tuivory.Escape(name), "", 0, func() { pathField.SetText(destination); s.app.SetFocus(dialog.form) })
 			}
 		}
 		dialog.info.SetText(s.tr("file_picker_hint"))
@@ -266,42 +265,42 @@ func (s *screen) showFileDialog(mode string, next func()) {
 		}
 		write := func() { s.writeDocument(path, expected, next) }
 		if expected.Exists {
-			s.showProgramConfirm(fmt.Sprintf(s.tr("file_overwrite_confirm"), tview.Escape(path)), write)
+			s.showProgramConfirm(fmt.Sprintf(s.tr("file_overwrite_confirm"), tuivory.Escape(path)), write)
 		} else {
 			write()
 		}
 	}
-	apply := s.clickable(tview.NewButton(s.tr("file_" + mode)).SetSelectedFunc(dialog.apply))
-	cancel := s.clickable(tview.NewButton(s.tr("cancel")).SetSelectedFunc(func() { s.abortWorkspaceExit(); dialog.close() }))
+	apply := s.clickable(tuivory.NewWidgetButton(s.tr("file_" + mode)).SetSelectedFunc(dialog.apply))
+	cancel := s.clickable(tuivory.NewWidgetButton(s.tr("cancel")).SetSelectedFunc(func() { s.abortWorkspaceExit(); dialog.close() }))
 	row := s.newFlex().AddItem(apply, 0, 1, false).AddItem(cancel, 0, 1, false)
 	dialog.form.SetBorder(true)
-	content := s.newFlex().SetDirection(tview.FlexRow).AddItem(dialog.form, 5, 0, true).AddItem(dialog.list, 0, 1, false).AddItem(dialog.info, 3, 0, false).AddItem(row, 1, 0, false)
+	content := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(dialog.form, 5, 0, true).AddItem(dialog.list, 0, 1, false).AddItem(dialog.info, 3, 0, false).AddItem(row, 1, 0, false)
 	root := s.formPopup(content, 96, 30, nil)
 	browse(directory)
 	pathField.SetText(path)
 	s.pages.AddPage("file", root, true, true)
 	s.app.SetFocus(dialog.form)
 }
-func (s *screen) fileKey(event *tcell.EventKey) *tcell.EventKey {
+func (s *screen) fileKey(event *tuivory.EventKey) *tuivory.EventKey {
 	switch event.Key() {
-	case tcell.KeyCtrlC, tcell.KeyCtrlQ:
+	case tuivory.KeyCtrlC, tuivory.KeyCtrlQ:
 		return nil
-	case tcell.KeyF1:
+	case tuivory.KeyF1:
 		s.showHelp()
 		return nil
-	case tcell.KeyEscape:
+	case tuivory.KeyEscape:
 		s.abortWorkspaceExit()
 		s.fileDialog.close()
 		return nil
-	case tcell.KeyTab, tcell.KeyBacktab:
+	case tuivory.KeyTab, tuivory.KeyBacktab:
 		s.dialogTab(event, s.fileDialog.form, s.fileDialog.list)
 		return nil
-	case tcell.KeyEnter:
-		if event.Modifiers()&(tcell.ModCtrl|tcell.ModAlt) != 0 || s.fileDialog.form.HasFocus() {
+	case tuivory.KeyEnter:
+		if event.Modifiers()&(tuivory.ModCtrl|tuivory.ModAlt) != 0 || s.fileDialog.form.HasFocus() {
 			s.fileDialog.apply()
 			return nil
 		}
-	case tcell.KeyCtrlS:
+	case tuivory.KeyCtrlS:
 		if s.fileDialog.mode == "save" {
 			s.fileDialog.apply()
 			return nil

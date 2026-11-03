@@ -5,15 +5,14 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 	"github.com/rivo/uniseg"
 )
 
 // This intentionally implements a documented subset, not an embedded Vim.
 // Keep only the active editor, so closing tabs cannot retain their documents.
 type vimState struct {
-	editor         *tview.TextArea
+	editor         *tuivory.TextArea
 	mode           string
 	dot, anchor    int
 	linewise       bool
@@ -160,7 +159,7 @@ func (v *vimState) position() {
 		v.editor.Select(v.dot, v.dot)
 	}
 }
-func (s *screen) vimSync(e *tview.TextArea) {
+func (s *screen) vimSync(e *tuivory.TextArea) {
 	text := e.GetText()
 	_, a, b := e.GetSelection()
 	v := &s.vim
@@ -243,15 +242,15 @@ func (s *screen) vimPaste(before bool) {
 	v.position()
 }
 
-func (s *screen) vimKey(e *tview.TextArea, event *tcell.EventKey) bool {
-	if event.Key() == tcell.KeyEnter && event.Modifiers()&(tcell.ModCtrl|tcell.ModAlt) != 0 {
+func (s *screen) vimKey(e *tuivory.TextArea, event *tuivory.EventKey) bool {
+	if event.Key() == tuivory.KeyEnter && event.Modifiers()&(tuivory.ModCtrl|tuivory.ModAlt) != 0 {
 		return false
 	}
 	s.vimSync(e)
 	v := &s.vim
 	defer v.remember()
-	key, mod := event.Key(), event.Modifiers()&^tcell.ModCtrl
-	if key == tcell.KeyEscape {
+	key, mod := event.Key(), event.Modifiers()&^tuivory.ModCtrl
+	if key == tuivory.KeyEscape {
 		if v.mode == "INSERT" {
 			v.dot = prevCluster(e.GetText(), v.dot)
 		}
@@ -259,8 +258,8 @@ func (s *screen) vimKey(e *tview.TextArea, event *tcell.EventKey) bool {
 		v.position()
 		return true
 	}
-	if key == tcell.KeyCtrlR && mod == 0 {
-		s.nativeEditorKey(e, tcell.KeyCtrlY)
+	if key == tuivory.KeyCtrlR && mod == 0 {
+		s.nativeEditorKey(e, tuivory.KeyCtrlY)
 		_, v.dot, _ = e.GetSelection()
 		v.mode = "NORMAL"
 		v.position()
@@ -271,26 +270,26 @@ func (s *screen) vimKey(e *tview.TextArea, event *tcell.EventKey) bool {
 	}
 	var char rune
 	switch key {
-	case tcell.KeyRune:
-		if event.Modifiers()&tcell.ModCtrl != 0 {
+	case tuivory.KeyRune:
+		if event.Modifiers()&tuivory.ModCtrl != 0 {
 			return false
 		}
 		char = event.Rune()
-	case tcell.KeyLeft, tcell.KeyBackspace, tcell.KeyBackspace2:
+	case tuivory.KeyLeft, tuivory.KeyBackspace, tuivory.KeyBackspace2:
 		char = 'h'
-	case tcell.KeyRight:
+	case tuivory.KeyRight:
 		char = 'l'
-	case tcell.KeyUp:
+	case tuivory.KeyUp:
 		char = 'k'
-	case tcell.KeyDown:
+	case tuivory.KeyDown:
 		char = 'j'
-	case tcell.KeyHome:
+	case tuivory.KeyHome:
 		char = '0'
-	case tcell.KeyEnd:
+	case tuivory.KeyEnd:
 		char = '$'
-	case tcell.KeyEnter:
+	case tuivory.KeyEnter:
 		return true
-	case tcell.KeyDelete:
+	case tuivory.KeyDelete:
 		char = 'x'
 	default:
 		return false // App commands, menus and function keys retain their routing.
@@ -503,7 +502,7 @@ func (s *screen) vimKey(e *tview.TextArea, event *tcell.EventKey) bool {
 	case 'p', 'P':
 		s.vimPaste(char == 'P')
 	case 'u':
-		s.nativeEditorKey(e, tcell.KeyCtrlZ)
+		s.nativeEditorKey(e, tuivory.KeyCtrlZ)
 		_, v.dot, _ = e.GetSelection()
 		v.mode = "NORMAL"
 		v.position()

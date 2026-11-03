@@ -1,27 +1,26 @@
 package ui
 
 import (
+	"lazyora/internal/oracle"
+	"lazyora/internal/settings"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
-	"lazyora/internal/settings"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestLanguageChangePreservesSQLResultsAndConnectionInputs(t *testing.T) {
 	s := shortcutScreen(t)
 	s.render(oracle.Result{Columns: []string{"Original"}, Rows: [][]string{{"한글 SQL data"}}})
 	s.connectionForm()
-	s.connectForm.GetFormItem(connectionUser).(*tview.InputField).SetText("my_user")
-	s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).SetText("my_password")
+	s.connectForm.GetFormItem(connectionUser).(*tuivory.InputField).SetText("my_user")
+	s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).SetText("my_password")
 	s.settingsForm()
 	s.prefsForm.GetFormItem(0).(*choiceField).SetCurrentOption(1)
-	s.prefsForm.GetFormItem(1).(*tview.Checkbox).SetChecked(false)
-	s.key(tcell.NewEventKey(tcell.KeyCtrlS, 0, tcell.ModCtrl))
+	s.prefsForm.GetFormItem(1).(*tuivory.Checkbox).SetChecked(false)
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlS, 0, tuivory.ModCtrl))
 	if s.prefs.Language != "ko" || s.prefs.Mouse {
 		t.Fatal("preferences were not applied")
 	}
@@ -31,7 +30,7 @@ func TestLanguageChangePreservesSQLResultsAndConnectionInputs(t *testing.T) {
 	if !strings.Contains(s.connectForm.GetButton(0).GetLabel(), "접속") {
 		t.Fatal("connection button was not translated")
 	}
-	if s.connectForm.GetFormItem(connectionUser).(*tview.InputField).GetText() != "my_user" || s.connectForm.GetFormItem(connectionPassword).(*tview.InputField).GetText() != "my_password" {
+	if s.connectForm.GetFormItem(connectionUser).(*tuivory.InputField).GetText() != "my_user" || s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).GetText() != "my_password" {
 		t.Fatal("connection inputs were lost")
 	}
 	if s.editor.GetText() != "SELECT 1 FROM dual;" || s.resultRows[0][0] != "한글 SQL data" {
@@ -66,24 +65,24 @@ func TestFailedSaveAndCancelKeepPreferences(t *testing.T) {
 	if !strings.Contains(s.prefsForm.GetTitle(), "Could not save") {
 		t.Fatal("save error was not shown")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, tcell.ModNone))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, tuivory.ModNone))
 	if s.prefs.Language != "en" {
 		t.Fatal("cancel changed preferences")
 	}
 }
 
 func TestConnectionAndPaneShortcuts(t *testing.T) {
-	for _, shortcut := range []*tcell.EventKey{
-		tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModCtrl),
-		tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModAlt),
-		tcell.NewEventKey(tcell.KeyRune, 'c', tcell.ModAlt),
+	for _, shortcut := range []*tuivory.EventKey{
+		tuivory.NewEventKey(tuivory.KeyEnter, 0, tuivory.ModCtrl),
+		tuivory.NewEventKey(tuivory.KeyEnter, 0, tuivory.ModAlt),
+		tuivory.NewEventKey(tuivory.KeyRune, 'c', tuivory.ModAlt),
 	} {
 		s := shortcutScreen(t)
 		s.connectionForm()
-		s.connectForm.GetFormItem(connectionUser).(*tview.InputField).SetText("test_user")
-		s.connectForm.GetFormItem(connectionName).(*tview.InputField).SetText("FREEPDB1")
+		s.connectForm.GetFormItem(connectionUser).(*tuivory.InputField).SetText("test_user")
+		s.connectForm.GetFormItem(connectionName).(*tuivory.InputField).SetText("FREEPDB1")
 		for i, letter := range []rune{'a', 'h', 'p', 'u', 'w', 't', 'n'} {
-			s.key(tcell.NewEventKey(tcell.KeyRune, letter, tcell.ModAlt))
+			s.key(tuivory.NewEventKey(tuivory.KeyRune, letter, tuivory.ModAlt))
 			if s.app.GetFocus() != s.connectForm.GetFormItem(i) {
 				t.Fatalf("Alt+%c did not focus its field", letter)
 			}
@@ -99,11 +98,11 @@ func TestConnectionAndPaneShortcuts(t *testing.T) {
 		}
 	}
 	s := shortcutScreen(t)
-	s.key(tcell.NewEventKey(tcell.KeyF6, 0, tcell.ModNone))
+	s.key(tuivory.NewEventKey(tuivory.KeyF6, 0, tuivory.ModNone))
 	if s.app.GetFocus() != s.table {
 		t.Fatal("F6 did not focus results")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF6, 0, tcell.ModNone))
+	s.key(tuivory.NewEventKey(tuivory.KeyF6, 0, tuivory.ModNone))
 	if s.app.GetFocus() != s.editor {
 		t.Fatal("F6 did not focus editor")
 	}

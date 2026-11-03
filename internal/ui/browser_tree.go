@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/leechis7/tuivory/go"
-	"github.com/rivo/tview"
 )
 
 // browserTree retains Oracle node references for asynchronous jobs and delegates
@@ -14,9 +12,9 @@ import (
 type browserTree struct {
 	*tuivory.TreeView
 	screen *screen
-	root   *tview.TreeNode
+	root   *tuivory.WidgetTreeNode
 	state  tuivory.TreeState
-	nodes  map[string]*tview.TreeNode
+	nodes  map[string]*tuivory.WidgetTreeNode
 	model  *tuivory.Tree
 }
 
@@ -47,7 +45,7 @@ func (s *screen) browserPalette() tuivory.Palette {
 	}
 }
 
-func browserID(n *tview.TreeNode) string {
+func browserID(n *tuivory.WidgetTreeNode) string {
 	d, _ := n.GetReference().(*browserNode)
 	if d == nil {
 		return fmt.Sprintf("node:%p", n)
@@ -55,14 +53,14 @@ func browserID(n *tview.TreeNode) string {
 	return d.kind + ":" + strconv.Quote(d.object.Owner) + ":" + strconv.Quote(d.object.Kind) + ":" + strconv.Quote(d.object.Name) + ":" + strconv.Quote(d.column.Name) + ":" + strconv.Quote(d.label)
 }
 
-func (b *browserTree) GetRoot() *tview.TreeNode { return b.root }
-func (b *browserTree) SetRoot(root *tview.TreeNode) *browserTree {
+func (b *browserTree) GetRoot() *tuivory.WidgetTreeNode { return b.root }
+func (b *browserTree) SetRoot(root *tuivory.WidgetTreeNode) *browserTree {
 	b.root = root
 	b.state = tuivory.TreeState{Expanded: map[string]bool{}}
 	b.Refresh()
 	return b
 }
-func (b *browserTree) GetCurrentNode() *tview.TreeNode {
+func (b *browserTree) GetCurrentNode() *tuivory.WidgetTreeNode {
 	n := b.nodes[b.state.Selected]
 	if n != nil {
 		if d, ok := n.GetReference().(*browserNode); ok && (d.kind == "object" || d.kind == "column") {
@@ -71,7 +69,7 @@ func (b *browserTree) GetCurrentNode() *tview.TreeNode {
 	}
 	return nil
 }
-func (b *browserTree) SetCurrentNode(n *tview.TreeNode) *browserTree {
+func (b *browserTree) SetCurrentNode(n *tuivory.WidgetTreeNode) *browserTree {
 	b.state.Selected = ""
 	if n != nil {
 		b.state.Selected = browserID(n)
@@ -82,15 +80,15 @@ func (b *browserTree) SetCurrentNode(n *tview.TreeNode) *browserTree {
 
 func (b *browserTree) Refresh() {
 	var nodes []tuivory.TreeNode
-	b.nodes = map[string]*tview.TreeNode{}
-	var visit func(*tview.TreeNode, string)
-	visit = func(n *tview.TreeNode, parent string) {
+	b.nodes = map[string]*tuivory.WidgetTreeNode{}
+	var visit func(*tuivory.WidgetTreeNode, string)
+	visit = func(n *tuivory.WidgetTreeNode, parent string) {
 		id := browserID(n)
 		d, _ := n.GetReference().(*browserNode)
 		if d != nil && d.kind == "message" && parent != "" {
 			id = parent + "/" + id
 		}
-		row := tuivory.TreeNode{ID: id, Parent: parent, Name: tview.Unescape(n.GetText())}
+		row := tuivory.TreeNode{ID: id, Parent: parent, Name: tuivory.Unescape(n.GetText())}
 		if d != nil {
 			switch d.kind {
 			case "object":
@@ -171,30 +169,30 @@ func (b *browserTree) event(e tuivory.TreeEvent) {
 		b.screen.activateBrowser(n)
 	}
 }
-func (b *browserTree) Draw(screen tcell.Screen) {
+func (b *browserTree) Draw(screen tuivory.Screen) {
 	_ = b.SetPalette(b.screen.browserPalette())
 	b.ASCII = b.screen.asciiDisplay()
 	b.TreeView.Draw(screen)
 }
-func (b *browserTree) MouseHandler() func(tview.MouseAction, *tcell.EventMouse, func(tview.Primitive)) (bool, tview.Primitive) {
-	return b.WrapMouseHandler(func(action tview.MouseAction, e *tcell.EventMouse, setFocus func(tview.Primitive)) (bool, tview.Primitive) {
+func (b *browserTree) MouseHandler() func(tuivory.MouseAction, *tuivory.EventMouse, func(tuivory.Primitive)) (bool, tuivory.Primitive) {
+	return b.WrapMouseHandler(func(action tuivory.MouseAction, e *tuivory.EventMouse, setFocus func(tuivory.Primitive)) (bool, tuivory.Primitive) {
 		x, y := e.Position()
 		left, top, w, h := b.GetInnerRect()
 		if x < left || x >= left+w || y < top || y >= top+h {
 			return false, nil
 		}
-		if action == tview.MouseLeftDoubleClick {
-			action = tview.MouseLeftClick
+		if action == tuivory.MouseLeftDoubleClick {
+			action = tuivory.MouseLeftClick
 		}
-		if action == tview.MouseScrollUp || action == tview.MouseScrollDown {
+		if action == tuivory.MouseScrollUp || action == tuivory.MouseScrollDown {
 			a := tuivory.TreeUp
-			if action == tview.MouseScrollDown {
+			if action == tuivory.MouseScrollDown {
 				a = tuivory.TreeDown
 			}
 			b.event(b.model.Handle(&b.state, a, h))
 			return true, nil
 		}
-		if action != tview.MouseLeftClick {
+		if action != tuivory.MouseLeftClick {
 			return false, nil
 		}
 		setFocus(b)

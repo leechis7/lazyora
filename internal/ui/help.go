@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 )
 
 type helpSection struct {
@@ -74,7 +73,7 @@ var helpTopicNames = [][2]string{
 
 func (s *screen) helpSubheading(title string) string {
 	color := fmt.Sprintf("#%06x", s.colors().accent.Hex())
-	return fmt.Sprintf("[%s::b]%s[-::-]\n\n", color, tview.Escape(title))
+	return fmt.Sprintf("[%s::b]%s[-::-]\n\n", color, tuivory.Escape(title))
 }
 
 func (s *screen) helpCommands(ids []string) string {
@@ -87,7 +86,7 @@ func (s *screen) helpCommands(ids []string) string {
 			label = s.tr(menuGroups[cmd.group].label) + " > " + label
 		}
 		// No fixed-width padding: long labels and key combinations wrap naturally.
-		fmt.Fprintf(&out, "[::b]%s[::-]  %s\n", tview.Escape(keys), tview.Escape(label))
+		fmt.Fprintf(&out, "[::b]%s[::-]  %s\n", tuivory.Escape(keys), tuivory.Escape(label))
 	}
 	out.WriteByte('\n')
 	return out.String()
@@ -97,7 +96,7 @@ func helpParagraphs(text string) string {
 	var out strings.Builder
 	for _, line := range strings.Split(text, "\n") {
 		if line = strings.TrimSpace(line); line != "" {
-			out.WriteString("• " + tview.Escape(line) + "\n\n")
+			out.WriteString("• " + tuivory.Escape(line) + "\n\n")
 		}
 	}
 	return out.String()
@@ -112,7 +111,7 @@ func (s *screen) keymapArticle() string {
 		out.WriteString(s.helpSubheading(section.title))
 		for _, line := range strings.Split(section.text, "\n") {
 			if keys, description, ok := strings.Cut(line, "\t"); ok {
-				fmt.Fprintf(&out, "[::b]%s[::-]  %s\n", tview.Escape(keys), tview.Escape(description))
+				fmt.Fprintf(&out, "[::b]%s[::-]  %s\n", tuivory.Escape(keys), tuivory.Escape(description))
 			} else {
 				out.WriteString("\n" + helpParagraphs(line))
 			}
@@ -129,7 +128,7 @@ func (s *screen) helpArticle(topic int) string {
 			s.helpSubheading(s.tr("help_reading")) + helpParagraphs(s.tr("help_reading_hint"))
 	}
 	if topic == 9 {
-		return s.helpSubheading(s.tr("help_about")) + tview.Escape(s.aboutContent())
+		return s.helpSubheading(s.tr("help_about")) + tuivory.Escape(s.aboutContent())
 	}
 	if topic == 8 {
 		return s.helpSubheading(helpTopicNames[8][language]) + s.keymapArticle()
@@ -251,7 +250,7 @@ func (s *screen) showHelp() {
 	help.SetBorderPadding(1, 1, 2, 2)
 	s.styleBox(help.Box)
 	help.SetTextColor(s.colors().text)
-	topics := tview.NewList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetHighlightFullLine(true).SetSelectedFocusOnly(false)
+	topics := tuivory.NewWidgetList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetHighlightFullLine(true).SetSelectedFocusOnly(false)
 	topics.SetMainTextColor(s.colors().text).SetSelectedStyle(s.buttonFocusStyle().Underline(false))
 	topics.SetBorder(true).SetTitle(s.tr("help_topics"))
 	s.styleList(topics)
@@ -263,16 +262,16 @@ func (s *screen) showHelp() {
 	topics.SetSelectedFunc(func(_ int, _, _ string, _ rune) { s.app.SetFocus(help) })
 	body := s.newFlex().AddItem(topics, 26, 0, false).AddItem(help, 0, 1, true)
 	// Narrow terminals retain both navigation and readable article width.
-	body.SetDrawFunc(func(_ tcell.Screen, x, y, width, height int) (int, int, int, int) {
+	body.SetDrawFunc(func(_ tuivory.Screen, x, y, width, height int) (int, int, int, int) {
 		if width < 76 {
-			body.SetDirection(tview.FlexRow).ResizeItem(topics, min(5, max(3, height/4)), 0)
+			body.SetDirection(tuivory.FlexRow).ResizeItem(topics, min(5, max(3, height/4)), 0)
 		} else {
-			body.SetDirection(tview.FlexColumn).ResizeItem(topics, 26, 0)
+			body.SetDirection(tuivory.FlexColumn).ResizeItem(topics, 26, 0)
 		}
 		return x, y, width, height
 	})
-	close := s.clickable(tview.NewButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeHelp))
-	root := s.newFlex().SetDirection(tview.FlexRow).AddItem(body, 0, 1, true).AddItem(close, 1, 0, false)
+	close := s.clickable(tuivory.NewWidgetButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeHelp))
+	root := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(body, 0, 1, true).AddItem(close, 1, 0, false)
 	s.selectHelpTopic(0)
 	// Lists consume Click, but not the preceding Down/Up events. Without
 	// an opaque mouse layer, Pages passes those to the schema dropdown below,

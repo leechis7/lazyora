@@ -2,19 +2,18 @@ package ui
 
 import (
 	"fmt"
+	"lazyora/internal/oracle"
+	"lazyora/internal/settings"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/leechis7/tuivory/go"
-	"lazyora/internal/oracle"
-	"lazyora/internal/settings"
 )
 
 type displayTestTerminal struct {
-	tcell.Screen
+	tuivory.Screen
 	charset, missing string
 	colors           int
 }
@@ -61,7 +60,7 @@ func TestDisplayDetectionAndLanguageAreIndependentOfColorsAndTERM(t *testing.T) 
 	}
 }
 
-func assertASCIIFrame(t *testing.T, terminal tcell.Screen) string {
+func assertASCIIFrame(t *testing.T, terminal tuivory.Screen) string {
 	t.Helper()
 	var out strings.Builder
 	w, h := terminal.Size()
@@ -173,7 +172,7 @@ func TestDisplaySettingsSaveOverrideCancelAndWorkspaceReuse(t *testing.T) {
 	second := secondWorkspace(spaces)
 	second.prefs.Language = "ko"
 	second.settingsForm()
-	second.key(tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModAlt))
+	second.key(tuivory.NewEventKey(tuivory.KeyRune, 'd', tuivory.ModAlt))
 	if !second.prefsForm.GetFormItem(4).HasFocus() {
 		t.Fatal("Alt+D did not focus display choice")
 	}
@@ -225,7 +224,7 @@ func TestDisplaySettingsSaveOverrideCancelAndWorkspaceReuse(t *testing.T) {
 func TestASCIIWideFallbackKeepsFollowingCellAndCombiningMarksOutOfFrame(t *testing.T) {
 	base := colorTestTerminal(t, 10, 2)
 	a := asciiScreen{base}
-	st := tcell.StyleDefault
+	st := tuivory.StyleDefault
 	a.SetContent(0, 0, '한', nil, st)
 	a.SetContent(2, 0, 'X', nil, st)
 	a.SetContent(3, 0, 'e', []rune{'\u0301'}, st)
@@ -265,17 +264,17 @@ func TestDisplaySavePreservesRealResultAfterDemoStartup(t *testing.T) {
 func TestASCIIWritesThroughTuivorySafeScreenPreserveWidths(t *testing.T) {
 	for _, order := range []string{"host-first", "library-first"} {
 		t.Run(order, func(t *testing.T) {
-			base := tcell.NewSimulationScreen("UTF-8")
+			base := tuivory.NewSimulationScreen("UTF-8")
 			if err := base.Init(); err != nil {
 				t.Fatal(err)
 			}
 			defer base.Fini()
 			base.SetSize(40, 4)
-			var writer tcell.Screen = asciiScreen{tuivory.WideSafeScreen(base)}
+			var writer tuivory.Screen = asciiScreen{tuivory.WideSafeScreen(base)}
 			if order == "library-first" {
 				writer = tuivory.WideSafeScreen(asciiScreen{base})
 			}
-			style := tcell.StyleDefault.Foreground(tcell.ColorGreen)
+			style := tuivory.StyleDefault.Foreground(tuivory.ColorGreen)
 			writer.SetContent(0, 0, '한', nil, style)
 			rest, width := writer.Put(3, 0, "界Z", style)
 			if rest != "Z" || width != 2 {

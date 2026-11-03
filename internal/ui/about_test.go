@@ -2,11 +2,11 @@ package ui
 
 import (
 	"fmt"
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"lazyora/internal/appinfo"
 	"strings"
 	"testing"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestAboutMenuSharedMetadataAndStatePreserved(t *testing.T) {
@@ -25,7 +25,7 @@ func TestAboutMenuSharedMetadataAndStatePreserved(t *testing.T) {
 					t.Fatal("Help/About menu missing")
 				}
 				s.menuList.SetCurrentItem(s.menuList.GetItemCount() - 1)
-				s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+				s.menuList.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 				if !s.pages.HasPage("about") {
 					t.Fatal("menu did not open About")
 				}
@@ -45,21 +45,21 @@ func TestAboutMenuSharedMetadataAndStatePreserved(t *testing.T) {
 						t.Fatalf("About card not centered/bounded: %v rect=%d,%d %dx%d", size, x, y, w, h)
 					}
 				}
-				s.key(tcell.NewEventKey(tcell.KeyCtrlC, 0, 0))
+				s.key(tuivory.NewEventKey(tuivory.KeyCtrlC, 0, 0))
 				if s.clipboardText != s.aboutContent() {
 					t.Fatal("metadata copy changed")
 				}
-				s.key(tcell.NewEventKey(tcell.KeyF1, 0, 0))
+				s.key(tuivory.NewEventKey(tuivory.KeyF1, 0, 0))
 				s.closeHelp()
 				if s.app.GetFocus() != s.aboutText {
 					t.Fatal("help did not restore About focus")
 				}
-				s.key(tcell.NewEventKey(tcell.KeyTab, 0, 0))
-				button, ok := s.app.GetFocus().(*tview.Button)
+				s.key(tuivory.NewEventKey(tuivory.KeyTab, 0, 0))
+				button, ok := s.app.GetFocus().(*tuivory.WidgetButton)
 				if !ok {
 					t.Fatal("close button not keyboard accessible")
 				}
-				button.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+				button.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 				if s.pages.HasPage("about") || s.app.GetFocus() != s.editor || !s.pendingChanges || !s.connected || s.editor.GetText() != "SELECT '한글' FROM dual" {
 					t.Fatal("About disturbed working state")
 				}
@@ -74,7 +74,7 @@ func TestAboutEscapeDoesNotCancelSQLAndMouseClose(t *testing.T) {
 	cancelled := false
 	s.cancel = func() { cancelled = true }
 	s.invoke("about")
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if cancelled || !s.busy || s.app.GetFocus() != s.table {
 		t.Fatal("About Escape cancelled background work")
 	}
@@ -83,9 +83,9 @@ func TestAboutEscapeDoesNotCancelSQLAndMouseClose(t *testing.T) {
 	_, root := s.pages.GetFrontPage()
 	root.SetRect(0, 0, 80, 20)
 	root.Draw(terminal)
-	button := root.(*formPopupLayer).content.(*tview.Flex).GetItem(1).(*tview.Flex).GetItem(1).(*tview.Button)
+	button := root.(*formPopupLayer).content.(*tuivory.Flex).GetItem(1).(*tuivory.Flex).GetItem(1).(*tuivory.WidgetButton)
 	x, y, _, _ := button.GetRect()
-	button.MouseHandler()(tview.MouseLeftClick, tcell.NewEventMouse(x+1, y, tcell.Button1, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	button.MouseHandler()(tuivory.MouseLeftClick, tuivory.NewEventMouse(x+1, y, tuivory.Button1, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	if s.pages.HasPage("about") {
 		t.Fatal("mouse close failed")
 	}

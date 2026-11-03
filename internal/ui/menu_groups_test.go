@@ -1,16 +1,16 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"testing"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestMenuSeparatorsNeverSelectOrExecute(t *testing.T) {
 	s, terminal := resultScreen(t)
 	s.app.SetFocus(s.editor)
 	s.showMenu(menuHelp)
-	delegate := func(p tview.Primitive) { s.app.SetFocus(p) }
+	delegate := func(p tuivory.Primitive) { s.app.SetFocus(p) }
 	_, root := s.pages.GetFrontPage()
 	root.SetRect(0, 0, 120, 35)
 	root.Draw(terminal)
@@ -25,14 +25,14 @@ func TestMenuSeparatorsNeverSelectOrExecute(t *testing.T) {
 		t.Fatal("missing separator")
 	}
 	s.menuList.SetCurrentItem(separator - 1)
-	s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyDown, 0, 0), delegate)
+	s.menuList.InputHandler()(tuivory.NewEventKey(tuivory.KeyDown, 0, 0), delegate)
 	if menuTestRows(s)[s.menuList.GetCurrentItem()].divider {
 		t.Fatal("arrow selected separator")
 	}
 	x, y, _, _ := s.menuList.GetInnerRect()
 	offset, _ := s.menuList.GetOffset()
 	before := s.menuList.GetCurrentItem()
-	s.menuList.MouseHandler()(tview.MouseLeftClick, tcell.NewEventMouse(x+1, y+separator-offset, 0, 0), delegate)
+	s.menuList.MouseHandler()(tuivory.MouseLeftClick, tuivory.NewEventMouse(x+1, y+separator-offset, 0, 0), delegate)
 	if s.menuList.GetCurrentItem() != before || !s.pages.HasPage("menu") || len(s.jobs) != 0 {
 		t.Fatal("separator click changed selection or executed")
 	}
@@ -45,15 +45,15 @@ func TestNestedMenuKeyboardMouseBackAndCommand(t *testing.T) {
 		t.Fatal("long menu not grouped")
 	}
 	parent := s.menuList
-	s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	s.menuList.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	if !menuNested(s) || s.menuList != parent {
 		t.Fatal("Enter did not enter submenu")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if menuNested(s) || !s.pages.HasPage("menu") {
 		t.Fatal("Escape did not return")
 	}
-	s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	s.menuList.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	s.menuRowAction(0)
 	if menuNested(s) {
 		t.Fatal("mouse Back item failed")
@@ -69,12 +69,12 @@ func TestMenuArrowsTraverseAllTopLevelMenus(t *testing.T) {
 	s.app.SetFocus(s.editor)
 	s.showMenu(menuFile)
 	for _, direction := range []struct {
-		key  tcell.Key
+		key  tuivory.Key
 		step int
-	}{{tcell.KeyRight, 1}, {tcell.KeyLeft, -1}} {
+	}{{tuivory.KeyRight, 1}, {tuivory.KeyLeft, -1}} {
 		for range len(menuGroups) {
 			want := (s.menuIndex + direction.step + len(menuGroups)) % len(menuGroups)
-			s.key(tcell.NewEventKey(direction.key, 0, 0))
+			s.key(tuivory.NewEventKey(direction.key, 0, 0))
 			if s.menuIndex != want || menuNested(s) || !s.menuList.HasFocus() {
 				t.Fatalf("arrow %v did not reach top-level menu %d", direction.key, want)
 			}
@@ -92,16 +92,16 @@ func TestSubmenuArrowsReturnOrAdvanceAndContextStaysLocal(t *testing.T) {
 	for _, menu := range []int{menuEdit, menuView} {
 		s.showMenu(menu)
 		selected := s.menuList.GetCurrentItem()
-		s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+		s.menuList.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 		if !menuNested(s) {
 			t.Fatal("Enter did not open submenu")
 		}
-		s.key(tcell.NewEventKey(tcell.KeyLeft, 0, 0))
+		s.key(tuivory.NewEventKey(tuivory.KeyLeft, 0, 0))
 		if menuNested(s) || s.menuIndex != menu || s.menuList.GetCurrentItem() != selected {
 			t.Fatal("Left did not restore parent selection")
 		}
 		s.menuRowAction(selected)
-		s.key(tcell.NewEventKey(tcell.KeyRight, 0, 0))
+		s.key(tuivory.NewEventKey(tuivory.KeyRight, 0, 0))
 		if menuNested(s) || s.menuIndex != menu+1 {
 			t.Fatal("Right did not advance from submenu to next top-level menu")
 		}
@@ -109,8 +109,8 @@ func TestSubmenuArrowsReturnOrAdvanceAndContextStaysLocal(t *testing.T) {
 	s.closeMenu()
 	s.showContextMenu()
 	list := s.menuList
-	for _, key := range []tcell.Key{tcell.KeyLeft, tcell.KeyRight} {
-		s.key(tcell.NewEventKey(key, 0, 0))
+	for _, key := range []tuivory.Key{tuivory.KeyLeft, tuivory.KeyRight} {
+		s.key(tuivory.NewEventKey(key, 0, 0))
 		if s.menuIndex != -1 || s.menuList != list || menuNested(s) {
 			t.Fatal("context menu arrow opened a top-level menu")
 		}

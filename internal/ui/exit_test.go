@@ -5,26 +5,25 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestQuitAlwaysConfirmsAndEscapePreservesFocus(t *testing.T) {
 	for _, pending := range []bool{false, true} {
-		for _, key := range []tcell.Key{tcell.KeyCtrlQ} {
+		for _, key := range []tuivory.Key{tuivory.KeyCtrlQ} {
 			s := shortcutScreen(t)
 			s.pendingChanges = pending
 			s.app.SetFocus(s.table)
-			s.key(tcell.NewEventKey(key, 0, tcell.ModNone))
+			s.key(tuivory.NewEventKey(key, 0, tuivory.ModNone))
 			if page, _ := s.pages.GetFrontPage(); page != "exit" || s.exitDialog == nil {
 				t.Fatal("quit did not show confirmation")
 			}
 			dialog := s.exitDialog
-			s.key(tcell.NewEventKey(key, 0, tcell.ModNone))
+			s.key(tuivory.NewEventKey(key, 0, tuivory.ModNone))
 			if s.exitDialog != dialog {
 				t.Fatal("repeated quit replaced confirmation")
 			}
-			s.key(tcell.NewEventKey(tcell.KeyEscape, 0, tcell.ModNone))
+			s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, tuivory.ModNone))
 			if page, _ := s.pages.GetFrontPage(); page != "main" || !s.table.HasFocus() || s.exitDialog != nil || s.pendingChanges != pending {
 				t.Fatal("cancel changed focus, page or transaction state")
 			}
@@ -53,7 +52,7 @@ func TestPendingQuitActionsUseWorkerAndDefaultEnterCancels(t *testing.T) {
 	s := shortcutScreen(t)
 	s.pendingChanges = true
 	s.requestQuit()
-	s.exitDialog.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone), func(p tview.Primitive) { s.app.SetFocus(p) })
+	s.exitDialog.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, tuivory.ModNone), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	if s.exitDialog != nil || len(s.jobs) != 0 {
 		t.Fatal("default Enter did not cancel safely")
 	}

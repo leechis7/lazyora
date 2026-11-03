@@ -5,17 +5,15 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"slices"
-	"time"
-
-	"github.com/gdamore/tcell/v2"
-	"github.com/leechis7/tuivory/go"
-	"github.com/rivo/tview"
 	"lazyora/internal/credentials"
 	"lazyora/internal/exportdata"
 	"lazyora/internal/oracle"
 	"lazyora/internal/settings"
 	"lazyora/internal/sqlfile"
+	"slices"
+	"time"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 type job struct {
@@ -41,124 +39,124 @@ type job struct {
 	resolution    oracle.ReconnectResolution
 	text          string
 	object        oracle.Object
-	node          *tview.TreeNode
+	node          *tuivory.WidgetTreeNode
 }
 
 type screen struct {
-	textRoles                           map[*tview.TextView]textRole
-	surfaceRoles                        map[*tview.Box]surfaceRole
-	treeRoles                           map[*tview.TreeNode]textRole
+	textRoles                           map[*tuivory.WidgetTextView]textRole
+	surfaceRoles                        map[*tuivory.Box]surfaceRole
+	treeRoles                           map[*tuivory.WidgetTreeNode]textRole
 	comparison                          *keymapComparison
 	reference                           *referenceView
 	workspaces                          *workspaceSet
 	workspaceID                         int
-	workspaceFocus                      tview.Primitive
+	workspaceFocus                      tuivory.Primitive
 	connectionIdentity, pendingIdentity settings.Connection
-	connectionHeader                    *tview.TextView
-	workspaceList                       *tview.List
-	workspaceFocusBefore                tview.Primitive
+	connectionHeader                    *tuivory.WidgetTextView
+	workspaceList                       *tuivory.WidgetList
+	workspaceFocusBefore                tuivory.Primitive
 	installHandlers                     func()
 	workerClosed                        bool
 
-	aboutText                        *tview.TextView
-	aboutFocus                       tview.Primitive
+	aboutText                        *tuivory.WidgetTextView
+	aboutFocus                       tuivory.Primitive
 	inlineEdit                       *inlineCellEditor
 	editedCells                      map[editedCellKey]bool
 	editChange                       oracle.EditChange
-	editForm                         *tview.Form
-	editInfo                         *tview.TextView
+	editForm                         *tuivory.WidgetForm
+	editInfo                         *tuivory.WidgetTextView
 	cellValue                        oracle.Cell
-	cellInfo, cellText               *tview.TextView
-	cellForm                         *tview.Form
-	cellFocus                        tview.Primitive
+	cellInfo, cellText               *tuivory.WidgetTextView
+	cellForm                         *tuivory.WidgetForm
+	cellFocus                        tuivory.Primitive
 	definitionCopyDetail             bool
 	definitionObject                 oracle.Object
 	definitionSection, definitionDDL string
 	definitionCache                  map[string]oracle.ObjectDefinition
 	definitionRows                   [][]string
 	definitionDetails                []string
-	definitionRoot                   *tview.Flex
-	definitionInfo, definitionText   *tview.TextView
-	definitionTable                  *tview.Table
+	definitionRoot                   *tuivory.Flex
+	definitionInfo, definitionText   *tuivory.WidgetTextView
+	definitionTable                  *tuivory.Table
 	definitionTargets                []oracle.ObjectRelation
 	definitionTrail                  []definitionLocation
-	definitionSelectors              []tview.Primitive
+	definitionSelectors              []tuivory.Primitive
 
 	vim                                  vimState
 	yankText                             string
 	yankLine                             bool
-	completionEditor                     *tview.TextArea
+	completionEditor                     *tuivory.TextArea
 	completionOriginal                   string
 	completionCursor                     int
 	completionContext                    oracle.CompletionContext
 	completionResult                     oracle.Completions
 	completionCandidates, completionRows []oracle.CompletionCandidate
-	completionList                       *tview.List
-	completionFilter                     *tview.InputField
-	completionInfo                       *tview.TextView
-	routineResultsFocus                  tview.Primitive
+	completionList                       *tuivory.WidgetList
+	completionFilter                     *tuivory.InputField
+	completionInfo                       *tuivory.WidgetTextView
+	routineResultsFocus                  tuivory.Primitive
 	routines                             []oracle.Routine
-	routineList, routineResultList       *tview.List
-	routineInfo                          *tview.TextView
-	routineForm                          *tview.Form
+	routineList, routineResultList       *tuivory.WidgetList
+	routineInfo                          *tuivory.WidgetTextView
+	routineForm                          *tuivory.WidgetForm
 	routineSubmit                        func()
-	routineFocus                         tview.Primitive
+	routineFocus                         tuivory.Primitive
 	routineResults                       oracle.RoutineResult
 	outputEnabled, outputTruncated       bool
 	outputLines                          []string
 	outputSize                           int
 	outputError                          string
-	outputText, outputInfo               *tview.TextView
-	outputToggle                         *tview.Button
-	outputFocus                          tview.Primitive
+	outputText, outputInfo               *tuivory.WidgetTextView
+	outputToggle                         *tuivory.WidgetButton
+	outputFocus                          tuivory.Primitive
 
 	resultQuery            *oracle.QuerySpec
-	exportForm             *tview.Form
-	exportInfo             *tview.TextView
-	exportFocus            tview.Primitive
+	exportForm             *tuivory.WidgetForm
+	exportInfo             *tuivory.WidgetTextView
+	exportFocus            tuivory.Primitive
 	exportSubmit           func()
 	resultValues           [][]oracle.Cell
 	resultTruncated        bool
-	planTree               *tview.TreeView
-	planText               *tview.TextView
-	planFocus              tview.Primitive
-	bindForm               *tview.Form
+	planTree               *tuivory.WidgetTreeView
+	planText               *tuivory.WidgetTextView
+	planFocus              tuivory.Primitive
+	bindForm               *tuivory.WidgetForm
 	bindSQL                string
 	bindValues             map[string]oracle.BindValue
 	bindSubmit, bindCancel func()
 	scriptReport           oracle.ScriptReport
-	scriptList             *tview.List
-	scriptResult           *tview.Table
-	scriptText             *tview.TextView
-	scriptFocus            tview.Primitive
+	scriptList             *tuivory.WidgetList
+	scriptResult           *tuivory.Table
+	scriptText             *tuivory.WidgetTextView
+	scriptFocus            tuivory.Primitive
 	tabs                   []*sqlTab
 	activeTab              int
-	tabBar                 *tview.Flex
+	tabBar                 *tuivory.Flex
 	document               *sqlfile.Document
 	fileDialog             *fileDialog
-	renameForm             *tview.Form
-	documentModal          *tview.Modal
+	renameForm             *tuivory.WidgetForm
+	documentModal          *tuivory.Modal
 
-	sqlConfirmText  *tview.TextView
-	sqlConfirmFocus tview.Primitive
+	sqlConfirmText  *tuivory.WidgetTextView
+	sqlConfirmFocus tuivory.Primitive
 
 	vault                                                         *credentials.Store
 	reloadConnectionProfiles                                      func() error
 	vaultWorkDone                                                 chan struct{}
 	vaultBusy                                                     bool
-	masterForm, vaultForm                                         *tview.Form
+	masterForm, vaultForm                                         *tuivory.WidgetForm
 	masterSubmit, masterCancel, closeVault, clearConnectionSecret func()
-	vaultFocus                                                    tview.Primitive
+	vaultFocus                                                    tuivory.Primitive
 
 	sqlHistory                               []string
-	historyList                              *tview.List
-	historyFocus                             tview.Primitive
-	searchForm                               *tview.Form
-	searchFocus                              tview.Primitive
+	historyList                              *tuivory.WidgetList
+	historyFocus                             tuivory.Primitive
+	searchForm                               *tuivory.WidgetForm
+	searchFocus                              tuivory.Primitive
 	searchAction                             func(string)
 	findText, replaceText                    string
 	rootLayout                               *displayLayout
-	menuLayout                               *tview.Flex
+	menuLayout                               *tuivory.Flex
 	displayOverride                          string
 	chromeHidden                             bool
 	sizing                                   panelSizing
@@ -168,79 +166,79 @@ type screen struct {
 	mainMenu, menuModel                      *tuivory.Menu
 	menuBarView                              *tuivory.RowsView
 	menuCard                                 *tuivory.PanelView
-	menuFocus                                tview.Primitive
+	menuFocus                                tuivory.Primitive
 	menuIndex                                int
 	menuTitle                                string
-	describeForm                             *tview.Form
-	describeFocus                            tview.Primitive
+	describeForm                             *tuivory.WidgetForm
+	describeFocus                            tuivory.Primitive
 	describeAction                           func()
-	app                                      *tview.Application
-	terminal                                 tcell.Screen
+	app                                      *tuivory.Application
+	terminal                                 tuivory.Screen
 	resultRows                               [][]string
 	resultHeaders                            []string
 	resultSelection                          resultSelection
 	grid                                     gridState
 	resultBrowser                            resultBrowser
 	clipboardText                            string
-	copyFocus                                tview.Primitive
-	copyText                                 *tview.TextView
+	copyFocus                                tuivory.Primitive
+	copyText                                 *tuivory.WidgetTextView
 	maximized                                string
 	fullscreen                               bool
-	pages                                    *tview.Pages
-	editor                                   *tview.TextArea
-	table                                    *tview.Table
-	status                                   *tview.TextView
-	footer                                   *tview.TextView
-	footerVersion                            *tview.TextView
-	footerBar                                *tview.Flex
-	buttons                                  []*tview.Button
+	pages                                    *tuivory.Pages
+	editor                                   *tuivory.TextArea
+	table                                    *tuivory.Table
+	status                                   *tuivory.WidgetTextView
+	footer                                   *tuivory.WidgetTextView
+	footerVersion                            *tuivory.WidgetTextView
+	footerBar                                *tuivory.Flex
+	buttons                                  []*tuivory.WidgetButton
 	footerKeys                               []footerKey
 	resultsFocused                           bool
 	limitedColors                            bool
 	browser                                  *browserTree
 	browserHidden                            bool
-	mainLayout, queryLayout                  *tview.Flex
+	mainLayout, queryLayout                  *tuivory.Flex
 	browserOwner                             string
-	browserPanel                             *tview.Flex
-	browserForm                              *tview.Form
+	browserPanel                             *tuivory.Flex
+	browserForm                              *tuivory.WidgetForm
 	browserUsers, browserTypes               *choiceField
-	browserSearch                            *tview.InputField
+	browserSearch                            *tuivory.InputField
 	browserSchemas                           []string
 	browserObjects                           []oracle.Object
 	browserKind                              int
-	browserNodes                             map[oracle.Object]*tview.TreeNode
+	browserNodes                             map[oracle.Object]*tuivory.WidgetTreeNode
 	object                                   oracle.Object
-	objectInfo                               *tview.TextView
-	objectFocus                              tview.Primitive
-	objectTable                              *tview.Table
+	objectInfo                               *tuivory.WidgetTextView
+	objectFocus                              tuivory.Primitive
+	objectTable                              *tuivory.Table
 	objectColumns                            []oracle.Column
 	pendingChanges                           bool
 	transactionUncertain                     bool
 	pendingWork                              oracle.PendingWork
-	pendingTable                             *tview.Table
-	pendingSQL                               *tview.TextView
-	pendingFocus                             tview.Primitive
-	exitDialog                               *tview.Modal
-	reconnectDialog                          *tview.Modal
-	exitFocus                                tview.Primitive
-	sourceEditor                             *tview.TextArea
-	sourceInfo                               *tview.TextView
-	sourceDiagnostics                        *tview.Table
+	pendingTable                             *tuivory.Table
+	pendingSQL                               *tuivory.WidgetTextView
+	pendingFocus                             tuivory.Primitive
+	exitDialog                               *tuivory.Modal
+	reconnectDialog                          *tuivory.Modal
+	exitFocus                                tuivory.Primitive
+	sourceEditor                             *tuivory.TextArea
+	sourceInfo                               *tuivory.WidgetTextView
+	sourceDiagnostics                        *tuivory.Table
 	sourceBase                               string
 	sourceLoaded                             bool
-	programModal                             *tview.Modal
-	programFocus, argumentFocus              tview.Primitive
-	argumentTable                            *tview.Table
-	argumentInfo                             *tview.TextView
+	programModal                             *tuivory.Modal
+	programFocus, argumentFocus              tuivory.Primitive
+	argumentTable                            *tuivory.Table
+	argumentInfo                             *tuivory.WidgetTextView
 	jobs                                     chan job
 	done                                     chan struct{}
 	busy, quitting, demo, connected          bool
 	cancel                                   context.CancelFunc
-	helpFocus, connectFocus, prefsFocus      tview.Primitive
-	helpText                                 *tview.TextView
-	helpTopics                               *tview.List
+	helpFocus, connectFocus, prefsFocus      tuivory.Primitive
+	helpText                                 *tuivory.WidgetTextView
+	helpTopics                               *tuivory.WidgetList
 	helpContextText                          string
-	connectForm, connectProfiles, prefsForm  *tview.Form
+	connectForm, connectProfiles, prefsForm  *tuivory.WidgetForm
 	connectAction, saveConnection, savePrefs func()
 	testConnection                           func()
 	testingConnection                        bool
@@ -252,11 +250,11 @@ type screen struct {
 
 func Run(demo bool) error { return run(demo, nil, nil) }
 
-func run(demo bool, terminal tcell.Screen, ready func(*screen)) error {
+func run(demo bool, terminal tuivory.Screen, ready func(*screen)) error {
 	return runWithDisplayMode(demo, terminal, ready, "")
 }
 
-func runWithDisplayMode(demo bool, terminal tcell.Screen, ready func(*screen), override string) error {
+func runWithDisplayMode(demo bool, terminal tuivory.Screen, ready func(*screen), override string) error {
 	if terminal == nil {
 		var err error
 		terminal, err = newCompatibleScreen()
@@ -269,7 +267,7 @@ func runWithDisplayMode(demo bool, terminal tcell.Screen, ready func(*screen), o
 	if prefsErr == nil {
 		prefs, prefsErr = settings.Load(path)
 	}
-	app := tview.NewApplication().SetScreen(terminal)
+	app := tuivory.NewApplication().SetScreen(terminal)
 	s := newWorkspaceScreenWithDisplay(app, terminal, prefs, path, demo, prefsErr, override)
 	spaces := &workspaceSet{app: app, active: s}
 	spaces.factory = func(p settings.Config) *screen {
@@ -284,67 +282,67 @@ func runWithDisplayMode(demo bool, terminal tcell.Screen, ready func(*screen), o
 	return err
 }
 
-func newWorkspaceScreen(app *tview.Application, terminal tcell.Screen, prefs settings.Config, path string, demo bool, prefsErr error) *screen {
+func newWorkspaceScreen(app *tuivory.Application, terminal tuivory.Screen, prefs settings.Config, path string, demo bool, prefsErr error) *screen {
 	return newWorkspaceScreenWithDisplay(app, terminal, prefs, path, demo, prefsErr, "")
 }
 
-func newWorkspaceScreenWithDisplay(app *tview.Application, terminal tcell.Screen, prefs settings.Config, path string, demo bool, prefsErr error, override string) *screen {
+func newWorkspaceScreenWithDisplay(app *tuivory.Application, terminal tuivory.Screen, prefs settings.Config, path string, demo bool, prefsErr error, override string) *screen {
 	s := &screen{app: app, jobs: make(chan job, 1), done: make(chan struct{}), demo: demo, prefs: prefs, prefsPath: path}
 	s.terminal = terminal
 	s.displayOverride = override
 	s.limitedColors = terminal.Colors() > 0 && terminal.Colors() <= 16
-	s.editor = tview.NewTextArea().SetText("SELECT sysdate AS server_time FROM dual;", false)
+	s.editor = tuivory.NewTextArea().SetText("SELECT sysdate AS server_time FROM dual;", false)
 	s.editor.SetBorder(true)
 	s.initDocument()
-	s.editor.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
-		if action == tview.MouseRightClick {
+	s.editor.SetMouseCapture(func(action tuivory.MouseAction, event *tuivory.EventMouse) (tuivory.MouseAction, *tuivory.EventMouse) {
+		if action == tuivory.MouseRightClick {
 			s.app.SetFocus(s.editor)
 			s.showContextMenu()
-			return tview.MouseConsumed, nil
+			return tuivory.MouseConsumed, nil
 		}
 		return action, event
 	})
-	s.table = tview.NewTable().SetBorders(false).SetSelectable(true, true).SetFixed(1, 0)
+	s.table = tuivory.NewTable().SetBorders(false).SetSelectable(true, true).SetFixed(1, 0)
 	s.table.SetBorder(true)
 	s.table.SetMouseCapture(s.resultMouse)
 	s.table.SetInputCapture(s.resultGridKey)
 	s.editor.SetClipboard(s.sendClipboard, func() string { return s.clipboardText })
 	s.status = s.newTextView(textHint)
-	s.queryLayout = s.newFlex().SetDirection(tview.FlexRow).
+	s.queryLayout = s.newFlex().SetDirection(tuivory.FlexRow).
 		AddItem(s.editor, 0, 2, true).
 		AddItem(s.resultGrid(), 0, 3, false).AddItem(s.status, 2, 0, false)
 	s.mainLayout = s.newFlex().AddItem(s.newBrowser(), 0, 1, false).AddItem(s.queryLayout, 0, 3, true)
-	s.pages = tview.NewPages().AddPage("main", s.mainLayout, true, true)
-	s.pages.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
+	s.pages = tuivory.NewPages().AddPage("main", s.mainLayout, true, true)
+	s.pages.SetMouseCapture(func(action tuivory.MouseAction, event *tuivory.EventMouse) (tuivory.MouseAction, *tuivory.EventMouse) {
 		page, pageRoot := s.pages.GetFrontPage()
 		if page == "sql_confirm" {
-			pageRoot.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
-			return tview.MouseConsumed, nil
+			pageRoot.MouseHandler()(action, event, func(p tuivory.Primitive) { s.app.SetFocus(p) })
+			return tuivory.MouseConsumed, nil
 		}
-		var modal *tview.Modal
+		var modal *tuivory.Modal
 		if page == "master" || page == "vault" {
-			var form *tview.Form
+			var form *tuivory.WidgetForm
 			if page == "master" {
 				form = s.masterForm
 			} else {
 				form = s.vaultForm
 			}
 			if !s.vaultBusy && form != nil {
-				form.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
+				form.MouseHandler()(action, event, func(p tuivory.Primitive) { s.app.SetFocus(p) })
 			}
-			return tview.MouseConsumed, nil
+			return tuivory.MouseConsumed, nil
 		}
 		if page == "export" && s.busy {
 			button := s.exportForm.GetButton(1)
 			x, y := event.Position()
 			if button.InRect(x, y) {
-				button.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
+				button.MouseHandler()(action, event, func(p tuivory.Primitive) { s.app.SetFocus(p) })
 			}
-			return tview.MouseConsumed, nil
+			return tuivory.MouseConsumed, nil
 		}
 		if page == "file" || page == "script" || page == "bind" || page == "plan" || page == "export" {
-			pageRoot.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
-			return tview.MouseConsumed, nil
+			pageRoot.MouseHandler()(action, event, func(p tuivory.Primitive) { s.app.SetFocus(p) })
+			return tuivory.MouseConsumed, nil
 		}
 		if page == "file_unsaved" {
 			modal = s.documentModal
@@ -362,25 +360,25 @@ func newWorkspaceScreenWithDisplay(app *tview.Application, terminal tcell.Screen
 			// Modal only covers its centered box; consume the rest of the page
 			// too, so clicks cannot edit SQL or open dialogs behind it.
 			if !s.busy {
-				modal.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
+				modal.MouseHandler()(action, event, func(p tuivory.Primitive) { s.app.SetFocus(p) })
 			}
-			return tview.MouseConsumed, nil
+			return tuivory.MouseConsumed, nil
 		}
 		if s.menuList != nil {
 			x, y := event.Position()
 			if s.menuList.InRect(x, y) {
-				s.menuList.MouseHandler()(action, event, func(p tview.Primitive) { s.app.SetFocus(p) })
-			} else if action == tview.MouseLeftClick {
+				s.menuList.MouseHandler()(action, event, func(p tuivory.Primitive) { s.app.SetFocus(p) })
+			} else if action == tuivory.MouseLeftClick {
 				s.closeMenu()
 			}
-			return tview.MouseConsumed, nil
+			return tuivory.MouseConsumed, nil
 		}
 		return action, event
 	})
 	s.footer = s.newTextView(textAccent).SetWrap(false)
 	s.styleScreen()
 	s.menuLayout = s.menuBar()
-	layout := s.newFlex().SetDirection(tview.FlexRow).
+	layout := s.newFlex().SetDirection(tuivory.FlexRow).
 		AddItem(s.menuLayout, 1, 0, false).AddItem(s.pages, 0, 1, true).AddItem(s.footer, 1, 0, false).AddItem(s.toolbar(), 1, 0, false)
 	layout.Box = s.newBox().SetBackgroundColor(s.colors().background)
 	s.rootLayout = &displayLayout{Flex: layout, owner: s}
@@ -388,14 +386,14 @@ func newWorkspaceScreenWithDisplay(app *tview.Application, terminal tcell.Screen
 	s.textSurface(s.connectionHeader, surfacePanel)
 	s.installHandlers = func() {
 		s.app.SetInputCapture(s.key).EnableMouse(s.prefs.Mouse)
-		s.app.SetBeforeDrawFunc(func(tcell.Screen) bool {
+		s.app.SetBeforeDrawFunc(func(tuivory.Screen) bool {
 			s.syncChrome()
 			s.refreshFooter()
 			s.refreshBorders()
 			return false
 		})
 		lastClickX, lastClickY := -1, -1
-		s.app.SetMouseCapture(func(event *tcell.EventMouse, action tview.MouseAction) (*tcell.EventMouse, tview.MouseAction) {
+		s.app.SetMouseCapture(func(event *tuivory.EventMouse, action tuivory.MouseAction) (*tuivory.EventMouse, tuivory.MouseAction) {
 			if s.vaultBusy {
 				return nil, action
 			}
@@ -419,10 +417,10 @@ func newWorkspaceScreenWithDisplay(app *tview.Application, terminal tcell.Screen
 			}
 			// tview groups quick clicks even when they target different controls.
 			// Preserve double clicks for text selection only at the same position.
-			if action == tview.MouseLeftClick || action == tview.MouseLeftDoubleClick {
+			if action == tuivory.MouseLeftClick || action == tuivory.MouseLeftDoubleClick {
 				x, y := event.Position()
 				if x != lastClickX || y != lastClickY {
-					action = tview.MouseLeftClick
+					action = tuivory.MouseLeftClick
 				}
 				lastClickX, lastClickY = x, y
 			}
@@ -710,7 +708,7 @@ func (s *screen) worker() {
 				if err == nil {
 					s.finishExit()
 				} else {
-					s.exitDialog.SetText(s.tr("exit_failed") + "\n" + tview.Escape(err.Error()))
+					s.exitDialog.SetText(s.tr("exit_failed") + "\n" + tuivory.Escape(err.Error()))
 				}
 				return
 			}
@@ -909,7 +907,7 @@ func (s *screen) renderGrid(result oracle.Result) {
 	s.table.SetBackgroundColor(s.gridColors().background)
 	s.table.ScrollToBeginning()
 	for col, name := range result.Columns {
-		s.table.SetCell(0, col, tview.NewTableCell(tview.Escape(" "+name+" ")).SetStyle(s.gridHeaderStyle(false)).SetTransparency(false).SetSelectable(false))
+		s.table.SetCell(0, col, tuivory.NewTableCell(tuivory.Escape(" "+name+" ")).SetStyle(s.gridHeaderStyle(false)).SetTransparency(false).SetSelectable(false))
 	}
 	if len(result.Rows) > 0 && len(result.Columns) > 0 {
 		s.table.Select(1, 0)
@@ -920,9 +918,9 @@ func (s *screen) renderGrid(result oracle.Result) {
 			if s.resultValues[row][col].Null {
 				text = "∅ NULL"
 			}
-			cell := tview.NewTableCell(tview.Escape(" " + text + " ")).SetStyle(s.gridBaseStyle(row+1, col)).SetTransparency(false).SetMaxWidth(40)
+			cell := tuivory.NewTableCell(tuivory.Escape(" " + text + " ")).SetStyle(s.gridBaseStyle(row+1, col)).SetTransparency(false).SetMaxWidth(40)
 			if gridNumeric(s.resultValues[row][col]) {
-				cell.SetAlign(tview.AlignRight)
+				cell.SetAlign(tuivory.AlignRight)
 			}
 			s.table.SetCell(row+1, col, cell)
 		}

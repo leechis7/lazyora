@@ -1,10 +1,11 @@
 package ui
 
 import (
-	"github.com/gdamore/tcell/v2"
 	"lazyora/internal/oracle"
 	"strings"
 	"testing"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestCellDetailUsesTypedRawValueAndRestoresFocus(t *testing.T) {
@@ -12,7 +13,7 @@ func TestCellDetailUsesTypedRawValueAndRestoresFocus(t *testing.T) {
 	s.render(oracle.Result{Columns: []string{"BYTES"}, Rows: [][]string{{"0001ff"}}, Values: [][]oracle.Cell{{{Type: "BLOB", Text: "0001ff", Size: 3}}}})
 	s.table.Select(1, 0)
 	s.app.SetFocus(s.table)
-	s.key(tcell.NewEventKey(tcell.KeyEnter, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
 	if !s.pages.HasPage("cell") || !strings.Contains(s.cellText.GetText(false), "00000000") || !strings.Contains(s.cellInfo.GetText(false), "BLOB") {
 		t.Fatal("typed binary detail missing")
 	}
@@ -22,11 +23,11 @@ func TestCellDetailUsesTypedRawValueAndRestoresFocus(t *testing.T) {
 		root.SetRect(0, 0, width, 28)
 		root.Draw(terminal)
 	}
-	s.cellKey(tcell.NewEventKey(tcell.KeyCtrlC, 0, 0))
+	s.cellKey(tuivory.NewEventKey(tuivory.KeyCtrlC, 0, 0))
 	if s.clipboardText != "0001ff" {
 		t.Fatal("copied dump instead of raw hex")
 	}
-	s.cellKey(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.cellKey(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if s.pages.HasPage("cell") || s.app.GetFocus() != s.table {
 		t.Fatal("focus not restored")
 	}

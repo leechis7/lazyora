@@ -2,12 +2,11 @@ package ui
 
 import (
 	"context"
+	"lazyora/internal/oracle"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestCompletionCancelAndInsertPreserveUndoAndFocus(t *testing.T) {
@@ -17,15 +16,15 @@ func TestCompletionCancelAndInsertPreserveUndoAndFocus(t *testing.T) {
 		s.prefs.Language = lang
 		s.editor.SetText("se", true)
 		s.app.SetFocus(s.editor)
-		s.key(tcell.NewEventKey(tcell.KeyCtrlT, 0, 0))
+		s.key(tuivory.NewEventKey(tuivory.KeyCtrlT, 0, 0))
 		if s.completionList == nil || len(s.jobs) != 0 {
 			t.Fatal("offline completion used DB")
 		}
-		s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+		s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 		if s.editor.GetText() != "se" || !s.editor.HasFocus() {
 			t.Fatal("cancel changed text/focus")
 		}
-		s.key(tcell.NewEventKey(tcell.KeyCtrlT, 0, 0))
+		s.key(tuivory.NewEventKey(tuivory.KeyCtrlT, 0, 0))
 		for i, candidate := range s.completionRows {
 			if candidate.Name == "SELECT" {
 				s.completionList.SetCurrentItem(i)
@@ -35,7 +34,7 @@ func TestCompletionCancelAndInsertPreserveUndoAndFocus(t *testing.T) {
 		if s.editor.GetText() != "select" || !s.editor.HasFocus() {
 			t.Fatalf("insert=%q", s.editor.GetText())
 		}
-		s.editor.InputHandler()(tcell.NewEventKey(tcell.KeyCtrlZ, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+		s.editor.InputHandler()(tuivory.NewEventKey(tuivory.KeyCtrlZ, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 		if s.editor.GetText() != "se" {
 			t.Fatal("completion reset undo history")
 		}
@@ -68,7 +67,7 @@ func TestCompletionQuotesMetadataAndRefreshesWithFilter(t *testing.T) {
 	s.cancel = nil
 	s.busy = false
 	s.completionFilter.SetText("Na")
-	s.key(tcell.NewEventKey(tcell.KeyCtrlR, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlR, 0, 0))
 	j = <-s.jobs
 	s.cancel()
 	if !j.refresh || j.completion.Prefix != "Na" {
@@ -98,7 +97,7 @@ func TestSourceCompletionPreservesDirtyStateAndEscapeCancelsMetadataOnly(t *test
 	s.connected = false
 	text := s.sourceEditor.GetText() + "\nSEL"
 	s.sourceEditor.SetText(text, true)
-	s.key(tcell.NewEventKey(tcell.KeyCtrlT, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlT, 0, 0))
 	if s.completionEditor != s.sourceEditor {
 		t.Fatal("wrong editor")
 	}
@@ -113,7 +112,7 @@ func TestSourceCompletionPreservesDirtyStateAndEscapeCancelsMetadataOnly(t *test
 	defer cancel()
 	s.cancel()
 	s.cancel = cancel
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if ctx.Err() == nil || s.completionEditor == nil || !s.busy {
 		t.Fatal("busy Escape didn't cancel read safely")
 	}
@@ -131,8 +130,8 @@ func TestCompletionHelpKeepsMetadataRunningAndCancelButtonCancels(t *testing.T) 
 	s.app.SetFocus(s.editor)
 	s.showCompletion(false)
 	j := <-s.jobs
-	s.key(tcell.NewEventKey(tcell.KeyF1, 0, 0))
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyF1, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if j.ctx.Err() != nil || !s.busy || s.completionEditor == nil {
 		t.Fatal("closing help cancelled completion read")
 	}
@@ -149,7 +148,7 @@ func TestCompletionHelpKeepsMetadataRunningAndCancelButtonCancels(t *testing.T) 
 func TestSourceDiagnosticFocusDoesNotCompleteSQL(t *testing.T) {
 	s := programScreen(t)
 	s.app.SetFocus(s.sourceDiagnostics)
-	s.key(tcell.NewEventKey(tcell.KeyCtrlT, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyCtrlT, 0, 0))
 	if s.completionEditor != nil {
 		t.Fatal("non-editor focus opened completion")
 	}

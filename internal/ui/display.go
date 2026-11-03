@@ -2,12 +2,11 @@ package ui
 
 import (
 	"fmt"
+	"lazyora/internal/settings"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/leechis7/tuivory/go"
 	"github.com/rivo/uniseg"
-	"lazyora/internal/settings"
 )
 
 type displayCapability struct {
@@ -17,7 +16,7 @@ type displayCapability struct {
 
 // TERM and color counts describe protocols, not font coverage. CanDisplay is
 // only an encoding/terminfo estimate; never send terminal probes or change locale.
-func detectDisplay(terminal tcell.Screen, requested string) displayCapability {
+func detectDisplay(terminal tuivory.Screen, requested string) displayCapability {
 	c := displayCapability{mode: "unicode", reason: "display_reason_auto", korean: true}
 	if terminal != nil {
 		c.korean = terminal.CanDisplay('한', false)
@@ -74,24 +73,24 @@ func (s *screen) displaySummary() string {
 // displayLayout applies fallback to drawing only. Widgets retain their original
 // strings for editing, identities, hit testing, clipboard and export operations.
 type displayLayout struct {
-	*tview.Flex
+	*tuivory.Flex
 	owner *screen
 }
 
-func (d *displayLayout) Draw(terminal tcell.Screen) {
+func (d *displayLayout) Draw(terminal tuivory.Screen) {
 	if d.owner.asciiDisplay() {
 		terminal = asciiScreen{terminal}
 	}
 	d.Flex.Draw(terminal)
 }
 
-type asciiScreen struct{ tcell.Screen }
+type asciiScreen struct{ tuivory.Screen }
 
 func (a asciiScreen) CanDisplay(r rune, _ bool) bool { return r >= 0x20 && r <= 0x7e }
 
 // Tuivory's drawing adapter uses tcell's newer Put API. Keep all positioned
 // writes in the same display-only conversion path, regardless of wrapper order.
-func (a asciiScreen) Put(x, y int, text string, st tcell.Style) (string, int) {
+func (a asciiScreen) Put(x, y int, text string, st tuivory.Style) (string, int) {
 	w, h := a.Size()
 	if x < 0 || y < 0 || x >= w || y >= h {
 		return text, 0
@@ -108,12 +107,12 @@ func (a asciiScreen) Put(x, y int, text string, st tcell.Style) (string, int) {
 	}
 	return "", 0
 }
-func (a asciiScreen) SetCell(x, y int, st tcell.Style, chars ...rune) {
+func (a asciiScreen) SetCell(x, y int, st tuivory.Style, chars ...rune) {
 	if len(chars) > 0 {
 		a.SetContent(x, y, chars[0], chars[1:], st)
 	}
 }
-func (a asciiScreen) PutStrStyled(x, y int, text string, st tcell.Style) {
+func (a asciiScreen) PutStrStyled(x, y int, text string, st tuivory.Style) {
 	for text != "" {
 		rest, width := a.Put(x, y, text, st)
 		if width == 0 {
@@ -123,10 +122,10 @@ func (a asciiScreen) PutStrStyled(x, y int, text string, st tcell.Style) {
 	}
 }
 func (a asciiScreen) PutStr(x, y int, text string) {
-	a.PutStrStyled(x, y, text, tcell.StyleDefault)
+	a.PutStrStyled(x, y, text, tuivory.StyleDefault)
 }
 
-func (a asciiScreen) SetContent(x, y int, r rune, comb []rune, st tcell.Style) {
+func (a asciiScreen) SetContent(x, y int, r rune, comb []rune, st tuivory.Style) {
 	if r < 128 {
 		// Combining marks are display-only too; retain the base cell width.
 		a.Screen.SetContent(x, y, r, nil, st)

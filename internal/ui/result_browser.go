@@ -2,13 +2,13 @@ package ui
 
 import (
 	"fmt"
+	"lazyora/internal/oracle"
 	"math/big"
 	"sort"
 	"strconv"
 	"strings"
 
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
 type resultBrowser struct {
@@ -220,10 +220,10 @@ func (s *screen) showResultFilter() {
 	if s.busy {
 		return
 	}
-	form := tview.NewForm().AddInputField(s.tr("result_filter_label"), s.resultBrowser.filter, 30, nil, nil)
+	form := tuivory.NewWidgetForm().AddInputField(s.tr("result_filter_label"), s.resultBrowser.filter, 30, nil, nil)
 	close := func() { s.pages.RemovePage("result_filter"); s.app.SetFocus(s.table) }
 	form.AddButton(s.tr("result_filter_apply"), func() {
-		s.resultBrowser.filter = form.GetFormItem(0).(*tview.InputField).GetText()
+		s.resultBrowser.filter = form.GetFormItem(0).(*tuivory.InputField).GetText()
 		s.applyResultBrowser(true)
 		s.resultScopeStatus()
 		close()

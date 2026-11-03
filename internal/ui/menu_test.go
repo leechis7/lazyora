@@ -2,10 +2,10 @@ package ui
 
 import (
 	"fmt"
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"strings"
 	"testing"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 func TestMenuOnlyPaintsItsPopupArea(t *testing.T) {
@@ -24,7 +24,7 @@ func TestMenuOnlyPaintsItsPopupArea(t *testing.T) {
 					for _, size := range [][2]int{{120, 40}, {80, 10}, {40, 12}} {
 						width, height := size[0], size[1]
 						terminal.SetSize(width, height)
-						backdrop := tcell.StyleDefault.Foreground(s.colors().text).Background(s.colors().editor)
+						backdrop := tuivory.StyleDefault.Foreground(s.colors().text).Background(s.colors().editor)
 						for y := 0; y < height; y++ {
 							for x := 0; x < width; x++ {
 								terminal.SetContent(x, y, 'Q', nil, backdrop)
@@ -68,7 +68,7 @@ func selectMenuCommand(t *testing.T, s *screen, id string) {
 			}
 			s.menuModel.Open(item.Parent, s.menuModel.ReturnID())
 			s.menuModel.Focus(item.ID)
-			s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+			s.menuList.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 			return
 		}
 	}
@@ -81,7 +81,7 @@ func TestF10MainMenuAndShiftF10ContextMenu(t *testing.T) {
 			t.Run(panel+"/"+keymap, func(t *testing.T) {
 				s := demoBrowserScreen(t)
 				s.prefs.EditorKeymap = keymap
-				focused := tview.Primitive(s.editor)
+				focused := tuivory.Primitive(s.editor)
 				if panel == "results" {
 					focused = s.table
 				} else if panel == "browser" {
@@ -89,31 +89,31 @@ func TestF10MainMenuAndShiftF10ContextMenu(t *testing.T) {
 				}
 				s.app.SetFocus(focused)
 				before := s.editor.GetText()
-				s.key(tcell.NewEventKey(tcell.KeyF10, 0, 0))
+				s.key(tuivory.NewEventKey(tuivory.KeyF10, 0, 0))
 				if s.menuList == nil || s.menuIndex != menuFile || s.menuFocus != focused {
 					t.Fatal("F10 did not open the main menu with panel focus preserved")
 				}
-				s.key(tcell.NewEventKey(tcell.KeyRight, 0, 0))
+				s.key(tuivory.NewEventKey(tuivory.KeyRight, 0, 0))
 				if s.menuIndex != menuTabs {
 					t.Fatal("main menu navigation failed")
 				}
-				s.key(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModShift))
+				s.key(tuivory.NewEventKey(tuivory.KeyF10, 0, tuivory.ModShift))
 				if s.menuList == nil || s.menuIndex != -1 || s.menuFocus != focused {
 					t.Fatal("Shift+F10 did not switch to the panel context menu")
 				}
-				s.key(tcell.NewEventKey(tcell.KeyF10, 0, 0))
+				s.key(tuivory.NewEventKey(tuivory.KeyF10, 0, 0))
 				if s.menuList == nil || s.menuIndex != menuFile {
 					t.Fatal("F10 in a context menu did not open the main menu")
 				}
-				s.key(tcell.NewEventKey(tcell.KeyF10, 0, 0))
+				s.key(tuivory.NewEventKey(tuivory.KeyF10, 0, 0))
 				if s.menuList != nil || !focused.HasFocus() {
 					t.Fatal("F10 did not close the main menu and restore focus")
 				}
-				s.key(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModShift))
+				s.key(tuivory.NewEventKey(tuivory.KeyF10, 0, tuivory.ModShift))
 				if s.menuList == nil || s.menuIndex != -1 {
 					t.Fatal("Shift+F10 did not open a context menu from the main page")
 				}
-				s.key(tcell.NewEventKey(tcell.KeyF10, 0, tcell.ModShift))
+				s.key(tuivory.NewEventKey(tuivory.KeyF10, 0, tuivory.ModShift))
 				if s.menuList != nil || !focused.HasFocus() || s.editor.GetText() != before || len(s.jobs) != 0 {
 					t.Fatal("menu shortcuts changed work or failed to restore focus")
 				}
@@ -132,7 +132,7 @@ func TestSQLTabMenuPreservesDocumentsAndProtectsDirtyClose(t *testing.T) {
 			s.prefs.Language = language
 			s.initTabs()
 			first := s.editor
-			s.key(tcell.NewEventKey(tcell.KeyRune, 'g', tcell.ModAlt))
+			s.key(tuivory.NewEventKey(tuivory.KeyRune, 'g', tuivory.ModAlt))
 			if s.menuIndex != menuTabs || s.menuList.GetItemCount() != 6 {
 				t.Fatal("SQL tabs menu not available")
 			}
@@ -234,7 +234,7 @@ func TestLongMenuScrollsWithinSmallTerminal(t *testing.T) {
 	_, root = s.pages.GetFrontPage()
 	root.SetRect(0, 0, 80, 10)
 	for i := 1; i < s.menuList.GetItemCount(); i++ {
-		s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyDown, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+		s.menuList.InputHandler()(tuivory.NewEventKey(tuivory.KeyDown, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	}
 	root.Draw(terminal)
 	var visible strings.Builder
@@ -269,7 +269,7 @@ func TestBrowserRefreshAvailableFromMenuAndContextMenu(t *testing.T) {
 func TestMenuCommandsRespectContextAndNeverAliasScriptToCommit(t *testing.T) {
 	s := demoBrowserScreen(t)
 	s.connected = true
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'x', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'x', tuivory.ModAlt))
 	if s.menuList == nil || s.menuList.GetItemCount() != 9 {
 		t.Fatal("execute menu not opened")
 	}
@@ -278,21 +278,21 @@ func TestMenuCommandsRespectContextAndNeverAliasScriptToCommit(t *testing.T) {
 		t.Fatal("script key not visible")
 	}
 	s.menuList.SetCurrentItem(1)
-	s.menuList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	s.menuList.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	if len(s.jobs) != 0 || s.sqlConfirmText == nil {
 		t.Fatal("script bypassed confirmation or executed SQL/commit")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
-	s.key(tcell.NewEventKey(tcell.KeyF5, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyF5, 0, 0))
 	if len(s.jobs) != 0 {
 		t.Fatal("F5 committed")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
-	s.key(tcell.NewEventKey(tcell.KeyF6, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyF6, 0, 0))
 	if len(s.jobs) != 0 || !s.table.HasFocus() {
 		t.Fatal("F6 rolled back instead of toggling SQL/results")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyRune, 's', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 's', tuivory.ModAlt))
 	selectMenuCommand(t, s, "commit")
 	if j := <-s.jobs; j.action != "commit" {
 		t.Fatal("session menu did not commit")
@@ -300,7 +300,7 @@ func TestMenuCommandsRespectContextAndNeverAliasScriptToCommit(t *testing.T) {
 	s.cancel()
 	s.cancel = nil
 	s.busy = false
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'r', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'r', tuivory.ModAlt))
 	if j := <-s.jobs; j.action != "rollback" {
 		t.Fatal("Alt+R did not roll back")
 	}
@@ -309,27 +309,27 @@ func TestMenuCommandsRespectContextAndNeverAliasScriptToCommit(t *testing.T) {
 func TestMenusPreserveFocusAndStayOutOfDialogs(t *testing.T) {
 	s := demoBrowserScreen(t)
 	s.app.SetFocus(s.table)
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'm', tcell.ModAlt))
-	s.key(tcell.NewEventKey(tcell.KeyRight, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'm', tuivory.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRight, 0, 0))
 	if s.menuIndex != 1 {
 		t.Fatal("Right did not switch menu")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyEscape, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if !s.table.HasFocus() {
 		t.Fatal("menu lost previous focus")
 	}
 	s.connectionForm()
-	s.key(tcell.NewEventKey(tcell.KeyRune, 'h', tcell.ModAlt))
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'h', tuivory.ModAlt))
 	if s.menuList != nil || !s.connectForm.GetFormItem(connectionHost).HasFocus() {
 		t.Fatal("menu stole connection mnemonic")
 	}
-	s.key(tcell.NewEventKey(tcell.KeyF9, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyF9, 0, 0))
 	if len(s.jobs) != 0 {
 		t.Fatal("F9 executed behind connection form")
 	}
 	s.closeConnection()
 	s.editor.SetText("SAMPLE_ROWS", false)
-	s.key(tcell.NewEventKey(tcell.KeyF4, 0, 0))
+	s.key(tuivory.NewEventKey(tuivory.KeyF4, 0, 0))
 	if page, _ := s.pages.GetFrontPage(); page != "object" {
 		t.Fatal("F4 did not describe demo object")
 	}
@@ -356,9 +356,9 @@ func TestMouseMenuUsesTheFocusedResultPanel(t *testing.T) {
 			break
 		}
 	}
-	focus := func(p tview.Primitive) { s.app.SetFocus(p) }
-	button.MouseHandler()(tview.MouseLeftDown, tcell.NewEventMouse(x+1, y, tcell.Button1, 0), focus)
-	button.MouseHandler()(tview.MouseLeftClick, tcell.NewEventMouse(x+1, y, 0, 0), focus)
+	focus := func(p tuivory.Primitive) { s.app.SetFocus(p) }
+	button.MouseHandler()(tuivory.MouseLeftDown, tuivory.NewEventMouse(x+1, y, tuivory.Button1, 0), focus)
+	button.MouseHandler()(tuivory.MouseLeftClick, tuivory.NewEventMouse(x+1, y, 0, 0), focus)
 	if s.menuFocus != s.table {
 		t.Fatal("mouse menu stole panel focus")
 	}

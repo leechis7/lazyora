@@ -1,20 +1,19 @@
 package ui
 
 import (
+	"lazyora/internal/oracle"
+	"lazyora/internal/settings"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
-	"lazyora/internal/settings"
+	"github.com/leechis7/tuivory/go"
 )
 
-func workspaceTestSet(t *testing.T) (*workspaceSet, tcell.SimulationScreen) {
+func workspaceTestSet(t *testing.T) (*workspaceSet, tuivory.SimulationScreen) {
 	t.Helper()
 	terminal := colorTestTerminal(t, 120, 40)
-	app := tview.NewApplication().SetScreen(terminal)
+	app := tuivory.NewApplication().SetScreen(terminal)
 	path := filepath.Join(t.TempDir(), "settings.json")
 	factory := func(p settings.Config) *screen { return newWorkspaceScreen(app, terminal, p, path, true, nil) }
 	first := factory(settings.Config{Language: "en", Mouse: true})
@@ -31,7 +30,7 @@ func secondWorkspace(m *workspaceSet) *screen {
 }
 func exitChoice(s *screen, index int) {
 	s.exitDialog.SetFocus(index)
-	s.exitDialog.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { s.app.SetFocus(p) })
+	s.exitDialog.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 }
 
 func TestWorkspacesKeepSQLTabsResultsAndTransactionsSeparate(t *testing.T) {
@@ -152,7 +151,7 @@ func TestWorkspaceBusyBlocksSwitchAndCreation(t *testing.T) {
 	}
 	second.busy = false
 	second.showWorkspaces()
-	e := second.workspaceKey(tcell.NewEventKey(tcell.KeyRune, 'n', 0))
+	e := second.workspaceKey(tuivory.NewEventKey(tuivory.KeyRune, 'n', 0))
 	if e != nil || len(m.screens) != 3 || m.active == second {
 		t.Fatal("N new connection failed")
 	}
@@ -172,16 +171,16 @@ func TestWorkspacePickerResizeButtonsAndCloseCancel(t *testing.T) {
 		terminal.SetSize(size[0], size[1])
 		root.SetRect(0, 0, size[0], size[1])
 		root.Draw(terminal)
-		first.workspaceKey(tcell.NewEventKey(tcell.KeyTab, 0, 0))
+		first.workspaceKey(tuivory.NewEventKey(tuivory.KeyTab, 0, 0))
 		focused := first.app.GetFocus()
 		x, y, w, h := focused.GetRect()
 		if x < 0 || y < 0 || x+w > size[0] || y+h > size[1] {
 			t.Fatal("picker button clipped", size)
 		}
-		first.workspaceKey(tcell.NewEventKey(tcell.KeyRight, 0, 0))
+		first.workspaceKey(tuivory.NewEventKey(tuivory.KeyRight, 0, 0))
 		first.app.SetFocus(first.workspaceList)
 	}
-	first.workspaceKey(tcell.NewEventKey(tcell.KeyDelete, 0, 0))
+	first.workspaceKey(tuivory.NewEventKey(tuivory.KeyDelete, 0, 0))
 	if first.exitDialog == nil {
 		t.Fatal("Delete did not ask before close")
 	}
@@ -228,7 +227,7 @@ func TestUncertainWorkspaceOnlyExplicitlyDisconnects(t *testing.T) {
 	m.closeOne(first)
 	first.showPendingWork()
 	first.closePendingWork()
-	first.exitDialog.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { first.app.SetFocus(p) })
+	first.exitDialog.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { first.app.SetFocus(p) })
 	if first.workerClosed {
 		t.Fatal("pending detail lost cancel default")
 	}
@@ -245,17 +244,17 @@ func TestWorkspaceSwitchPreservesUnappliedSourceAndMetadata(t *testing.T) {
 	second := secondWorkspace(m)
 	m.activate(first)
 	first.object = oracle.Object{Owner: "A", Name: "P", Kind: "PROCEDURE"}
-	first.sourceEditor = tview.NewTextArea().SetText("unapplied source", false)
+	first.sourceEditor = tuivory.NewTextArea().SetText("unapplied source", false)
 	first.sourceLoaded = true
 	first.sourceBase = "original source"
 	first.pages.AddPage("source", first.sourceEditor, true, true)
 	first.app.SetFocus(first.sourceEditor)
-	first.key(tcell.NewEventKey(tcell.KeyRune, 'j', tcell.ModAlt))
+	first.key(tuivory.NewEventKey(tuivory.KeyRune, 'j', tuivory.ModAlt))
 	if first.workspaceList == nil {
 		t.Fatal("Alt+J unavailable in source editor")
 	}
 	first.workspaceList.SetCurrentItem(1)
-	first.workspaceList.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { first.app.SetFocus(p) })
+	first.workspaceList.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { first.app.SetFocus(p) })
 	if m.active != second || first.sourceEditor.GetText() != "unapplied source" {
 		t.Fatal("workspace switch lost source")
 	}
@@ -266,7 +265,7 @@ func TestWorkspaceSwitchPreservesUnappliedSourceAndMetadata(t *testing.T) {
 	if first.programModal == nil {
 		t.Fatal("unapplied source was not protected on quit")
 	}
-	first.programModal.InputHandler()(tcell.NewEventKey(tcell.KeyEnter, 0, 0), func(p tview.Primitive) { first.app.SetFocus(p) })
+	first.programModal.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { first.app.SetFocus(p) })
 	if m.closingAll || len(m.screens) != 2 {
 		t.Fatal("source cancel did not abort global quit")
 	}

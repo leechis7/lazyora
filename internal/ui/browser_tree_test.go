@@ -3,16 +3,15 @@ package ui
 import (
 	"errors"
 	"fmt"
+	"lazyora/internal/oracle"
 	"strings"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"lazyora/internal/oracle"
+	"github.com/leechis7/tuivory/go"
 )
 
-func browserPress(s *screen, key tcell.Key, mods tcell.ModMask) {
-	s.browser.InputHandler()(tcell.NewEventKey(key, 0, mods), func(p tview.Primitive) { s.app.SetFocus(p) })
+func browserPress(s *screen, key tuivory.Key, mods tuivory.ModMask) {
+	s.browser.InputHandler()(tuivory.NewEventKey(key, 0, mods), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 }
 
 func TestTuivoryBrowserExpandsColumnsWithoutChangingSQL(t *testing.T) {
@@ -20,29 +19,29 @@ func TestTuivoryBrowserExpandsColumnsWithoutChangingSQL(t *testing.T) {
 	s.pendingChanges = true
 	s.render(oracle.Result{Columns: []string{"N"}, Rows: [][]string{{"keep"}}})
 	n := s.browser.GetCurrentNode()
-	browserPress(s, tcell.KeyRight, 0)
+	browserPress(s, tuivory.KeyRight, 0)
 	if !n.IsExpanded() || len(n.GetChildren()) != 3 || len(s.jobs) != 0 {
 		t.Fatal("demo expansion did not load columns locally")
 	}
-	browserPress(s, tcell.KeyRight, 0)
+	browserPress(s, tuivory.KeyRight, 0)
 	selected := s.browser.GetCurrentNode()
 	if selected == nil || selected.GetReference().(*browserNode).column.Name != "ID" {
 		t.Fatal("right did not enter columns")
 	}
-	browserPress(s, tcell.KeyLeft, 0)
+	browserPress(s, tuivory.KeyLeft, 0)
 	if s.browser.GetCurrentNode() != n {
 		t.Fatal("left did not return to table")
 	}
-	browserPress(s, tcell.KeyLeft, 0)
+	browserPress(s, tuivory.KeyLeft, 0)
 	if n.IsExpanded() {
 		t.Fatal("left did not collapse")
 	}
-	browserPress(s, tcell.KeyRight, 0)
+	browserPress(s, tuivory.KeyRight, 0)
 	if n.GetChildren()[0] != selected {
 		t.Fatal("re-expansion replaced cached columns")
 	}
 	s.browser.SetCurrentNode(selected)
-	browserPress(s, tcell.KeyEnter, 0)
+	browserPress(s, tuivory.KeyEnter, 0)
 	if name, _ := s.pages.GetFrontPage(); name != "object" || s.object.Name != "SAMPLE_ROWS" {
 		t.Fatal("column activation did not open parent details")
 	}
@@ -55,7 +54,7 @@ func TestTuivoryBrowserColumnsRetryAndRejectStaleResponses(t *testing.T) {
 	s := demoBrowserScreen(t)
 	s.demo, s.connected = false, true
 	n := s.browser.GetCurrentNode()
-	browserPress(s, tcell.KeyRight, 0)
+	browserPress(s, tuivory.KeyRight, 0)
 	j := <-s.jobs
 	if j.action != "browser_columns" || j.node != n || j.object.Name != "SAMPLE_ROWS" {
 		t.Fatal("wrong column request")
@@ -64,8 +63,8 @@ func TestTuivoryBrowserColumnsRetryAndRejectStaleResponses(t *testing.T) {
 	s.cancel = nil
 	s.busy = false
 	s.acceptBrowserColumns(n, nil, errors.New("canceled"))
-	browserPress(s, tcell.KeyLeft, 0)
-	browserPress(s, tcell.KeyRight, 0)
+	browserPress(s, tuivory.KeyLeft, 0)
+	browserPress(s, tuivory.KeyRight, 0)
 	retry := <-s.jobs
 	if retry.node != n {
 		t.Fatal("failed column lookup was cached")
@@ -121,7 +120,7 @@ func TestTuivoryBrowserThemesWideTextAndNavigation(t *testing.T) {
 		for _, theme := range []string{"dark", "light", "blackwhite"} {
 			t.Run(fmt.Sprintf("%s/%d", theme, colors), func(t *testing.T) {
 				s := demoBrowserScreen(t)
-				terminal := tcell.NewSimulationScreen("UTF-8")
+				terminal := tuivory.NewSimulationScreen("UTF-8")
 				if err := terminal.Init(); err != nil {
 					t.Fatal(err)
 				}
@@ -133,12 +132,12 @@ func TestTuivoryBrowserThemesWideTextAndNavigation(t *testing.T) {
 				s.renderBrowserObjects()
 				s.browser.SetRect(0, 0, 34, 10)
 				s.app.SetFocus(s.browser)
-				browserPress(s, tcell.KeyRight, 0)
-				browserPress(s, tcell.KeyRight, tcell.ModAlt)
+				browserPress(s, tuivory.KeyRight, 0)
+				browserPress(s, tuivory.KeyRight, tuivory.ModAlt)
 				scroll := s.browser.state.Horizontal
 				s.refreshBorders()
 				s.browser.Draw(terminal)
-				fg, bg, _ := func() tcell.Style { _, _, st, _ := terminal.GetContent(1, 1); return st }().Decompose()
+				fg, bg, _ := func() tuivory.Style { _, _, st, _ := terminal.GetContent(1, 1); return st }().Decompose()
 				if fg == bg {
 					t.Fatal("selection text invisible")
 				}
@@ -168,12 +167,12 @@ func TestTuivoryBrowserLargeListKeepsSelectionAcrossFilter(t *testing.T) {
 	}
 	s.renderBrowserObjects()
 	s.browser.SetRect(0, 0, 32, 20)
-	browserPress(s, tcell.KeyEnd, 0)
+	browserPress(s, tuivory.KeyEnd, 0)
 	last := s.browser.GetCurrentNode()
 	if last.GetReference().(*browserNode).object.Name != "TABLE_4999" || s.browser.state.Scroll == 0 {
 		t.Fatal("End did not scroll to last object")
 	}
-	browserPress(s, tcell.KeyRight, 0)
+	browserPress(s, tuivory.KeyRight, 0)
 	s.browserSearch.SetText("4999")
 	if len(s.browser.GetRoot().GetChildren()) != 1 || s.browser.GetCurrentNode() != last || !last.IsExpanded() {
 		t.Fatal("filter discarded selected expanded table")
@@ -187,8 +186,8 @@ func TestTuivoryBrowserLargeListKeepsSelectionAcrossFilter(t *testing.T) {
 func TestTuivoryBrowserColumnActionsTargetItsParent(t *testing.T) {
 	s := demoBrowserScreen(t)
 	s.app.SetFocus(s.browser)
-	browserPress(s, tcell.KeyRight, 0)
-	browserPress(s, tcell.KeyRight, 0)
+	browserPress(s, tuivory.KeyRight, 0)
+	browserPress(s, tuivory.KeyRight, 0)
 	if target := s.editTableTarget(); target.Name != "SAMPLE_ROWS" || target.Kind != "TABLE" {
 		t.Fatal("column selection lost parent table for edit action")
 	}

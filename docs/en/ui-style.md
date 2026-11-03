@@ -4,7 +4,9 @@
 
 In **v0.12.1**, common styles come from **Tuivory v0.5.0**, the public Go module `github.com/leechis7/tuivory/go`. Its single `tuivory` package supplies `Styles`, `Styler`, `Choice` and state-style methods. The pinned version is in `go.mod`; see [integration and updates](tuivory-sync.md).
 
-LazyOra's `internal/ui/style_tokens.go` adapts package values to product roles. It does not own a second palette. `theme.go` and `widgets.go` apply styles to existing widgets. Oracle execution, transactions, SQL display lexing, Toad keymaps, grid data, focus and modal input routing remain application responsibilities.
+LazyOra's `internal/ui/style_tokens.go` adapts package values to product roles. It does not own a second palette. `theme.go` and `widgets.go` apply styles to existing widgets. Oracle execution, transactions, Toad keymaps, grid data, focus and modal input routing remain application responsibilities.
+
+Unreleased development uses the Tuivory v0.10.1 root facade and public Oracle SQL/PLSQL analyzer. Tuivory owns highlighting classification/common tokens/colors; LazyOra owns execution/safety and application state/keymaps. Application/test direct tview/tcell imports are zero. Retain the editor replacement after separate shared-editor input/large-document checks; do not duplicate missing shared behavior locally. See [v0.10.1 evidence](../audits/lora-76-tuivory0101.md).
 
 ## Surfaces, components and states
 

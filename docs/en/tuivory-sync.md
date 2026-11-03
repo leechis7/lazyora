@@ -2,6 +2,34 @@
 
 [한국어](../tuivory-sync.md) | **English** · [UI style rules](ui-style.md)
 
+## LORA-76: Tuivory v0.10.1 half-row shadows (2026-11-03, uncommitted/unreleased)
+
+Consume published Go v0.10.1, tag `go/v0.10.1`, Origin `287ab1d17e3834c13359645d4a4ec132e83ed345`, checksum `h1:Q/cz8UMFjfANg0Xi/jKtSWcuhtA79vBwW1xs3myr78E=`. Existing ShadowView/ShadowAuto renders one cell right and half a row down using Unicode `▀` or ASCII `.`, still reserving a full layout row. No duplicate renderer. See the [bilingual integration/verification report](../audits/lora-76-tuivory0101.md).
+
+## LORA-76: Tuivory v0.10.0 regression improvements (2026-11-02, uncommitted/unreleased)
+
+Consume published Go v0.10.0, tag `go/v0.10.0`, Origin `1697765b366facfc82120ef4f6c9a18a73437524`, checksum `h1:MZKtI82SYZpVhFTj3zRNJc5x3wtoWEn06Lbj9CNGcp8=`. Existing public APIs deliver glyph preservation, splitter/syntax/comparison styles and responsive confirmations without duplicate host layout fixes. All 1,272 screen combinations pass, resolving 24 previous failures. See the [bilingual integration/revalidation report](../audits/lora-76-tuivory0100.md). The v0.9.0 audit below is historical pre-fix evidence.
+
+## LORA-76: comprehensive runtime UI audit (2026-11-02)
+
+Audited 1,272 real-application drawing combinations. Korean glyph loss, invisible light/8 splitters and offscreen reconnect buttons remain; this work is not release-ready. Independent SDK reproductions and host causes are tracked separately in existing LORA-76/TVR-7. See the [bilingual audit report](../audits/lora-76-ui-runtime-audit.md) for coverage, defects and unverified environments. No additional product fixes, commits or publication were performed.
+
+## LORA-76: Tuivory v0.9.0 SQL analyzer adoption (2026-11-01, uncommitted/unreleased)
+
+Verified public `github.com/leechis7/tuivory/go v0.9.0`, tag `go/v0.9.0`, Origin `3aadb547a40f8be58b55268300dc613b6f1b8db1`, Sum `h1:fY/1eZcDws90Z9Vb60JQ4GruNNBuX9Y9dU450o3Bkz8=`. Continue on the existing v0.8.0 branch and replace the host highlighting lexer/classification vocabulary with the public SQL analyzer. A minimal display adapter maps original byte ranges/common roles to the retained editor callback; analysis errors render plain text instead of stale colors. Preserve 268 offline completion candidates as separate application data. Execution/safety decisions do not consume highlighting results.
+
+First-party application/test direct tview/tcell imports remain zero. Retiring the editor replacement is a separate task: shared-editor Tab/Ctrl+Left behavior and large-document layout costs differ from the current contract. Analysis and byte-editing APIs are available; defer full editor replacement on actual compatibility/performance evidence, reported to TVR-24, rather than building a duplicate editor locally. See [v0.9.0 evidence](../audits/lora-76-tuivory090.md). Released v0.12.1 still contains Tuivory v0.5.0.
+
+Top F10 popups use actual public Menu.BarLayout() label coordinates and MenuPlacement() clamping instead of the host’s equally spaced screen-width calculation. Verify bilingual labels, narrow widths, resizing and nonzero parent origins.
+
+## LORA-76: Tuivory v0.8.0 single-import proposal (2026-11-01, uncommitted/unreleased)
+
+- Verified public `github.com/leechis7/tuivory/go v0.8.0`, tag `go/v0.8.0`, Origin `46cc506d0e9234cdd1c7f1b0a2033269e39476c7`, Sum `h1:z9afgCzv5OShNQLFH92dEm5pROEGB5SnenONPGLZuMo=`. No copied SDK source or local Tuivory replacement.
+- Migrate first-party application/test tview and tcell imports to the published root facade. Use SDK `WidgetForm`, `WidgetTextView` and other compatibility names where semantic models conflict; do not introduce a consumer shim. Read live global borders through `GetBorders()`.
+- Public `SurfaceView` owns opaque borderless popup cards, replacing the Flex/Box workaround while retaining themes, ASCII, modal blocking, shadows and selection.
+- **Zero direct imports does not mean removal of the editor fork.** v0.8.0 `TextArea` aliases the backend and lacks the existing `SetTextStyleFunc` callback. Semantic `TextDocument.SetByteSyntax` exists but does not preserve the complete current byte-selection/Replace, undo/redo and large-document display contract unchanged. Retain `third_party/tview` replacement to preserve syntax colors, original text and keymaps; do not claim the fork is retired.
+- Released LazyOra v0.12.1 still contains Tuivory v0.5.0. See [proposal and validation](../audits/lora-76-tuivory080.md) for application, commit, publication, CI and release status. Dated entries below are historical.
+
 ## v0.12.1 release adoption
 
 v0.12.1 includes published Tuivory Go v0.5.0, releasing the popup/source-menu/deprecation integration below with bilingual docs and actual PTY captures. Full zero-direct-tview-import migration remains dependent on TVR-22–26's language-neutral APIs. Unreleased/uncommitted labels below preserve validation-time history; earlier v0.12.0 still contains v0.4.0.

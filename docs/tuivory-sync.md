@@ -4,6 +4,34 @@
 
 LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 원칙을 제품 UI에 적용합니다. Tuivory의 가이드·견본·도구 개발은 별도 저장소와 Tuivory Jira에서 관리하고, LazyOra의 적용 작업은 LORA Jira에서 관리합니다.
 
+## LORA-76: Tuivory v0.10.1 반 줄 그림자 (2026-11-03, 미커밋·미배포)
+
+공개 Go v0.10.1(태그 `go/v0.10.1`, Origin `287ab1d17e3834c13359645d4a4ec132e83ed345`, Sum `h1:Q/cz8UMFjfANg0Xi/jKtSWcuhtA79vBwW1xs3myr78E=`)을 적용했습니다. 기존 ShadowView/ShadowAuto로 오른쪽 1칸·하단 반 줄을 소비하며 Unicode는 `▀`, ASCII는 `.`으로 표시합니다. 시각적으로 반 줄이어도 배치에는 1행을 예약합니다. 공통 렌더러를 별도 구현하지 않았습니다. [한영 적용·검증 기록](audits/lora-76-tuivory0101.md)을 확인하세요.
+
+## LORA-76: Tuivory v0.10.0 회귀 개선 적용 (2026-11-02, 미커밋·미배포)
+
+공개 Go v0.10.0(태그 `go/v0.10.0`, Origin `1697765b366facfc82120ef4f6c9a18a73437524`, Sum `h1:MZKtI82SYZpVhFTj3zRNJc5x3wtoWEn06Lbj9CNGcp8=`)을 적용합니다. 한글 보존·분할선/구문/비교표 스타일·반응형 확인창의 SDK 수정을 기존 공개 API로 소비하며 앱 우회 배치를 추가하지 않습니다. 이전 24개 실패를 포함한 1,272개 화면 조합이 모두 통과했습니다. [한영 적용·재검증 기록](audits/lora-76-tuivory0100.md)을 확인하세요. 아래 v0.9.0 조사 결과는 수정 전 이력입니다.
+
+## LORA-76: UI 전수 조사 (2026-11-02)
+
+실제 앱 그리기 1,272개 조합을 검사했습니다. 한글 소실·8색 분할선 대비·40열 재접속 버튼 잘림이 남아 배포 가능한 상태로 판정하지 않습니다. 공개 SDK만의 재현과 앱 원인을 분리해 기존 LORA-76/TVR-7에 기록했습니다. [한영 조사 보고서](audits/lora-76-ui-runtime-audit.md)에서 범위·결함·정상 동작·미검증 환경을 확인하세요. 추가 제품 수정·커밋·게시는 하지 않았습니다.
+
+## LORA-76: Tuivory v0.9.0 SQL 분석기 적용 (2026-11-01, 미커밋·미배포)
+
+공개 `github.com/leechis7/tuivory/go v0.9.0`, 태그 `go/v0.9.0`, Origin `3aadb547a40f8be58b55268300dc613b6f1b8db1`, Sum `h1:fY/1eZcDws90Z9Vb60JQ4GruNNBuX9Y9dU450o3Bkz8=`를 확인했습니다. 기존 v0.8.0 작업 브랜치에서 공개 SQL 분석기를 연결해 독자 강조 렉서·색상 어휘 분류표를 제거했습니다. 최소 표시 어댑터가 SDK의 원문 바이트 범위·공통 역할을 기존 편집기 스타일 콜백에 연결하며, 분석 오류 시 이전 색을 쓰지 않고 기본 텍스트로 표시합니다. 자동완성 후보 268개는 강조 분류와 분리된 앱 데이터로 보존합니다. SQL 실행/위험 구문 판단은 이 강조 결과를 사용하지 않습니다.
+
+first-party 앱·테스트의 tview/tcell 직접 import는 0개를 유지합니다. 그러나 직접 import 제거와 기존 편집기 replace 제거는 별개입니다. 새 편집기의 Tab·Ctrl+← 동작과 긴 문서 재배치 비용이 기존 계약과 달라 전면 교체는 보류했습니다. 새 분석기·바이트 편집 API가 없다는 의미가 아닙니다. 공통 입력/성능 개선은 TVR-24에 재현 근거를 전달했으며 LazyOra에 중복 편집 엔진을 구현하지 않습니다. [v0.9.0 적용·검증 기록](audits/lora-76-tuivory090.md)을 확인하세요. 정식 v0.12.1은 여전히 Tuivory v0.5.0입니다.
+
+상단 F10 팝업은 화면을 메뉴 개수로 균등 분할하던 앱 계산을 제거하고, 공개 `Menu.BarLayout()`의 실제 라벨 좌표와 `MenuPlacement()`의 경계 보정에 연결합니다. 한영 메뉴·좁은 폭·크기 왕복·부모 좌표 이동에서 검증합니다.
+
+## LORA-76: Tuivory v0.8.0 단일 import 전환안 (2026-11-01, 미커밋·미배포)
+
+- 공개 모듈 `github.com/leechis7/tuivory/go v0.8.0`, 태그 `go/v0.8.0`, Origin `46cc506d0e9234cdd1c7f1b0a2033269e39476c7`, Sum `h1:z9afgCzv5OShNQLFH92dEm5pROEGB5SnenONPGLZuMo=`를 확인했습니다. SDK 소스 복사나 로컬 Tuivory replace는 없습니다.
+- first-party 앱/테스트의 tview·tcell 직접 import를 공개 루트 facade로 전환합니다. 이름이 기존 의미 모델과 겹치는 호환 위젯은 `WidgetForm`, `WidgetTextView` 등 게시된 이름을 사용하며 소비자 shim을 만들지 않습니다. 전역 테두리 값은 `GetBorders()`로 읽습니다.
+- 공개 `SurfaceView`가 팝업의 불투명·테두리 없는 카드 채우기를 담당합니다. 이전 Flex/Box 표면 우회를 제거하고 테마·ASCII·입력 차단·그림자·선택 동작을 보존합니다.
+- **직접 import 제거와 편집기 포크 제거는 다릅니다.** v0.8.0 `TextArea`는 기본 backend 타입의 호환 별칭이며 기존 `SetTextStyleFunc` 콜백이 없습니다. 의미 모델 `TextDocument.SetByteSyntax`는 제공되지만 기존 편집기의 바이트 선택/Replace·Undo/Redo·대용량 표시 계약 전체를 그대로 대체하지 않습니다. 문법 색상과 원문·키맵을 보존하기 위해 `third_party/tview` replace는 유지하며, 전체 포크 제거가 끝났다고 표시하지 않습니다.
+- 릴리스 v0.12.1의 Tuivory는 여전히 v0.5.0입니다. 이번 v0.8.0 변경안의 적용·커밋·게시·CI·배포 여부와 검증은 [적용 검토 기록](audits/lora-76-tuivory080.md)에 구분합니다. 기존 날짜별 항목은 당시 기록입니다.
+
 ## v0.12.1 릴리스 적용
 
 v0.12.1은 공개 Tuivory Go v0.5.0을 포함합니다. 아래 팝업·소스 명령 메뉴 전환과 Deprecated 정리를 사용자 승인으로 발행하며 한영 문서·실제 PTY 캡처를 갱신합니다. 전체 tview 직접 import 제거는 TVR-22~26의 언어 중립 API 제공에 의존하는 미완료 목표입니다. 아래 미배포/미커밋 표기는 검증 당시 시점을 보존한 기록이며 정식 v0.12.0은 여전히 v0.4.0을 포함합니다.

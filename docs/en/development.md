@@ -4,6 +4,10 @@
 
 `dev` integrates development; `main` is the release/public documentation branch. Start feature, fix and documentation work from current `dev`. Maintainers check the related Jira issue before work, update it when work starts and record implementation/verification evidence. External contributors do not need Jira accounts.
 
+## Tuivory v0.10.1 (2026-11-03, unreleased)
+
+LORA-76 development consumes only the Tuivory Go v0.10.1 root import and published Widget… compatibility names. An AST check guards against direct application/test tview/tcell imports. Delegate SQL highlighting analysis to NewSQLAnalyzer(); keep only a byte-range/role display adapter locally. Completion candidates remain separate application data. Retain the existing tview replacement after checking shared-editor input/large-document compatibility. Distinguish these changes from released v0.12.1's v0.5.0 dependency. See the [v0.10.1 review](../audits/lora-76-tuivory0101.md).
+
 ## Jira Kanban workflow
 
 Since 2026-10-27, LazyOra uses Kanban without sprints. Prioritize the backlog and use **To Do → In Progress → Review → Done** instead of inventing deadlines or creating new sprints. Preserve the historical records of sprints 1 and 2; sprint 2 is closed.

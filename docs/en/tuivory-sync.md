@@ -2,6 +2,10 @@
 
 [한국어](../tuivory-sync.md) | **English** · [UI style rules](ui-style.md)
 
+## v0.12.2 release integration
+
+v0.12.2 pins published Tuivory Go v0.10.1 (Origin `287ab1d17e3834c13359645d4a4ec132e83ed345`). First-party app/tests have no direct tview/tcell imports; retain the editor replacement for input/performance compatibility. Adopt the public SQL analyzer, actual-label F10 placement, glyph/contrast fixes and right-one-cell/bottom-half-row shadows. [Release notes](releases/v0.12.2.md). The dated uncommitted/unreleased notes below describe their validation-time state; broader layout/editor scope remains open.
+
 ## LORA-76: Tuivory v0.10.1 half-row shadows (2026-11-03, uncommitted/unreleased)
 
 Consume published Go v0.10.1, tag `go/v0.10.1`, Origin `287ab1d17e3834c13359645d4a4ec132e83ed345`, checksum `h1:Q/cz8UMFjfANg0Xi/jKtSWcuhtA79vBwW1xs3myr78E=`. Existing ShadowView/ShadowAuto renders one cell right and half a row down using Unicode `▀` or ASCII `.`, still reserving a full layout row. No duplicate renderer. See the [bilingual integration/verification report](../audits/lora-76-tuivory0101.md).

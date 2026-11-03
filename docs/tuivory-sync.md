@@ -4,6 +4,10 @@
 
 LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 원칙을 제품 UI에 적용합니다. Tuivory의 가이드·견본·도구 개발은 별도 저장소와 Tuivory Jira에서 관리하고, LazyOra의 적용 작업은 LORA Jira에서 관리합니다.
 
+## v0.12.2 릴리스 적용
+
+v0.12.2는 공개 Tuivory Go v0.10.1(Origin `287ab1d17e3834c13359645d4a4ec132e83ed345`)을 고정합니다. 앱·테스트의 직접 tview/tcell import는 0개이며 기존 편집기 replace는 입력·성능 호환성 때문에 유지합니다. 공개 SQL 분석기, 실제 라벨 기준 F10 위치, 한글·대비 수정과 오른쪽 1칸·하단 반 줄 그림자를 포함합니다. [릴리스 설명](releases/v0.12.2.md)을 확인하세요. 아래 날짜별 미커밋·미배포 표기는 당시 검증 시점의 이력이며 전체 배치·편집기 전환은 남아 있습니다.
+
 ## LORA-76: Tuivory v0.10.1 반 줄 그림자 (2026-11-03, 미커밋·미배포)
 
 공개 Go v0.10.1(태그 `go/v0.10.1`, Origin `287ab1d17e3834c13359645d4a4ec132e83ed345`, Sum `h1:Q/cz8UMFjfANg0Xi/jKtSWcuhtA79vBwW1xs3myr78E=`)을 적용했습니다. 기존 ShadowView/ShadowAuto로 오른쪽 1칸·하단 반 줄을 소비하며 Unicode는 `▀`, ASCII는 `.`으로 표시합니다. 시각적으로 반 줄이어도 배치에는 1행을 예약합니다. 공통 렌더러를 별도 구현하지 않았습니다. [한영 적용·검증 기록](audits/lora-76-tuivory0101.md)을 확인하세요.

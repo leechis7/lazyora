@@ -6,7 +6,7 @@ replace github.com/rivo/tview => ./third_party/tview
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
-	github.com/leechis7/tuivory/go v0.10.1
+	github.com/leechis7/tuivory/go v0.10.2
 	github.com/rivo/uniseg v0.4.7
 	github.com/sijms/go-ora/v3 v3.0.2-0.20260731135026-9197bc12b6fe
 	golang.org/x/crypto v0.45.0

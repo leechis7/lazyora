@@ -2,7 +2,7 @@
 
 [한국어 (기본)](index.md) | [English](en/index.md)
 
-현행 사용법은 아래 안내를 따릅니다. 앱 버전의 원본은 `internal/appinfo/info.go`, 의존 버전은 `go.mod`, 실제 배포 파일은 [GitHub Releases](https://github.com/leechis7/lazyora/releases)에서 확인합니다. **v0.12.2은 Tuivory v0.10.1을 공통 UI 패키지로 사용**합니다. 이전 TUIS·독립 프로젝트 준비안은 현재 의존성이나 미완료 작업을 뜻하지 않습니다.
+현행 사용법은 아래 안내를 따릅니다. 앱 버전의 원본은 `internal/appinfo/info.go`, 의존 버전은 `go.mod`, 실제 배포 파일은 [GitHub Releases](https://github.com/leechis7/lazyora/releases)에서 확인합니다. **v0.12.2은 Tuivory v0.10.2을 공통 UI 패키지로 사용**합니다. 이전 TUIS·독립 프로젝트 준비안은 현재 의존성이나 미완료 작업을 뜻하지 않습니다.
 
 ## 현행 안내
 

@@ -4,8 +4,8 @@
 
 공통 설계 원칙의 상위 출처는 [Tuivory](https://github.com/leechis7/tuivory)입니다. LazyOra 적용 기준과 마지막 확인 커밋은 [Tuivory 가이드 반영 기록](tuivory-sync.md)에 남깁니다. 아래 문서는 LazyOra의 실제 컴포넌트·단축키·상태 처리에 맞춘 적용 규칙입니다.
 
-v0.12.2 공통 스타일의 원본은 **Tuivory v0.10.1** (`github.com/leechis7/tuivory/go`)입니다. 단일 공개 패키지 `tuivory`의 `Styles`, `Styler`, `Choice`와 상태 스타일 메서드를 import합니다. `internal/ui/style_tokens.go`는 패키지 값과 제품 역할을 연결하고, `theme.go`·`widgets.go`는 공통 API를 기존 위젯에 적용합니다. 실제 의존 버전은 `go.mod`와 [적용 기록](tuivory-sync.md)에 고정합니다.
-v0.12.2는 Tuivory v0.10.1 루트 facade와 공개 Oracle SQL/PLSQL 분석기를 사용합니다. 강조 분류·공통 토큰/색상은 Tuivory, SQL 실행/위험 구문 판단·업무 상태/키맵은 LazyOra가 담당합니다. 앱/테스트의 직접 tview/tcell import는 0개입니다. SDK 편집기의 입력·긴 문서 표시 계약은 별도 검증하여 기존 편집기 replace를 유지하며, 미충족 기능을 앱에 중복 구현하지 않습니다. [v0.10.1 근거](audits/lora-76-tuivory0101.md)를 확인하세요.
+v0.12.2 공통 스타일의 원본은 **Tuivory v0.10.2** (`github.com/leechis7/tuivory/go`)입니다. 단일 공개 패키지 `tuivory`의 `Styles`, `Styler`, `Choice`와 상태 스타일 메서드를 import합니다. `internal/ui/style_tokens.go`는 패키지 값과 제품 역할을 연결하고, `theme.go`·`widgets.go`는 공통 API를 기존 위젯에 적용합니다. 실제 의존 버전은 `go.mod`와 [적용 기록](tuivory-sync.md)에 고정합니다.
+v0.12.2는 Tuivory v0.10.2 루트 facade와 공개 Oracle SQL/PLSQL 분석기를 사용합니다. 강조 분류·공통 토큰/색상은 Tuivory, SQL 실행/위험 구문 판단·업무 상태/키맵은 LazyOra가 담당합니다. 앱/테스트의 직접 tview/tcell import는 0개입니다. SDK 편집기의 입력·긴 문서 표시 계약은 별도 검증하여 기존 편집기 replace를 유지하며, 미충족 기능을 앱에 중복 구현하지 않습니다. [v0.10.2 근거](audits/lora-76-tuivory0102.md)를 확인하세요.
 
 새 화면을 추가할 때 기본 tview 색상에 맡기지 않고 생성 시점부터 현재 테마를 적용합니다.
 

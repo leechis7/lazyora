@@ -4,7 +4,11 @@
 
 ## v0.12.2 release integration
 
-v0.12.2 pins published Tuivory Go v0.10.1 (Origin `287ab1d17e3834c13359645d4a4ec132e83ed345`). First-party app/tests have no direct tview/tcell imports; retain the editor replacement for input/performance compatibility. Adopt the public SQL analyzer, actual-label F10 placement, glyph/contrast fixes and right-one-cell/bottom-half-row shadows. [Release notes](releases/v0.12.2.md). The dated uncommitted/unreleased notes below describe their validation-time state; broader layout/editor scope remains open.
+v0.12.2 pins published Tuivory Go v0.10.2 (Origin `5e95114869356297c38cf69dc3b1cc46675475eb`). First-party app/tests have no direct tview/tcell imports; retain the editor replacement for input/performance compatibility. Adopt the public SQL analyzer, actual-label F10 placement, glyph/contrast fixes and right-one-cell/bottom-half-row shadows. [Release notes](releases/v0.12.2.md). The dated uncommitted/unreleased notes below describe their validation-time state; broader layout/editor scope remains open.
+
+## LORA-76: v0.10.2 Windows facade fix (2026-11-03)
+
+Consume published Go v0.10.2, Origin `5e95114869356297c38cf69dc3b1cc46675475eb`, checksum `h1:iPVsFzd0TLAsADWvMRnP6S0kD0OsZsZzglGAyOeob+Y=`. Platform-aware generation fixes the Windows import failure, without consumer shims or removal of Windows support. Upstream withdrew v0.10.1; earlier dated evidence below is historical. Resume v0.12.2 through PR #70 and Windows/all-platform CI. [Integration evidence](../audits/lora-76-tuivory0102.md).
 
 ## LORA-76: Tuivory v0.10.1 half-row shadows (2026-11-03, uncommitted/unreleased)
 

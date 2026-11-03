@@ -6,7 +6,11 @@ LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 �
 
 ## v0.12.2 릴리스 적용
 
-v0.12.2는 공개 Tuivory Go v0.10.1(Origin `287ab1d17e3834c13359645d4a4ec132e83ed345`)을 고정합니다. 앱·테스트의 직접 tview/tcell import는 0개이며 기존 편집기 replace는 입력·성능 호환성 때문에 유지합니다. 공개 SQL 분석기, 실제 라벨 기준 F10 위치, 한글·대비 수정과 오른쪽 1칸·하단 반 줄 그림자를 포함합니다. [릴리스 설명](releases/v0.12.2.md)을 확인하세요. 아래 날짜별 미커밋·미배포 표기는 당시 검증 시점의 이력이며 전체 배치·편집기 전환은 남아 있습니다.
+v0.12.2는 공개 Tuivory Go v0.10.2(Origin `5e95114869356297c38cf69dc3b1cc46675475eb`)을 고정합니다. 앱·테스트의 직접 tview/tcell import는 0개이며 기존 편집기 replace는 입력·성능 호환성 때문에 유지합니다. 공개 SQL 분석기, 실제 라벨 기준 F10 위치, 한글·대비 수정과 오른쪽 1칸·하단 반 줄 그림자를 포함합니다. [릴리스 설명](releases/v0.12.2.md)을 확인하세요. 아래 날짜별 미커밋·미배포 표기는 당시 검증 시점의 이력이며 전체 배치·편집기 전환은 남아 있습니다.
+
+## LORA-76: v0.10.2 Windows 파사드 수정 (2026-11-03)
+
+공개 Go v0.10.2, Origin `5e95114869356297c38cf69dc3b1cc46675475eb`, Sum `h1:iPVsFzd0TLAsADWvMRnP6S0kD0OsZsZzglGAyOeob+Y=`를 적용합니다. 플랫폼 조건을 보존한 SDK 생성기가 Windows import 실패를 해결하며 소비자 shim이나 Windows 지원 제외로 우회하지 않습니다. upstream에서 v0.10.1을 회수했으며 아래 날짜별 검증은 과거 기록입니다. PR #70에서 Windows/전체 CI로 v0.12.2 배포를 재개합니다. [적용 근거](audits/lora-76-tuivory0102.md).
 
 ## LORA-76: Tuivory v0.10.1 반 줄 그림자 (2026-11-03, 미커밋·미배포)
 

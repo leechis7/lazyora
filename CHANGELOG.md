@@ -8,8 +8,8 @@
 
 ### 개선 / Changed
 
-- LORA-76: Tuivory Go v0.10.1 루트 facade로 앱·테스트의 tview/tcell 직접 import를 제거하고, 팝업 표면 우회를 공개 SurfaceView로 교체합니다.
-- LORA-76: Use the Tuivory Go v0.10.1 root facade instead of direct application/test tview/tcell imports and replace the popup surface workaround with public SurfaceView.
+- LORA-76: Tuivory Go v0.10.2 루트 facade로 앱·테스트의 tview/tcell 직접 import를 제거하고, 팝업 표면 우회를 공개 SurfaceView로 교체합니다.
+- LORA-76: Use the Tuivory Go v0.10.2 root facade instead of direct application/test tview/tcell imports and replace the popup surface workaround with public SurfaceView.
 - LORA-76: 공개 Oracle SQL/PLSQL 분석기로 강조 전용 렉서·분류표를 교체합니다. 원문·색상·선택·키맵·자동완성 후보를 보존합니다. 기존 편집기 replace는 공통 편집기의 입력·대용량 표시 계약 검증에 따라 유지합니다.
 - LORA-76: Replace the highlighting lexer/vocabulary with the public Oracle SQL/PLSQL analyzer, preserving literal text, colors, selection, keymaps and completion candidates. Retain the editor replacement pending shared-editor input/large-document compatibility.
 
@@ -19,8 +19,11 @@
 - LORA-76: 공개 v0.10.0의 한글 보존·저색상 구문/분할선/비교표 대비·반응형 확인창을 적용해 40열의 취소 버튼 잘림을 해소합니다. 실제 앱 출력 회귀 검사를 추가합니다.
 - LORA-76: Consume published v0.10.0 glyph preservation, low-color syntax/splitter/comparison contrast and responsive confirmations, resolving clipped Cancel buttons at 40 columns; add rendered-application regression coverage.
 
-- LORA-76: 공개 Tuivory v0.10.1로 팝업 그림자를 오른쪽 1칸·아래 반 줄로 표시합니다. ASCII는 점으로 대체하고 배치·입력 경계를 유지합니다.
-- LORA-76: Use public Tuivory v0.10.1 popup shadows, one cell right and half a row down, with ASCII dots and preserved layout/input boundaries.
+- LORA-76: 공개 Tuivory v0.10.2로 팝업 그림자를 오른쪽 1칸·아래 반 줄로 표시합니다. ASCII는 점으로 대체하고 배치·입력 경계를 유지합니다.
+- LORA-76: Use public Tuivory v0.10.2 popup shadows, one cell right and half a row down, with ASCII dots and preserved layout/input boundaries.
+
+- LORA-76: Windows 파사드 빌드 결함이 수정된 공개 SDK를 사용합니다. 회수된 v0.10.1은 사용하지 않습니다.
+- LORA-76: Consume the public SDK fixing Windows facade compilation; do not use withdrawn v0.10.1.
 
 ## [0.12.1] - 2026-10-31
 

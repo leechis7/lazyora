@@ -2,7 +2,7 @@
 
 [한국어 (primary)](../index.md) | **English**
 
-Use the guides below for current behavior. The app-version source is `internal/appinfo/info.go`, dependency versions are in `go.mod`, and actual published binaries are in [GitHub Releases](https://github.com/leechis7/lazyora/releases). **v0.12.2 uses Tuivory v0.10.1 for shared UI styles.** Earlier TUIS references and independent-project plans are migration/design history, not current dependencies or incomplete extraction work.
+Use the guides below for current behavior. The app-version source is `internal/appinfo/info.go`, dependency versions are in `go.mod`, and actual published binaries are in [GitHub Releases](https://github.com/leechis7/lazyora/releases). **v0.12.2 uses Tuivory v0.10.2 for shared UI styles.** Earlier TUIS references and independent-project plans are migration/design history, not current dependencies or incomplete extraction work.
 
 ## Current guidance
 

@@ -46,7 +46,7 @@ func (s *screen) prepareResultGrid() {
 				}
 				label = arrow + " " + label
 			}
-			columns[c] = tuivory.GridColumn{ID: strconv.Itoa(c), Label: label, Width: max(1, s.grid.widths[c]-2)}
+			columns[c] = tuivory.GridColumn{ID: strconv.Itoa(c), Label: label, Width: max(1, s.grid.widths[c]-2), Editable: true}
 		}
 		model, err := tuivory.NewGrid(columns, resultSource{s})
 		if err != nil {
@@ -56,6 +56,21 @@ func (s *screen) prepareResultGrid() {
 		if err != nil {
 			panic(err)
 		}
+		model.SetEditOptions(tuivory.GridEditOptions{Enabled: true, AllowNull: true,
+			Prepare: func(row tuivory.GridRecord, col tuivory.GridColumn) (tuivory.GridValue, bool) {
+				r, errR := strconv.Atoi(row.ID)
+				c, errC := strconv.Atoi(col.ID)
+				if errR != nil || errC != nil || !s.connected || s.busy || s.transactionUncertain ||
+					r < 1 || r > len(s.resultBrowser.visible) || c < 0 || c >= len(s.resultHeaders) {
+					return tuivory.GridValue{}, false
+				}
+				index, sourceCol := s.resultBrowser.visible[r-1], s.resultSourceColumn(c)
+				if !s.resultBrowser.source.CanEditColumn(sourceCol) {
+					return tuivory.GridValue{}, false
+				}
+				cell := browserCell(s.resultBrowser.source, index, sourceCol)
+				return tuivory.GridValue{Text: editInputText(cell), Null: cell.Null}, true
+			}})
 		p = &resultPresentation{model: model, view: view}
 		s.grid.presentation = p
 		model.SetCellInfo(func(row tuivory.GridRecord, col tuivory.GridColumn) tuivory.GridCellInfo {
@@ -73,6 +88,17 @@ func (s *screen) prepareResultGrid() {
 			info.State.Edited = s.isEditedCell(r, c)
 			return info
 		})
+		// Published v0.11.0 separates the aggregate gutter marker from cell
+		// colors. Supply identities; the SDK owns marker rendering and styling.
+		model.SetRowEdited(func(row tuivory.GridRecord) bool {
+			r, _ := strconv.Atoi(row.ID)
+			for c := range s.resultHeaders {
+				if s.isEditedCell(r, c) {
+					return true
+				}
+			}
+			return false
+		})
 	}
 	model := p.model
 	options, _ := tuivory.GridPreset("data")
@@ -81,11 +107,12 @@ func (s *screen) prepareResultGrid() {
 	options.ASCII = s.asciiDisplay()
 	// Host keymaps and transaction actions take priority over generic demo keys.
 	options.DisableHeaderSort = true
-	options.DisableEditing = true
+	options.DisableEditing = false
 	// Preserve the product's richer localized status text, rendered by StatusLine.
 	options.StatusFields = []string{"meta"}
 	_ = model.SetOptions(options)
 	model.Status.Metadata = s.gridStatusText()
+	model.Labels = map[string]string{"editing": s.tr("grid_inline_editing"), "pending": s.tr("grid_inline_pending")}
 	_ = p.view.SetPalette(s.resultPalette())
 	row, col := s.table.GetSelection()
 	model.Focus(strconv.Itoa(row), strconv.Itoa(col))
@@ -99,7 +126,9 @@ func (s *screen) prepareResultGrid() {
 		a := s.resultSelection
 		model.SelectRange(tuivory.GridRange{AnchorRow: strconv.Itoa(a.anchorRow), AnchorColumn: strconv.Itoa(a.anchorCol), EndRow: strconv.Itoa(a.endRow), EndColumn: strconv.Itoa(a.endCol)})
 	} else {
-		model.Handle("cancel", 1)
+		if _, editing := model.EditSession(); !editing {
+			model.Handle("cancel", 1)
+		}
 		_ = model.SetSelectionMode("cell")
 	}
 }

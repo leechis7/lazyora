@@ -1,0 +1,19 @@
+cursor=-1,-1 visible=false
+
+  grid.header-active: " Title               "
+  header: "  #"
+  grid.divider: "│"
+  grid.divider: "│"
+> 
+  field: " 한글|                "
+  grid.gutter: " >1"
+  grid.divider: "│"
+  grid.divider: "│"
+
+
+
+
+
+
+
+i Editing | R 1/1 C 1/1 | Title

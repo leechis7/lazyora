@@ -102,6 +102,9 @@ func (s *screen) refreshFooter() {
 		return
 	}
 	page, _ := s.pages.GetFrontPage()
+	if page == "main" && s.inlineEdit != nil {
+		page = "grid_inline"
+	}
 	keys := []footerKey{
 		{"F1", "help", tuivory.KeyF1, tuivory.ModNone},
 		{"", "connect", 0, 0},

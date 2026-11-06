@@ -84,7 +84,7 @@ F9 SELECT fetches from the same cursor in batches of 1,000, retaining at most 10
 
 Ctrl+C copies the active cell/range; Alt+Y copies the row. Shift+arrows or mouse drag selects a rectangle; Esc clears it. Copy uses original values before display clipping/markup, with TSV quoting and `NULL` for nulls. A successful OSC 52 request does not prove receipt by the desktop clipboard; use Edit → View copied content for terminal-native selection when necessary.
 
-Read-only Enter opens cell details for long values/NULL/BLOB, with full-value reading and individual file saving where supported. LOB references belong to their execution/session and can expire; streamed full saves differ from clipped previews. XLSX/INSERT have format/type limits; do not infer that a preview contains the full value.
+Use Cell details in the context menu for long values/NULL/BLOB, with full-value reading and individual file saving where supported. Enter/double-click starts editing inside eligible cells; unavailable cells stay in the grid with an explanation, without opening a popup. LOB references belong to their execution/session and can expire; streamed full saves differ from clipped previews. XLSX/INSERT have format/type limits; do not infer that a preview contains the full value.
 
 Open a table explicitly for editing, or execute a validated single-table SELECT containing **actual ROWID and original columns**:
 
@@ -121,3 +121,6 @@ In v0.4.0 the shared package renders menu single borders and clipped titles. Dis
 ### v0.12.1 popup refinements
 
 v0.12.1 uses Tuivory v0.5.0 shared shadows and backdrop dimming. Background colors remain under Dim; shadow clicks cannot activate the page behind. Shift+F10 source-edit commands open in a common popup menu: navigate with arrows/Home/End/PgUp/PgDn and Enter; Esc restores the source editor. Editing, secret handling and settings-save policy remain.
+
+
+The current development version uses Tuivory v0.11.1 to show a cell `*` and an independent dirty-row gutter `*`. Unchanged cells do not inherit dirty colors from the row marker; transaction completion clears the cues. Enter/double-click editing uses the shared SDK buffer and real cursor. Cancelling change review resumes the same draft; NULL, pending approval and closure hide the cursor. Blink/shape follow terminal settings.

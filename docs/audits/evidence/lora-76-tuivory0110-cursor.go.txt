@@ -1,0 +1,18 @@
+package main
+import (
+ "fmt"
+ ui "github.com/leechis7/tuivory/go"
+)
+func main() {
+ rows,_:=ui.NewMemoryRows([]ui.GridRecord{{ID:"r1",Cells:map[string]string{"c1":"한글"}}})
+ grid,_:=ui.NewGrid([]ui.GridColumn{{ID:"c1",Label:"Title",Width:20,Editable:true}},rows)
+ options,_:=ui.GridPreset("data");grid.SetOptions(options)
+ grid.SetEditOptions(ui.GridEditOptions{Enabled:true,AllowNull:true})
+ grid.BeginEdit("")
+ doc,_:=ui.CandidateTokens(); raw,_:=doc.Palette("dark","truecolor"); palette,_:=ui.Resolve(raw)
+ view,err:=ui.NewGridView(grid,palette,nil);if err!=nil{panic(err)}
+ terminal:=ui.NewSimulationScreen("");terminal.Init();defer terminal.Fini();terminal.SetSize(40,10)
+ view.SetRect(0,0,40,10);view.Focus(func(ui.Primitive){});terminal.HideCursor();view.Draw(terminal);terminal.Show()
+ x,y,visible:=terminal.GetCursor();fmt.Printf("cursor=%d,%d visible=%v\n",x,y,visible)
+ for _,line:=range grid.Layout(40,10){fmt.Printf("%s\n",line.Text);for _,span:=range line.Spans{fmt.Printf("  %s: %q\n",span.Role,span.Text)}}
+}

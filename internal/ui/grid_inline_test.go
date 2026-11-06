@@ -7,6 +7,11 @@ import (
 	"github.com/leechis7/tuivory/go"
 )
 
+func setInlineText(s *screen, text string) {
+	s.inlineEdit.model.EditInput("select_all", "")
+	s.inlineEdit.model.EditInput("insert", text)
+}
+
 func inlineFixture(t *testing.T) (*screen, tuivory.SimulationScreen) {
 	t.Helper()
 	s, terminal := resultScreen(t)
@@ -41,7 +46,7 @@ func TestInlineCellEditConfirmationAndCancel(t *testing.T) {
 	if s.inlineEdit == nil || s.inlineEdit.GetText() != "second" || s.inlineEdit.change.Row != 1 {
 		t.Fatal("inline input lost sorted row mapping")
 	}
-	s.inlineEdit.SetText("new")
+	setInlineText(s, "new")
 	s.key(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
 	confirmInline(t, s, false)
 	if s.inlineEdit == nil || s.inlineEdit.GetText() != "new" {
@@ -60,7 +65,7 @@ func TestInlineCellEditConfirmationAndCancel(t *testing.T) {
 		t.Fatal("unapplied job marked edited")
 	}
 	s.startInlineEdit(nil)
-	s.inlineEdit.SetText("discard")
+	setInlineText(s, "discard")
 	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
 	if s.inlineEdit != nil || len(s.jobs) != 0 || s.resultBrowser.source.Rows[1][1] != "second" {
 		t.Fatal("Esc changed data")
@@ -81,14 +86,16 @@ func TestInlineReplaceNullAndModalInputIsolation(t *testing.T) {
 		terminal.SetSize(width, 30)
 		s.table.SetRect(0, 0, width, 25)
 		s.resultGrid().Draw(terminal)
-		s.inlineEdit.Draw(terminal)
-		x, y, w, h := s.inlineEdit.GetRect()
+		s.resultGrid().Draw(terminal)
+		x, y, w := s.resultCellRect(s.table.GetSelection())
+		h := 1
 		if x < 0 || x+w > width || y < 0 || h != 1 {
 			t.Fatal("inline widget outside grid")
 		}
 	}
 	s.key(tuivory.NewEventKey(tuivory.KeyDelete, 0, tuivory.ModAlt))
-	if !s.inlineEdit.change.Null {
+	session, _ := s.inlineEdit.model.EditSession()
+	if !session.Value.Null {
 		t.Fatal("NULL action missing")
 	}
 	s.key(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))

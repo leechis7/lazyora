@@ -9,11 +9,6 @@ import (
 	"github.com/leechis7/tuivory/go"
 )
 
-// tcell emits DECSCUSR even for its default cursor. Older SecureCRT sessions
-// render the trailing q instead of consuming it. Keep the terminal's existing
-// cursor shape: LazyOra only needs to show, hide and position the cursor.
-var defaultCursorSequence = []byte("\x1b[0 q")
-
 // Win32-input-mode reports key releases as CSI ... _. On SSH terminals these
 // may arrive after cooked input is restored, leaking into the shell. Keep
 // CSI-u/modifyOtherKeys for modified keys without opting into Win32 reports.
@@ -27,11 +22,10 @@ type compatibleTTY struct {
 
 func (t *compatibleTTY) Write(data []byte) (int, error) {
 	buffer := append(t.pending, data...)
-	buffer = bytes.ReplaceAll(buffer, defaultCursorSequence, nil)
 	buffer = bytes.ReplaceAll(buffer, win32InputEnable, win32InputDisable)
 	// A control sequence may straddle writes. Hold only a possible prefix.
 	keep := 0
-	for _, sequence := range [][]byte{defaultCursorSequence, win32InputEnable} {
+	for _, sequence := range [][]byte{win32InputEnable} {
 		for size := 1; size < len(sequence) && size <= len(buffer); size++ {
 			if bytes.Equal(buffer[len(buffer)-size:], sequence[:size]) {
 				keep = max(keep, size)
@@ -88,6 +82,7 @@ func newCompatibleScreen() (tuivory.Screen, error) {
 }
 
 func newCompatibleScreenFromTTY(tty tuivory.Tty) (tuivory.Screen, error) {
+	tty = tuivory.PreserveCursorTty(tty)
 	if os.Getenv("TERM") == "" {
 		// Select a conservative fallback locally, without modifying the process
 		// environment or replacing an explicitly configured terminal protocol.

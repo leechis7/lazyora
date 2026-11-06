@@ -27,7 +27,7 @@ func (s *screen) key(event *tuivory.EventKey) *tuivory.EventKey {
 	if page == "keymap_compare" {
 		return s.keymapComparisonKey(event)
 	}
-	if page == "grid_inline" {
+	if page == "main" && s.inlineEdit != nil {
 		return s.inlineEditKey(event)
 	}
 	if s.vaultBusy {
@@ -65,9 +65,7 @@ func (s *screen) key(event *tuivory.EventKey) *tuivory.EventKey {
 		return s.cellKey(event)
 	}
 	if page == "main" && s.table.HasFocus() && event.Key() == tuivory.KeyEnter && event.Modifiers() == 0 {
-		if !s.startInlineEdit(nil) {
-			s.showCellDetail()
-		}
+		s.editSelectedResultCell()
 		return nil
 	}
 	if page == "result_filter" {

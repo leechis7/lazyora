@@ -118,8 +118,6 @@ func widgetBox(p tuivory.Primitive) *tuivory.Box {
 		return w.Flex.Box
 	case *resultGrid:
 		return w.Table.Box
-	case *inlineCellEditor:
-		return w.InputField.Box
 	case *tuivory.Box:
 		return w
 	case *tuivory.Flex:

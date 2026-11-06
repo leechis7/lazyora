@@ -49,6 +49,18 @@ func (s *screen) resultMouse(action tuivory.MouseAction, event *tuivory.EventMou
 	s.prepareResultGrid()
 	x, y := event.Position()
 	left, top, w, h := s.table.GetInnerRect()
+	if s.inlineEdit != nil && page == "main" {
+		e := s.inlineEdit
+		if !s.inlineTargetValid(e) {
+			s.closeInlineEdit()
+			return tuivory.MouseConsumed, nil
+		}
+		if handler := s.grid.presentation.view.MouseHandler(); handler != nil {
+			handler(action, event, func(tuivory.Primitive) {})
+		}
+		s.inlineEditEvent(tuivory.GridEvent{})
+		return tuivory.MouseConsumed, nil
+	}
 	if action == tuivory.MouseRightClick {
 		if page == "main" {
 			s.app.SetFocus(s.table)
@@ -63,13 +75,16 @@ func (s *screen) resultMouse(action tuivory.MouseAction, event *tuivory.EventMou
 	if !s.table.InRect(x, y) && pointer != "up" && pointer != "move" {
 		return action, event
 	}
-	// Double-click opens the existing inline editor or read-only detail popup.
+	// Main-grid double-click shares Enter's in-cell edit action.
+	// Routine results retain their read-only detail viewer.
 	if pointer == "double" {
 		row, col := s.resultCellAt(x, y)
 		if row > 0 && col >= 0 {
 			s.table.Select(row, col)
 			s.app.SetFocus(s.table)
-			if page != "main" || !s.startInlineEdit(nil) {
+			if page == "main" {
+				s.editSelectedResultCell()
+			} else {
 				s.showCellDetail()
 			}
 		}

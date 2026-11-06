@@ -6,6 +6,10 @@
 
 소스 빌드 방법과 호환성·검증 기록은 [빌드와 검증](build.md)을 참고하세요.
 
+## Tuivory v0.11.1 (개발 브랜치, 미배포)
+
+현재 LORA-76은 공개 SDK의 승인형 Grid 편집 세션·실제 커서·독립 변경 표식을 소비합니다. 셀 InputField 렌더러와 소비자 DECSCUSR 필터를 제거하고 Oracle 대상 검증·변경 확인·UPDATE/트랜잭션만 연결합니다. 공개 `PreserveCursorTty`는 기존 TTY 생성 경로에 적용합니다. [출처·적용 및 검증 범위](tuivory-sync.md)를 참고하세요. 아래 v0.12.2 설명은 배포 버전의 이력입니다.
+
 ## Tuivory v0.10.2 (v0.12.2)
 
 현재 LORA-76 개발 변경은 Tuivory Go v0.10.2 루트 import만 사용합니다. backend 호환 위젯 이름은 `Widget…`이며 AST 검사로 앱·테스트의 직접 tview/tcell import 재도입을 막습니다. SQL 강조 분석은 공개 `NewSQLAnalyzer()`에 위임하며 앱에는 원문 범위·역할을 연결하는 표시 어댑터만 둡니다. 자동완성 후보는 별도 앱 데이터입니다. 공통 편집기 입력·대용량 표시 호환성을 검토한 결과 기존 tview replace는 유지합니다. 이 변경은 v0.12.2에 포함하며 [v0.10.2 검토 기록](audits/lora-76-tuivory0102.md)을 확인하세요.

@@ -388,7 +388,7 @@ func (s *screen) clearConnectionResults() {
 }
 
 func (s *screen) canSwitchWorkspace() bool {
-	if s.workspaces == nil || s.busy || s.vaultBusy || s.quitting || s.workspaces.closingAll {
+	if s.workspaces == nil || s.inlineEdit != nil || s.busy || s.vaultBusy || s.quitting || s.workspaces.closingAll {
 		return false
 	}
 	page, _ := s.pages.GetFrontPage()

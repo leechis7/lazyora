@@ -4,6 +4,50 @@
 
 LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 원칙을 제품 UI에 적용합니다. Tuivory의 가이드·견본·도구 개발은 별도 저장소와 Tuivory Jira에서 관리하고, LazyOra의 적용 작업은 LORA Jira에서 관리합니다.
 
+## v0.12.3 릴리스 준비
+
+v0.12.3은 공개 Tuivory Go v0.11.1을 고정하고 셀 편집 UI·실제 커서·독립 변경 표식을 통합합니다. [릴리스 설명](releases/v0.12.3.md). 아래 미커밋·미게시 표기는 각각의 검증 시점 이력입니다. 사용자 배포 승인에 따라 기능 커밋과 한영 근거를 분리했으며 원격 CI·태그 게시를 확인합니다. 전체 LORA-76 완료나 SQL 편집기 포크 제거를 의미하지 않습니다.
+
+## LORA-76: Tuivory v0.11.1 공통 셀 편집 전환 (2026-11-06, 미배포)
+
+공개 `github.com/leechis7/tuivory/go v0.11.1`, 태그 `go/v0.11.1`, Origin `aacaa369a830ad22fe5d5bed7a1e4c25830771c5`, Sum `h1:g7Rp4Rlo039vVdrfJ1Xl3s7/C4HK4jB6HXrOyN9y5to=`를 적용했습니다. 이전 v0.11.0의 커서 보류 사유가 해소되어 공개 `Grid.BeginEdit`/`Input`/`EditInput`/`EditSession`/`ResolveEdit`와 `NewGridView`로 셀 내 편집을 전환했습니다. 로컬 `inlineCellEditor.Draw`/`MouseHandler`, InputField·전체화면 입력 페이지와 개별 좌표/클리핑 처리를 제거했습니다. 남은 객체는 Oracle 대상 ID·원본 컬럼·물리 ROWID 식별과 공개 세션의 연결 상태만 보관합니다.
+
+공개 `PreserveCursorTty`를 기존 TTY 화면 생성 경로에 연결하고 소비자 DECSCUSR 필터는 제거했습니다. 이 경로는 터미널 사용자 커서 모양/깜빡임 설정을 보존하며 기존 TERM 미지정 ANSI 선택과 Win32 키 릴리스 누출 차단은 별개로 유지합니다. Windows의 기존 native console 선택은 유지하며 실제 Windows/macOS 콘솔·SecureCRT·CentOS에서 깜빡임을 시험한 것은 아닙니다. [독립 재현 코드](audits/evidence/lora-76-tuivory0111-cursor.go.txt)와 [출력](audits/evidence/lora-76-tuivory0111-cursor.txt)은 실제 커서 `(9,1,true)`와 고정 `|` 제거를 확인합니다.
+
+Oracle 편집 자격/초깃값은 `Prepare` 콜백으로 공급합니다. Enter 제출은 SDK 승인 대기로 두고 LazyOra 변경 확인에서 승인해야 `ResolveEdit` 후 UPDATE 작업을 보냅니다. 확인 취소는 같은 SDK 초안을 재개하며 원본은 바꾸지 않습니다. 소스 재조회·탭 교체는 세션을 취소하고 오래된 승인에는 SQL을 보내지 않습니다. Alt+D 별도 편집창, Ctrl+U 지우기, Alt+Delete NULL, 원문 복사·변경 셀/독립 행 표식은 유지합니다. SDK 데모 전역 키·Tab 편집 이동·범위 붙여넣기·열 고정·찾기 등은 새 제품 명령으로 노출하지 않습니다.
+
+커서·입력 버퍼·문자 폭·마우스·스타일·그리기는 SDK가 담당하며 강제 커서 escape나 새 로컬 편집 렌더러를 만들지 않습니다. API 제공과 제품 통합 완료를 구분하며, SQL 편집기의 기존 `third_party/tview` replace 및 다른 LORA-76 범위는 남아 있습니다. 커밋·게시·배포하지 않았습니다.
+
+검증: 전체 테스트(UI 25.650초), 관련 race(68.936초)와 최종 승인/포커스 보호 race(1.704초), vet·ARM64 빌드, 실제 커서 96조합·표식 24조합·PTY 4환경을 통과했습니다. [한영 검증 보고서](audits/lora-76-tuivory0111.md)에서 실DB·물리 터미널 미검증 범위를 확인하세요. 사용자 검토 대기이며 커밋·게시·배포하지 않았습니다.
+
+## LORA-76: Tuivory v0.11.0 적용 및 편집 UI 전환 판단 (2026-11-06, 미배포)
+
+공개 `github.com/leechis7/tuivory/go v0.11.0`, 태그 `go/v0.11.0`, Origin `ebe38b07fceb357b3537a355ba45fffde8832ad1`, Sum `h1:U85LlO5WQzQDcRSfvfiaiXo4ufYXk1WeuquABSvUDWw=`를 적용했습니다. `SetRowEdited`로 변경 행 번호의 `*`를 복원하고 기존 셀 `Edited`와 색상을 독립적으로 공급합니다. 스타일과 표식 그리기는 공개 SDK가 담당하며 행 전체 변경색 우회는 추가하지 않습니다. 과거 아래의 ‘행 표식 생략’ 기록은 해당 버전의 이력입니다.
+
+**편집 UI 전체 교체는 보류합니다.** v0.11.0은 승인형 `BeginEdit`/`EditInput`/`ResolveEdit`를 제공하지만 공개 `NewGridView`의 실제 출력은 커서를 고정 `|` 문자로 그립니다. 독립 재현의 `GetCursor()`는 `(-1,-1,false)`이며 실제 커서를 표시하지 않습니다. [재현 코드](audits/evidence/lora-76-tuivory0110-cursor.go.txt) · [출력](audits/evidence/lora-76-tuivory0110-cursor.txt). 요청한 터미널 커서 동작을 유지하기 위해 기존 InputField 어댑터를 남기고, [TVR-7 보완 요청](https://leechis7.atlassian.net/browse/TVR-7?focusedCommentId=11002)에 공통 backend 커서 위치/가시성·포커스/클리핑·NULL/승인 대기·종료 처리를 전달했습니다. 강제 커서 모양 escape나 새 소비자 커서 우회는 만들지 않습니다. ‘API 없음’이라는 11월 5일 기록은 당시 v0.10.2 기준이며 현재는 커서 호환성 차이로 보류합니다.
+
+새 열 고정/숨김/순서·범위 붙여넣기·찾기·보기 상태·Tab 편집 이동은 SDK에 제공되지만 이번 적용에서 제품 명령으로 연결하지 않았습니다. 기존 Oracle 승인·ROWID·트랜잭션·원문 복사와 전역 키를 유지합니다. 커밋·게시·배포 승인 전이며 사용자 `test/oracle/run.sh` 실행 모드는 보존합니다.
+
+검증: 전체 `go test ./...`(UI 22.429초), 관련 편집/표식 `-race`(13.624초), `go vet ./...`, Linux ARM64 `make build`를 통과했습니다. 새 소비자 표식 검사는 다크/라이트/흑백 ×8/16/256/truecolor ×Unicode/ASCII 24조합에서 셀·행 표식 분리, 포커스 이동과 상태 해제를 확인합니다. 기존 한영 Enter/더블클릭 실제 커서 검사도 통과했습니다. 실DB·CentOS·물리 터미널·타 OS 로컬 빌드·GitHub CI는 이번에 실행하지 않았습니다. 사용자 검토 대기이며 커밋·게시·배포하지 않았습니다.
+
+## LORA-76: 공통 셀 편집 API 전환 요청 (2026-11-05, 의존성 대기)
+
+공개 Go v0.10.2(Origin `5e95114869356297c38cf69dc3b1cc46675475eb`)의 `Grid.Handle("activate")`는 `edit` 이벤트를 제공하고 `NewGridView`는 이를 호스트에 전달합니다. 셀 내 입력칸 배치·편집 수명·확정/취소를 소유하는 공개 컨트롤은 아직 없으므로, 현재 `inlineCellEditor.Draw`/`MouseHandler`와 페이지·포커스 관리를 제거하지 않습니다. 기존 Enter·더블클릭 편집은 유지하며 공통 API로 전환 완료했다고 표시하지 않습니다.
+
+사용자 승인으로 [TVR-7 요청](https://leechis7.atlassian.net/browse/TVR-7?focusedCommentId=10993)에 언어 중립 계약을 전달했습니다. Tuivory는 셀 좌표·클리핑·리사이즈/스크롤·커서·포커스·키/마우스 전달·시작/제출/취소 및 설정 가능한 NULL 조작을 담당합니다. LazyOra는 안정적인 행/열 ID와 리비전, 편집 허용 여부·초깃값·NULL/형식·스타일을 연결하고 Oracle ROWID/원본 컬럼 검증·변경 승인·UPDATE·트랜잭션을 담당합니다. 제출은 소스를 즉시 바꾸지 않고 호스트 승인/거절을 지원해야 하며 접속·탭·소스 교체 후 오래된 편집은 무효화해야 합니다.
+
+공개 패키지 제공 후 기존 로컬 UI 우회를 제거하고 Enter·더블클릭·타이핑·취소·NULL·승인 거절·데이터 교체·좁은 화면/크기 변경·한글/ASCII·색상별 회귀 검증을 진행합니다. 별도 Alt+D 편집창은 유지합니다. Go/Rust 제공 완료와 계획을 구분하며 여기서는 Tuivory 구현을 수정하지 않습니다. 이번 기록은 소스/API 확인과 요청 정리이며 제품 변경·추가 테스트·커밋·배포는 없습니다.
+
+변경 셀 표시도 [TVR-7 추가 요청](https://leechis7.atlassian.net/browse/TVR-7?focusedCommentId=10995)에 포함했습니다. 기존 셀 `Edited`/`EditedStyle` 지원을 바탕으로 Tuivory가 테마·색상 수·문자 모드별 배경/글자/보조 표식과 선택·NULL 등 상태 조합 우선순위를 담당합니다. LazyOra는 변경 셀의 안정적인 식별과 실제 미커밋 상태, 승인·실패 및 커밋/롤백/재조회에 따른 해제만 공급합니다. 행 변경 표식은 셀 배경과 독립적으로 제공하여 하나의 변경 셀 때문에 행 전체가 변경 색으로 칠해지지 않도록 요청했습니다. 공개 API 보완 대기이며 기존 표시 동작은 유지합니다.
+
+## LORA-76: Enter·더블클릭 셀 내 편집 명확화 (미배포, 2026-11-03)
+
+일반 SQL 결과에서 Enter·더블클릭을 같은 셀 내 편집 명령으로 연결합니다. 편집 가능한 셀은 기존 공개 InputField로 진입하고 크기 변경 후에도 커서를 셀 안에 유지합니다. 편집 불가 시 상세창 대신 그리드에 사유를 안내합니다. Alt+D 별도 편집창, 문맥/보기 메뉴의 셀 상세, 기존 Oracle 허용 조건과 ROWID 숨김을 유지하며 F4는 객체 상세로 남깁니다. 공통 렌더러나 강제 커서 모양 제어 코드는 추가하지 않았고, 깜빡임/모양은 SecureCRT 호환을 위해 터미널 설정을 따릅니다. 사용자 검토 대기이며 미커밋·미게시입니다.
+
+## LORA-76: 그리드 전후 기능 감사 (2026-11-03, 제품 수정 없음)
+
+v0.11.3 자체 렌더러와 v0.12.2/공개 SDK v0.10.2를 비교했습니다. 버전별 관찰 47개와 동일한 기존 검사 24개를 확인했고, 탐색·휠 선택/복사 대상·헤더·스타일 속성·수정 행 표식의 조작/표시 차이 9가지를 정리했습니다. 조건을 갖춘 결과의 인라인/별도창 편집은 유지됐습니다. [한영 보고서·증거](audits/lora-76-grid-regressions.md)에 SDK와 Oracle 어댑터의 담당 및 실DB 미검증 범위를 구분했습니다. 제품 수정·커밋·게시 없음.
+
 ## v0.12.2 릴리스 적용
 
 v0.12.2는 공개 Tuivory Go v0.10.2(Origin `5e95114869356297c38cf69dc3b1cc46675475eb`)을 고정합니다. 앱·테스트의 직접 tview/tcell import는 0개이며 기존 편집기 replace는 입력·성능 호환성 때문에 유지합니다. 공개 SQL 분석기, 실제 라벨 기준 F10 위치, 한글·대비 수정과 오른쪽 1칸·하단 반 줄 그림자를 포함합니다. [릴리스 설명](releases/v0.12.2.md)을 확인하세요. 아래 날짜별 미커밋·미배포 표기는 당시 검증 시점의 이력이며 전체 배치·편집기 전환은 남아 있습니다.

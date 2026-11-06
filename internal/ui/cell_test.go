@@ -13,7 +13,7 @@ func TestCellDetailUsesTypedRawValueAndRestoresFocus(t *testing.T) {
 	s.render(oracle.Result{Columns: []string{"BYTES"}, Rows: [][]string{{"0001ff"}}, Values: [][]oracle.Cell{{{Type: "BLOB", Text: "0001ff", Size: 3}}}})
 	s.table.Select(1, 0)
 	s.app.SetFocus(s.table)
-	s.key(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
+	s.invoke("cell_detail")
 	if !s.pages.HasPage("cell") || !strings.Contains(s.cellText.GetText(false), "00000000") || !strings.Contains(s.cellInfo.GetText(false), "BLOB") {
 		t.Fatal("typed binary detail missing")
 	}

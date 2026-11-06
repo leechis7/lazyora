@@ -228,6 +228,7 @@ type screen struct {
 	sourceLoaded                             bool
 	programModal                             *tuivory.Modal
 	programFocus, argumentFocus              tuivory.Primitive
+	programReject                            func()
 	argumentTable                            *tuivory.Table
 	argumentInfo                             *tuivory.WidgetTextView
 	jobs                                     chan job
@@ -406,9 +407,12 @@ func newWorkspaceScreenWithDisplay(app *tuivory.Application, terminal tuivory.Sc
 					return nil, action
 				}
 			}
-			if page, _ := s.pages.GetFrontPage(); page == "grid_inline" && s.inlineEdit != nil {
+
+			// Editing remains a host workflow: do not activate another screen's
+			// commands while a draft is open. The SDK owns pointer handling in-grid.
+			if page, _ := s.pages.GetFrontPage(); page == "main" && s.inlineEdit != nil {
 				x, y := event.Position()
-				if !s.inlineEdit.InRect(x, y) {
+				if !s.table.InRect(x, y) {
 					return nil, action
 				}
 			}
@@ -881,6 +885,7 @@ func (s *screen) render(result oracle.Result) {
 }
 
 func (s *screen) renderGrid(result oracle.Result) {
+	s.closeInlineEdit()
 	s.resultQuery = result.Query
 	s.resultTruncated = result.Truncated
 	s.resultValues = make([][]oracle.Cell, len(result.Rows))

@@ -63,6 +63,7 @@ func (s *screen) switchTab(index int) {
 	if s.busy || index < 0 || index >= len(s.tabs) {
 		return
 	}
+	s.closeInlineEdit()
 	s.stashTab()
 	s.activeTab = index
 	tab := s.tabs[index]

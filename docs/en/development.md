@@ -4,6 +4,10 @@
 
 `dev` integrates development; `main` is the release/public documentation branch. Start feature, fix and documentation work from current `dev`. Maintainers check the related Jira issue before work, update it when work starts and record implementation/verification evidence. External contributors do not need Jira accounts.
 
+## Tuivory v0.11.1 (development branch, unreleased)
+
+LORA-76 consumes published SDK host-approved Grid edit sessions, real cursors and independent dirty markers. Remove the cell InputField renderer and consumer DECSCUSR filter; bind Oracle identity/eligibility, approval, UPDATE and transactions. Use public `PreserveCursorTty` in the existing TTY factory. See [source identity, integration and verification scope](tuivory-sync.md). The v0.12.2 notes below describe released history.
+
 ## Tuivory v0.10.2 (v0.12.2)
 
 LORA-76 development consumes only the Tuivory Go v0.10.2 root import and published Widget… compatibility names. An AST check guards against direct application/test tview/tcell imports. Delegate SQL highlighting analysis to NewSQLAnalyzer(); keep only a byte-range/role display adapter locally. Completion candidates remain separate application data. Retain the existing tview replacement after checking shared-editor input/large-document compatibility. These changes are included in v0.12.2. See the [v0.10.2 review](../audits/lora-76-tuivory0102.md).

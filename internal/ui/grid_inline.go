@@ -51,32 +51,17 @@ func (s *screen) editedCellStyle() tuivory.Style {
 	return s.tuivoryStyles().EditedStyle()
 }
 
-// The page covers the input routing area, while Draw places the real input
-// widget over just the selected cell. It never paints an opaque full-screen box.
+// Only Oracle target metadata lives here. Tuivory owns the draft buffer,
+// rendering, cursor, clipping, and the edit session lifecycle.
 type inlineCellEditor struct {
-	*tuivory.InputField
-	owner    *screen
-	change   oracle.EditChange
-	row, col int
+	model  *tuivory.Grid
+	change oracle.EditChange
+	key    editedCellKey
 }
 
-func (e *inlineCellEditor) Draw(terminal tuivory.Screen) {
-	table := e.owner.table
-	x, y, width := e.owner.resultCellRect(e.row, e.col)
-	left, top, w, h := table.GetInnerRect()
-	actualRow, actualCol := e.owner.resultCellAt(x, y)
-	if actualRow != e.row || actualCol != e.col || y < top || y >= top+h || x < left || x >= left+w {
-		return
-	}
-	width = min(max(1, width), left+w-x)
-	e.InputField.SetRect(x, y, width, 1)
-	e.InputField.Draw(terminal)
-}
-func (e *inlineCellEditor) MouseHandler() func(tuivory.MouseAction, *tuivory.EventMouse, func(tuivory.Primitive)) (bool, tuivory.Primitive) {
-	return func(action tuivory.MouseAction, event *tuivory.EventMouse, focus func(tuivory.Primitive)) (bool, tuivory.Primitive) {
-		e.InputField.MouseHandler()(action, event, focus)
-		return true, nil // Do not change the source cell or dismiss unconfirmed text.
-	}
+func (e *inlineCellEditor) GetText() string {
+	session, _ := e.model.EditSession()
+	return session.Value.Text
 }
 
 func editInputText(cell oracle.Cell) string {
@@ -94,74 +79,128 @@ func editInputText(cell oracle.Cell) string {
 	}
 	return cell.Text
 }
+
+// Main-grid activation is an editing request. Keep unavailable cells in place
+// instead of opening a details popup that resembles the separate editor.
+func (s *screen) editSelectedResultCell() {
+	if !s.startInlineEdit(nil) && !s.busy {
+		s.setStatus("grid_inline_unavailable")
+	}
+}
+
 func (s *screen) startInlineEdit(first *rune) bool {
-	if !s.commandEnabled("grid_edit") {
+	if s.inlineEdit != nil || !s.commandEnabled("grid_edit") {
 		return false
 	}
+	s.prepareResultGrid()
 	row, col := s.table.GetSelection()
 	index := s.resultBrowser.visible[row-1]
 	sourceCol := s.resultSourceColumn(col)
-	old := browserCell(s.resultBrowser.source, index, sourceCol)
-	value := editInputText(old)
-	change := oracle.EditChange{ID: s.resultBrowser.source.EditID, Row: index, Column: sourceCol, Text: value, Null: old.Null}
+	model := s.grid.presentation.model
+	text := ""
 	if first != nil {
-		value = string(*first)
-		change.Null = false
+		text = string(*first)
 	}
-	field := tuivory.NewInputField().SetText(value).SetFieldWidth(0).SetFieldStyle(s.editedCellStyle())
-	field.SetPlaceholderStyle(s.editedCellStyle().Dim(true))
-	editor := &inlineCellEditor{InputField: field, owner: s, change: change, row: row, col: col}
-	if change.Null {
-		field.SetPlaceholder("NULL")
+	if !model.BeginEdit(text) {
+		return false
 	}
-	field.SetChangedFunc(func(string) { editor.change.Null = false; field.SetPlaceholder("") })
-	s.inlineEdit = editor
+	s.inlineEdit = &inlineCellEditor{model: model,
+		change: oracle.EditChange{ID: s.resultBrowser.source.EditID, Row: index, Column: sourceCol},
+		key:    s.editedCellIdentity(s.resultBrowser.source, index, sourceCol)}
 	s.clearResultSelection()
-	s.pages.AddPage("grid_inline", editor, true, true)
-	s.app.SetFocus(editor)
+	s.app.SetFocus(s.table)
 	s.setStatus("grid_inline_hint")
 	return true
 }
+
+func (s *screen) inlineTargetValid(e *inlineCellEditor) bool {
+	return e != nil && s.inlineEdit == e && s.grid.presentation != nil &&
+		s.grid.presentation.model == e.model && s.connected && !s.transactionUncertain &&
+		s.resultBrowser.source.EditID == e.change.ID && s.resultBrowser.source.CanEditColumn(e.change.Column) &&
+		s.editedCellIdentity(s.resultBrowser.source, e.change.Row, e.change.Column) == e.key
+}
+
 func (s *screen) closeInlineEdit() {
 	if s.inlineEdit == nil {
 		return
 	}
-	s.pages.RemovePage("grid_inline")
+	s.inlineEdit.model.CancelEdit()
+	if p := s.grid.presentation; p != nil && p.model == s.inlineEdit.model {
+		p.view.Blur()
+	}
 	s.inlineEdit = nil
-	s.app.SetFocus(s.table)
+	if s.programModal == nil {
+		s.app.SetFocus(s.table)
+	}
 }
+
 func (s *screen) inlineEditKey(event *tuivory.EventKey) *tuivory.EventKey {
-	editor := s.inlineEdit
-	if editor == nil {
-		return nil
-	}
-	switch event.Key() {
-	case tuivory.KeyEscape:
+	e := s.inlineEdit
+	if !s.inlineTargetValid(e) {
 		s.closeInlineEdit()
-		s.resultScopeStatus()
+		s.setStatus("grid_inline_unavailable")
 		return nil
-	case tuivory.KeyEnter:
-		change := editor.change
-		change.Text = editor.GetText()
-		old := browserCell(s.resultBrowser.source, change.Row, change.Column)
-		if change.Null == old.Null && (change.Null || change.Text == editInputText(old)) {
-			s.closeInlineEdit()
-			return nil
-		}
-		s.previewCellChange(change)
-		return nil
-	case tuivory.KeyDelete:
-		if event.Modifiers()&tuivory.ModAlt != 0 {
-			editor.SetText("")
-			editor.change.Null = true
-			editor.SetPlaceholder("NULL")
-			return nil
-		}
 	}
-	// Keep all application commands inside this editor until Enter/Esc. Ctrl+U,
-	// cursor movement, backspace and paste retain InputField's native behavior.
+	// Preserve product bindings rather than installing the SDK demo keymap.
+	// Tab traversal is deliberately left unchanged until the workflow is exposed.
 	if event.Key() == tuivory.KeyTab || event.Key() == tuivory.KeyBacktab {
 		return nil
 	}
-	return event
+	var result tuivory.GridEvent
+	if event.Key() == tuivory.KeyDelete && event.Modifiers()&tuivory.ModAlt != 0 {
+		e.model.EditInput("select_all", "")
+		e.model.EditInput("delete", "")
+		result = e.model.EditInput("null", "")
+	} else if event.Key() == tuivory.KeyCtrlU {
+		e.model.EditInput("select_all", "")
+		result = e.model.EditInput("delete", "")
+	} else {
+		_, _, w, h := s.table.GetInnerRect()
+		result = e.model.Input(tuivory.InputFromKey(event), w, h)
+	}
+	s.inlineEditEvent(result)
+	return nil
+}
+
+func (s *screen) inlineEditEvent(event tuivory.GridEvent) {
+	e := s.inlineEdit
+	if e == nil {
+		return
+	}
+	session, active := e.model.EditSession()
+	if !active {
+		s.closeInlineEdit()
+		s.resultScopeStatus()
+		return
+	}
+	if !s.inlineTargetValid(e) {
+		s.closeInlineEdit()
+		return
+	}
+	if event.Kind == "copy" || event.Kind == "cut" {
+		s.sendClipboard(event.Text)
+		return
+	}
+	if event.Kind != "edit_submit" {
+		return
+	}
+	change := e.change
+	change.Text, change.Null = session.Value.Text, session.Value.Null
+	old := browserCell(s.resultBrowser.source, change.Row, change.Column)
+	if change.Null == old.Null && (change.Null || change.Text == editInputText(old)) {
+		e.model.ResolveEdit(session.ID, "", nil)
+		s.closeInlineEdit()
+		return
+	}
+	s.previewCellChange(change)
+	// Cancellation of the host approval returns to the same SDK draft.
+	if s.programModal != nil {
+		s.programReject = func() {
+			if s.inlineTargetValid(e) {
+				e.model.ResolveEdit(session.ID, s.tr("grid_inline_retry"), nil)
+			} else {
+				s.closeInlineEdit()
+			}
+		}
+	}
 }

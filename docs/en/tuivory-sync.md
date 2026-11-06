@@ -2,6 +2,50 @@
 
 [한국어](../tuivory-sync.md) | **English** · [UI style rules](ui-style.md)
 
+## v0.12.3 release preparation
+
+v0.12.3 pins public Tuivory Go v0.11.1 and integrates shared cell editing, real cursors and independent dirty cues. [Release notes](releases/v0.12.3.md). Dated uncommitted/unpublished notes below preserve their validation-time status. User-approved deployment separates implementation/docs commits and verifies remote CI/tag publication. Broader LORA-76 work and the SQL-editor replacement remain.
+
+## LORA-76: Tuivory v0.11.1 shared in-cell editor migration (2026-11-06, unreleased)
+
+Consume published `github.com/leechis7/tuivory/go v0.11.1`, tag `go/v0.11.1`, Origin `aacaa369a830ad22fe5d5bed7a1e4c25830771c5`, checksum `h1:g7Rp4Rlo039vVdrfJ1Xl3s7/C4HK4jB6HXrOyN9y5to=`. The v0.11.0 cursor gate is resolved: integrate public `Grid.BeginEdit`/`Input`/`EditInput`/`EditSession`/`ResolveEdit` and `NewGridView`. Remove the local `inlineCellEditor.Draw`/`MouseHandler`, InputField/full-screen input page and per-cell placement/clipping. The remaining adapter holds Oracle snapshot/column/physical-row identity and its connection to the public session.
+
+Connect public `PreserveCursorTty` to the existing TTY screen factory and remove the consumer DECSCUSR filter. Preserve terminal cursor-shape/blink preferences while retaining the independent unset-TERM ANSI fallback and Win32 key-release compatibility rule. Keep existing Windows native-console selection; physical Windows/macOS consoles, SecureCRT and CentOS blinking were not tested. The [standalone reproducer](../audits/evidence/lora-76-tuivory0111-cursor.go.txt) and [output](../audits/evidence/lora-76-tuivory0111-cursor.txt) show a real cursor `(9,1,true)` without an inserted literal `|`.
+
+Supply Oracle eligibility and initial values through `Prepare`. Enter submission stays pending until the host change-review dialog approves; only then resolve the SDK request and enqueue UPDATE. Rejecting review resumes the same SDK draft without changing source data. Result replacement/tab switching cancels the session and stale approvals enqueue no SQL. Retain Alt+D, Ctrl+U clear, Alt+Delete NULL, original-value copying and independent dirty-cell/gutter cues. Do not expose demo global bindings, Tab edit traversal, range paste, pinning or find as new product commands.
+
+The SDK owns cursor, buffer, glyph widths, pointer handling, styles and rendering; no forced cursor escapes or duplicate editor renderer. Distinguish API availability from consumer integration. The SQL editor's `third_party/tview` replacement and broader LORA-76 work remain. No commit/publication/release.
+
+Validation passed: full tests (UI25.650s), focused race (68.936s) plus final approval/focus-guard race (1.704s), vet, ARM64 build, 96 real-cursor and24 marker combinations, and4 PTY environments. See the [bilingual evidence report](../audits/lora-76-tuivory0111.md), including live-DB/physical-terminal limitations. User review pending; no commit/publication/release.
+
+## LORA-76: Tuivory v0.11.0 integration and editor migration decision (2026-11-06, unreleased)
+
+Consume published `github.com/leechis7/tuivory/go v0.11.0`, tag `go/v0.11.0`, Origin `ebe38b07fceb357b3537a355ba45fffde8832ad1`, checksum `h1:U85LlO5WQzQDcRSfvfiaiXo4ufYXk1WeuquABSvUDWw=`. Restore the dirty-row gutter `*` through public `SetRowEdited` independently from cell `Edited` colors. The SDK renders styles/markers; no row-wide color workaround. Earlier omitted-row-marker notes describe historical versions.
+
+**Defer full editor replacement.** v0.11.0 provides host-approved `BeginEdit`/`EditInput`/`ResolveEdit`, but public `NewGridView` renders a static literal `|` caret. A standalone reproduction reports `GetCursor()=(-1,-1,false)`, without a real visible terminal cursor. [Reproducer](../audits/evidence/lora-76-tuivory0110-cursor.go.txt) · [output](../audits/evidence/lora-76-tuivory0110-cursor.txt). Retain the working InputField adapter and request backend cursor position/visibility across focus/clipping, NULL, pending approval and closure in [TVR-7](https://leechis7.atlassian.net/browse/TVR-7?focusedCommentId=11002). Do not add forced cursor-shape escapes or another consumer cursor workaround. The November 5 missing-API note describes v0.10.2; the current gate is cursor compatibility, not absent editing APIs.
+
+Column pinning/hiding/reordering, range paste, find, view state and Tab edit traversal are available in the SDK but are not connected to product commands in this integration. Retain Oracle approval/ROWID/transactions, original-value copying and global bindings. No approved commit/publication/release; preserve the user's `test/oracle/run.sh` executable mode.
+
+Validation passed: `go test ./...` (UI 22.429s), focused editor/marker `-race` (13.624s), `go vet ./...` and Linux ARM64 `make build`. New consumer tests cover independent cell/gutter markers, focus changes and clearing across 24 dark/light/blackwhite ×8/16/256/truecolor ×Unicode/ASCII combinations. Existing bilingual Enter/double-click real-cursor checks also pass. No live DB, CentOS, physical-terminal, other-OS local build or GitHub CI run in this integration. Await user review; no commit/publication/release.
+
+## LORA-76: shared in-cell editing API request (2026-11-05, dependency pending)
+
+Published Go v0.10.2 (Origin `5e95114869356297c38cf69dc3b1cc46675475eb`) provides an `edit` event through `Grid.Handle("activate")`; `NewGridView` forwards it to the host. It does not yet provide a public control owning input placement, editing lifecycle and submit/cancel. Retain `inlineCellEditor.Draw`/`MouseHandler` and page/focus management until that API is available. Existing Enter/double-click editing remains available; this is not a completed migration.
+
+With user approval, the [TVR-7 request](https://leechis7.atlassian.net/browse/TVR-7?focusedCommentId=10993) specifies a language-neutral contract. Tuivory owns anchoring, clipping, resize/scroll, cursor/focus, input routing, start/submit/cancel and configurable NULL interaction. LazyOra binds stable row/column IDs and revisions, eligibility, initial values, NULL/type metadata and styles, while retaining Oracle ROWID/original-column validation, change approval, UPDATE and transactions. Submission must await host acceptance rather than immediately mutating the source; workspace/tab/source changes must invalidate stale edits.
+
+Once released, remove the local UI adapter and verify Enter/double-click/typing, cancel/NULL, rejected approval, source replacement, narrow/resized views, Korean/ASCII and color modes. Retain the separate Alt+D editor. Distinguish released Go/Rust support from plans; do not implement Tuivory itself in this repository. This update records source/API inspection and the request only: no product change, additional runtime tests, commit or release.
+
+The [additional TVR-7 request](https://leechis7.atlassian.net/browse/TVR-7?focusedCommentId=10995) covers edited-cell presentation. Build on existing cell `Edited`/`EditedStyle` support: Tuivory owns theme/color-depth/character-mode backgrounds, foregrounds, supplementary markers and precedence with selection/NULL states. LazyOra supplies stable changed-cell identity, actual pending state, approval/failure and transaction/refresh-driven clearing. Keep aggregated dirty-row markers independent from cell backgrounds so a single changed cell does not color the entire row. Public API improvements are pending; retain existing presentation.
+
+## LORA-76: in-cell activation clarification (unreleased, 2026-11-03)
+
+Enter and double-click in the main SQL result grid share an immediate in-cell edit action. Editable cells use the existing public InputField; the cursor stays inside the selected cell through resizing. Unavailable edits remain in the grid with an explanation instead of opening details. Keep Alt+D dialog, context/View-menu cell details and existing Oracle guards/ROWID projection. F4 remains object description. No shared rendering engine or forced cursor-shape escape was added; cursor appearance/blinking follows the terminal setting for SecureCRT compatibility. User review pending; no commit/publication.
+
+## LORA-76: grid feature audit (2026-11-03, no product fix)
+
+Compared the last custom renderer in v0.11.3 with v0.12.2/shared SDK v0.10.2: 47 observations per version and the same 24 existing tests. Found nine behavior/presentation gaps across navigation, wheel selection/copy targets, header interactions, style attributes and dirty-row indicators. Editable-result inline/dialog editing remains under the tested conditions. See the [bilingual report and evidence](../audits/lora-76-grid-regressions.md) for shared-SDK versus Oracle-adapter ownership and unverified live-DB scope. No source fix, commit or publication.
+
 ## v0.12.2 release integration
 
 v0.12.2 pins published Tuivory Go v0.10.2 (Origin `5e95114869356297c38cf69dc3b1cc46675475eb`). First-party app/tests have no direct tview/tcell imports; retain the editor replacement for input/performance compatibility. Adopt the public SQL analyzer, actual-label F10 placement, glyph/contrast fixes and right-one-cell/bottom-half-row shadows. [Release notes](releases/v0.12.2.md). The dated uncommitted/unreleased notes below describe their validation-time state; broader layout/editor scope remains open.

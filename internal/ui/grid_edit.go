@@ -88,8 +88,21 @@ func (s *screen) previewCellChange(change oracle.EditChange) {
 	}
 	message := fmt.Sprintf("%s\n%s · %s\n%s: %s\n%s: %s\n\n%s", s.tr("edit_preview"), tuivory.Escape(oracle.QualifiedObject(source.EditObject)), tuivory.Escape(source.Columns[change.Column]), s.tr("edit_old"), tuivory.Escape(old.Text), s.tr("edit_new"), tuivory.Escape(next), s.tr("edit_confirm"))
 	object := source.EditObject
+	inline := s.inlineEdit
+	var request uint64
+	if inline != nil {
+		session, _ := inline.model.EditSession()
+		request = session.ID
+	}
 	key := s.editedCellIdentity(source, change.Row, change.Column)
 	s.showProgramConfirmFocused(message, func() {
+		if inline != nil {
+			if !s.inlineTargetValid(inline) || s.busy || !inline.model.ResolveEdit(request, "", nil) {
+				s.closeInlineEdit()
+				s.setStatus("grid_inline_unavailable")
+				return
+			}
+		}
 		s.closeInlineEdit()
 		s.submit(job{action: "edit_apply", edit: change, object: object, query: source.Query, editKey: key})
 	}, 0)

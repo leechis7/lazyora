@@ -1,0 +1,391 @@
+package ui
+
+import (
+	"encoding/json"
+	"fmt"
+	"github.com/leechis7/tuivory/go"
+	"lazyora/internal/oracle"
+	"lazyora/internal/settings"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+type gridProbeTerminal struct {
+	tuivory.SimulationScreen
+	count int
+}
+
+func (g gridProbeTerminal) Colors() int { return g.count }
+func gridProbeFixture(t *testing.T, theme string, colors int) (*screen, tuivory.SimulationScreen) {
+	raw := tuivory.NewSimulationScreen("UTF-8")
+	if err := raw.Init(); err != nil {
+		t.Fatal(err)
+	}
+	raw.SetSize(120, 36)
+	t.Cleanup(raw.Fini)
+	terminal := gridProbeTerminal{raw, colors}
+	app := tuivory.NewApplication().SetScreen(terminal)
+	s := newWorkspaceScreen(app, terminal, settings.Config{Language: "ko", Theme: theme, DisplayMode: "unicode", Mouse: true}, filepath.Join(t.TempDir(), "settings.json"), true, nil)
+	spaces := &workspaceSet{app: app, active: s}
+	spaces.adopt(s)
+	t.Cleanup(func() { s.workerClosed = false; spaces.shutdown() })
+	s.workerClosed = true // Never submit SQL or connect during this display/input audit.
+	s.connected = true
+	data := oracle.Result{EditID: 5, EditObject: oracle.Object{Owner: "AUDIT", Name: "ITEMS", Kind: "TABLE"}, EditRowIDColumn: 1, EditColumns: []bool{false, true, true, true, true}, EditColumnNames: []string{"", "ID", "TITLE", "AMOUNT", "NOTE"}, Columns: []string{"RID", "ID", "TITLE", "AMOUNT", "NOTE"}}
+	for i := 0; i < 30; i++ {
+		id := fmt.Sprint(i + 1)
+		title := "한글 " + id
+		note := "note " + id
+		if i == 1 {
+			title = "long\t[red]\n" + strings.Repeat("가", 90)
+		}
+		null := i == 0
+		cellNote := note
+		if null {
+			note = "NULL"
+			cellNote = ""
+		}
+		data.EditRowIDs = append(data.EditRowIDs, "r"+id)
+		data.Rows = append(data.Rows, []string{"r" + id, id, title, "12345.67", note})
+		data.Values = append(data.Values, []oracle.Cell{{Text: "r" + id, Type: "ROWID"}, {Text: id, Type: "NUMBER"}, {Text: title, Type: "VARCHAR2"}, {Text: "12345.67", Type: "NUMBER"}, {Text: cellNote, Type: "VARCHAR2", Null: null}})
+	}
+	s.render(data)
+	for c, w := range []int{8, 18, 14, 18} {
+		s.table.Select(1, c)
+		s.resizeResultColumn(w - s.grid.widths[c])
+	}
+	s.table.Select(1, 1)
+	app.SetFocus(s.table)
+	app.ForceDraw()
+	return s, raw
+}
+func gridProbeKey(s *screen, e *tuivory.EventKey) {
+	if f := s.app.GetInputCapture(); f != nil {
+		e = f(e)
+	}
+	if e != nil {
+		if p := s.app.GetFocus(); p != nil {
+			if f := p.InputHandler(); f != nil {
+				f(e, func(p tuivory.Primitive) { s.app.SetFocus(p) })
+			}
+		}
+	}
+	s.app.ForceDraw()
+}
+func gridProbeMouse(s *screen, a tuivory.MouseAction, x, y int, b tuivory.ButtonMask) {
+	e := tuivory.NewEventMouse(x, y, b, 0)
+	if f := s.app.GetMouseCapture(); f != nil {
+		e, a = f(e, a)
+	}
+	if e != nil {
+		s.rootLayout.MouseHandler()(a, e, func(p tuivory.Primitive) { s.app.SetFocus(p) })
+	}
+	s.app.ForceDraw()
+}
+func gridProbeStyle(s *screen, raw tuivory.SimulationScreen, row, col int) map[string]any {
+	x, y, w := s.resultCellRect(row, col)
+	if x < 0 || y < 0 || w < 1 {
+		return map[string]any{"visible": false}
+	}
+	r, _, st, _ := raw.GetContent(x+min(1, w-1), y)
+	fg, bg, a := st.Decompose()
+	return map[string]any{"x": x, "y": y, "width": w, "glyph": string(r), "fg": fmt.Sprintf("#%06x", fg.Hex()), "bg": fmt.Sprintf("#%06x", bg.Hex()), "underline": a&tuivory.AttrUnderline != 0, "italic": a&tuivory.AttrItalic != 0, "bold": a&tuivory.AttrBold != 0}
+}
+func gridProbeDump(t *testing.T, raw tuivory.SimulationScreen, name string) {
+	t.Helper()
+	dir := os.Getenv("GRID_AUDIT_DIR")
+	if dir == "" {
+		return
+	}
+	cells, w, h := raw.GetContents()
+	out := []map[string]any{}
+	var text strings.Builder
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; {
+			c := cells[y*w+x]
+			v := string(c.Runes)
+			if v == "" {
+				v = " "
+			}
+			fg, bg, a := c.Style.Decompose()
+			width := max(1, tuivory.TaggedStringWidth(v))
+			out = append(out, map[string]any{"X": x, "Y": y, "W": width, "Text": v, "FG": fmt.Sprintf("#%06x", fg.Hex()), "BG": fmt.Sprintf("#%06x", bg.Hex()), "Bold": a&tuivory.AttrBold != 0, "Underline": a&tuivory.AttrUnderline != 0, "Italic": a&tuivory.AttrItalic != 0})
+			text.WriteString(v)
+			x += width
+		}
+		text.WriteByte('\n')
+	}
+	_ = os.MkdirAll(dir, 0755)
+	b, _ := json.Marshal(map[string]any{"width": w, "height": h, "cells": out})
+	if err := os.WriteFile(filepath.Join(dir, name+".json"), b, 0600); err != nil {
+		t.Fatal(err)
+	}
+	_ = os.WriteFile(filepath.Join(dir, name+".txt"), []byte(text.String()), 0600)
+}
+func TestGridMigrationProbe(t *testing.T) {
+	for _, key := range []string{"LAZYORA_HOST", "LAZYORA_USER", "LAZYORA_PASSWORD", "LAZYORA_NAME"} {
+		t.Setenv(key, "")
+	}
+	cases := []struct {
+		name string
+		f    func(*screen, tuivory.SimulationScreen, map[string]any)
+	}{
+		{"initial", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			o["headers"] = s.resultHeaders
+			o["editable"] = s.commandEnabled("grid_edit")
+			o["title"] = s.table.GetTitle()
+			o["footer"] = s.footer.GetText(true)
+		}},
+		{"enter_inline", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
+			if s.inlineEdit != nil {
+				o["text"] = s.inlineEdit.GetText()
+				x, y, w, h := s.inlineEdit.GetRect()
+				o["rect"] = []int{x, y, w, h}
+				o["visible"] = x >= 0 && y >= 0 && w > 0 && h > 0
+			}
+			gridProbeDump(t, r, "inline")
+		}},
+		{"type_inline", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyRune, 'X', 0))
+			if s.inlineEdit != nil {
+				o["text"] = s.inlineEdit.GetText()
+			}
+		}},
+		{"double_inline", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			x, y, _ := s.resultCellRect(1, 1)
+			gridProbeMouse(s, tuivory.MouseLeftClick, x+1, y, 0)
+			gridProbeMouse(s, tuivory.MouseLeftDoubleClick, x+1, y, 0)
+			if s.inlineEdit != nil {
+				o["text"] = s.inlineEdit.GetText()
+			}
+		}},
+		{"dialog_alt_d", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyRune, 'd', tuivory.ModAlt))
+			o["form"] = s.editForm != nil
+		}},
+		{"readonly_enter", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			s.resultBrowser.source.EditID = 0
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
+		}},
+		{"readonly_j", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			s.resultBrowser.source.EditID = 0
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyRune, 'j', 0))
+		}},
+		{"readonly_G", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			s.resultBrowser.source.EditID = 0
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyRune, 'G', 0))
+		}},
+		{"readonly_k", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			s.resultBrowser.source.EditID = 0
+			s.table.Select(3, 1)
+			s.app.ForceDraw()
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyRune, 'k', 0))
+		}},
+		{"readonly_h", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			s.resultBrowser.source.EditID = 0
+			s.table.Select(3, 1)
+			s.app.ForceDraw()
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyRune, 'h', 0))
+		}},
+		{"readonly_l", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			s.resultBrowser.source.EditID = 0
+			s.table.Select(3, 1)
+			s.app.ForceDraw()
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyRune, 'l', 0))
+		}},
+		{"readonly_g", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			s.resultBrowser.source.EditID = 0
+			s.table.Select(3, 1)
+			s.app.ForceDraw()
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyRune, 'g', 0))
+		}},
+		{"wheel_down", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			x, y, _ := s.resultCellRect(1, 1)
+			gridProbeMouse(s, tuivory.MouseScrollDown, x+1, y, 0)
+		}},
+		{"wheel_then_copy", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			x, y, _ := s.resultCellRect(1, 1)
+			gridProbeMouse(s, tuivory.MouseScrollDown, x+1, y, 0)
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyCtrlC, 0, 0))
+			o["copy"] = s.clipboardText
+			gridProbeDump(t, r, "wheel-copy")
+		}},
+		{"alt_right", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyRight, 0, tuivory.ModAlt))
+		}},
+		{"tab_panel", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyTab, 0, 0))
+			o["editor_focus"] = s.editor.HasFocus()
+			o["table_focus"] = s.table.HasFocus()
+		}},
+		{"home", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			s.table.Select(12, 2)
+			s.app.ForceDraw()
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyHome, 0, 0))
+		}},
+		{"end", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyEnd, 0, 0))
+		}},
+		{"ctrl_home", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			s.table.Select(12, 2)
+			s.app.ForceDraw()
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyHome, 0, tuivory.ModCtrl))
+		}},
+		{"ctrl_end", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyEnd, 0, tuivory.ModCtrl))
+		}},
+		{"pgdn", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyPgDn, 0, 0))
+		}},
+		{"arrow_down", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyDown, 0, 0))
+		}},
+		{"copy_cell", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyCtrlC, 0, 0))
+			o["copy"] = s.clipboardText
+		}},
+		{"copy_long", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			s.table.Select(2, 1)
+			s.app.ForceDraw()
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyCtrlC, 0, 0))
+			o["copy"] = s.clipboardText
+		}},
+		{"copy_row", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyRune, 'y', tuivory.ModAlt))
+			o["copy"] = s.clipboardText
+		}},
+		{"shift_range_copy", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyRight, 0, tuivory.ModShift))
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyDown, 0, tuivory.ModShift))
+			gridProbeKey(s, tuivory.NewEventKey(tuivory.KeyCtrlC, 0, 0))
+			o["copy"] = s.clipboardText
+			o["range"] = s.resultSelection
+		}},
+		{"mouse_range_copy", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			x, y, _ := s.resultCellRect(1, 0)
+			xx, yy, _ := s.resultCellRect(3, 1)
+			gridProbeMouse(s, tuivory.MouseLeftDown, x+1, y, tuivory.Button1)
+			gridProbeMouse(s, tuivory.MouseMove, xx+1, yy, tuivory.Button1)
+			gridProbeMouse(s, tuivory.MouseLeftUp, xx+1, yy, 0)
+			gridProbeMouse(s, tuivory.MouseLeftClick, xx+1, yy, 0)
+			s.copyResults("selection")
+			o["copy"] = s.clipboardText
+			r1, c1, r2, c2 := s.resultBounds()
+			o["bounds"] = []int{r1, c1, r2, c2}
+		}},
+		{"row_gutter", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			x, y, _ := s.resultCellRect(1, 0)
+			gridProbeMouse(s, tuivory.MouseLeftDown, x-2, y, tuivory.Button1)
+			gridProbeMouse(s, tuivory.MouseLeftUp, x-2, y, 0)
+			gridProbeMouse(s, tuivory.MouseLeftClick, x-2, y, 0)
+			s.copyResults("selection")
+			o["copy"] = s.clipboardText
+			r1, c1, r2, c2 := s.resultBounds()
+			o["bounds"] = []int{r1, c1, r2, c2}
+		}},
+		{"sort_menu", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			s.table.Select(1, 0)
+			s.invoke("result_sort_desc")
+			s.app.ForceDraw()
+			o["first"] = s.resultRows[0][0]
+			o["sorted"] = s.resultBrowser.sorted
+		}},
+		{"header_click_sort", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			x, y, _ := s.resultCellRect(0, 0)
+			gridProbeMouse(s, tuivory.MouseLeftClick, x+1, y, 0)
+			o["sorted"] = s.resultBrowser.sorted
+		}},
+		{"filter", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			s.resultBrowser.filter = "한글 3"
+			s.applyResultBrowser(true)
+			s.app.ForceDraw()
+			o["rows"] = len(s.resultRows)
+			o["first"] = s.resultRows[0][0]
+		}},
+		{"resize_menu", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			w := s.grid.widths[1]
+			s.invoke("grid_widen")
+			s.app.ForceDraw()
+			o["delta"] = s.grid.widths[1] - w
+			s.invoke("grid_auto")
+			s.app.ForceDraw()
+			o["auto_width"] = s.grid.widths[1]
+		}},
+		{"header_drag", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			w := s.grid.widths[0]
+			x, y, cw := s.resultCellRect(0, 0)
+			gridProbeMouse(s, tuivory.MouseLeftDown, x+cw, y, tuivory.Button1)
+			gridProbeMouse(s, tuivory.MouseMove, x+cw+4, y, tuivory.Button1)
+			gridProbeMouse(s, tuivory.MouseLeftUp, x+cw+4, y, 0)
+			o["delta"] = s.grid.widths[0] - w
+		}},
+		{"few_rows", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			s.resultBrowser.source.Rows = s.resultBrowser.source.Rows[:1]
+			s.resultBrowser.source.Values = s.resultBrowser.source.Values[:1]
+			s.applyResultBrowser(true)
+			s.app.ForceDraw()
+			x, y, w := s.resultCellRect(1, 0)
+			ch, _, _, _ := r.GetContent(x+w, y+2)
+			o["blank_divider"] = string(ch)
+			gridProbeDump(t, r, "few-rows")
+		}},
+		{"edited_markers", func(s *screen, r tuivory.SimulationScreen, o map[string]any) {
+			s.markEditedCell(s.editedCellIdentity(s.resultBrowser.source, 0, 2))
+			s.app.ForceDraw()
+			o["active"] = gridProbeStyle(s, r, 1, 1)
+			o["status"] = s.gridStatusText()
+			sx, _, _, _ := s.table.GetRect()
+			dx, dy, _ := s.resultCellRect(1, 0)
+			var gutter strings.Builder
+			for px := sx; px < dx; px++ {
+				ch, _, _, _ := r.GetContent(px, dy)
+				gutter.WriteRune(ch)
+			}
+			o["gutter"] = gutter.String()
+			gridProbeDump(t, r, "edited")
+		}},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			s, r := gridProbeFixture(t, "dark", 1<<24)
+			out := map[string]any{"case": c.name}
+			defer func() {
+				if v := recover(); v != nil {
+					out["panic"] = fmt.Sprint(v)
+				}
+				b, _ := json.Marshal(out)
+				t.Log("GRIDPROBE " + string(b))
+			}()
+			c.f(s, r, out)
+			row, col := s.table.GetSelection()
+			out["selection"] = []int{row, col}
+			top, left := s.table.GetOffset()
+			out["offset"] = []int{top, left}
+			page, _ := s.pages.GetFrontPage()
+			out["page"] = page
+			out["sql_unchanged"] = s.editor.GetText() == "SELECT sysdate AS server_time FROM dual;"
+		})
+	}
+	for _, theme := range []string{"dark", "light", "blackwhite"} {
+		for _, colors := range []int{8, 16, 256, 1 << 24} {
+			t.Run(fmt.Sprintf("visual/%s/%d", theme, colors), func(t *testing.T) {
+				s, r := gridProbeFixture(t, theme, colors)
+				out := map[string]any{"case": fmt.Sprintf("visual/%s/%d", theme, colors), "header": gridProbeStyle(s, r, 0, 0), "active_header": gridProbeStyle(s, r, 0, 1), "active": gridProbeStyle(s, r, 1, 1), "null": gridProbeStyle(s, r, 1, 3)}
+				s.markEditedCell(s.editedCellIdentity(s.resultBrowser.source, 0, 2))
+				s.app.ForceDraw()
+				out["edited"] = gridProbeStyle(s, r, 1, 1)
+				s.app.SetFocus(s.editor)
+				s.app.ForceDraw()
+				out["inactive_edited"] = gridProbeStyle(s, r, 1, 1)
+				s.app.SetFocus(s.table)
+				s.app.ForceDraw()
+				gridProbeDump(t, r, fmt.Sprintf("%s-%d", theme, colors))
+				b, _ := json.Marshal(out)
+				t.Log("GRIDPROBE " + string(b))
+			})
+		}
+	}
+}

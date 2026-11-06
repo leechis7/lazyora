@@ -8,6 +8,8 @@ LazyOra aims to make everyday Oracle development and inspection practical in a t
 
 Current version: **0.12.2** · **Linux / Windows / macOS · AMD64 / ARM64**
 
+The unreleased development branch adopts Tuivory v0.11.1 host-approved in-cell editing, a real cursor and independent dirty markers. See the [current integration record](docs/en/tuivory-sync.md).
+
 v0.12.2 fixes menu positioning and popup rendering, improves low-color syntax/contrast, and adopts Tuivory v0.10.2 half-row shadows. See the [release notes](docs/en/releases/v0.12.2.md).
 
 - Oracle SQL/PL/SQL syntax highlighting, files and multiple SQL tabs, cursor-statement execution, F5 scripts and IN bind variables.

@@ -4,6 +4,16 @@
 
 ## [Unreleased]
 
+### 개선 / Changed
+
+- LORA-76: Tuivory Go v0.11.1을 적용하고 변경 행 번호의 `*`를 셀 변경색과 독립적으로 복원합니다. 공개 승인형 편집 세션과 실제 커서로 전환하고 자체 셀 입력 렌더러·커서 모양 필터를 제거합니다. Oracle 변경 확인·Alt+D·NULL·커밋/롤백은 유지합니다.
+- LORA-76: Upgrade to Tuivory Go v0.11.1 and restore dirty-row gutter `*` independently from edited-cell colors. Use public host-approved edit sessions and real-cursor rendering, removing the local cell-input renderer/cursor-shape filter. Preserve Oracle review, Alt+D, NULL and transactions.
+
+### 수정 / Fixed
+
+- LORA-76: Enter·더블클릭을 같은 셀 내 편집 동작으로 통일합니다. 편집 불가 셀에서 상세창이 자동으로 열리지 않고 그리드에 사유를 안내합니다. Alt+D 별도 편집창과 문맥 메뉴의 셀 상세는 유지합니다.
+- LORA-76: Enter/double-click share immediate in-cell editing. Unavailable cells remain in the grid with an explanation instead of automatically opening details. Keep the Alt+D editor and context-menu cell details.
+
 ## [0.12.2] - 2026-11-03
 
 ### 개선 / Changed

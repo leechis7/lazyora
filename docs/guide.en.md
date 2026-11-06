@@ -66,9 +66,9 @@ Drag a header column divider to resize. The current row uses `>`, edited cells u
 Click, drag or Shift+arrows selects cells; Ctrl+C copies and Alt+Y copies a row.
 View/Shift+F10 provides the next 1,000 rows, local sorting/filtering and column widths.
 One F9 query retains at most 10,000 rows / estimated 64 MiB; loaded rows are not the full database result.
-For read-only cells, Enter opens cell details for long values, NULL and binary content, including original-value file saving.
+Use Cell details in the context menu for long values, NULL and binary content, including original-value file saving.
 Editing supports explicit browser table loads and verified single-table ROWID SELECT results; commit remains manual.
-Editable cells: Enter/double-click edits the existing value; typing replaces it. Enter reviews before applying, Esc cancels input, Ctrl+U clears, Alt+Delete sets NULL. Alt+D / Edit > Edit cell in dialog opens the separate editor; review defaults to Proceed and Cancel returns to the draft; the context menu opens cell details. Applied cells have a distinct background until commit/rollback. Successful commit/rollback automatically refreshes the current replayable result using its original query/binds, preserving sorting, filter and widths. Reload failure is reported separately from transaction completion.
+Editable cells: Enter/double-click places the cursor directly inside the selected cell; typing replaces its value. Unavailable cells stay in the grid with an explanation and do not open a popup. Enter reviews before applying, Esc cancels input, Ctrl+U clears, Alt+Delete sets NULL. NULL, pending approval and closure hide the cursor; cancelling review restores the draft and cursor. Blink/shape follow terminal settings. Alt+D / Edit > Edit cell in dialog opens the separate editor; review defaults to Proceed and Cancel returns to the draft; the context menu opens cell details. Applied cells have a distinct background until commit/rollback. Successful commit/rollback automatically refreshes the current replayable result using its original query/binds, preserving sorting, filter and widths. Reload failure is reported separately from transaction completion.
 If clipboard delivery fails, use Edit → Copy preview and your terminal's selection/copy command.
 
 Execute `SELECT t.ROWID, t.* FROM table_name t WHERE ...` with F9 to edit verified original columns. The verified physical ROWID is hidden in the grid and retained internally; commit or roll back explicitly. Joins, expressions and ambiguous results stay read-only.
@@ -99,3 +99,5 @@ Help → Report an issue / suggest a feature provides the URL and report templat
 Release history marks unreleased development separately. About is the last Help menu item.
 
 Tools → Settings → Character display (Alt+D) saves Auto/Unicode/ASCII (v0.11.2). --display-mode ascii overrides only this run. ASCII uses English UI and ? substitutes for non-ASCII data glyphs, preserving original SQL/data/application copy/export and Korean preferences. Settings/Diagnostics show the effective mode and reason. Actual font coverage cannot be detected.
+
+Pending edits have a cell `*` and an independent dirty-row gutter `*`; unrelated cells keep their own backgrounds. Commit/rollback clears these cues.

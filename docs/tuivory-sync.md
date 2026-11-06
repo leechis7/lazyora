@@ -4,6 +4,10 @@
 
 LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 원칙을 제품 UI에 적용합니다. Tuivory의 가이드·견본·도구 개발은 별도 저장소와 Tuivory Jira에서 관리하고, LazyOra의 적용 작업은 LORA Jira에서 관리합니다.
 
+## v0.12.3 릴리스 준비
+
+v0.12.3은 공개 Tuivory Go v0.11.1을 고정하고 셀 편집 UI·실제 커서·독립 변경 표식을 통합합니다. [릴리스 설명](releases/v0.12.3.md). 아래 미커밋·미게시 표기는 각각의 검증 시점 이력입니다. 사용자 배포 승인에 따라 기능 커밋과 한영 근거를 분리했으며 원격 CI·태그 게시를 확인합니다. 전체 LORA-76 완료나 SQL 편집기 포크 제거를 의미하지 않습니다.
+
 ## LORA-76: Tuivory v0.11.1 공통 셀 편집 전환 (2026-11-06, 미배포)
 
 공개 `github.com/leechis7/tuivory/go v0.11.1`, 태그 `go/v0.11.1`, Origin `aacaa369a830ad22fe5d5bed7a1e4c25830771c5`, Sum `h1:g7Rp4Rlo039vVdrfJ1Xl3s7/C4HK4jB6HXrOyN9y5to=`를 적용했습니다. 이전 v0.11.0의 커서 보류 사유가 해소되어 공개 `Grid.BeginEdit`/`Input`/`EditInput`/`EditSession`/`ResolveEdit`와 `NewGridView`로 셀 내 편집을 전환했습니다. 로컬 `inlineCellEditor.Draw`/`MouseHandler`, InputField·전체화면 입력 페이지와 개별 좌표/클리핑 처리를 제거했습니다. 남은 객체는 Oracle 대상 ID·원본 컬럼·물리 ROWID 식별과 공개 세션의 연결 상태만 보관합니다.

@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.12.3] - 2026-11-06
+
 ### 개선 / Changed
 
 - LORA-76: Tuivory Go v0.11.1을 적용하고 변경 행 번호의 `*`를 셀 변경색과 독립적으로 복원합니다. 공개 승인형 편집 세션과 실제 커서로 전환하고 자체 셀 입력 렌더러·커서 모양 필터를 제거합니다. Oracle 변경 확인·Alt+D·NULL·커밋/롤백은 유지합니다.
@@ -371,7 +373,8 @@ v0.0.1의 F2 접속은 Alt+L, F4 실행은 F9, F5 커밋은 Alt+C, F6 롤백은 
 - 이 릴리스 시점에는 실제 CentOS 7.4, 구형 Oracle 및 SID 접속 검증이 완료되지 않았습니다. 이후 호환성 수정은 `Unreleased`에 기록합니다.
 - 한 번에 SQL 한 문장 또는 BEGIN/DECLARE 블록 하나를 실행합니다. 여러 문장 일괄 실행, SQL*Plus 스크립트, 바인드 입력, DBMS_OUTPUT 출력은 지원하지 않습니다.
 
-[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.12.2...dev
+[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.12.3...dev
+[0.12.3]: https://github.com/leechis7/lazyora/compare/v0.12.2...v0.12.3
 [0.12.2]: https://github.com/leechis7/lazyora/compare/v0.12.1...v0.12.2
 [0.12.1]: https://github.com/leechis7/lazyora/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/leechis7/lazyora/compare/v0.11.3...v0.12.0

@@ -2,6 +2,10 @@
 
 [한국어](../tuivory-sync.md) | **English** · [UI style rules](ui-style.md)
 
+## v0.12.3 release preparation
+
+v0.12.3 pins public Tuivory Go v0.11.1 and integrates shared cell editing, real cursors and independent dirty cues. [Release notes](releases/v0.12.3.md). Dated uncommitted/unpublished notes below preserve their validation-time status. User-approved deployment separates implementation/docs commits and verifies remote CI/tag publication. Broader LORA-76 work and the SQL-editor replacement remain.
+
 ## LORA-76: Tuivory v0.11.1 shared in-cell editor migration (2026-11-06, unreleased)
 
 Consume published `github.com/leechis7/tuivory/go v0.11.1`, tag `go/v0.11.1`, Origin `aacaa369a830ad22fe5d5bed7a1e4c25830771c5`, checksum `h1:g7Rp4Rlo039vVdrfJ1Xl3s7/C4HK4jB6HXrOyN9y5to=`. The v0.11.0 cursor gate is resolved: integrate public `Grid.BeginEdit`/`Input`/`EditInput`/`EditSession`/`ResolveEdit` and `NewGridView`. Remove the local `inlineCellEditor.Draw`/`MouseHandler`, InputField/full-screen input page and per-cell placement/clipping. The remaining adapter holds Oracle snapshot/column/physical-row identity and its connection to the public session.

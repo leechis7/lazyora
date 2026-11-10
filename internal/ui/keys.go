@@ -176,7 +176,9 @@ func (s *screen) key(event *tuivory.EventKey) *tuivory.EventKey {
 			s.dialogTab(event, s.helpTopics, s.helpText)
 			return nil
 		case "object":
-			s.dialogTab(event, s.objectTable)
+			if !s.cycleObjectWorkspace(event) {
+				s.dialogTab(event, s.objectTable)
+			}
 			return nil
 		case "source":
 			s.dialogTab(event, s.sourceEditor, s.sourceDiagnostics)
@@ -333,6 +335,9 @@ func (s *screen) key(event *tuivory.EventKey) *tuivory.EventKey {
 		return nil
 	}
 	if page == "object" {
+		if s.objectWorkspaceKey(event) {
+			return nil
+		}
 		if alt {
 			switch letter {
 			case 'g':

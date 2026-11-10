@@ -243,6 +243,9 @@ func (s *screen) refreshFooter() {
 		keys[3] = footerKey{"Esc", "close", tuivory.KeyEscape, tuivory.ModNone}
 	case "object":
 		hint = "footer_object"
+		if s.objectWorkspace != nil {
+			hint = "footer_object_workspace"
+		}
 		keys[0].action = "help"
 		keys[1] = footerKey{"PgUp", "previous_page", tuivory.KeyPgUp, tuivory.ModNone}
 		keys[2] = footerKey{"PgDn", "next_page", tuivory.KeyPgDn, tuivory.ModNone}

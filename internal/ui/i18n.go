@@ -4,6 +4,11 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"object_tab_columns":        {"Columns", "컬럼"},
+	"object_tab_data":           {"Data", "데이터"},
+	"object_data_rows":          {"%d preview rows · Read only", "미리보기 %d행 · 읽기 전용"},
+	"object_data_more":          {"Ctrl+N preview more", "Ctrl+N 더 보기"},
+	"object_data_limit":         {"Preview limit reached", "미리보기 한도에 도달했습니다"},
 	"favorites":                 {"SQL favorites", "SQL 즐겨찾기"},
 	"favorite_save":             {"Save SQL to favorites", "SQL을 즐겨찾기에 저장"},
 	"favorite_name":             {"Name", "이름"},
@@ -571,6 +576,7 @@ var messages = map[string][2]string{
 	"no":                      {"No", "아니요"},
 	"footer_browser":          {"Alt+B Hide | Alt+U User | Alt+O Type | ↑↓ Move | ←→/Space Expand | Enter Open | Alt+←→ Pan | Ctrl+R Refresh | Tab Next", "Alt+B 숨김 | Alt+U 사용자 | Alt+O 종류 | ↑↓ 이동 | ←→/Space 펼침 | Enter 열기 | Alt+←→ 가로 이동 | Ctrl+R 새로고침 | Tab 다음"},
 	"footer_object":           {"Alt+D DDL | Alt+C Constraints | Alt+I Indexes | Ctrl+R Refresh | Esc Back", "Alt+D DDL | Alt+C 제약조건 | Alt+I 인덱스 | Ctrl+R 새로고침 | Esc 돌아가기"},
+	"footer_object_workspace": {"Tab Focus | Alt+V Data | Ctrl+R Refresh | Esc Back", "Tab 포커스 | Alt+V 데이터 | Ctrl+R 새로고침 | Esc 돌아가기"},
 	"developer":               {"Developer", "개발자"},
 	"email":                   {"Email", "이메일"},
 	"license":                 {"License", "라이선스"},

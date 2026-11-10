@@ -117,6 +117,15 @@ func (s *screen) applyTheme(previous string) {
 	visit(s.pages)
 	visit(s.tabBar)
 	visit(s.browserPanel)
+	if w := s.objectWorkspace; w != nil {
+		_ = w.tabs.SetPalette(s.componentPalette())
+		if w.split != nil {
+			_ = w.split.SetPalette(s.componentPalette())
+		}
+		if w.dataGrid != nil {
+			_ = w.dataGrid.SetPalette(s.resultPalette())
+		}
+	}
 	visit(s.editor)
 	visit(s.table)
 	visit(s.status)

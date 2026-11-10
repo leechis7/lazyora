@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+- LORA-75: 스키마 브라우저 오른쪽에서 컬럼·데이터·DDL을 전환합니다. 데이터 미리보기는 기존 SQL 결과와 트랜잭션을 유지합니다.
+- LORA-75: Switch between columns, data, and DDL beside the schema browser. Data previews preserve the existing SQL result and transaction.
+
 ## [0.13.0] - 2026-11-10
 
 - LORA-80: 편집기와 F8 이력에서 SQL을 즐겨찾기에 저장하고 이름·태그로 검색해 새 탭에서 엽니다.

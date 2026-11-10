@@ -72,6 +72,8 @@ Table/view details include column comments. Program objects offer source and arg
 
 Execute → Run procedure/function is distinct from a step debugger: LazyOra has **no breakpoint/step debugger**. The runner supports its documented scalar IN/OUT/IN OUT arguments and REF CURSOR results; up to four cursors, up to 1,000 fetched rows each. Routine export uses fetched results and does not rerun the routine. Record/collection/LOB/timezone-specific argument types are not generally supported. See the [debugger design record](plsql-debugger.md) for planned, unimplemented work.
 
+Opening a table, view or materialized view from the schema tree shows **Columns · Data · DDL** on the right. Press **Tab** to focus the tab strip and use **Left/Right and Enter**, or click a tab. **Alt+V** opens the Data tab, and **Alt+D** opens the existing DDL detail screen. Narrow screens show the detail pane alone. Data loads when the tab is opened. **Ctrl+R** refreshes and **Ctrl+N** reruns the preview with a limit 100 rows higher, up to 1,000 rows or approximately 8 MiB. Row order is unspecified, and LOB values may be partial. The preview is read-only and preserves existing SQL tabs, result cursors and uncommitted changes.
+
 ## Editor keymaps, search and completion
 
 Settings offers Toad (default), Vim, Notepad++, VS Code and IntelliJ IDEA. The empty/legacy `editor_keymap` value means Toad; other stored values are `vim`, `notepad++`, `vscode`, `intellij`. These provide subsets of familiar Windows/Linux editing behavior, not complete IDE emulation. App-wide execute/commit/rollback/exit/fullscreen keys take priority.

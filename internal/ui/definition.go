@@ -68,7 +68,9 @@ func (s *screen) closeDefinition() {
 	s.definitionInfo, s.definitionText, s.definitionTable = nil, nil, nil
 	s.definitionRows, s.definitionDetails = nil, nil
 	s.definitionDDL = ""
-	if s.objectTable != nil {
+	if s.objectWorkspace != nil && s.objectWorkspace.section != "columns" {
+		s.app.SetFocus(s.objectWorkspace.tabs)
+	} else if s.objectTable != nil {
 		s.app.SetFocus(s.objectTable)
 	}
 }

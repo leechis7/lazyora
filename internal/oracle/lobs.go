@@ -86,6 +86,10 @@ func (s *Session) clearLOBs() {
 }
 
 func (s *Session) scanLOB(ctx context.Context, ref lobReference, retain bool) (Cell, error) {
+	return s.scanLOBValue(ctx, ref, retain, false)
+}
+
+func (s *Session) scanLOBValue(ctx context.Context, ref lobReference, retain, preview bool) (Cell, error) {
 	cell := Cell{Type: ref.kind}
 	if ref.reader.IsNil() {
 		cell.Null = true
@@ -114,7 +118,9 @@ func (s *Session) scanLOB(ctx context.Context, ref lobReference, retain bool) (C
 	if !retain {
 		limit = MaxExportLOBUnits
 	}
-	if ref.length > limit {
+	if preview {
+		limit = PreviewLOBUnits
+	} else if ref.length > limit {
 		if !retain {
 			s.freeLOB(ref)
 			return cell, fmt.Errorf("%s cell exceeds the %d-unit export limit; save the individual cell to stream its full value", ref.kind, MaxExportLOBUnits)
@@ -132,7 +138,7 @@ func (s *Session) scanLOB(ctx context.Context, ref lobReference, retain bool) (C
 		cell.Text = hex.EncodeToString([]byte(cell.Text))
 	}
 	cell.Partial = units < ref.length
-	if cell.Partial {
+	if cell.Partial && !preview {
 		if len(s.lobs) >= MaxRetainedLOBs {
 			s.freeLOB(ref)
 			return cell, errors.New("too many retained LOB values; narrow the query")

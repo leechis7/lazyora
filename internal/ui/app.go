@@ -22,6 +22,7 @@ type job struct {
 	identity      settings.Connection
 	cell          oracle.Cell
 	pageID        uint64
+	previewLimit  int
 	completion    oracle.CompletionContext
 	refresh       bool
 	routine       oracle.Routine
@@ -212,6 +213,8 @@ type screen struct {
 	objectInfo                               *tuivory.WidgetTextView
 	objectFocus                              tuivory.Primitive
 	objectTable                              *tuivory.Table
+	objectWorkspace                          *objectWorkspace
+	objectSplit                              tuivory.SplitState
 	objectColumns                            []oracle.Column
 	pendingChanges                           bool
 	transactionUncertain                     bool
@@ -504,7 +507,7 @@ func (s *screen) submit(j job) {
 	} else {
 		j.ctx, s.cancel = context.WithTimeout(context.Background(), 60*time.Second)
 	}
-	if j.action == "definition" || j.action == "complete" || j.action == "schemas" || j.action == "objects" || j.action == "browser_columns" || j.action == "columns" || j.action == "object_info" || j.action == "source" || j.action == "arguments" {
+	if j.action == "definition" || j.action == "complete" || j.action == "schemas" || j.action == "objects" || j.action == "browser_columns" || j.action == "columns" || j.action == "object_info" || j.action == "object_ddl" || j.action == "object_data" || j.action == "source" || j.action == "arguments" {
 		s.setStatus("browser_loading")
 	} else {
 		s.setStatus("running", j.action)
@@ -637,6 +640,10 @@ func (s *screen) worker() {
 			object, err = session.ObjectInfo(j.ctx, j.object)
 		case "definition":
 			definition, err = session.Definition(j.ctx, j.object, j.text)
+		case "object_ddl":
+			definition, err = session.Definition(j.ctx, j.object, "ddl")
+		case "object_data":
+			result, err = session.ObjectPreview(j.ctx, j.object, j.previewLimit)
 		case "source":
 			source, err = session.Source(j.ctx, j.object)
 		case "complete":
@@ -725,6 +732,21 @@ func (s *screen) worker() {
 			}
 			if j.action == "browser_columns" {
 				s.acceptBrowserColumns(j.node, columns, err)
+				return
+			}
+			if j.action == "object_ddl" || j.action == "object_data" {
+				if j.action == "object_ddl" {
+					s.acceptObjectDDL(definition.DDL, err)
+				} else {
+					s.acceptObjectData(result, j.previewLimit, err)
+				}
+				if err != nil {
+					s.setStatus("error", err)
+				} else if j.action == "object_ddl" {
+					s.setStatus("definition_loaded", s.tr("ddl"))
+				} else {
+					s.setStatus("object_data_rows", len(result.Values))
+				}
 				return
 			}
 			if j.action == "definition" {

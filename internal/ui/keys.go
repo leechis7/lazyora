@@ -43,6 +43,9 @@ func (s *screen) key(event *tuivory.EventKey) *tuivory.EventKey {
 	}
 
 	page, _ = s.pages.GetFrontPage()
+	if page == "foreign_keys" || page == "related_rows" {
+		return s.foreignRowsKey(page, event)
+	}
 	if page == "main" && s.resizePanelKey(event) {
 		return nil
 	}

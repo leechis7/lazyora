@@ -17,7 +17,9 @@ type objectWorkspace struct {
 	split         *tuivory.SplitView
 	dataInfo, ddl *tuivory.WidgetTextView
 	dataGrid      *tuivory.RowsView
+	dataModel     *tuivory.Grid
 	buttons       *tuivory.Flex
+	relatedButton *tuivory.WidgetButton
 	data          oracle.Result
 	rows          int
 	section       string
@@ -46,6 +48,11 @@ func (s *screen) makeObjectWorkspace(buttons *tuivory.Flex) tuivory.Primitive {
 		section:  "columns",
 	}
 	s.objectWorkspace = w
+	if s.object.Kind == "TABLE" {
+		w.relatedButton = s.clickable(tuivory.NewWidgetButton(s.tr("foreign_keys")).SetSelectedFunc(s.showForeignKeys))
+		w.relatedButton.SetDisabled(true)
+		buttons.AddItem(w.relatedButton, 0, 1, false)
+	}
 	w.ddl.SetBorder(true).SetTitle(s.tr("ddl"))
 	s.styleBox(w.ddl.Box)
 	w.tabs, _ = tuivory.NewTabView(s.objectTabs(), w.tabState, s.componentPalette())
@@ -78,6 +85,9 @@ func (s *screen) selectObjectTab(section string) {
 		return
 	}
 	w.section = section
+	if w.relatedButton != nil {
+		w.relatedButton.SetDisabled(section != "data" || len(w.data.Values) == 0)
+	}
 	w.tabState.Active, w.tabState.Focused = section, section
 	w.body.Clear()
 	s.app.SetFocus(w.tabs)
@@ -158,6 +168,35 @@ func (s *screen) acceptObjectData(result oracle.Result, limit int, err error) {
 		w.dataInfo.SetText(fmt.Sprintf(s.tr("error"), err))
 		return
 	}
+	model, view, err := s.objectPreviewGrid(result)
+	if err != nil {
+		w.dataInfo.SetText(fmt.Sprintf(s.tr("error"), err))
+		return
+	}
+	w.dataModel = model
+	focused := w.dataGrid != nil && w.dataGrid.HasFocus()
+	w.data, w.rows, w.dataGrid = result, limit, view
+	if w.relatedButton != nil {
+		w.relatedButton.SetDisabled(w.section != "data" || len(result.Values) == 0)
+	}
+	info := fmt.Sprintf(s.tr("object_data_rows"), len(result.Values))
+	if result.Truncated {
+		if result.PageLimited || limit >= oracle.MaxObjectPreviewRows {
+			info += " · " + s.tr("object_data_limit")
+		} else {
+			info += " · " + s.tr("object_data_more")
+		}
+	}
+	w.dataInfo.SetText(info)
+	if w.tabState.Active == "data" {
+		w.body.Clear().AddItem(w.dataInfo, 2, 0, false).AddItem(view, 0, 1, false)
+		if focused {
+			s.app.SetFocus(view)
+		}
+	}
+}
+
+func (s *screen) objectPreviewGrid(result oracle.Result) (*tuivory.Grid, *tuivory.RowsView, error) {
 	columns := make([]tuivory.GridColumn, len(result.Columns))
 	for i, label := range result.Columns {
 		columns[i] = tuivory.GridColumn{ID: strconv.Itoa(i), Label: label, Width: 18}
@@ -179,31 +218,14 @@ func (s *screen) acceptObjectData(result oracle.Result, limit int, err error) {
 	source, _ := tuivory.NewMemoryRows(records)
 	model, err := tuivory.NewGrid(columns, source)
 	if err != nil {
-		w.dataInfo.SetText(fmt.Sprintf(s.tr("error"), err))
-		return
+		return nil, nil, err
 	}
 	options, _ := tuivory.GridPreset("data")
 	options.DisableEditing, options.DisableHeaderSort = true, true
 	options.ASCII, options.StatusBar = s.asciiDisplay(), false
 	_ = model.SetOptions(options)
-	view, _ := tuivory.NewGridView(model, s.resultPalette(), nil)
-	focused := w.dataGrid != nil && w.dataGrid.HasFocus()
-	w.data, w.rows, w.dataGrid = result, limit, view
-	info := fmt.Sprintf(s.tr("object_data_rows"), len(result.Values))
-	if result.Truncated {
-		if result.PageLimited || limit >= oracle.MaxObjectPreviewRows {
-			info += " · " + s.tr("object_data_limit")
-		} else {
-			info += " · " + s.tr("object_data_more")
-		}
-	}
-	w.dataInfo.SetText(info)
-	if w.tabState.Active == "data" {
-		w.body.Clear().AddItem(w.dataInfo, 2, 0, false).AddItem(view, 0, 1, false)
-		if focused {
-			s.app.SetFocus(view)
-		}
-	}
+	view, err := tuivory.NewGridView(model, s.resultPalette(), nil)
+	return model, view, err
 }
 
 func (s *screen) objectWorkspaceKey(event *tuivory.EventKey) bool {
@@ -213,6 +235,11 @@ func (s *screen) objectWorkspaceKey(event *tuivory.EventKey) bool {
 	}
 	if event.Modifiers() == tuivory.ModAlt && event.Key() == tuivory.KeyRune {
 		switch event.Rune() {
+		case 'f', 'F':
+			if w.section == "data" && w.dataGrid != nil && w.dataGrid.HasFocus() && s.object.Kind == "TABLE" {
+				s.showForeignKeys()
+				return true
+			}
 		case 'v', 'V':
 			s.selectObjectTab("data")
 			return true
@@ -269,7 +296,9 @@ func (s *screen) cycleObjectWorkspace(event *tuivory.EventKey) bool {
 		items = append(items, s.objectTable)
 	}
 	for i := 0; i < w.buttons.GetItemCount(); i++ {
-		items = append(items, w.buttons.GetItem(i))
+		if button, ok := w.buttons.GetItem(i).(*tuivory.WidgetButton); ok && !button.IsDisabled() {
+			items = append(items, button)
+		}
 	}
 	step := 1
 	if event.Key() == tuivory.KeyBacktab {

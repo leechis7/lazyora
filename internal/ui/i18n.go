@@ -4,6 +4,13 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"foreign_keys":              {"Related rows (Alt+F)", "관련 행 (Alt+F)"},
+	"foreign_choose":            {"Choose a foreign-key relationship.", "외래 키 관계를 선택하세요."},
+	"foreign_empty":             {"No visible enabled foreign keys.", "조회할 수 있는 활성 외래 키가 없습니다."},
+	"foreign_pick_row":          {"Select a data row first.", "데이터 행을 먼저 선택하세요."},
+	"foreign_null":              {"A key column is NULL. There is no matching row.", "키 컬럼이 NULL이므로 일치하는 행이 없습니다."},
+	"foreign_child":             {"Child", "자식"},
+	"foreign_parent":            {"Parent", "부모"},
 	"object_tab_columns":        {"Columns", "컬럼"},
 	"object_tab_data":           {"Data", "데이터"},
 	"object_data_rows":          {"%d preview rows · Read only", "미리보기 %d행 · 읽기 전용"},

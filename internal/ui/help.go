@@ -212,7 +212,7 @@ func (s *screen) helpContext(page string) string {
 		return s.tr("display_mode") + ": " + s.tr("display_auto") + " / Unicode / ASCII\n" + s.tr("display_font_note") + "\n" + s.tr("footer_settings") + "\nAlt+T: " + s.tr("theme_dark") + " / " + s.tr("theme_light") + " / " + s.tr("theme_blackwhite") + "\nCtrl+S: " + s.tr("save") + " | Esc: " + s.tr("cancel")
 	case "object":
 		if s.objectWorkspace != nil {
-			return s.tr("footer_object_workspace") + "\n" + s.tr("object_data_more")
+			return s.tr("footer_object_workspace") + "\n" + s.tr("object_data_more") + " | " + s.tr("foreign_keys")
 		}
 		return s.tr("footer_object") + "\nAlt+S: " + s.tr("source") + " | Alt+A: " + s.tr("arguments")
 	case "source":

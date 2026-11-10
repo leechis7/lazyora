@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+- LORA-81: 스키마 데이터 탭에서 선택한 행의 외래 키를 따라 부모·자식 행을 읽기 전용으로 조회합니다.
+- LORA-81: Follow foreign keys from a selected schema data row to read-only parent or child results.
+
 - LORA-75: 스키마 브라우저 오른쪽에서 컬럼·데이터·DDL을 전환합니다. 데이터 미리보기는 기존 SQL 결과와 트랜잭션을 유지합니다.
 - LORA-75: Switch between columns, data, and DDL beside the schema browser. Data previews preserve the existing SQL result and transaction.
 

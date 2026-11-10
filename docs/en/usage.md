@@ -74,6 +74,8 @@ Execute → Run procedure/function is distinct from a step debugger: LazyOra has
 
 Opening a table, view or materialized view from the schema tree shows **Columns · Data · DDL** on the right. Press **Tab** to focus the tab strip and use **Left/Right and Enter**, or click a tab. **Alt+V** opens the Data tab, and **Alt+D** opens the existing DDL detail screen. Narrow screens show the detail pane alone. Data loads when the tab is opened. **Ctrl+R** refreshes and **Ctrl+N** reruns the preview with a limit 100 rows higher, up to 1,000 rows or approximately 8 MiB. Row order is unspecified, and LOB values may be partial. The preview is read-only and preserves existing SQL tabs, result cursors and uncommitted changes.
 
+Select a row in a table's data grid and press **Alt+F** or choose **Related rows** to list enabled foreign keys visible to the connected account. Press **Enter** on a relationship to preview up to 100 parent or child rows in a separate read-only grid. **Esc** returns to the relationships and then the original row. All components of a composite key are compared. NUMBER, CHAR/VARCHAR2, NCHAR/NVARCHAR2, and RAW keys are supported. A key with a NULL component has no matching rows to query.
+
 ## Editor keymaps, search and completion
 
 Settings offers Toad (default), Vim, Notepad++, VS Code and IntelliJ IDEA. The empty/legacy `editor_keymap` value means Toad; other stored values are `vim`, `notepad++`, `vscode`, `intellij`. These provide subsets of familiar Windows/Linux editing behavior, not complete IDE emulation. App-wide execute/commit/rollback/exit/fullscreen keys take priority.

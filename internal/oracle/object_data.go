@@ -18,7 +18,12 @@ func (s *Session) ObjectPreview(ctx context.Context, object Object, limit int) (
 	if !object.HasColumns() || object.Owner == "" || object.Name == "" || limit < 1 || limit > MaxObjectPreviewRows {
 		return result, fmt.Errorf("invalid object or preview row limit")
 	}
-	rows, err := s.dictionaryQuery(ctx, "SELECT * FROM "+QualifiedObject(object)+" WHERE ROWNUM <= :1", limit+1)
+	return s.readObjectPreview(ctx, "SELECT * FROM "+QualifiedObject(object)+" WHERE ROWNUM <= :1", limit, []any{limit + 1})
+}
+
+func (s *Session) readObjectPreview(ctx context.Context, query string, limit int, args []any) (Result, error) {
+	var result Result
+	rows, err := s.dictionaryQuery(ctx, query, args...)
 	if err != nil {
 		return result, err
 	}

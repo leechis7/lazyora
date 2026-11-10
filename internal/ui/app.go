@@ -23,6 +23,7 @@ type job struct {
 	cell          oracle.Cell
 	pageID        uint64
 	previewLimit  int
+	related       *relatedRowQuery
 	completion    oracle.CompletionContext
 	refresh       bool
 	routine       oracle.Routine
@@ -214,6 +215,7 @@ type screen struct {
 	objectFocus                              tuivory.Primitive
 	objectTable                              *tuivory.Table
 	objectWorkspace                          *objectWorkspace
+	foreignRows                              *foreignRowView
 	objectSplit                              tuivory.SplitState
 	objectColumns                            []oracle.Column
 	pendingChanges                           bool
@@ -529,6 +531,7 @@ func (s *screen) worker() {
 		var objects []oracle.Object
 		var columns []oracle.Column
 		var definition oracle.ObjectDefinition
+		var foreignKeys oracle.ForeignKeyLinks
 		var object oracle.Object
 		var source string
 		var arguments []oracle.Argument
@@ -644,6 +647,10 @@ func (s *screen) worker() {
 			definition, err = session.Definition(j.ctx, j.object, "ddl")
 		case "object_data":
 			result, err = session.ObjectPreview(j.ctx, j.object, j.previewLimit)
+		case "foreign_keys":
+			foreignKeys, err = session.ForeignKeys(j.ctx, j.object)
+		case "related_rows":
+			result, err = session.RelatedRows(j.ctx, j.related.link, j.related.headers, j.related.row, objectPreviewStep)
 		case "source":
 			source, err = session.Source(j.ctx, j.object)
 		case "complete":
@@ -732,6 +739,14 @@ func (s *screen) worker() {
 			}
 			if j.action == "browser_columns" {
 				s.acceptBrowserColumns(j.node, columns, err)
+				return
+			}
+			if j.action == "foreign_keys" {
+				s.acceptForeignKeys(foreignKeys, err)
+				return
+			}
+			if j.action == "related_rows" {
+				s.acceptRelatedRows(j.related, result, err)
 				return
 			}
 			if j.action == "object_ddl" || j.action == "object_data" {

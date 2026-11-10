@@ -6,6 +6,9 @@
 
 ## [0.14.0] - 2026-11-11
 
+- LORA-76: 공개 Tuivory Go 패키지를 v0.12.3으로 갱신합니다.
+- LORA-76: Upgrade the public Tuivory Go package to v0.12.3.
+
 - LORA-82: 두 Oracle 접속의 테이블과 컬럼 정의를 읽기 전용으로 비교합니다.
 - LORA-82: Compare table and column definitions across two Oracle connections without changing either database.
 

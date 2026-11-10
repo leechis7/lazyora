@@ -2,6 +2,12 @@
 
 [한국어](../tuivory-sync.md) | **English** · [UI style rules](ui-style.md)
 
+## LORA-76 · Tuivory Go v0.12.3
+
+LazyOra v0.14.0 uses the public Go module v0.12.3. The Go proxy resolves tag `go/v0.12.3` to commit `fe6ce139039dc4e9df18de233fbd8f3ec64d537e` with checksum `h1:k7qOV0WvWVg6hd2g0FYQpIB/CqvEuMuXriSQSsb4/Yw=`. [Public release](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.3)
+
+The existing schema details `SplitView` uses the updated module. [LORA-87](https://leechis7.atlassian.net/browse/LORA-87) tracks wiring the new collapse API to the main schema and results panels, menus and shortcuts.
+
 ## LORA-50 · Tuivory Go v0.12.2
 
 The public Go module is pinned to v0.12.2. The Go proxy resolves tag `go/v0.12.2` to commit `88265e85d3fba40e36f30249f68e8a56056420a1` with checksum `h1:kLSARzIGaN4QPlC6HbEGy0aTk2up1N7eUOO3lyMjeQI=`. [Public release](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.2)

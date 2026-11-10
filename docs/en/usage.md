@@ -72,6 +72,16 @@ Table/view details include column comments. Program objects offer source and arg
 
 Execute → Run procedure/function is distinct from a step debugger: LazyOra has **no breakpoint/step debugger**. The runner supports its documented scalar IN/OUT/IN OUT arguments and REF CURSOR results; up to four cursors, up to 1,000 fetched rows each. Routine export uses fetched results and does not rerun the routine. Record/collection/LOB/timezone-specific argument types are not generally supported. See the [debugger design record](plsql-debugger.md) for planned, unimplemented work.
 
+Opening a table, view or materialized view from the schema tree shows **Columns · Data · DDL** on the right. Press **Tab** to focus the tab strip and use **Left/Right and Enter**, or click a tab. **Alt+V** opens the Data tab, and **Alt+D** opens the existing DDL detail screen. Narrow screens show the detail pane alone. Data loads when the tab is opened. **Ctrl+R** refreshes and **Ctrl+N** reruns the preview with a limit 100 rows higher, up to 1,000 rows or approximately 8 MiB. Row order is unspecified, and LOB values may be partial. The preview is read-only and preserves existing SQL tabs, result cursors and uncommitted changes.
+
+Select a row in a table's data grid and press **Alt+F** or choose **Related rows** to list enabled foreign keys visible to the connected account. Press **Enter** on a relationship to preview up to 100 parent or child rows in a separate read-only grid. **Esc** returns to the relationships and then the original row. All components of a composite key are compared. NUMBER, CHAR/VARCHAR2, NCHAR/NVARCHAR2, and RAW keys are supported. A key with a NULL component has no matching rows to query.
+
+### Compare table structures across two connections
+
+Open two Oracle connection workspaces and choose **Tools → Compare table structures**. Select the left and right connections. Leave a schema blank to use that session's current schema, or quote a case-sensitive schema name. The comparison shows tables visible only on one side and differences in column names, order, types, length or precision, nullability, and defaults. Press **Enter** for details, **Tab** to cycle panes and buttons, or **Ctrl+C** to copy the focused details.
+
+The comparison uses metadata visible to each connection. Privileges and changes made between reads can affect the results. LazyOra withholds the diff if either read fails or exceeds 12,000 metadata rows or 8 MiB of defaults. **Esc** cancels both reads. The comparison preserves existing SQL results and pending transactions and does not execute DDL.
+
 ## Editor keymaps, search and completion
 
 Settings offers Toad (default), Vim, Notepad++, VS Code and IntelliJ IDEA. The empty/legacy `editor_keymap` value means Toad; other stored values are `vim`, `notepad++`, `vscode`, `intellij`. These provide subsets of familiar Windows/Linux editing behavior, not complete IDE emulation. App-wide execute/commit/rollback/exit/fullscreen keys take priority.

@@ -278,7 +278,7 @@ func (s *screen) activateBrowser(node *tuivory.WidgetTreeNode) {
 		return
 	}
 	if data, ok := node.GetReference().(*browserNode); ok && (data.kind == "object" || data.kind == "column") {
-		s.openObject(data.object)
+		s.openObjectDetails(data.object, true)
 	}
 }
 
@@ -312,9 +312,18 @@ func (s *screen) localizeBrowser() {
 	if s.objectTable != nil {
 		s.renderObject(s.objectColumns)
 	}
+	if w := s.objectWorkspace; w != nil {
+		_ = w.tabs.SetTabs(s.objectTabs())
+		w.tabs.ASCII = s.asciiDisplay()
+		w.ddl.SetTitle(s.tr("ddl"))
+	}
 }
 
 func (s *screen) openObject(object oracle.Object) {
+	s.openObjectDetails(object, s.browserHasFocus())
+}
+
+func (s *screen) openObjectDetails(object oracle.Object, docked bool) {
 	if page, _ := s.pages.GetFrontPage(); page != "object" {
 		s.objectFocus = s.app.GetFocus()
 	}
@@ -322,6 +331,8 @@ func (s *screen) openObject(object oracle.Object) {
 	if s.busy {
 		return
 	}
+	useWorkspace := docked && object.HasColumns()
+	s.objectWorkspace = nil
 	s.object = object
 	s.objectColumns = nil
 	s.objectInfo = s.newTextView().SetWrap(true)
@@ -334,6 +345,9 @@ func (s *screen) openObject(object oracle.Object) {
 	close := s.clickable(tuivory.NewWidgetButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeObject))
 	buttons := s.newFlex()
 	for _, item := range []struct{ section, key string }{{"ddl", "Alt+D"}, {"constraints", "Alt+C"}, {"indexes", "Alt+I"}, {"grants", "Alt+G"}} {
+		if item.section == "ddl" && useWorkspace {
+			continue
+		}
 		if item.section == "constraints" && !object.HasColumns() {
 			continue
 		}
@@ -350,8 +364,11 @@ func (s *screen) openObject(object oracle.Object) {
 		buttons.AddItem(s.clickable(tuivory.NewWidgetButton(s.tr("routine_button")).SetSelectedFunc(func() { s.showRoutine(s.object, "") })), 0, 1, false)
 	}
 	buttons.AddItem(close, 0, 1, false)
-	root := s.newFlex().SetDirection(tuivory.FlexRow).
+	var root tuivory.Primitive = s.newFlex().SetDirection(tuivory.FlexRow).
 		AddItem(s.objectInfo, 2, 0, false).AddItem(s.objectTable, 0, 1, true).AddItem(buttons, 1, 0, false)
+	if useWorkspace {
+		root = s.makeObjectWorkspace(buttons)
+	}
 	s.pages.AddPage("object", root, true, true)
 	s.app.SetFocus(s.objectTable)
 	if !object.HasColumns() {
@@ -402,6 +419,7 @@ func (s *screen) renderObject(columns []oracle.Column) {
 
 func (s *screen) closeObject() {
 	s.pages.RemovePage("object")
+	s.objectWorkspace = nil
 	if s.objectFocus != nil {
 		s.app.SetFocus(s.objectFocus)
 	} else {

@@ -139,6 +139,12 @@ func (r *QueryRows) Close() error {
 }
 
 func (s *Session) scanCells(ctx context.Context, rows *sql.Rows, columnTypes []*sql.ColumnType, retain bool) ([]Cell, error) {
+	return scanCellValues(rows, columnTypes, func(ref lobReference) (Cell, error) {
+		return s.scanLOB(ctx, ref, retain)
+	})
+}
+
+func scanCellValues(rows *sql.Rows, columnTypes []*sql.ColumnType, readLOB func(lobReference) (Cell, error)) ([]Cell, error) {
 	values := make([]any, len(columnTypes))
 	pointers := make([]any, len(values))
 	for i := range values {
@@ -150,7 +156,7 @@ func (s *Session) scanCells(ctx context.Context, rows *sql.Rows, columnTypes []*
 	cells := make([]Cell, len(values))
 	for i, value := range values {
 		if reference, ok := lobValue(value); ok {
-			cell, err := s.scanLOB(ctx, reference, retain)
+			cell, err := readLOB(reference)
 			if err != nil {
 				return nil, err
 			}

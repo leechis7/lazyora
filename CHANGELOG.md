@@ -4,6 +4,20 @@
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-11-11
+
+- LORA-76: 공개 Tuivory Go 패키지를 v0.12.3으로 갱신합니다.
+- LORA-76: Upgrade the public Tuivory Go package to v0.12.3.
+
+- LORA-82: 두 Oracle 접속의 테이블과 컬럼 정의를 읽기 전용으로 비교합니다.
+- LORA-82: Compare table and column definitions across two Oracle connections without changing either database.
+
+- LORA-81: 스키마 데이터 탭에서 선택한 행의 외래 키를 따라 부모·자식 행을 읽기 전용으로 조회합니다.
+- LORA-81: Follow foreign keys from a selected schema data row to read-only parent or child results.
+
+- LORA-75: 스키마 브라우저 오른쪽에서 컬럼·데이터·DDL을 전환합니다. 데이터 미리보기는 기존 SQL 결과와 트랜잭션을 유지합니다.
+- LORA-75: Switch between columns, data, and DDL beside the schema browser. Data previews preserve the existing SQL result and transaction.
+
 ## [0.13.0] - 2026-11-10
 
 - LORA-80: 편집기와 F8 이력에서 SQL을 즐겨찾기에 저장하고 이름·태그로 검색해 새 탭에서 엽니다.
@@ -387,7 +401,8 @@ v0.0.1의 F2 접속은 Alt+L, F4 실행은 F9, F5 커밋은 Alt+C, F6 롤백은 
 - 이 릴리스 시점에는 실제 CentOS 7.4, 구형 Oracle 및 SID 접속 검증이 완료되지 않았습니다. 이후 호환성 수정은 `Unreleased`에 기록합니다.
 - 한 번에 SQL 한 문장 또는 BEGIN/DECLARE 블록 하나를 실행합니다. 여러 문장 일괄 실행, SQL*Plus 스크립트, 바인드 입력, DBMS_OUTPUT 출력은 지원하지 않습니다.
 
-[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.13.0...dev
+[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.14.0...dev
+[0.14.0]: https://github.com/leechis7/lazyora/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/leechis7/lazyora/compare/v0.12.3...v0.13.0
 [0.12.3]: https://github.com/leechis7/lazyora/compare/v0.12.2...v0.12.3
 [0.12.2]: https://github.com/leechis7/lazyora/compare/v0.12.1...v0.12.2

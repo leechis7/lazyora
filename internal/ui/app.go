@@ -22,6 +22,10 @@ type job struct {
 	identity      settings.Connection
 	cell          oracle.Cell
 	pageID        uint64
+	previewLimit  int
+	related       *relatedRowQuery
+	schemaCompare *schemaCompareRun
+	compareSide   int
 	completion    oracle.CompletionContext
 	refresh       bool
 	routine       oracle.Routine
@@ -212,6 +216,10 @@ type screen struct {
 	objectInfo                               *tuivory.WidgetTextView
 	objectFocus                              tuivory.Primitive
 	objectTable                              *tuivory.Table
+	objectWorkspace                          *objectWorkspace
+	schemaCompare                            *schemaCompareView
+	foreignRows                              *foreignRowView
+	objectSplit                              tuivory.SplitState
 	objectColumns                            []oracle.Column
 	pendingChanges                           bool
 	transactionUncertain                     bool
@@ -504,7 +512,7 @@ func (s *screen) submit(j job) {
 	} else {
 		j.ctx, s.cancel = context.WithTimeout(context.Background(), 60*time.Second)
 	}
-	if j.action == "definition" || j.action == "complete" || j.action == "schemas" || j.action == "objects" || j.action == "browser_columns" || j.action == "columns" || j.action == "object_info" || j.action == "source" || j.action == "arguments" {
+	if j.action == "definition" || j.action == "complete" || j.action == "schemas" || j.action == "objects" || j.action == "browser_columns" || j.action == "columns" || j.action == "object_info" || j.action == "object_ddl" || j.action == "object_data" || j.action == "source" || j.action == "arguments" {
 		s.setStatus("browser_loading")
 	} else {
 		s.setStatus("running", j.action)
@@ -526,6 +534,8 @@ func (s *screen) worker() {
 		var objects []oracle.Object
 		var columns []oracle.Column
 		var definition oracle.ObjectDefinition
+		var foreignKeys oracle.ForeignKeyLinks
+		var schemaStructure oracle.SchemaStructure
 		var object oracle.Object
 		var source string
 		var arguments []oracle.Argument
@@ -637,6 +647,16 @@ func (s *screen) worker() {
 			object, err = session.ObjectInfo(j.ctx, j.object)
 		case "definition":
 			definition, err = session.Definition(j.ctx, j.object, j.text)
+		case "object_ddl":
+			definition, err = session.Definition(j.ctx, j.object, "ddl")
+		case "object_data":
+			result, err = session.ObjectPreview(j.ctx, j.object, j.previewLimit)
+		case "foreign_keys":
+			foreignKeys, err = session.ForeignKeys(j.ctx, j.object)
+		case "related_rows":
+			result, err = session.RelatedRows(j.ctx, j.related.link, j.related.headers, j.related.row, objectPreviewStep)
+		case "schema_compare":
+			schemaStructure, err = session.ReadSchemaStructure(j.ctx, j.text)
 		case "source":
 			source, err = session.Source(j.ctx, j.object)
 		case "complete":
@@ -725,6 +745,33 @@ func (s *screen) worker() {
 			}
 			if j.action == "browser_columns" {
 				s.acceptBrowserColumns(j.node, columns, err)
+				return
+			}
+			if j.action == "foreign_keys" {
+				s.acceptForeignKeys(foreignKeys, err)
+				return
+			}
+			if j.action == "related_rows" {
+				s.acceptRelatedRows(j.related, result, err)
+				return
+			}
+			if j.action == "schema_compare" {
+				j.schemaCompare.accept(j.compareSide, schemaStructure, err)
+				return
+			}
+			if j.action == "object_ddl" || j.action == "object_data" {
+				if j.action == "object_ddl" {
+					s.acceptObjectDDL(definition.DDL, err)
+				} else {
+					s.acceptObjectData(result, j.previewLimit, err)
+				}
+				if err != nil {
+					s.setStatus("error", err)
+				} else if j.action == "object_ddl" {
+					s.setStatus("definition_loaded", s.tr("ddl"))
+				} else {
+					s.setStatus("object_data_rows", len(result.Values))
+				}
 				return
 			}
 			if j.action == "definition" {

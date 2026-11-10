@@ -331,10 +331,14 @@ func (s *Session) definitionLong(ctx context.Context, kind string, rows []longDe
 		for i, row := range batch {
 			suffix := fmt.Sprint(i)
 			args = append(args, sql.Named("owner"+suffix, row.owner), sql.Named("name"+suffix, row.name))
-			if kind == "condition" {
+			switch kind {
+			case "condition":
 				args = append(args, sql.Named("table"+suffix, row.table))
 				fmt.Fprintf(&code, "SELECT search_condition INTO v_text FROM all_constraints WHERE owner = :owner%s AND constraint_name = :name%s AND table_name = :table%s;\n", suffix, suffix, suffix)
-			} else {
+			case "default":
+				args = append(args, sql.Named("table"+suffix, row.table))
+				fmt.Fprintf(&code, "SELECT data_default INTO v_text FROM all_tab_columns WHERE owner = :owner%s AND column_name = :name%s AND table_name = :table%s;\n", suffix, suffix, suffix)
+			default:
 				args = append(args, sql.Named("position"+suffix, row.position))
 				fmt.Fprintf(&code, "BEGIN SELECT column_expression INTO v_text FROM all_ind_expressions WHERE index_owner = :owner%s AND index_name = :name%s AND column_position = :position%s; EXCEPTION WHEN NO_DATA_FOUND THEN v_text := NULL; END;\n", suffix, suffix, suffix)
 			}

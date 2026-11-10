@@ -4,6 +4,12 @@
 
 LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 원칙을 제품 UI에 적용합니다. Tuivory의 가이드·견본·도구 개발은 별도 저장소와 Tuivory Jira에서 관리하고, LazyOra의 적용 작업은 LORA Jira에서 관리합니다.
 
+## LORA-76 · Tuivory Go v0.12.3
+
+LazyOra v0.14.0은 공개 Go 모듈 v0.12.3을 사용합니다. Go 프록시에서 태그 `go/v0.12.3`, 원본 커밋 `fe6ce139039dc4e9df18de233fbd8f3ec64d537e`, 체크섬 `h1:k7qOV0WvWVg6hd2g0FYQpIB/CqvEuMuXriSQSsb4/Yw=`를 확인했습니다. [공개 릴리스](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.3)
+
+스키마 상세 화면의 기존 `SplitView`가 새 버전을 사용합니다. 새 접기 API를 기본 스키마·결과 창의 메뉴와 단축키에 연결하는 작업은 [LORA-87](https://leechis7.atlassian.net/browse/LORA-87)에서 진행합니다.
+
 ## LORA-50 · Tuivory Go v0.12.2
 
 공개 Go 모듈을 v0.12.2로 올렸습니다. Go 프록시에서 태그 `go/v0.12.2`, 원본 커밋 `88265e85d3fba40e36f30249f68e8a56056420a1`, 체크섬 `h1:kLSARzIGaN4QPlC6HbEGy0aTk2up1N7eUOO3lyMjeQI=`를 확인했습니다. [공개 릴리스](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.2)

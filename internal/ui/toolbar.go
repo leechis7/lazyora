@@ -127,10 +127,10 @@ func (s *screen) refreshFooter() {
 		keys = []footerKey{{"Ctrl+C", "copy", tuivory.KeyCtrlC, 0}, {"Esc", "close", tuivory.KeyEscape, 0}}
 	case "grid_inline":
 		hint = "grid_inline_hint"
-		keys = []footerKey{{"Enter", "edit_preview", tuivory.KeyEnter, 0}, {"Esc", "cancel", tuivory.KeyEscape, 0}}
+		keys = []footerKey{{"Enter", "edit_stage", tuivory.KeyEnter, 0}, {"Esc", "cancel", tuivory.KeyEscape, 0}}
 	case "grid_edit":
 		hint = "footer_grid_edit"
-		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Ctrl+S", "edit_preview", tuivory.KeyCtrlS, 0}, {"Esc", "cancel", tuivory.KeyEscape, 0}}
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Ctrl+S", "edit_stage", tuivory.KeyCtrlS, 0}, {"Esc", "cancel", tuivory.KeyEscape, 0}}
 	case "cell":
 		hint = "footer_cell"
 		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Ctrl+S", "save", tuivory.KeyCtrlS, 0}, {"Ctrl+C", "copy", tuivory.KeyCtrlC, 0}, {"Esc", "close", tuivory.KeyEscape, 0}}
@@ -265,7 +265,7 @@ func (s *screen) refreshFooter() {
 	case "exit":
 		hint = "footer_exit"
 		keys = []footerKey{{"Esc", "exit_cancel", tuivory.KeyEscape, tuivory.ModNone}}
-		if s.pendingChanges {
+		if s.hasPendingWork() {
 			keys = append(keys, footerKey{"Alt+V", "pending_work", tuivory.KeyRune, tuivory.ModAlt})
 			if !s.transactionUncertain {
 				keys = append(keys, footerKey{shortcut("commit"), "exit_commit", tuivory.KeyRune, tuivory.ModAlt}, footerKey{shortcut("rollback"), "exit_rollback", tuivory.KeyRune, tuivory.ModAlt})

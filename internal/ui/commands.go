@@ -196,7 +196,7 @@ func (s *screen) commandEnabled(id string) bool {
 	case "history":
 		return !s.busy
 	case "pending_work":
-		return !s.busy && s.pendingChanges
+		return !s.busy && s.hasPendingWork()
 	case "browser", "browser_user", "browser_type", "browser_search":
 		return s.browser != nil
 	case "connect":

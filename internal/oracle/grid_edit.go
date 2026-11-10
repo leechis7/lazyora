@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	oraTypes "github.com/sijms/go-ora/v3/types"
+	"sort"
 	"strings"
 	"time"
 )
@@ -179,46 +180,72 @@ func (s *Session) EditID() uint64 {
 	return s.edit.id
 }
 
-// ApplyEdit binds all values and compares the captured editable columns plus ROWID.
-// A savepoint undoes this attempt on error/conflict, preserving earlier work.
-// Success remains uncommitted and invalidates the snapshot (triggers may run).
-func (s *Session) ApplyEdit(ctx context.Context, change EditChange) (err error) {
+// ApplyEdit retains the single-cell entry point for Oracle consumers.
+func (s *Session) ApplyEdit(ctx context.Context, change EditChange) error {
+	return s.applyEdits(ctx, []EditChange{change}, false)
+}
+
+// ApplyEdits validates one snapshot, updates each physical row once, and
+// rolls back the entire batch on failure without undoing earlier SQL work.
+func (s *Session) ApplyEdits(ctx context.Context, changes []EditChange) error {
+	return s.applyEdits(ctx, changes, true)
+}
+
+func (s *Session) applyEdits(ctx context.Context, changes []EditChange, retryable bool) (err error) {
+	if len(changes) == 0 {
+		return nil
+	}
 	if s.finishErr != nil {
 		return s.finishErr
 	}
 	snap := s.edit
-	if snap == nil || change.ID == 0 || snap.id != change.ID || change.Row < 0 || change.Row >= len(snap.rows) || change.Column < 0 || change.Column >= len(snap.columns) {
+	if snap == nil || s.tx == nil {
 		return errors.New("editable result expired; reload table data")
 	}
-	column := snap.columns[change.Column]
-	if column.Name == "" {
-		return errors.New("this result column is read-only")
+	type rowUpdate struct {
+		row  int
+		sets []string
+		args []any
 	}
-	s.ClosePage()
-	value, err := editValue(column.DataType, change.Text, change.Null)
-	if err != nil {
-		return err
-	}
-	if !column.Nullable && (change.Null || change.Text == "") {
-		return errors.New("column does not allow NULL (Oracle treats empty text as NULL)")
-	}
-	args := []any{sql.Named("new_value", value), sql.Named("row_id", snap.rowIDs[change.Row])}
-	conditions := []string{"ROWID = CHARTOROWID(:row_id)"}
-	for i, c := range snap.columns {
-		if c.Name == "" {
-			continue
+	updates := make(map[string]*rowUpdate)
+	var rowIDs []string
+	seen := make(map[[2]string]bool)
+	for _, change := range changes {
+		if change.ID == 0 || change.ID != snap.id || change.Row < 0 || change.Row >= len(snap.rows) || change.Column < 0 || change.Column >= len(snap.columns) {
+			return errors.New("editable result expired; reload table data")
 		}
-		old := snap.rows[change.Row][i]
-		arg, e := editValue(c.DataType, old.Text, old.Null)
+		col := snap.columns[change.Column]
+		if col.Name == "" {
+			return errors.New("this result column is read-only")
+		}
+		value, e := editValue(col.DataType, change.Text, change.Null)
 		if e != nil {
-			return e
+			return fmt.Errorf("row %d, %s: %w", change.Row+1, col.Name, e)
 		}
-		name := fmt.Sprintf("old_%d", i)
-		args = append(args, sql.Named(name, arg))
-		expr := editExpression(quoteIdentifier(c.Name), c.DataType)
-		conditions = append(conditions, "("+expr+" = :"+name+" OR ("+expr+" IS NULL AND :"+name+" IS NULL))")
+		if !col.Nullable && (change.Null || change.Text == "") {
+			return fmt.Errorf("row %d, %s: column does not allow NULL", change.Row+1, col.Name)
+		}
+		id := snap.rowIDs[change.Row]
+		key := [2]string{id, col.Name}
+		if seen[key] {
+			return errors.New("duplicate grid change for the same row and column")
+		}
+		seen[key] = true
+		row := updates[id]
+		if row == nil {
+			row = &rowUpdate{row: change.Row}
+			updates[id] = row
+			rowIDs = append(rowIDs, id)
+		}
+		bind := fmt.Sprintf("new_%d", len(row.args))
+		row.sets = append(row.sets, quoteIdentifier(col.Name)+" = "+editBind(":"+bind, col.DataType))
+		row.args = append(row.args, sql.Named(bind, value))
 	}
-	statement := "UPDATE " + QualifiedObject(snap.object) + " SET " + quoteIdentifier(column.Name) + " = " + editBind(":new_value", column.DataType) + " WHERE " + strings.Join(conditions, " AND ")
+	sort.Strings(rowIDs)
+	s.ClosePage()
+	table := QualifiedObject(snap.object)
+	journal := "UPDATE " + table + " (grid edit batch)"
+	var affected int64
 	var nonce [8]byte
 	if _, err = rand.Read(nonce[:]); err != nil {
 		return err
@@ -231,7 +258,6 @@ func (s *Session) ApplyEdit(ctx context.Context, change EditChange) (err error) 
 	s.pending = true
 	start := time.Now()
 	defer func() {
-		s.edit = nil
 		if err != nil {
 			cleanup, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
@@ -242,31 +268,53 @@ func (s *Session) ApplyEdit(ctx context.Context, change EditChange) (err error) 
 				s.pending = previousPending
 			}
 		}
-		s.recordStatement(start, statement, func() int64 {
-			if err == nil {
-				return 1
-			}
-			return 0
-		}(), err)
+		if err != nil {
+			affected = 0
+		}
+		if err == nil || !retryable || s.finishErr != nil {
+			s.edit = nil
+		}
+		s.recordStatement(start, journal, affected, err)
 	}()
-	var locked string
-	err = s.tx.QueryRowContext(ctx, "SELECT ROWIDTOCHAR(ROWID) FROM "+QualifiedObject(snap.object)+" WHERE ROWID = CHARTOROWID(:row_id) FOR UPDATE NOWAIT", sql.Named("row_id", snap.rowIDs[change.Row])).Scan(&locked)
-	if errors.Is(err, sql.ErrNoRows) {
-		return ErrEditConflict
+	for _, id := range rowIDs {
+		row := updates[id]
+		conditions := []string{"ROWID = CHARTOROWID(:row_id)"}
+		args := append(row.args, sql.Named("row_id", id))
+		for i, c := range snap.columns {
+			if c.Name == "" {
+				continue
+			}
+			old := snap.rows[row.row][i]
+			arg, e := editValue(c.DataType, old.Text, old.Null)
+			if e != nil {
+				return e
+			}
+			name := fmt.Sprintf("old_%d", i)
+			args = append(args, sql.Named(name, arg))
+			expr := editExpression(quoteIdentifier(c.Name), c.DataType)
+			conditions = append(conditions, "("+expr+" = :"+name+" OR ("+expr+" IS NULL AND :"+name+" IS NULL))")
+		}
+		var locked string
+		err = s.tx.QueryRowContext(ctx, "SELECT ROWIDTOCHAR(ROWID) FROM "+table+" WHERE ROWID = CHARTOROWID(:row_id) FOR UPDATE NOWAIT", sql.Named("row_id", id)).Scan(&locked)
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrEditConflict
+		}
+		if err != nil {
+			return fmt.Errorf("could not lock row without waiting; retry after the other transaction finishes: %w", err)
+		}
+		statement := "UPDATE " + table + " SET " + strings.Join(row.sets, ", ") + " WHERE " + strings.Join(conditions, " AND ")
+		exec, e := s.tx.ExecContext(ctx, statement, args...)
+		if e != nil {
+			return fmt.Errorf("row %d: %w", row.row+1, e)
+		}
+		count, e := exec.RowsAffected()
+		if e != nil {
+			return e
+		}
+		if count != 1 {
+			return ErrEditConflict
+		}
+		affected++
 	}
-	if err != nil {
-		return fmt.Errorf("could not lock row without waiting; reload or retry after the other transaction finishes: %w", err)
-	}
-	exec, err := s.tx.ExecContext(ctx, statement, args...)
-	if err != nil {
-		return err
-	}
-	count, err := exec.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if count != 1 {
-		return ErrEditConflict
-	}
-	return nil
+	return ctx.Err()
 }

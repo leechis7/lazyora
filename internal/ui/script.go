@@ -25,7 +25,6 @@ func (s *screen) executeScript() {
 
 func (s *screen) submitScript(text string) {
 	s.withBinds(text, func(values map[string]oracle.BindValue) {
-		s.recordSQLHistory(text)
 		s.submit(job{action: "script", text: text, bindings: values})
 	})
 }
@@ -73,6 +72,10 @@ func (s *screen) showScriptReport() {
 	list.SetChangedFunc(func(index int, _, _ string, _ rune) { selectResult(index) })
 	selectResult(0)
 	use := s.clickable(tuivory.NewWidgetButton(s.tr("script_use_result")).SetSelectedFunc(func() {
+		if len(s.gridDrafts) != 0 {
+			s.setStatus("grid_resolve_drafts")
+			return
+		}
 		step := s.scriptReport.Steps[list.GetCurrentItem()]
 		if len(step.Result.Columns) > 0 {
 			s.render(step.Result)

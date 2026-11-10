@@ -94,9 +94,11 @@ SELECT t.ROWID, t.* FROM scott.emp t WHERE t.deptno = 10 ORDER BY t.empno;
 
 Validated ROWID is hidden in the grid, row/range copy and fetched-result export, but retained internally. Full DB export repeats the original SQL and can include ROWID. Joins/views/synonyms/DB links/CTEs/subqueries/DISTINCT/aggregates/calculations/ROWIDTOCHAR or unverifiable origins remain read-only. Supported origins are permanent heap tables and direct columns/`t.*`; omitted schema uses CURRENT_SCHEMA. LOB and unsupported types remain read-only.
 
-Enter/double-click edits an editable cell; typing replaces its value. Enter previews before UPDATE, Esc cancels the draft, Ctrl+U clears, Alt+Delete requests NULL, and Alt+D opens the separate editor. The **change-preview** default is Proceed; Cancel returns to the draft. This differs from the safe Cancel default on general dangerous-SQL warnings. Applied cells have a changed background and `*` status text until commit/rollback.
+Enter/double-click opens the cell editor. **Enter** stages the value locally. **Tab/Shift+Tab** stages it and moves to the next/previous editable cell. **Esc** cancels the current input. **Ctrl+U** clears and **Alt+Delete** sets NULL. **Alt+D** opens the separate editor, where **Ctrl+S** stages into the same draft.
 
-Edits use ROWID and original fetched editable-column values to detect conflicts, not every unfetched/read-only column. Lock conflicts and failed recovery are distinct from success. After commit/rollback the current grid requeries its original SQL/binds or explicit edit-table source, preserving sort/filter/widths and a feasible selection while clearing edit markers. Paging restarts at the first page; other SQL tabs' old results need rerunning. A failed refresh is reported separately from a successful transaction. The current editor text is never executed implicitly for this refresh; exit-time transaction actions proceed to exit.
+Draft values remain visible in the grid. **Alt+C** saves the entire batch to Oracle. Changes to multiple columns of a row use one UPDATE. The batch checks the original fetched editable values. A lock, conflict or constraint error rolls back the batch and preserves the drafts. **Alt+R** discards grid drafts and rolls back pending SQL. Successful commit/rollback refreshes the original result and preserves sorting, filter and widths.
+
+Rerunning a query with drafts prompts for discard. **Cancel** is selected by default and keeps the current result and drafts. **Proceed** discards the drafts and runs the query. Resolve drafts before switching SQL tabs, reconnecting or exporting the full DB result in the same workspace. Grid copy and fetched-result export use the displayed draft values.
 
 ## Export, plans and DBMS_OUTPUT
 
@@ -123,4 +125,4 @@ In v0.4.0 the shared package renders menu single borders and clipped titles. Dis
 v0.12.1 uses Tuivory v0.5.0 shared shadows and backdrop dimming. Background colors remain under Dim; shadow clicks cannot activate the page behind. Shift+F10 source-edit commands open in a common popup menu: navigate with arrows/Home/End/PgUp/PgDn and Enter; Esc restores the source editor. Editing, secret handling and settings-save policy remain.
 
 
-The current development version uses Tuivory v0.11.1 to show a cell `*` and an independent dirty-row gutter `*`. Unchanged cells do not inherit dirty colors from the row marker; transaction completion clears the cues. Enter/double-click editing uses the shared SDK buffer and real cursor. Cancelling change review resumes the same draft; NULL, pending approval and closure hide the cursor. Blink/shape follow terminal settings.
+Tuivory renders edited-cell backgrounds, cell and row `*` markers, and the real cell cursor. Cursor shape and blink follow terminal settings.

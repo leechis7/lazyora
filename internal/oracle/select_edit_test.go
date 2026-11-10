@@ -111,7 +111,7 @@ func TestSelectRowIDPagesMapAliasesAndConflictCheckOriginalValues(t *testing.T) 
 	}
 	m.ExpectExec("SAVEPOINT LAZYORA_").WillReturnResult(sqlmock.NewResult(0, 0))
 	m.ExpectQuery("SELECT ROWIDTOCHAR").WithArgs("AAAAAAAABAAAAA1001").WillReturnRows(sqlmock.NewRows([]string{"ROWID"}).AddRow("AAAAAAAABAAAAA1001"))
-	m.ExpectExec(`UPDATE "APP"\."ITEMS" SET "TITLE" = :new_value WHERE ROWID = CHARTOROWID\(:row_id\).*"ID".*"TITLE"`).WithArgs("new", "AAAAAAAABAAAAA1001", "1001", "old").WillReturnResult(sqlmock.NewResult(0, 0))
+	m.ExpectExec(`UPDATE "APP"\."ITEMS" SET "TITLE" = :new_0 WHERE ROWID = CHARTOROWID\(:row_id\).*"ID".*"TITLE"`).WithArgs("new", "AAAAAAAABAAAAA1001", "1001", "old").WillReturnResult(sqlmock.NewResult(0, 0))
 	m.ExpectExec("ROLLBACK TO SAVEPOINT").WillReturnResult(sqlmock.NewResult(0, 0))
 	if err = s.ApplyEdit(context.Background(), EditChange{ID: r.EditID, Row: 1001, Column: 2, Text: "new"}); !errors.Is(err, ErrEditConflict) {
 		t.Fatalf("lost-update conflict: %v", err)

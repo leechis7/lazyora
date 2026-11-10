@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+- Tuivory Go v0.12.2를 적용합니다. 팝업 버튼 가운데 정렬과 전용 그리드 헤더 배경색을 적용하고, 현재 셀과 선택 범위의 색상을 구분합니다.
+- Adopt Tuivory Go v0.12.2 for centered popup buttons, a dedicated grid header background, and distinct colors for the current cell and selected range.
+
+- LORA-50 그리드 수정값을 여러 행과 열에 임시 저장하고 명시적 커밋 때 일괄 반영합니다. 재실행 전 초안 폐기를 확인하며 실패한 일괄 변경은 되돌리고 초안을 보존합니다.
+- LORA-50 Stage edits across rows and columns and write them as a batch on explicit commit. Confirm draft discard before rerunning and retain drafts after failed batches.
+
 ## [0.12.3] - 2026-11-06
 
 ### 개선 / Changed

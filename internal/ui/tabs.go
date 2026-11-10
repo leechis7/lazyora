@@ -60,6 +60,10 @@ func (s *screen) stashTab() {
 }
 
 func (s *screen) switchTab(index int) {
+	if len(s.gridDrafts) != 0 {
+		s.setStatus("grid_resolve_drafts")
+		return
+	}
 	if s.busy || index < 0 || index >= len(s.tabs) {
 		return
 	}
@@ -89,6 +93,10 @@ func (s *screen) cycleTab(step int) {
 }
 
 func (s *screen) newTab() {
+	if len(s.gridDrafts) != 0 {
+		s.setStatus("grid_resolve_drafts")
+		return
+	}
 	if s.busy {
 		return
 	}
@@ -118,6 +126,10 @@ func (s *screen) newTab() {
 }
 
 func (s *screen) closeTab() {
+	if len(s.gridDrafts) != 0 {
+		s.setStatus("grid_resolve_drafts")
+		return
+	}
 	if s.busy {
 		return
 	}

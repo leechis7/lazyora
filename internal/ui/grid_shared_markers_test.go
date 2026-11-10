@@ -53,11 +53,31 @@ func TestSharedGridDirtyMarkersStayCellSpecific(t *testing.T) {
 					s.table.Select(1, 0)
 					s.resultGrid().Draw(terminal)
 					assertMarkers(true)
-					s.clearEditedCells()
+					s.clearGridDrafts()
 					s.resultGrid().Draw(terminal)
 					assertMarkers(false)
 				})
 			}
 		}
+	}
+}
+
+func TestSharedGridHeaderUsesOneBackground(t *testing.T) {
+	s, terminal := inlineFixture(t)
+	s.table.SetRect(0, 0, 80, 16)
+	for _, theme := range []string{"dark", "light", "blackwhite"} {
+		t.Run(theme, func(t *testing.T) {
+			s.prefs.Theme = theme
+			s.resultGrid().Draw(terminal)
+			x, y, w, _ := s.table.GetInnerRect()
+			_, want, _ := s.tuivoryStyles().GridHeaderStyle(false).Decompose()
+			for col := x; col < x+w; col++ {
+				_, _, style, _ := terminal.GetContent(col, y)
+				_, bg, _ := style.Decompose()
+				if bg != want {
+					t.Fatalf("header cell %d has background %v, want %v", col, bg, want)
+				}
+			}
+		})
 	}
 }

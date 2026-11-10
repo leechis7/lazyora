@@ -18,9 +18,8 @@ import (
 
 type job struct {
 	gridRefresh   *gridRefreshState
-	editKey       editedCellKey
+	edits         []oracle.EditChange
 	identity      settings.Connection
-	edit          oracle.EditChange
 	cell          oracle.Cell
 	pageID        uint64
 	completion    oracle.CompletionContext
@@ -61,7 +60,7 @@ type screen struct {
 	aboutText                        *tuivory.WidgetTextView
 	aboutFocus                       tuivory.Primitive
 	inlineEdit                       *inlineCellEditor
-	editedCells                      map[editedCellKey]bool
+	gridDrafts                       map[editedCellKey]oracle.EditChange
 	editChange                       oracle.EditChange
 	editForm                         *tuivory.WidgetForm
 	editInfo                         *tuivory.WidgetTextView
@@ -228,7 +227,6 @@ type screen struct {
 	sourceLoaded                             bool
 	programModal                             *tuivory.Modal
 	programFocus, argumentFocus              tuivory.Primitive
-	programReject                            func()
 	argumentTable                            *tuivory.Table
 	argumentInfo                             *tuivory.WidgetTextView
 	jobs                                     chan job
@@ -462,6 +460,40 @@ func (s *screen) submit(j job) {
 		s.setStatus("connect_first")
 		return
 	}
+	if len(s.gridDrafts) != 0 {
+		switch j.action {
+		case "commit", "exit_commit":
+			for _, edit := range s.gridDrafts {
+				j.edits = append(j.edits, edit)
+			}
+			slices.SortFunc(j.edits, func(a, b oracle.EditChange) int {
+				if a.Row != b.Row {
+					return a.Row - b.Row
+				}
+				return a.Column - b.Column
+			})
+		case "connect":
+			if !s.transactionUncertain {
+				s.setStatus("grid_resolve_drafts")
+				return
+			}
+			fallthrough
+		case "execute", "script", "edit_load", "routine_run", "compile_source", "result_refresh":
+			s.showProgramConfirm(s.tr("grid_discard_edit_confirm"), func() {
+				s.clearGridDrafts()
+				s.submit(j)
+			})
+			return
+		case "export":
+			if j.query != nil {
+				s.setStatus("grid_resolve_drafts")
+				return
+			}
+		}
+	}
+	if j.action == "execute" || j.action == "script" {
+		s.recordSQLHistory(j.text)
+	}
 	s.busy = true
 	if j.action == "test_connect" {
 		j.ctx, s.cancel = context.WithTimeout(context.Background(), 15*time.Second)
@@ -501,7 +533,6 @@ func (s *screen) worker() {
 		var compilation oracle.Compilation
 		var script oracle.ScriptReport
 		var plan []oracle.PlanStep
-		var editApplied bool
 		var exported int64
 		var cell oracle.Cell
 		var err error
@@ -518,16 +549,6 @@ func (s *screen) worker() {
 				result, err = session.ExecutePaged(j.ctx, j.query.Text, j.query.Bindings)
 			} else {
 				result, err = session.EditableTable(j.ctx, j.object)
-			}
-		case "edit_apply":
-			err = session.ApplyEdit(j.ctx, j.edit)
-			editApplied = err == nil
-			if err == nil {
-				if j.query != nil {
-					result, err = session.ExecutePaged(j.ctx, j.query.Text, j.query.Bindings)
-				} else {
-					result, err = session.EditableTable(j.ctx, j.object)
-				}
 			}
 		case "cell_preview":
 			cell, err = session.PreviewCell(j.ctx, j.cell)
@@ -596,7 +617,10 @@ func (s *screen) worker() {
 		case "plan":
 			plan, err = session.Explain(j.ctx, j.text, j.bindings)
 		case "commit", "exit_commit":
-			err = session.Finish(true)
+			err = session.ApplyEdits(j.ctx, j.edits)
+			if err == nil {
+				err = session.Finish(true)
+			}
 		case "rollback", "exit_rollback":
 			err = session.Finish(false)
 		case "schemas":
@@ -649,40 +673,21 @@ func (s *screen) worker() {
 				s.pendingChanges = session.PendingChanges()
 				s.transactionUncertain = session.TransactionUncertain()
 				s.pendingWork = session.PendingWork()
-				if !s.pendingChanges && !s.transactionUncertain {
-					s.clearEditedCells()
-				}
 				s.refreshConnectionTitles()
 				s.invalidateResultCursors(session.PageID())
 				s.invalidateEditResults(session.EditID())
-			}
-			if j.action == "edit_apply" && editApplied {
-				s.markEditedCell(j.editKey)
 			}
 			if j.action == "result_refresh" {
 				s.acceptTransactionGridRefresh(j, result, err)
 				return
 			}
-			if j.action == "edit_load" || j.action == "edit_apply" {
-				if err != nil && editApplied {
-					err = fmt.Errorf("%s: %w", s.tr("edit_applied_reload_error"), err)
-				}
+			if j.action == "edit_load" {
 				if err != nil {
 					s.setStatus("error", err)
-					if s.editInfo != nil {
-						s.editInfo.SetText(err.Error() + "\n" + s.tr("edit_hint"))
-					}
 				} else {
-					if s.editForm != nil {
-						s.closeGridEdit()
-					}
 					s.render(result)
 					s.app.SetFocus(s.table)
-					if j.action == "edit_apply" {
-						s.setStatus("edit_applied")
-					} else {
-						s.setStatus("edit_loaded")
-					}
+					s.setStatus("edit_loaded")
 				}
 				return
 			}
@@ -795,7 +800,7 @@ func (s *screen) worker() {
 					s.refreshConnectionTitles()
 					s.demo = false
 					s.resetBrowser()
-					s.clearEditedCells()
+					s.clearGridDrafts()
 					s.setStatus("connected", j.config.User, j.config.Host, j.config.Port, j.config.Name, j.config.Mode)
 					if !s.quitting {
 						s.submit(job{action: "schemas"})
@@ -815,12 +820,12 @@ func (s *screen) worker() {
 						s.setStatus("executed", result.Affected, result.Elapsed.Round(time.Millisecond))
 					}
 				case "commit":
-					s.clearEditedCells()
+					s.clearGridDrafts()
 					if !s.refreshTransactionGrid("commit") {
 						s.setStatus("committed")
 					}
 				case "rollback":
-					s.clearEditedCells()
+					s.clearGridDrafts()
 					if !s.refreshTransactionGrid("rollback") {
 						s.setStatus("rolled_back")
 					}
@@ -939,7 +944,7 @@ func (s *screen) renderGrid(result oracle.Result) {
 		s.refreshGridHeader(col)
 	}
 	s.table.SetSelectionChangedFunc(func(_, _ int) { s.highlightResults(); s.refreshResultPosition() })
-	if len(s.editedCells) > 0 {
+	if len(s.gridDrafts) > 0 {
 		s.repaintEditedCells()
 	}
 	s.highlightResults()

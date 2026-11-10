@@ -147,7 +147,7 @@ func TestThemeAudit(t *testing.T) {
 						// Fixture construction may request read-only metadata; no worker exists.
 						for len(s.jobs) > 0 {
 							j := <-s.jobs
-							if j.action == "execute" || j.action == "edit_apply" || j.action == "commit" || j.action == "rollback" {
+							if j.action == "execute" || j.action == "commit" || j.action == "rollback" {
 								t.Fatalf("audit submitted a mutating job: %s", j.action)
 							}
 						}

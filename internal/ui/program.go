@@ -20,7 +20,6 @@ func (s *screen) showProgramConfirmFocused(message string, action func(), button
 		return
 	}
 	s.programFocus = s.app.GetFocus()
-	s.programReject = nil
 	s.programModal = tuivory.NewModal().SetText(message).AddButtons([]string{s.tr("proceed"), s.tr("cancel")}).
 		SetBackgroundColor(s.colors().background).SetTextColor(s.colors().text).
 		SetButtonStyle(s.buttonStyle()).SetButtonActivatedStyle(s.buttonFocusStyle()).SetFocus(button)
@@ -37,14 +36,9 @@ func (s *screen) showProgramConfirmFocused(message string, action func(), button
 		if s.programFocus != nil {
 			s.app.SetFocus(s.programFocus)
 		}
-		reject := s.programReject
-		s.programReject = nil
 		if index == 0 {
 			action()
 		} else {
-			if reject != nil {
-				reject()
-			}
 			s.abortWorkspaceExit()
 		}
 	})

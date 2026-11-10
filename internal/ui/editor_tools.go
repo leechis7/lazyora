@@ -44,7 +44,6 @@ func (s *screen) executeSQL() {
 
 func (s *screen) submitSQL(text string) {
 	s.withBinds(text, func(values map[string]oracle.BindValue) {
-		s.recordSQLHistory(text)
 		s.submit(job{action: "execute", text: text, bindings: values})
 	})
 }

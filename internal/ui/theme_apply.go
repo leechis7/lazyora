@@ -125,7 +125,7 @@ func (s *screen) applyTheme(previous string) {
 		visit(tab.editor)
 		visit(tab.table)
 		if tab.table != nil && tab.table != s.table {
-			inactive := screen{prefs: s.prefs, terminal: s.terminal, limitedColors: s.limitedColors, table: tab.table, resultRows: tab.rows, resultHeaders: tab.headers, resultValues: tab.values, resultSelection: tab.selection, resultBrowser: tab.browser, editedCells: s.editedCells}
+			inactive := screen{prefs: s.prefs, terminal: s.terminal, limitedColors: s.limitedColors, table: tab.table, resultRows: tab.rows, resultHeaders: tab.headers, resultValues: tab.values, resultSelection: tab.selection, resultBrowser: tab.browser, gridDrafts: s.gridDrafts}
 			inactive.repaintGridTheme()
 		}
 	}

@@ -83,6 +83,9 @@ func (s *screen) gridStatusText() string {
 			text += " · * " + s.tr("grid_uncommitted_cell")
 		}
 	}
+	if len(s.gridDrafts) > 0 {
+		text += " · " + fmt.Sprintf(s.tr("grid_drafts_count"), len(s.gridDrafts))
+	}
 	if s.resultSelection.active {
 		r1, c1, r2, c2 := s.resultBounds()
 		text += fmt.Sprintf(s.tr("grid_range"), r2-r1+1, c2-c1+1)

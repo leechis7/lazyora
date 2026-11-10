@@ -150,6 +150,8 @@ type screen struct {
 	sqlHistory                               []string
 	historyList                              *tuivory.WidgetList
 	historyFocus                             tuivory.Primitive
+	favoritesKey                             func(*tuivory.EventKey) *tuivory.EventKey
+	favoriteEditKey                          func(*tuivory.EventKey) *tuivory.EventKey
 	searchForm                               *tuivory.WidgetForm
 	searchFocus                              tuivory.Primitive
 	searchAction                             func(string)

@@ -58,6 +58,8 @@ var commands = []command{
 	{"debug_continue", "debug_unavailable", menuExecute, []binding{{"F11", tuivory.KeyF11, 0, 0}}},
 	{"cancel", "cancel_execution", menuExecute, []binding{{"Esc", tuivory.KeyEscape, 0, 0}}},
 	{"history", "history", menuView, []binding{{"F8", tuivory.KeyF8, 0, 0}}},
+	{"favorites", "favorites", menuView, nil},
+	{"favorite_save", "favorite_save", menuEdit, nil},
 	{"output_view", "output_view", menuView, []binding{{"Alt+P", tuivory.KeyRune, tuivory.ModAlt, 'p'}}},
 	{"fullscreen_sql", "fullscreen_sql", menuView, []binding{{"F2", tuivory.KeyF2, 0, 0}}},
 	{"fullscreen_results", "fullscreen_results", menuView, []binding{{"Shift+F2", tuivory.KeyF2, tuivory.ModShift, 0}, {"F12", tuivory.KeyF12, 0, 0}}},
@@ -193,8 +195,10 @@ func (s *screen) commandEnabled(id string) bool {
 		return !s.busy && s.editor.HasFocus() && (s.editor.HasSelection() || lineClipboardKeymap(s.prefs.EditorKeymap))
 	case "browser_refresh":
 		return !s.busy && s.browser != nil && (s.connected || s.demo)
-	case "history":
+	case "history", "favorites":
 		return !s.busy
+	case "favorite_save":
+		return !s.busy && s.editor.HasFocus() && strings.TrimSpace(s.favoriteEditorSQL()) != ""
 	case "pending_work":
 		return !s.busy && s.hasPendingWork()
 	case "browser", "browser_user", "browser_type", "browser_search":
@@ -359,6 +363,10 @@ func (s *screen) invoke(id string) {
 		s.clearSQL()
 	case "history":
 		s.showHistory()
+	case "favorites":
+		s.showFavorites()
+	case "favorite_save":
+		s.saveFavoriteSQL(s.favoriteEditorSQL())
 	case "pending_work":
 		s.showPendingWork()
 	case "describe":

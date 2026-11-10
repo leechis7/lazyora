@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+- LORA-80: 편집기와 F8 이력에서 SQL을 즐겨찾기에 저장하고 이름·태그로 검색해 새 탭에서 엽니다.
+- LORA-80: Save SQL from the editor or F8 history, find favorites by name or tags, and open them in a new tab.
+
 - LORA-73: 접속별 사용자 지정 환경 라벨을 저장하고 현재 접속과 위험 SQL·스크립트 실행 확인창에 표시합니다.
 - LORA-73: Save a custom environment label per connection and show it on the active connection and risky SQL or script confirmations.
 

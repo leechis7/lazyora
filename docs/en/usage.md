@@ -42,6 +42,10 @@ Files support UTF-8 up to 16 MiB, preserve BOM and LF/CRLF, and normalize mixed 
 
 F9/Ctrl+Enter/Alt+Enter/Shift+F9 executes the selection, otherwise the cursor statement/PLSQL unit. Plain Enter inserts a newline. SQL uses semicolons; PL/SQL/stored-unit boundaries use `/` on its own line (the final slash may be omitted). Separators inside quotes/comments/q/nq literals are ignored; incomplete quoting/comments/parentheses are rejected. F7 clears SQL after confirmation (undo can restore it); F8 opens the process-local history of up to 100 submitted statements. Loading history does not execute it.
 
+In F8 history, **Alt+S** saves the selected SQL as a favorite. In the editor, use **Edit → Completion / formatting → Save SQL to favorites** to save the selection or the whole editor when nothing is selected. Open **View → Execution reports → SQL favorites** or press **Alt+F** in F8 history to search by name or tag, open a new tab, edit the name or tags, or delete a favorite. Opening a favorite does not execute SQL.
+
+Favorites are stored as plain text in `sql-favorites.json` in the settings directory. Bind values and connection passwords are excluded, but values written into the SQL itself are stored verbatim. Limits are 200 favorites, 64 KiB of SQL per entry and 16 MiB for the file.
+
 F5 executes selected text or the whole editor as a script, after reviewing the original script and transaction warning. It is limited to 100 statements and 60 seconds, stops at the first error/cancellation, and does not automatically roll back earlier successful DML. Basic COMMIT/ROLLBACK inside the script act on the shared session. ROLLBACK TO, SQL*Plus commands (SET/SPOOL/PROMPT/@), and `&` substitution are unsupported. Unsupported input is checked before submission.
 
 **DBMS_OUTPUT collection is supported for F9 and F5** when enabled beforehand; it is collected after each completed statement, not live. Script history shows original line positions, status/counts and SQL. Each script SELECT retains up to 1,000 rows with truncation marked; the last SELECT is shown in the main grid and another script result can be selected explicitly.

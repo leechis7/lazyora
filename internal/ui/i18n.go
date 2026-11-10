@@ -4,6 +4,20 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"favorites":                 {"SQL favorites", "SQL 즐겨찾기"},
+	"favorite_save":             {"Save SQL to favorites", "SQL을 즐겨찾기에 저장"},
+	"favorite_name":             {"Name", "이름"},
+	"favorite_tags":             {"Tags", "태그"},
+	"favorite_filter":           {"Filter name or tags", "이름·태그 검색"},
+	"favorite_open":             {"Open tab", "새 탭 열기"},
+	"favorite_edit":             {"Edit details", "이름·태그 수정"},
+	"favorite_delete":           {"Delete", "삭제"},
+	"favorite_delete_confirm":   {"Delete this SQL favorite?", "이 SQL 즐겨찾기를 삭제하시겠습니까?"},
+	"favorite_empty":            {"No matching favorites", "일치하는 즐겨찾기가 없습니다"},
+	"favorite_invalid_name":     {"Enter a name of up to 40 printable characters.", "표시 가능한 문자 40자 이내로 이름을 입력하세요."},
+	"favorite_saved":            {"SQL favorite saved", "SQL 즐겨찾기를 저장했습니다"},
+	"favorite_local_hint":       {"SQL is stored as plain text. Check for secrets before saving.", "SQL은 평문으로 저장됩니다. 저장 전 민감한 값이 있는지 확인하세요."},
+	"favorite_history_keys":     {"Alt+S Save · Alt+F Favorites", "Alt+S 저장 · Alt+F 즐겨찾기"},
 	"display_reason_auto":       {"encoding/terminfo estimate", "문자 인코딩·터미널 정보 기준"},
 	"display_reason_ascii":      {"manual ASCII", "ASCII 직접 선택"},
 	"display_reason_unicode":    {"manual Unicode; check your font", "Unicode 직접 선택; 폰트 확인 필요"},

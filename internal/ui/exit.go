@@ -31,12 +31,12 @@ func (s *screen) showExitConfirmation() {
 	s.exitFocus = s.app.GetFocus()
 	message := "exit_clean"
 	labels := []string{s.tr("exit_now"), s.tr("exit_cancel")}
-	if s.pendingChanges {
+	if s.hasPendingWork() {
 		message = "exit_pending"
 		labels = []string{s.tr("exit_commit"), s.tr("exit_rollback"), s.tr("pending_work"), s.tr("exit_cancel")}
 	}
 	if s.workspaces != nil && len(s.workspaces.screens) > 1 {
-		if s.pendingChanges {
+		if s.hasPendingWork() {
 			message = "workspace_exit_pending"
 			labels = []string{s.tr("workspace_commit_close"), s.tr("workspace_rollback_close"), s.tr("pending_work"), s.tr("exit_cancel")}
 		} else {
@@ -54,7 +54,7 @@ func (s *screen) showExitConfirmation() {
 		for _, label := range labels {
 			needed += tuivory.TaggedStringWidth(label) + 6
 		}
-		if needed > width && !s.transactionUncertain && s.pendingChanges {
+		if needed > width && !s.transactionUncertain && s.hasPendingWork() {
 			labels = []string{s.tr("commit"), s.tr("rollback"), s.tr("pending_work_short"), s.tr("cancel")}
 		}
 	}
@@ -70,12 +70,12 @@ func (s *screen) showExitConfirmation() {
 			s.confirmExit("exit_discard_uncertain")
 			return
 		}
-		if s.pendingChanges && index == 2 {
+		if s.hasPendingWork() && index == 2 {
 			s.showPendingWork()
 			return
 		}
 		action := "exit_now"
-		if s.pendingChanges {
+		if s.hasPendingWork() {
 			if index == 0 {
 				action = "exit_commit"
 			} else {
@@ -125,11 +125,11 @@ func (s *screen) confirmExit(action string) {
 		s.setStatus("workspace_uncertain")
 		return
 	}
-	if action == "exit_now" && !s.pendingChanges {
+	if action == "exit_now" && !s.hasPendingWork() {
 		s.finishExit()
 		return
 	}
-	if s.pendingChanges && (action == "exit_commit" || action == "exit_rollback") {
+	if s.hasPendingWork() && (action == "exit_commit" || action == "exit_rollback") {
 		s.exitDialog.SetText(s.tr("exit_finishing"))
 		s.submit(job{action: action})
 	}
@@ -140,7 +140,7 @@ func (s *screen) exitKey(event *tuivory.EventKey) *tuivory.EventKey {
 		return nil
 	}
 	if event.Modifiers()&tuivory.ModAlt != 0 && event.Rune() == 'v' {
-		if s.pendingChanges {
+		if s.hasPendingWork() {
 			s.showPendingWork()
 		}
 		return nil
@@ -176,7 +176,7 @@ func (s *screen) abortWorkspaceExit() {
 }
 
 func (s *screen) exitCancelIndex() int {
-	if s.pendingChanges && !s.transactionUncertain {
+	if s.hasPendingWork() && !s.transactionUncertain {
 		return 3
 	}
 	return 1

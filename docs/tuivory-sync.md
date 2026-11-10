@@ -4,6 +4,20 @@
 
 LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 원칙을 제품 UI에 적용합니다. Tuivory의 가이드·견본·도구 개발은 별도 저장소와 Tuivory Jira에서 관리하고, LazyOra의 적용 작업은 LORA Jira에서 관리합니다.
 
+## LORA-50 · Tuivory Go v0.12.2
+
+공개 Go 모듈을 v0.12.2로 올렸습니다. Go 프록시에서 태그 `go/v0.12.2`, 원본 커밋 `88265e85d3fba40e36f30249f68e8a56056420a1`, 체크섬 `h1:kLSARzIGaN4QPlC6HbEGy0aTk2up1N7eUOO3lyMjeQI=`를 확인했습니다. [공개 릴리스](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.2)
+
+결과 그리드의 현재 셀과 선택 범위에 Tuivory가 공개한 `grid.active`와 `grid.range` 색상 토큰을 적용합니다. 수정된 현재 셀에는 수정 배경색을 유지하고, 그리드에서 포커스가 벗어나면 현재 셀의 강조를 줄입니다. 흑백 8색에서는 Tuivory가 현재 셀과 선택 범위에 동일한 색을 제공합니다. 나머지 UI 역할에 대한 후보 색상 일괄 전환은 이번 범위에서 보류합니다.
+
+## LORA-50 · Tuivory Go v0.12.1
+
+공개 Go v0.12.1의 원본 커밋은 `e9fa7b5ebae395acb66549b87326d788a3e2aa82`이며 모듈 체크섬은 `h1:ly1VZP5e5SsrWs0l7tnToC0irWAJpvu+6S0zaEqxTpw=`입니다. v0.12.0의 공통 팝업 버튼 행 가운데 정렬을 포함합니다. 기존 재현에서 120열 확인·취소 버튼 묶음과 40열에서 세 줄로 접힌 종료 버튼 행 각각이 가운데 정렬됐습니다. LazyOra의 결과 헤더는 전용 배경색을 제목·구분선·빈 영역에 적용하고 활성 열 제목을 굵게 표시합니다. [공개 릴리스](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.1)
+
+## 공통 팝업 버튼 정렬 확인
+
+공개 Go v0.11.1의 Modal을 단독 실행해 왼쪽 정렬을 재현했습니다. 120열 화면에서 한글 확인·취소 버튼은 팝업 내부의 x=42..58에 몰리고, 40열에서 줄바꿈된 단독 버튼도 왼쪽에 붙습니다. 일반 폼과 확인·종료·재접속 팝업 모두에 적용할 공통 정렬 계약을 TVR-7에 요청했습니다. [TVR-7 재현 기록](https://leechis7.atlassian.net/browse/TVR-7?focusedCommentId=11109)
+
 ## v0.12.3 릴리스 준비
 
 v0.12.3은 공개 Tuivory Go v0.11.1을 고정하고 셀 편집 UI·실제 커서·독립 변경 표식을 통합합니다. [릴리스 설명](releases/v0.12.3.md). 아래 미커밋·미게시 표기는 각각의 검증 시점 이력입니다. 사용자 배포 승인에 따라 기능 커밋과 한영 근거를 분리했으며 원격 CI·태그 게시를 확인합니다. 전체 LORA-76 완료나 SQL 편집기 포크 제거를 의미하지 않습니다.

@@ -17,23 +17,6 @@ func (s *screen) editedCellIdentity(result oracle.Result, row, col int) editedCe
 	}
 	return editedCellKey{result.EditObject.Owner, result.EditObject.Name, result.EditRowIDs[row], result.EditColumnNames[col]}
 }
-func (s *screen) markEditedCell(key editedCellKey) {
-	if key.rowID == "" || key.column == "" {
-		return
-	}
-	if s.editedCells == nil {
-		s.editedCells = make(map[editedCellKey]bool)
-	}
-	s.editedCells[key] = true
-	s.repaintEditedCells()
-}
-func (s *screen) clearEditedCells() {
-	if len(s.editedCells) == 0 {
-		return
-	}
-	s.editedCells = nil
-	s.repaintEditedCells()
-}
 func (s *screen) repaintEditedCells() {
 	rows := make(map[int]bool)
 	for row := 1; row < s.table.GetRowCount(); row++ {
@@ -45,7 +28,8 @@ func (s *screen) isEditedCell(row, col int) bool {
 	if row < 1 || row > len(s.resultBrowser.visible) {
 		return false
 	}
-	return s.editedCells[s.editedCellIdentity(s.resultBrowser.source, s.resultBrowser.visible[row-1], s.resultSourceColumn(col))]
+	_, changed := s.gridDrafts[s.editedCellIdentity(s.resultBrowser.source, s.resultBrowser.visible[row-1], s.resultSourceColumn(col))]
+	return changed
 }
 func (s *screen) editedCellStyle() tuivory.Style {
 	return s.tuivoryStyles().EditedStyle()
@@ -141,9 +125,35 @@ func (s *screen) inlineEditKey(event *tuivory.EventKey) *tuivory.EventKey {
 		s.setStatus("grid_inline_unavailable")
 		return nil
 	}
-	// Preserve product bindings rather than installing the SDK demo keymap.
-	// Tab traversal is deliberately left unchanged until the workflow is exposed.
+	if event.Key() == tuivory.KeyF9 || event.Key() == tuivory.KeyF5 ||
+		event.Key() == tuivory.KeyEnter && event.Modifiers()&(tuivory.ModCtrl|tuivory.ModAlt) != 0 {
+		s.inlineEditEvent(e.model.EditInput("submit", ""))
+		if s.inlineEdit == nil {
+			return s.key(event)
+		}
+		return nil
+	}
+	if event.Key() == tuivory.KeyRune && event.Modifiers()&tuivory.ModAlt != 0 {
+		switch event.Rune() {
+		case 'c':
+			s.inlineEditEvent(e.model.EditInput("submit", ""))
+			if s.inlineEdit == nil {
+				s.action("commit")
+			}
+			return nil
+		case 'r':
+			s.closeInlineEdit()
+			s.action("rollback")
+			return nil
+		}
+	}
 	if event.Key() == tuivory.KeyTab || event.Key() == tuivory.KeyBacktab {
+		model := e.model
+		s.inlineEditEvent(model.EditInput("submit", ""))
+		if s.inlineEdit == nil && model.MoveEditable(event.Key() == tuivory.KeyBacktab || event.Modifiers()&tuivory.ModShift != 0) {
+			s.resultGridEvent(tuivory.GridEvent{Kind: "select"})
+			s.startInlineEdit(nil)
+		}
 		return nil
 	}
 	var result tuivory.GridEvent
@@ -186,21 +196,10 @@ func (s *screen) inlineEditEvent(event tuivory.GridEvent) {
 	}
 	change := e.change
 	change.Text, change.Null = session.Value.Text, session.Value.Null
-	old := browserCell(s.resultBrowser.source, change.Row, change.Column)
-	if change.Null == old.Null && (change.Null || change.Text == editInputText(old)) {
-		e.model.ResolveEdit(session.ID, "", nil)
+	if !e.model.ResolveEdit(session.ID, "", nil) {
 		s.closeInlineEdit()
 		return
 	}
-	s.previewCellChange(change)
-	// Cancellation of the host approval returns to the same SDK draft.
-	if s.programModal != nil {
-		s.programReject = func() {
-			if s.inlineTargetValid(e) {
-				e.model.ResolveEdit(session.ID, s.tr("grid_inline_retry"), nil)
-			} else {
-				s.closeInlineEdit()
-			}
-		}
-	}
+	s.closeInlineEdit()
+	s.stageGridChange(change)
 }

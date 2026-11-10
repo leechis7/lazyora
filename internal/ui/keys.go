@@ -46,8 +46,14 @@ func (s *screen) key(event *tuivory.EventKey) *tuivory.EventKey {
 	if page == "main" && s.resizePanelKey(event) {
 		return nil
 	}
+	if page == "favorite_edit" && s.favoriteEditKey != nil {
+		return s.favoriteEditKey(event)
+	}
 	if page == "tab_rename" {
 		return event
+	}
+	if page == "favorites" && s.favoritesKey != nil {
+		return s.favoritesKey(event)
 	}
 	if page == "reference" {
 		return s.referenceKey(event)
@@ -257,6 +263,20 @@ func (s *screen) key(event *tuivory.EventKey) *tuivory.EventKey {
 		return event
 	}
 	if page == "history" {
+		if event.Key() == tuivory.KeyRune && event.Modifiers() == tuivory.ModAlt {
+			switch unicode.ToLower(event.Rune()) {
+			case 's':
+				index := len(s.sqlHistory) - 1 - s.historyList.GetCurrentItem()
+				if index >= 0 && index < len(s.sqlHistory) {
+					s.saveFavoriteSQL(s.sqlHistory[index])
+				}
+				return nil
+			case 'f':
+				s.closeHistory()
+				s.showFavorites()
+				return nil
+			}
+		}
 		if event.Key() == tuivory.KeyEscape || event.Key() == tuivory.KeyF8 {
 			s.closeHistory()
 			return nil

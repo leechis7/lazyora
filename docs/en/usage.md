@@ -28,7 +28,7 @@ Connection Test/Alt+V uses a temporary connection to authenticate and run a basi
 
 Alt+J opens connection workspaces. N adds one, Enter or Switch confirms selection, Delete closes it. Single/double mouse clicks select only; Cancel/Esc preserves the original workspace. Up to eight can be open; switching/adding is blocked during execution. SQL tabs, result/schema/output/source/bind state and transactions are isolated by workspace. Only tabs within the same workspace share its transaction. Preferences are common. Explicit vault locking clears cached keys across workspaces.
 
-Connection labels and Development/Test/Production markers help identify the target; these are user classifications, not database privileges. `[TX]` marks pending work and `!` an uncertain transaction outcome. Closing a workspace checks its unsaved SQL/source and pending transaction. Ctrl+Q checks all workspaces in order; cancellation preserves remaining workspaces.
+Select Development, Test or Production under Environment (Alt+E). The next field accepts a custom label of up to 24 characters, saved with the connection profile. A marker such as `[PROD · Seoul]` appears in the connection path, SQL editor title and risky SQL or script confirmation. It works without relying on color and does not change database privileges. Existing profiles keep their classification. `[TX]` marks pending work and `!` an uncertain transaction outcome. Closing a workspace checks its unsaved SQL/source and pending transaction. Ctrl+Q checks all workspaces in order; cancellation preserves remaining workspaces.
 
 ## SQL files and tabs
 
@@ -41,6 +41,10 @@ Files support UTF-8 up to 16 MiB, preserve BOM and LF/CRLF, and normalize mixed 
 ## Execute SQL, scripts and binds
 
 F9/Ctrl+Enter/Alt+Enter/Shift+F9 executes the selection, otherwise the cursor statement/PLSQL unit. Plain Enter inserts a newline. SQL uses semicolons; PL/SQL/stored-unit boundaries use `/` on its own line (the final slash may be omitted). Separators inside quotes/comments/q/nq literals are ignored; incomplete quoting/comments/parentheses are rejected. F7 clears SQL after confirmation (undo can restore it); F8 opens the process-local history of up to 100 submitted statements. Loading history does not execute it.
+
+In F8 history, **Alt+S** saves the selected SQL as a favorite. In the editor, use **Edit → Completion / formatting → Save SQL to favorites** to save the selection or the whole editor when nothing is selected. Open **View → Execution reports → SQL favorites** or press **Alt+F** in F8 history to search by name or tag, open a new tab, edit the name or tags, or delete a favorite. Opening a favorite does not execute SQL.
+
+Favorites are stored as plain text in `sql-favorites.json` in the settings directory. Bind values and connection passwords are excluded, but values written into the SQL itself are stored verbatim. Limits are 200 favorites, 64 KiB of SQL per entry and 16 MiB for the file.
 
 F5 executes selected text or the whole editor as a script, after reviewing the original script and transaction warning. It is limited to 100 statements and 60 seconds, stops at the first error/cancellation, and does not automatically roll back earlier successful DML. Basic COMMIT/ROLLBACK inside the script act on the shared session. ROLLBACK TO, SQL*Plus commands (SET/SPOOL/PROMPT/@), and `&` substitution are unsupported. Unsupported input is checked before submission.
 
@@ -94,9 +98,11 @@ SELECT t.ROWID, t.* FROM scott.emp t WHERE t.deptno = 10 ORDER BY t.empno;
 
 Validated ROWID is hidden in the grid, row/range copy and fetched-result export, but retained internally. Full DB export repeats the original SQL and can include ROWID. Joins/views/synonyms/DB links/CTEs/subqueries/DISTINCT/aggregates/calculations/ROWIDTOCHAR or unverifiable origins remain read-only. Supported origins are permanent heap tables and direct columns/`t.*`; omitted schema uses CURRENT_SCHEMA. LOB and unsupported types remain read-only.
 
-Enter/double-click edits an editable cell; typing replaces its value. Enter previews before UPDATE, Esc cancels the draft, Ctrl+U clears, Alt+Delete requests NULL, and Alt+D opens the separate editor. The **change-preview** default is Proceed; Cancel returns to the draft. This differs from the safe Cancel default on general dangerous-SQL warnings. Applied cells have a changed background and `*` status text until commit/rollback.
+Enter/double-click opens the cell editor. **Enter** stages the value locally. **Tab/Shift+Tab** stages it and moves to the next/previous editable cell. **Esc** cancels the current input. **Ctrl+U** clears and **Alt+Delete** sets NULL. **Alt+D** opens the separate editor, where **Ctrl+S** stages into the same draft.
 
-Edits use ROWID and original fetched editable-column values to detect conflicts, not every unfetched/read-only column. Lock conflicts and failed recovery are distinct from success. After commit/rollback the current grid requeries its original SQL/binds or explicit edit-table source, preserving sort/filter/widths and a feasible selection while clearing edit markers. Paging restarts at the first page; other SQL tabs' old results need rerunning. A failed refresh is reported separately from a successful transaction. The current editor text is never executed implicitly for this refresh; exit-time transaction actions proceed to exit.
+Draft values remain visible in the grid. **Alt+C** saves the entire batch to Oracle. Changes to multiple columns of a row use one UPDATE. The batch checks the original fetched editable values. A lock, conflict or constraint error rolls back the batch and preserves the drafts. **Alt+R** discards grid drafts and rolls back pending SQL. Successful commit/rollback refreshes the original result and preserves sorting, filter and widths.
+
+Rerunning a query with drafts prompts for discard. **Cancel** is selected by default and keeps the current result and drafts. **Proceed** discards the drafts and runs the query. Resolve drafts before switching SQL tabs, reconnecting or exporting the full DB result in the same workspace. Grid copy and fetched-result export use the displayed draft values.
 
 ## Export, plans and DBMS_OUTPUT
 
@@ -123,4 +129,4 @@ In v0.4.0 the shared package renders menu single borders and clipped titles. Dis
 v0.12.1 uses Tuivory v0.5.0 shared shadows and backdrop dimming. Background colors remain under Dim; shadow clicks cannot activate the page behind. Shift+F10 source-edit commands open in a common popup menu: navigate with arrows/Home/End/PgUp/PgDn and Enter; Esc restores the source editor. Editing, secret handling and settings-save policy remain.
 
 
-The current development version uses Tuivory v0.11.1 to show a cell `*` and an independent dirty-row gutter `*`. Unchanged cells do not inherit dirty colors from the row marker; transaction completion clears the cues. Enter/double-click editing uses the shared SDK buffer and real cursor. Cancelling change review resumes the same draft; NULL, pending approval and closure hide the cursor. Blink/shape follow terminal settings.
+Tuivory renders edited-cell backgrounds, cell and row `*` markers, and the real cell cursor. Cursor shape and blink follow terminal settings.

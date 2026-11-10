@@ -79,10 +79,7 @@ func (s *screen) applyResultBrowser(preserveWidths bool) {
 	for i := range view.source.Rows {
 		match := filter == ""
 		for _, col := range view.columns {
-			value := browserCell(view.source, i, col).Text
-			if col < len(view.source.Rows[i]) {
-				value = view.source.Rows[i][col]
-			}
+			value := s.displayedGridText(i, col, s.displayedGridCell(i, col))
 			if !match && strings.Contains(strings.ToLower(value), filter) {
 				match = true
 				break
@@ -97,14 +94,14 @@ func (s *screen) applyResultBrowser(preserveWidths bool) {
 		numbers := make(map[int]*big.Rat, len(indices))
 		numeric := true
 		for _, row := range indices {
-			cell := browserCell(view.source, row, col)
+			cell := s.displayedGridCell(row, col)
 			numbers[row] = gridNumber(cell)
 			if !cell.Null && numbers[row] == nil {
 				numeric = false
 			}
 		}
 		sort.SliceStable(indices, func(i, j int) bool {
-			a, b := browserCell(view.source, indices[i], col), browserCell(view.source, indices[j], col)
+			a, b := s.displayedGridCell(indices[i], col), s.displayedGridCell(indices[j], col)
 			if a.Null || b.Null {
 				return !a.Null && b.Null
 			}
@@ -130,11 +127,8 @@ func (s *screen) applyResultBrowser(preserveWidths bool) {
 		values := make([]string, len(view.columns))
 		cells := make([]oracle.Cell, len(view.columns))
 		for col, sourceCol := range view.columns {
-			cells[col] = browserCell(view.source, row, sourceCol)
-			values[col] = cells[col].Text
-			if sourceCol < len(view.source.Rows[row]) {
-				values[col] = view.source.Rows[row][sourceCol]
-			}
+			cells[col] = s.displayedGridCell(row, sourceCol)
+			values[col] = s.displayedGridText(row, sourceCol, cells[col])
 		}
 		result.Rows = append(result.Rows, values)
 		result.Values = append(result.Values, cells)

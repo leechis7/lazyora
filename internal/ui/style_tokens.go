@@ -47,12 +47,15 @@ func (s *screen) tuivoryProfile() string {
 	}
 	return tuivory.ProfileForColors(count, s.limitedColors)
 }
-func (s *screen) tuivoryStyles() tuivory.Styles {
+func (s *screen) tuivoryTheme() string {
 	theme := s.prefs.Theme
 	if theme != "light" && theme != "blackwhite" {
-		theme = "dark"
+		return "dark"
 	}
-	p, err := tuivory.NewStyles(theme, s.tuivoryProfile())
+	return theme
+}
+func (s *screen) tuivoryStyles() tuivory.Styles {
+	p, err := tuivory.NewStyles(s.tuivoryTheme(), s.tuivoryProfile())
 	if err != nil {
 		panic(err)
 	} // Both arguments are normalized above.

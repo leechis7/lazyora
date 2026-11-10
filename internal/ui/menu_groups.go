@@ -16,7 +16,7 @@ func menuSection(id string) string {
 		return "mg_search"
 	case "duplicate_line", "copy_line", "cut_line", "delete_line", "line_up", "line_down", "transpose_line", "clear_sql":
 		return "mg_lines"
-	case "complete", "complete_refresh", "format_code":
+	case "complete", "complete_refresh", "format_code", "favorite_save":
 		return "mg_code"
 	case "table_edit_load", "grid_edit", "grid_inline":
 		return "mg_data_edit"
@@ -26,7 +26,7 @@ func menuSection(id string) string {
 		return "mg_schema"
 	case "grid_widen", "grid_narrow", "grid_auto", "fetch_more", "result_sort_asc", "result_sort_desc", "result_filter", "result_view_reset", "cell_detail":
 		return "mg_results"
-	case "history", "output_view", "script_report", "routine_results", "output_toggle":
+	case "history", "favorites", "output_view", "script_report", "routine_results", "output_toggle":
 		return "mg_reports"
 	case "connect", "workspaces", "workspace_new", "workspace_close":
 		return "mg_connections"

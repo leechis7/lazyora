@@ -190,6 +190,22 @@ func safeIdentity(text string) string {
 	}
 	return string(r)
 }
+func (s *screen) environmentBadge() string {
+	p := s.connectionIdentity
+	category := strings.ToUpper(p.Environment)
+	label := popupLabel(safeIdentity(p.EnvironmentLabel), 20)
+	if category != "" && label != "" {
+		return "[" + category + " · " + label + "]"
+	}
+	if category != "" {
+		return "[" + category + "]"
+	}
+	if label != "" {
+		return "[" + label + "]"
+	}
+	return ""
+}
+
 func (s *screen) connectionBadge() string {
 	p := s.connectionIdentity
 	if s.workspaces == nil && p.User == "" && p.Host == "" {
@@ -205,10 +221,10 @@ func (s *screen) connectionBadge() string {
 	if p.Alias != "" {
 		target = safeIdentity(p.Alias) + " · " + target
 	}
-	if p.Environment != "" {
-		target = "[" + strings.ToUpper(p.Environment) + "] " + target
+	if badge := s.environmentBadge(); badge != "" {
+		target = badge + " " + target
 	}
-	if s.pendingChanges {
+	if s.hasPendingWork() {
 		target += " [TX]"
 	}
 	if s.transactionUncertain {
@@ -258,7 +274,7 @@ func (s *screen) showWorkspaces() {
 			selected = i
 		}
 		note := ""
-		if item.pendingChanges {
+		if item.hasPendingWork() {
 			note = s.tr("workspace_pending")
 		}
 		if item.transactionUncertain {
@@ -411,10 +427,10 @@ func (s *screen) connectionTitleBadge() string {
 	if p.Alias != "" {
 		label += " · " + popupLabel(safeIdentity(p.Alias), 18)
 	}
-	if p.Environment != "" {
-		label = "[" + strings.ToUpper(p.Environment) + "] " + label
+	if badge := s.environmentBadge(); badge != "" {
+		label = badge + " " + label
 	}
-	if s.pendingChanges {
+	if s.hasPendingWork() {
 		label += " [TX]"
 	}
 	if s.transactionUncertain {

@@ -53,6 +53,7 @@ v0.11.2 uses the published Tuivory **v0.2.0** tree. User/type selectors and live
 Alt+J opens workspaces: N adds a connection, Enter switches, Delete asks before closing one.
 SQL tabs, results and transactions are separate between connections. Check the environment, account and database labels.
 Closing one workspace preserves the other connections' transactions.
+The connection's Environment (Alt+E) and the custom label in the next field appear on the active connection and in risky SQL or script confirmations.
 
 Choose a user and object type above the schema list. Alt+U selects User, Alt+O Type, and Alt+B toggles the browser.
 Type in Alt+I object search to filter names immediately within the selected user/type. Down/Enter enters the list; Esc clears the search.
@@ -68,7 +69,7 @@ View/Shift+F10 provides the next 1,000 rows, local sorting/filtering and column 
 One F9 query retains at most 10,000 rows / estimated 64 MiB; loaded rows are not the full database result.
 Use Cell details in the context menu for long values, NULL and binary content, including original-value file saving.
 Editing supports explicit browser table loads and verified single-table ROWID SELECT results; commit remains manual.
-Editable cells: Enter/double-click places the cursor directly inside the selected cell; typing replaces its value. Unavailable cells stay in the grid with an explanation and do not open a popup. Enter reviews before applying, Esc cancels input, Ctrl+U clears, Alt+Delete sets NULL. NULL, pending approval and closure hide the cursor; cancelling review restores the draft and cursor. Blink/shape follow terminal settings. Alt+D / Edit > Edit cell in dialog opens the separate editor; review defaults to Proceed and Cancel returns to the draft; the context menu opens cell details. Applied cells have a distinct background until commit/rollback. Successful commit/rollback automatically refreshes the current replayable result using its original query/binds, preserving sorting, filter and widths. Reload failure is reported separately from transaction completion.
+Enter/double-click opens the cell editor. Enter stages the value. Tab/Shift+Tab stages and moves to the next/previous cell. Esc cancels input, Ctrl+U clears and Alt+Delete sets NULL. Alt+D opens the separate editor and Ctrl+S stages its value. Alt+C commits all drafts to Oracle and Alt+R discards them. A rerun prompts for discard with Cancel selected by default. Failed batches preserve the drafts.
 If clipboard delivery fails, use Edit → Copy preview and your terminal's selection/copy command.
 
 Execute `SELECT t.ROWID, t.* FROM table_name t WHERE ...` with F9 to edit verified original columns. The verified physical ROWID is hidden in the grid and retained internally; commit or roll back explicitly. Joins, expressions and ambiguous results stay read-only.

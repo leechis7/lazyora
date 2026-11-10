@@ -22,18 +22,23 @@ func inlineFixture(t *testing.T) (*screen, tuivory.SimulationScreen) {
 	s.app.SetFocus(s.table)
 	return s, terminal
 }
-func confirmInline(t *testing.T, s *screen, proceed bool) {
-	t.Helper()
-	if s.programModal == nil || len(s.jobs) != 0 {
-		t.Fatal("missing confirmation or premature UPDATE")
+
+// Set the same draft state used by the rendering audits, retaining the fixture value.
+func (s *screen) markEditedCell(key editedCellKey) {
+	if s.gridDrafts == nil {
+		s.gridDrafts = make(map[editedCellKey]oracle.EditChange)
 	}
-	delegate := func(p tuivory.Primitive) { s.app.SetFocus(p) }
-	if !proceed {
-		s.programModal.InputHandler()(tuivory.NewEventKey(tuivory.KeyRight, 0, 0), delegate)
+	for row := range s.resultBrowser.source.Rows {
+		for col := range s.resultBrowser.source.Columns {
+			if key == s.editedCellIdentity(s.resultBrowser.source, row, col) {
+				cell := browserCell(s.resultBrowser.source, row, col)
+				s.gridDrafts[key] = oracle.EditChange{ID: s.resultBrowser.source.EditID, Row: row, Column: col, Text: cell.Text, Null: cell.Null}
+			}
+		}
 	}
-	s.programModal.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), delegate)
+	s.repaintEditedCells()
 }
-func TestInlineCellEditConfirmationAndCancel(t *testing.T) {
+func TestInlineCellStagesWithoutConfirmation(t *testing.T) {
 	s, _ := inlineFixture(t)
 	s.table.Select(1, 0)
 	if s.startInlineEdit(nil) {
@@ -48,21 +53,8 @@ func TestInlineCellEditConfirmationAndCancel(t *testing.T) {
 	}
 	setInlineText(s, "new")
 	s.key(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
-	confirmInline(t, s, false)
-	if s.inlineEdit == nil || s.inlineEdit.GetText() != "new" {
-		t.Fatal("cancel confirmation lost draft")
-	}
-	s.key(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
-	confirmInline(t, s, true)
-	j := <-s.jobs
-	if j.edit.Row != 1 || j.edit.Text != "new" || j.editKey.rowID != "rid2" || j.editKey.column != "TITLE" || s.inlineEdit != nil {
-		t.Fatalf("wrong inline edit job: %+v", j)
-	}
-	s.cancel()
-	s.cancel = nil
-	s.busy = false
-	if len(s.editedCells) != 0 {
-		t.Fatal("unapplied job marked edited")
+	if s.programModal != nil || s.inlineEdit != nil || len(s.jobs) != 0 || s.resultRows[0][1] != "new" {
+		t.Fatal("Enter did not stage the edit locally")
 	}
 	s.startInlineEdit(nil)
 	setInlineText(s, "discard")
@@ -99,14 +91,9 @@ func TestInlineReplaceNullAndModalInputIsolation(t *testing.T) {
 		t.Fatal("NULL action missing")
 	}
 	s.key(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
-	confirmInline(t, s, true)
-	j := <-s.jobs
-	if !j.edit.Null {
-		t.Fatal("NULL lost")
+	if len(s.jobs) != 0 || !s.resultValues[0][1].Null {
+		t.Fatal("NULL draft was not staged")
 	}
-	s.cancel()
-	s.cancel = nil
-	s.busy = false
 	s.startInlineEdit(nil)
 	s.key(tuivory.NewEventKey(tuivory.KeyTab, 0, 0))
 	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'j', tuivory.ModAlt))
@@ -155,7 +142,7 @@ func TestEditedCellMarkersFollowPhysicalIdentityAndTransaction(t *testing.T) {
 			}
 		}
 	}
-	s.clearEditedCells()
+	s.clearGridDrafts()
 	if s.isEditedCell(2, 1) {
 		t.Fatal("transaction end retained marker")
 	}
@@ -181,20 +168,58 @@ func TestInlineDoubleClickAndFocusedModifiedCellColor(t *testing.T) {
 	if bg != tuivory.ColorOlive {
 		t.Fatalf("selected modified cell lost background: %v", bg)
 	}
-	// Other tabs in the same workspace observe transaction-wide markers, and
-	// markers painted into an inactive tab disappear when it becomes active.
 	s.initDocument()
 	s.initTabs()
 	s.newTab()
-	s.switchTab(0)
-	if !s.isEditedCell(1, 1) {
-		t.Fatal("tab switching lost marker")
+	if len(s.tabs) != 1 || !s.isEditedCell(1, 1) {
+		t.Fatal("opening another tab hid an unresolved draft")
 	}
+	s.clearGridDrafts()
 	s.newTab()
-	s.clearEditedCells()
-	s.switchTab(0)
-	_, bg, _ = s.table.GetCell(1, 1).Style.Decompose()
-	if s.isEditedCell(1, 1) || bg == tuivory.ColorOlive {
-		t.Fatal("inactive tab retained transaction marker")
+	if len(s.tabs) != 2 {
+		t.Fatal("tab remained blocked after clearing draft")
 	}
+}
+
+func TestGridDraftCommitIncludesAllRowsAndColumns(t *testing.T) {
+	s, _ := inlineFixture(t)
+	source := s.resultBrowser.source
+	source.Columns = append(source.Columns, "AMOUNT")
+	source.EditColumns = append(source.EditColumns, true)
+	source.EditColumnNames = append(source.EditColumnNames, "AMOUNT")
+	for i := range source.Rows {
+		source.Rows[i] = append(source.Rows[i], "10")
+		source.Values[i] = append(source.Values[i], oracle.Cell{Type: "NUMBER", Text: "10"})
+	}
+	s.render(source)
+	s.table.Select(1, 1)
+	s.startInlineEdit(nil)
+	setInlineText(s, "title")
+	s.key(tuivory.NewEventKey(tuivory.KeyTab, 0, 0))
+	if s.inlineEdit == nil || s.inlineEdit.change.Row != 0 || s.inlineEdit.change.Column != 2 {
+		t.Fatal("Tab did not move to next editable column")
+	}
+	setInlineText(s, "11")
+	s.key(tuivory.NewEventKey(tuivory.KeyTab, 0, 0))
+	if s.inlineEdit == nil || s.inlineEdit.change.Row != 1 || s.inlineEdit.change.Column != 1 {
+		t.Fatal("Tab did not skip the next row's ROWID")
+	}
+	setInlineText(s, "row two")
+	s.key(tuivory.NewEventKey(tuivory.KeyBacktab, 0, 0))
+	if s.inlineEdit == nil || s.inlineEdit.change.Row != 0 || s.inlineEdit.change.Column != 2 {
+		t.Fatal("Shift+Tab did not return to previous editable cell")
+	}
+	if len(s.jobs) != 0 || s.programModal != nil || source.Rows[0][1] != "first" {
+		t.Fatal("local staging executed SQL or changed the snapshot")
+	}
+	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'c', tuivory.ModAlt))
+	select {
+	case j := <-s.jobs:
+		if j.action != "commit" || len(j.edits) != 3 || j.edits[0].Text != "title" || j.edits[1].Text != "11" || j.edits[2].Text != "row two" {
+			t.Fatalf("wrong commit batch: %+v", j.edits)
+		}
+	default:
+		t.Fatal("commit was not submitted")
+	}
+	s.cancel()
 }

@@ -43,6 +43,8 @@ make -C test/oracle tui-test
 
 The DB-free `python3 test/oracle/tui_terminal_smoke.py` checks missing/empty TERM and terminal startup/exit using the demo binary. `tui_fullscreen_smoke.py` checks fullscreen and function-key encodings. Prepare the expected Linux ARM64 binary with `make build` in the project's local environment. These do not certify actual remote clients.
 
+The cell PTY checks cover eight-color xterm, About and copying, BLOB original-value copy/save, opening editable table data from the schema browser, the Alt+D editor and rollback. The ROWID query PTY stages three cells across two rows and checks Tab movement, rerun cancellation/discard and rollback. `TestOracleGridBatchEditIntegration` checks batch updates across columns and rows, visibility before and after commit from an independent session, and batch rollback/retry on constraints, concurrent changes and NOWAIT locks.
+
 ## Privileges and fixtures
 
 The test initialization grants the local PDB app user **DBA and SYSDBA**. For an existing volume, `make -C test/oracle grant-admin` applies `grants.sql` without resetting data. This is a local test privilege choice, not a recommendation for a production account or a CDB common administrator. LazyOra's connection form does not expose an AS SYSDBA selector; use SQL*Plus explicitly when testing that mode.

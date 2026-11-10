@@ -8,11 +8,11 @@ import (
 	"github.com/leechis7/tuivory/go"
 )
 
-func TestGridEditMapsSortedFilteredRowsAndRequiresConfirmation(t *testing.T) {
+func TestGridEditMapsSortedFilteredRowsAndStagesLocally(t *testing.T) {
 	s, terminal := resultScreen(t)
 	s.connected = true
 	object := oracle.Object{Owner: "SCOTT", Name: "TABLE_WITH_QUOTES\"", Kind: "TABLE"}
-	s.render(oracle.Result{EditID: 77, EditObject: object, Columns: []string{"N", "TITLE"}, Rows: [][]string{{"1", "first"}, {"2", "second"}}, Values: [][]oracle.Cell{{{Type: "NUMBER", Text: "1"}, {Type: "VARCHAR2", Text: "first"}}, {{Type: "NUMBER", Text: "2"}, {Type: "VARCHAR2", Text: "second"}}}})
+	s.render(oracle.Result{EditID: 77, EditRowIDs: []string{"r1", "r2"}, EditColumnNames: []string{"N", "TITLE"}, EditObject: object, Columns: []string{"N", "TITLE"}, Rows: [][]string{{"1", "first"}, {"2", "second"}}, Values: [][]oracle.Cell{{{Type: "NUMBER", Text: "1"}, {Type: "VARCHAR2", Text: "first"}}, {{Type: "NUMBER", Text: "2"}, {Type: "VARCHAR2", Text: "second"}}}})
 	s.table.Select(1, 0)
 	s.sortResult(true)
 	s.table.Select(1, 1)
@@ -25,30 +25,10 @@ func TestGridEditMapsSortedFilteredRowsAndRequiresConfirmation(t *testing.T) {
 		t.Fatal("sorted view changed another source row")
 	}
 	s.editForm.GetFormItem(0).(*tuivory.InputField).SetText("' ; DELETE FROM x; --")
-	s.previewGridEdit()
-	if s.programModal == nil || len(s.jobs) != 0 {
-		t.Fatal("preview ran SQL")
+	s.stageGridEdit()
+	if len(s.jobs) != 0 || s.programModal != nil || !strings.Contains(s.resultRows[0][1], "DELETE") {
+		t.Fatal("edit did not remain local")
 	}
-	// Explicit cancel must never submit an update; Proceed is the default.
-	s.programModal.InputHandler()(tuivory.NewEventKey(tuivory.KeyRight, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
-	s.programModal.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
-	if len(s.jobs) != 0 || !s.pages.HasPage("grid_edit") {
-		t.Fatal("cancel confirmation applied changes")
-	}
-	s.previewGridEdit()
-	s.programModal.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
-	select {
-	case j := <-s.jobs:
-		if j.action != "edit_apply" || j.edit.Row != 1 || !strings.Contains(j.edit.Text, "DELETE") {
-			t.Fatal("change snapshot corrupted")
-		}
-	default:
-		t.Fatal("confirmed edit not queued")
-	}
-	s.cancel()
-	s.cancel = nil
-	s.busy = false
-	s.closeGridEdit()
 	s.invalidateEditResults(0)
 	if s.commandEnabled("grid_edit") {
 		t.Fatal("expired snapshot editable")
@@ -64,7 +44,7 @@ func TestSelectRowIDEditMasksColumnsAndKeepsOriginalQuery(t *testing.T) {
 	s.initDocument()
 	s.connected = true
 	query := &oracle.QuerySpec{Text: "SELECT t.ROWID rid,t.title caption FROM items t WHERE id=:id", Bindings: map[string]oracle.BindValue{"ID": {Kind: "number", Text: "1"}}}
-	s.render(oracle.Result{EditID: 81, EditObject: oracle.Object{Owner: "APP", Name: "ITEMS", Kind: "TABLE"}, EditColumns: []bool{false, true}, Query: query,
+	s.render(oracle.Result{EditID: 81, EditRowIDs: []string{"r1"}, EditColumnNames: []string{"", "TITLE"}, EditObject: oracle.Object{Owner: "APP", Name: "ITEMS", Kind: "TABLE"}, EditColumns: []bool{false, true}, Query: query,
 		Columns: []string{"RID", "CAPTION"}, Rows: [][]string{{"AAAAAAAABAAAAA0001", "old"}}, Values: [][]oracle.Cell{{{Text: "AAAAAAAABAAAAA0001", Type: "ROWID"}, {Text: "old", Type: "VARCHAR2"}}}})
 	s.app.SetFocus(s.table)
 	s.table.Select(1, 0)
@@ -81,17 +61,11 @@ func TestSelectRowIDEditMasksColumnsAndKeepsOriginalQuery(t *testing.T) {
 	}
 	s.showGridEdit()
 	s.editForm.GetFormItem(0).(*tuivory.InputField).SetText("new")
-	s.previewGridEdit()
-	s.programModal.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(tuivory.Primitive) {})
-	j := <-s.jobs
-	if j.action != "edit_apply" || j.query != query || j.edit.Column != 1 || j.edit.Row != 0 || j.edit.Text != "new" {
-		t.Fatal("SELECT edit did not retain the query, bind values and source cell")
+	s.stageGridEdit()
+	if len(s.jobs) != 0 || s.resultBrowser.source.Query != query || s.resultRows[0][1] != "new" {
+		t.Fatal("draft lost source or query")
 	}
-	s.cancel()
-	s.cancel = nil
-	// A SQL tab keeps its read-only mask along with the result.
-	s.busy = false
-	s.closeGridEdit()
+	s.clearGridDrafts()
 	s.initTabs()
 	s.newTab()
 	s.switchTab(0)

@@ -44,7 +44,6 @@ func (s *screen) executeSQL() {
 
 func (s *screen) submitSQL(text string) {
 	s.withBinds(text, func(values map[string]oracle.BindValue) {
-		s.recordSQLHistory(text)
 		s.submit(job{action: "execute", text: text, bindings: values})
 	})
 }
@@ -63,7 +62,7 @@ func (s *screen) recordSQLHistory(text string) {
 func (s *screen) showHistory() {
 	s.historyFocus = s.app.GetFocus()
 	list := tuivory.NewWidgetList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
-	list.SetBorder(true).SetTitle(s.tr("history"))
+	list.SetBorder(true).SetTitle(s.tr("history") + " · " + s.tr("favorite_history_keys"))
 	s.styleList(list)
 	s.historyList = list
 	for i := len(s.sqlHistory) - 1; i >= 0; i-- {

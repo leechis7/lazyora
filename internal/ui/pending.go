@@ -23,6 +23,9 @@ func (s *screen) exitMessage(key string) string {
 	if key != "exit_pending" && key != "workspace_exit_pending" {
 		return message
 	}
+	if len(s.gridDrafts) > 0 {
+		message += "\n\n" + fmt.Sprintf(s.tr("grid_drafts_count"), len(s.gridDrafts))
+	}
 	records := s.pendingWork.Statements
 	message += "\n\n" + fmt.Sprintf(s.tr("pending_count"), len(records)+s.pendingWork.Omitted)
 	if len(records) > 0 {
@@ -63,6 +66,9 @@ func (s *screen) showPendingWork() {
 	info := s.newTextView(textHint).SetWrap(true).SetWordWrap(true).SetTextColor(s.colors().muted)
 	info.SetBackgroundColor(s.colors().background)
 	text := fmt.Sprintf(s.tr("pending_count"), len(s.pendingWork.Statements)+s.pendingWork.Omitted) + "\n" + s.tr("pending_note")
+	if len(s.gridDrafts) > 0 {
+		text += "\n" + fmt.Sprintf(s.tr("grid_drafts_count"), len(s.gridDrafts))
+	}
 	if s.pendingWork.Omitted > 0 {
 		text += "\n" + fmt.Sprintf(s.tr("pending_omitted"), s.pendingWork.Omitted)
 	}

@@ -10,20 +10,23 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
 // Connection stores only public connection metadata. Passwords live exclusively
 // in the separate encrypted credentials store, associated by stable IDs.
 type Connection struct {
-	Environment   string `json:"environment,omitempty"`
-	ID            string `json:"id,omitempty"`
-	SavedPassword bool   `json:"saved_password,omitempty"`
-	Alias         string `json:"alias"`
-	Host          string `json:"host"`
-	Port          int    `json:"port"`
-	User          string `json:"user"`
-	Mode          string `json:"mode"`
-	Name          string `json:"name"`
+	Environment      string `json:"environment,omitempty"`
+	EnvironmentLabel string `json:"environment_label,omitempty"`
+	ID               string `json:"id,omitempty"`
+	SavedPassword    bool   `json:"saved_password,omitempty"`
+	Alias            string `json:"alias"`
+	Host             string `json:"host"`
+	Port             int    `json:"port"`
+	User             string `json:"user"`
+	Mode             string `json:"mode"`
+	Name             string `json:"name"`
 }
 
 func ConnectionsPath(settingsPath string) string {
@@ -58,6 +61,9 @@ func (c Connection) Validate() error {
 	if c.Environment != "" && c.Environment != "dev" && c.Environment != "test" && c.Environment != "prod" {
 		return errors.New("environment must be dev, test or prod")
 	}
+	if !ValidEnvironmentLabel(c.EnvironmentLabel) {
+		return errors.New("invalid connection environment label")
+	}
 	if c.ID != "" {
 		id, err := hex.DecodeString(c.ID)
 		if err != nil || len(id) != 16 {
@@ -74,6 +80,13 @@ func (c Connection) Validate() error {
 		return errors.New("invalid connection port or mode")
 	}
 	return nil
+}
+
+func ValidEnvironmentLabel(label string) bool {
+	return utf8.ValidString(label) && utf8.RuneCountInString(label) <= 24 &&
+		strings.IndexFunc(label, func(r rune) bool {
+			return unicode.IsControl(r) || unicode.Is(unicode.Cf, r) || unicode.Is(unicode.Zl, r) || unicode.Is(unicode.Zp, r)
+		}) == -1
 }
 
 func validateConnections(profiles []Connection) error {

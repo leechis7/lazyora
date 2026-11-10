@@ -96,7 +96,10 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         send(b"\x1b")
         print("About menu, shared metadata and raw copy: passed")
         sql("SELECT TO_BLOB(HEXTORAW('0001FF')) AS payload FROM dual")
-        send(b"\x1b[1;2Q\r")
+        send(b"\x1b[1;2Q")  # Maximize results.
+        send(b"\x1b[21;2~\x1b[H" + b"\x1b[B" * 11)  # Context menu > Cell details.
+        output.clear()
+        send(b"\r")
         wait_for("Cell details")
         output.clear()
         send(b"\x03")
@@ -111,28 +114,22 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         send(b"\x1b")
         send(b"\x1b[1;2Q")
         print("BLOB detail, raw hex copy and original binary file save: passed")
-        send(b"\x1bu\rLAZYORA\r\t\t")
+        send(b"\x1bisample_rows\r")  # Find the fixture and focus its tree node.
         output.clear()
-        send(b"\x1b[21~\x1b[F\r")
+        send(b"\x1b[21;2~\x1b[F\r")  # Schema context menu > edit table data.
         wait_for("Editable table loaded")
         send(b"\x1b[C")  # TITLE, after ID.
         output.clear()
-        send(b"\x1b[21~\x1b[H" + b"\x1b[B" * 16 + b"\r")
+        send(b"\x1bd")  # Alt+D, separate editor.
         wait_for("New value")
         send(b"\x01\x0bPTY reviewed edit")
         output.clear()
         send(b"\x13")
-        wait_for("Apply one bound UPDATE")
-        send(b"\r")  # default cancel
-        output.clear()
-        send(b"\x13")
-        wait_for("Apply one bound UPDATE")
-        send(b"\x1b[D\r")
-        wait_for("One cell update applied")
+        wait_for("Grid drafts: 1 cells")
         output.clear()
         send(b"\x1br")
         wait_for("Rollback completed")
-        print("Safe table edit menu, default-cancel preview, apply/reload and rollback: passed")
+        print("Safe table edit menu, local staging and rollback: passed")
     finally:
         if pid is not None:
             os.kill(pid, signal.SIGTERM)

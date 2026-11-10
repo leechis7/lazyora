@@ -1,8 +1,29 @@
 package ui
 
 import (
+	"sync"
+
 	"github.com/leechis7/tuivory/go"
 )
+
+var gridSelectionPalettes = sync.OnceValue(func() map[string]tuivory.Palette {
+	doc, err := tuivory.CandidateTokens()
+	if err != nil {
+		panic(err)
+	}
+	palettes := make(map[string]tuivory.Palette, len(doc.Palettes))
+	for key, raw := range doc.Palettes {
+		palette, err := tuivory.Resolve(tuivory.TokenPalette{
+			"grid.active": raw["grid.active"],
+			"grid.range":  raw["grid.range"],
+		})
+		if err != nil {
+			panic(err)
+		}
+		palettes[key] = palette
+	}
+	return palettes
+})
 
 func stylePair(st tuivory.Style) tuivory.Pair {
 	fg, bg, attrs := st.Decompose()
@@ -26,19 +47,31 @@ func (s *screen) componentPalette() tuivory.Palette {
 func (s *screen) resultPalette() tuivory.Palette {
 	p := s.tuivoryStyles()
 	out := s.componentPalette()
+	// Keep the active column distinguishable without breaking the header band.
+	out["grid.header-active"] = stylePair(p.GridHeaderStyle(false).Bold(true))
 	out["surface"] = stylePair(p.GridCellStyle(tuivory.CellState{Row: 1}))
 	for role, style := range map[string]tuivory.Style{
 		"grid.base":        p.GridCellStyle(tuivory.CellState{Row: 1}),
 		"grid.stripe":      p.GridCellStyle(tuivory.CellState{Row: 2}),
 		"grid.current-row": p.GridCellStyle(tuivory.CellState{Row: 1, CurrentRow: true}),
 		"grid.null":        p.GridCellStyle(tuivory.CellState{Row: 1, Null: true}),
-		"grid.active":      p.GridActiveStyle(s.table != nil && s.table.HasFocus(), false),
-		"grid.range":       p.GridCellStyle(tuivory.CellState{Row: 1, InRange: true}),
-		"grid.edited":      p.EditedStyle(), "grid.header-active": p.GridHeaderStyle(true),
-		"grid.gutter": p.GridGutterStyle(), "grid.status": p.GridStatusStyle(),
+		"grid.edited":      p.EditedStyle(),
+		"grid.gutter":      p.GridGutterStyle(), "grid.status": p.GridStatusStyle(),
 		"grid.divider": p.GridGutterStyle().Foreground(p.GridDividerColor()),
 	} {
 		out[role] = stylePair(style)
+	}
+	for role, pair := range gridSelectionPalettes()[s.tuivoryTheme()+"-"+s.tuivoryProfile()] {
+		out[role] = pair
+	}
+	if s.table != nil {
+		row, col := s.table.GetSelection()
+		switch {
+		case s.isEditedCell(row, col):
+			out["grid.active"] = out["grid.edited"]
+		case !s.table.HasFocus():
+			out["grid.active"] = stylePair(p.GridActiveStyle(false, false))
+		}
 	}
 	return out
 }

@@ -2,6 +2,20 @@
 
 [한국어](../tuivory-sync.md) | **English** · [UI style rules](ui-style.md)
 
+## LORA-50 · Tuivory Go v0.12.2
+
+The public Go module is pinned to v0.12.2. The Go proxy resolves tag `go/v0.12.2` to commit `88265e85d3fba40e36f30249f68e8a56056420a1` with checksum `h1:kLSARzIGaN4QPlC6HbEGy0aTk2up1N7eUOO3lyMjeQI=`. [Public release](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.2)
+
+The result grid uses Tuivory's published `grid.active` and `grid.range` color tokens for the current cell and selected range. The current cell retains its edited background if modified, and its focus highlight softens when the grid loses focus. Tuivory supplies the same color for the current cell and range in the 8-color black-and-white profile. Adoption of candidate colors for other UI roles is deferred.
+
+## LORA-50 · Tuivory Go v0.12.1
+
+The published Go v0.12.1 module resolves to commit `e9fa7b5ebae395acb66549b87326d788a3e2aa82` with checksum `h1:ly1VZP5e5SsrWs0l7tnToC0irWAJpvu+6S0zaEqxTpw=`. It includes the v0.12.0 fix for centering each popup button row. The original reproduction now centers the confirmation buttons at 120 columns and each of the three wrapped exit button rows at 40 columns. LazyOra uses the dedicated grid header background across labels, dividers and trailing space and distinguishes the active column label in bold. [Public release](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.1)
+
+## Shared popup button alignment
+
+Standalone public Go v0.11.1 Modal reproduces left-aligned buttons. At 120 columns the Korean confirmation buttons occupy x=42..58, and at 40 columns a wrapped singleton row hugs the left edge. TVR-7 tracks a shared alignment contract for forms and confirmation, exit and reconnect dialogs. [TVR-7 reproduction](https://leechis7.atlassian.net/browse/TVR-7?focusedCommentId=11109)
+
 ## v0.12.3 release preparation
 
 v0.12.3 pins public Tuivory Go v0.11.1 and integrates shared cell editing, real cursors and independent dirty cues. [Release notes](releases/v0.12.3.md). Dated uncommitted/unpublished notes below preserve their validation-time status. User-approved deployment separates implementation/docs commits and verifies remote CI/tag publication. Broader LORA-76 work and the SQL-editor replacement remain.

@@ -157,7 +157,7 @@ func TestUnavailableGridEditStaysInPlace(t *testing.T) {
 	}
 }
 
-func TestSharedInlineApprovalCursorAndLiteralDraft(t *testing.T) {
+func TestSharedInlineCursorAndLiteralDraft(t *testing.T) {
 	s, raw := inlineEntryScreen(t, 256, "ko")
 	inlineEntryKey(s, tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
 	draft := "한글|😀e\u0301" + strings.Repeat("긴 값", 30)
@@ -172,21 +172,8 @@ func TestSharedInlineApprovalCursorAndLiteralDraft(t *testing.T) {
 	if mouse, _ := s.app.GetMouseCapture()(tuivory.NewEventMouse(x, y, tuivory.Button1, 0), tuivory.MouseLeftDown); mouse != nil {
 		t.Fatal("click outside grid escaped the draft workflow")
 	}
-	inlineEntryKey(s, tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
-	session, active := editor.model.EditSession()
-	_, _, visible = raw.GetCursor()
-	if !active || !session.Pending || s.programModal == nil || visible {
-		t.Fatal("host approval did not preserve a pending draft with hidden cursor")
-	}
-	confirmInline(t, s, false)
-	s.app.ForceDraw()
-	session, active = editor.model.EditSession()
-	_, _, visible = raw.GetCursor()
-	if !active || session.Pending || !visible || session.Value.Text != draft {
-		t.Fatal("rejection failed to restore the same editable draft/cursor")
-	}
 	inlineEntryKey(s, tuivory.NewEventKey(tuivory.KeyDelete, 0, tuivory.ModAlt))
-	session, _ = editor.model.EditSession()
+	session, _ := editor.model.EditSession()
 	_, _, visible = raw.GetCursor()
 	if !session.Value.Null || visible {
 		t.Fatal("NULL must hide the shared cursor")
@@ -214,21 +201,25 @@ func TestSharedInlineApprovalCursorAndLiteralDraft(t *testing.T) {
 	}
 }
 
-func TestSharedInlineRejectsStaleApproval(t *testing.T) {
+func TestGridDraftRerunCancelAndConfirm(t *testing.T) {
 	s, _ := inlineFixture(t)
 	s.startInlineEdit(nil)
-	setInlineText(s, "stale")
-	editor := s.inlineEdit
-	s.key(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
-	session, active := editor.model.EditSession()
-	if !active || !session.Pending {
-		t.Fatal("approval not pending")
+	setInlineText(s, "draft")
+	run := job{action: "execute", text: "SELECT 1 FROM dual"}
+	s.editor.SetText(run.text, false)
+	s.key(tuivory.NewEventKey(tuivory.KeyF9, 0, 0))
+	if s.programModal == nil || len(s.jobs) != 0 {
+		t.Fatal("rerun escaped discard confirmation")
 	}
-	replacement := s.resultBrowser.source
-	replacement.EditID++
-	s.render(replacement)
-	confirmInline(t, s, true)
-	if len(s.jobs) != 0 || s.inlineEdit != nil || editor.model.ResolveEdit(session.ID, "", nil) {
-		t.Fatal("stale approval submitted an UPDATE or revived an invalidated editor")
+	modalKey(s, tuivory.KeyEnter)
+	if len(s.jobs) != 0 || len(s.gridDrafts) != 1 || s.resultRows[0][1] != "draft" {
+		t.Fatal("default Cancel lost draft")
 	}
+	s.submit(run)
+	modalKey(s, tuivory.KeyLeft)
+	modalKey(s, tuivory.KeyEnter)
+	if len(s.jobs) != 1 || len(s.gridDrafts) != 0 || s.resultRows[0][1] != "first" {
+		t.Fatal("confirmed rerun did not discard draft and submit query")
+	}
+	s.cancel()
 }

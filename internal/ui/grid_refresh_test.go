@@ -30,7 +30,7 @@ func TestTransactionGridRefreshUsesResultRecipeAndPreservesView(t *testing.T) {
 	s.app.SetFocus(s.table)
 	s.markEditedCell(s.editedCellIdentity(result, 1, 2))
 	// Transaction completion clears pending markers before the refresh job.
-	s.clearEditedCells()
+	s.clearGridDrafts()
 	s.invalidateEditResults(0)
 	if !s.refreshTransactionGrid("rollback") {
 		t.Fatal("result refresh not queued")

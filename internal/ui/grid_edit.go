@@ -46,7 +46,7 @@ func (s *screen) showGridEdit() {
 		return
 	}
 	index := s.resultBrowser.visible[row-1]
-	old := source.Values[index][col]
+	old := s.displayedGridCell(index, col)
 	old.Text = editInputText(old)
 	s.editChange = oracle.EditChange{ID: source.EditID, Row: index, Column: col, Text: old.Text, Null: old.Null}
 	value := old.Text
@@ -57,7 +57,7 @@ func (s *screen) showGridEdit() {
 	s.styleBox(s.editInfo.Box)
 	form := tuivory.NewWidgetForm().AddInputField(s.tr("edit_new"), value, 50, nil, nil).AddCheckbox("NULL", old.Null, nil)
 	s.editForm = form
-	form.AddButton(s.tr("edit_preview"), s.previewGridEdit).AddButton(s.tr("cancel"), s.closeGridEdit)
+	form.AddButton(s.tr("edit_stage"), s.stageGridEdit).AddButton(s.tr("cancel"), s.closeGridEdit)
 	s.styleForm(form)
 	for i := 0; i < form.GetButtonCount(); i++ {
 		s.clickable(form.GetButton(i))
@@ -66,46 +66,15 @@ func (s *screen) showGridEdit() {
 	s.pages.AddPage("grid_edit", root, true, true)
 	focusForm(s, form, 0)
 }
-func (s *screen) previewGridEdit() {
+func (s *screen) stageGridEdit() {
 	if s.busy {
 		return
 	}
 	change := s.editChange
 	change.Text = s.editForm.GetFormItem(0).(*tuivory.InputField).GetText()
 	change.Null = s.editForm.GetFormItem(1).(*tuivory.Checkbox).IsChecked()
-	s.previewCellChange(change)
-}
-
-func (s *screen) previewCellChange(change oracle.EditChange) {
-	source := s.resultBrowser.source
-	if s.busy || s.programModal != nil || source.EditID != change.ID || !source.CanEditColumn(change.Column) || change.Row < 0 || change.Row >= len(source.Values) {
-		return
-	}
-	old := source.Values[change.Row][change.Column]
-	next := change.Text
-	if change.Null {
-		next = "NULL"
-	}
-	message := fmt.Sprintf("%s\n%s · %s\n%s: %s\n%s: %s\n\n%s", s.tr("edit_preview"), tuivory.Escape(oracle.QualifiedObject(source.EditObject)), tuivory.Escape(source.Columns[change.Column]), s.tr("edit_old"), tuivory.Escape(old.Text), s.tr("edit_new"), tuivory.Escape(next), s.tr("edit_confirm"))
-	object := source.EditObject
-	inline := s.inlineEdit
-	var request uint64
-	if inline != nil {
-		session, _ := inline.model.EditSession()
-		request = session.ID
-	}
-	key := s.editedCellIdentity(source, change.Row, change.Column)
-	s.showProgramConfirmFocused(message, func() {
-		if inline != nil {
-			if !s.inlineTargetValid(inline) || s.busy || !inline.model.ResolveEdit(request, "", nil) {
-				s.closeInlineEdit()
-				s.setStatus("grid_inline_unavailable")
-				return
-			}
-		}
-		s.closeInlineEdit()
-		s.submit(job{action: "edit_apply", edit: change, object: object, query: source.Query, editKey: key})
-	}, 0)
+	s.closeGridEdit()
+	s.stageGridChange(change)
 }
 func (s *screen) closeGridEdit() {
 	if s.busy {
@@ -134,7 +103,7 @@ func (s *screen) gridEditKey(e *tuivory.EventKey) *tuivory.EventKey {
 		return nil
 	}
 	if e.Key() == tuivory.KeyCtrlS {
-		s.previewGridEdit()
+		s.stageGridEdit()
 		return nil
 	}
 	return e

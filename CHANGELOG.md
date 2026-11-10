@@ -4,6 +4,20 @@
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-11-10
+
+- LORA-80: 편집기와 F8 이력에서 SQL을 즐겨찾기에 저장하고 이름·태그로 검색해 새 탭에서 엽니다.
+- LORA-80: Save SQL from the editor or F8 history, find favorites by name or tags, and open them in a new tab.
+
+- LORA-73: 접속별 사용자 지정 환경 라벨을 저장하고 현재 접속과 위험 SQL·스크립트 실행 확인창에 표시합니다.
+- LORA-73: Save a custom environment label per connection and show it on the active connection and risky SQL or script confirmations.
+
+- Tuivory Go v0.12.2를 적용합니다. 팝업 버튼 가운데 정렬과 전용 그리드 헤더 배경색을 적용하고, 현재 셀과 선택 범위의 색상을 구분합니다.
+- Adopt Tuivory Go v0.12.2 for centered popup buttons, a dedicated grid header background, and distinct colors for the current cell and selected range.
+
+- LORA-50 그리드 수정값을 여러 행과 열에 임시 저장하고 명시적 커밋 때 일괄 반영합니다. 재실행 전 초안 폐기를 확인하며 실패한 일괄 변경은 되돌리고 초안을 보존합니다.
+- LORA-50 Stage edits across rows and columns and write them as a batch on explicit commit. Confirm draft discard before rerunning and retain drafts after failed batches.
+
 ## [0.12.3] - 2026-11-06
 
 ### 개선 / Changed
@@ -373,7 +387,8 @@ v0.0.1의 F2 접속은 Alt+L, F4 실행은 F9, F5 커밋은 Alt+C, F6 롤백은 
 - 이 릴리스 시점에는 실제 CentOS 7.4, 구형 Oracle 및 SID 접속 검증이 완료되지 않았습니다. 이후 호환성 수정은 `Unreleased`에 기록합니다.
 - 한 번에 SQL 한 문장 또는 BEGIN/DECLARE 블록 하나를 실행합니다. 여러 문장 일괄 실행, SQL*Plus 스크립트, 바인드 입력, DBMS_OUTPUT 출력은 지원하지 않습니다.
 
-[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.12.3...dev
+[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.13.0...dev
+[0.13.0]: https://github.com/leechis7/lazyora/compare/v0.12.3...v0.13.0
 [0.12.3]: https://github.com/leechis7/lazyora/compare/v0.12.2...v0.12.3
 [0.12.2]: https://github.com/leechis7/lazyora/compare/v0.12.1...v0.12.2
 [0.12.1]: https://github.com/leechis7/lazyora/compare/v0.12.0...v0.12.1

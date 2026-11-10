@@ -68,7 +68,7 @@ func (s *screen) prepareResultGrid() {
 				if !s.resultBrowser.source.CanEditColumn(sourceCol) {
 					return tuivory.GridValue{}, false
 				}
-				cell := browserCell(s.resultBrowser.source, index, sourceCol)
+				cell := s.displayedGridCell(index, sourceCol)
 				return tuivory.GridValue{Text: editInputText(cell), Null: cell.Null}, true
 			}})
 		p = &resultPresentation{model: model, view: view}
@@ -112,7 +112,7 @@ func (s *screen) prepareResultGrid() {
 	options.StatusFields = []string{"meta"}
 	_ = model.SetOptions(options)
 	model.Status.Metadata = s.gridStatusText()
-	model.Labels = map[string]string{"editing": s.tr("grid_inline_editing"), "pending": s.tr("grid_inline_pending")}
+	model.Labels = map[string]string{"editing": s.tr("grid_inline_editing")}
 	_ = p.view.SetPalette(s.resultPalette())
 	row, col := s.table.GetSelection()
 	model.Focus(strconv.Itoa(row), strconv.Itoa(col))

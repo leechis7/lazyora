@@ -74,23 +74,11 @@ func TestHiddenRowIDKeepsOriginalEditColumnAndRowIdentity(t *testing.T) {
 				t.Fatal("Alt+D mapped to the wrong original cell")
 			}
 			s.editForm.GetFormItem(0).(*tuivory.InputField).SetText("new")
-			s.previewGridEdit()
-			if len(s.jobs) != 0 {
-				t.Fatal("preview applied before confirmation")
+			s.stageGridEdit()
+			change := s.gridDrafts[editedCellKey{"APP", "ITEMS", "rid2", "TITLE"}]
+			if len(s.jobs) != 0 || change.Row != 1 || change.Column != s.resultSourceColumn(1) || change.Text != "new" {
+				t.Fatalf("wrong draft identity: %+v", change)
 			}
-			s.programModal.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
-			select {
-			case j := <-s.jobs:
-				if j.edit.Column != s.resultSourceColumn(1) || j.edit.Row != 1 || j.editKey.rowID != "rid2" || j.editKey.column != "TITLE" || j.query != query {
-					t.Fatalf("wrong original identity: %+v", j)
-				}
-				s.markEditedCell(j.editKey)
-			default:
-				t.Fatal("default Proceed did not queue the update")
-			}
-			s.cancel()
-			s.cancel, s.busy = nil, false
-			s.closeGridEdit()
 			if !s.isEditedCell(1, 1) || s.isEditedCell(2, 1) {
 				t.Fatal("edited marker moved to another row")
 			}
@@ -99,7 +87,7 @@ func TestHiddenRowIDKeepsOriginalEditColumnAndRowIdentity(t *testing.T) {
 			if len(s.resultRows) != 0 {
 				t.Fatal("filter matched hidden ROWID")
 			}
-			s.resultBrowser.filter = "second"
+			s.resultBrowser.filter = "new"
 			s.applyResultBrowser(true)
 			s.table.Select(1, 1)
 			if !s.startInlineEdit(nil) || s.inlineEdit.change.Column != s.resultSourceColumn(1) || s.inlineEdit.change.Row != 1 || !s.isEditedCell(1, 1) {

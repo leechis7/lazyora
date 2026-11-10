@@ -60,13 +60,13 @@ with tempfile.TemporaryDirectory(prefix="lazyora-select-edit-") as folder:
         encoded = re.findall(rb"\x1b\]52;c;([^\x07\x1b]*)", output)[-1]
         return base64.b64decode(encoded).decode()
 
-    query = b"SELECT t.ROWID AS rid,t.title AS caption FROM sample_rows t WHERE t.id=1"
+    query = b"SELECT t.ROWID AS rid,t.title AS caption,t.amount FROM sample_rows t WHERE t.id<=2 ORDER BY t.id"
 
     def execute():
         send(b"\x1bOQ\x1bOQ\x01\x0b" + query)
         output.clear()
         send(b"\x1b[20~")  # F9
-        wait_for("1 rows")
+        wait_for("2 rows")
         send(b"\x1b[17~")  # F6: result grid.
 
     try:
@@ -78,56 +78,48 @@ with tempfile.TemporaryDirectory(prefix="lazyora-select-edit-") as folder:
         read_for(0.3)
         execute()
         original = copy_row()
-        assert len(original.split("\t")) == 1, "ROWID leaked into visible row copy"
+        assert len(original.split("\t")) == 2, "ROWID leaked into visible row copy"
+        send(b"\x1b[B")
+        original_second = copy_row()
+        send(b"\x1b[A")
         output.clear()
-        send(b"\x1bd")  # Alt+D opens the separate cell editor.
+        send(b"\x1bd")  # Alt+D, separate editor.
         wait_for("New value")
-        send(b"\x01\x0bPTY ROWID SELECT edit")
+        send(b"\x01\x0bPTY batch title")
         output.clear()
-        send(b"\x13")
-        wait_for("Apply one bound UPDATE")
-        send(b"\x1b[C\r")  # Explicit Cancel returns to the form.
+        send(b"\x13")  # Ctrl+S stages locally.
+        wait_for("Grid drafts: 1 cells")
+        assert copy_row().split("\t")[0] == "PTY batch title"
+        send(b"\x1b[C")  # Row 1, amount.
+        send(b"12345\t")  # Stage and move to row 2, title.
+        send(b"\x15PTY second\r")
+        assert copy_row().split("\t")[0] == "PTY second", "Tab failed to move to next row"
         output.clear()
-        send(b"\x13")
-        wait_for("Apply one bound UPDATE")
-        send(b"\r")  # Proceed is selected by default.
-        wait_for("One cell update applied")
-        changed = copy_row().split("\t")
-        assert len(changed) == 1 and changed[0] == "PTY ROWID SELECT edit", "reload lost original projection or value"
-        # The original popup remains available; now edit inside the grid.
+        send(b"\x1b[20~")  # F9 while the drafts are visible.
+        wait_for("Discard all staged grid edits")
+        send(b"\r")  # Cancel is the default.
+        assert copy_row().split("\t")[0] == "PTY second", "cancel discarded the draft"
+        send(b"\x1b[A")
+        assert copy_row().split("\t") == ["PTY batch title", "12345"], "earlier row/column drafts lost"
         output.clear()
-        send(b"\r")
-        wait_for("Enter Review")
-        send(b"\x15INLINE discarded")  # Ctrl+U clears InputField text.
-        send(b"\x1b")  # Esc cancels input without applying SQL.
-        read_for(0.15)
-        assert copy_row().split("\t")[0] == "PTY ROWID SELECT edit", "Esc applied an inline draft"
-        output.clear()
-        send(b"INLINE ROWID value")  # Printable text starts replacement.
-        wait_for("Enter Review")
-        output.clear()
-        send(b"\r")
-        wait_for("Apply one bound UPDATE")
-        send(b"\x1b[C\r")  # Explicit Cancel returns to the inline draft.
-        output.clear()
-        send(b"\r")
-        wait_for("Apply one bound UPDATE")
-        send(b"\r")  # Proceed is selected by default.
-        wait_for("One cell update applied")
-        assert copy_row().split("\t")[0] == "INLINE ROWID value", "inline edit or original-query reload failed"
-        # Select the changed cell: its distinct 8-color background survives focus.
-        output.clear()
-        send(b"\x1b[17~\x1b[17~")  # Switch focus away and back to repaint.
+        send(b"\x1b[17~\x1b[17~")
         assert re.search(rb"\x1b\[[0-9;]*43[0-9;]*m", output), "changed cell lost ANSI yellow background"
+        output.clear()
+        send(b"\x1b[20~")
+        wait_for("Discard all staged grid edits")
+        output.clear()
+        send(b"\x1b[D\r")
+        wait_for("2 rows")
+        assert copy_row() == original, "confirmed rerun did not discard drafts"
+        send(b"\x1b[B")
+        assert copy_row() == original_second, "rerun did not restore the second row"
+        send(b"\x1b[A")
+        send(b"Discard on rollback\r")
         output.clear()
         send(b"\x1br")
         wait_for("Rollback completed. Grid refreshed.")
-        assert copy_row() == original, "rollback did not automatically restore the grid"
-        output.clear()
-        send(b"\x1bc")
-        wait_for("Commit completed. Grid refreshed.")
-        assert copy_row() == original, "commit refresh changed the current result"
-        print("ROWID SELECT: popup and inline editing, confirmation/cancel, cell color, original query reload and automatic rollback/commit refresh passed")
+        assert copy_row() == original, "rollback did not restore the grid"
+        print("ROWID SELECT: three staged cells across two rows, Tab, rerun cancel/confirm, color and rollback passed")
     finally:
         os.kill(pid, signal.SIGTERM)
         os.waitpid(pid, 0)

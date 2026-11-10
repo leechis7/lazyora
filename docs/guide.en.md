@@ -53,6 +53,7 @@ v0.11.2 uses the published Tuivory **v0.2.0** tree. User/type selectors and live
 Alt+J opens workspaces: N adds a connection, Enter switches, Delete asks before closing one.
 SQL tabs, results and transactions are separate between connections. Check the environment, account and database labels.
 Closing one workspace preserves the other connections' transactions.
+The connection's Environment (Alt+E) and the custom label in the next field appear on the active connection and in risky SQL or script confirmations.
 
 Choose a user and object type above the schema list. Alt+U selects User, Alt+O Type, and Alt+B toggles the browser.
 Type in Alt+I object search to filter names immediately within the selected user/type. Down/Enter enters the list; Esc clears the search.

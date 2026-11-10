@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"lazyora/internal/oracle"
 
 	"github.com/leechis7/tuivory/go"
@@ -11,7 +12,11 @@ func (s *screen) confirmSQL(text string, risk oracle.SQLRisk) {
 }
 
 func (s *screen) confirmExecution(text, risk string, submit func(string)) {
-	s.confirmActionPreview(text, s.tr("sql_risk_"+risk)+"\n\n"+s.tr("sql_risk_limits"), s.tr("sql_confirm_title"), s.tr("execute"), func() { submit(text) })
+	message := s.tr("sql_risk_"+risk) + "\n\n" + s.tr("sql_risk_limits")
+	if target := s.connectionBadge(); s.connected && target != "" {
+		message = fmt.Sprintf(s.tr("execution_target"), target) + "\n" + message
+	}
+	s.confirmActionPreview(text, message, s.tr("sql_confirm_title"), s.tr("execute"), func() { submit(text) })
 }
 
 func (s *screen) confirmActionPreview(text, message, title, button string, submit func()) {

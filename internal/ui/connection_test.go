@@ -26,13 +26,14 @@ func TestConnectionProfilesPersistUpdateAndClearPassword(t *testing.T) {
 	s := shortcutScreen(t)
 	s.connectionForm()
 	fillConnection(s, " 개발 DB ", "sid")
+	s.connectForm.GetFormItem(connectionEnvironmentLabel).(*tuivory.InputField).SetText(" 서울 QA ")
 	s.key(tuivory.NewEventKey(tuivory.KeyCtrlS, 0, tuivory.ModCtrl))
 	if len(s.jobs) != 0 {
 		t.Fatal("saving a profile attempted a database connection")
 	}
 	path := settings.ConnectionsPath(s.prefsPath)
 	profiles, err := settings.LoadConnections(path)
-	if err != nil || len(profiles) != 1 || profiles[0].Alias != "개발 DB" || profiles[0].Mode != "sid" || profiles[0].Port != 1522 {
+	if err != nil || len(profiles) != 1 || profiles[0].Alias != "개발 DB" || profiles[0].Mode != "sid" || profiles[0].Port != 1522 || profiles[0].EnvironmentLabel != "서울 QA" {
 		t.Fatalf("profile was not saved: %+v %v", profiles, err)
 	}
 	data, err := os.ReadFile(path)
@@ -64,6 +65,9 @@ func TestConnectionProfilesPersistUpdateAndClearPassword(t *testing.T) {
 	t.Setenv("LAZYORA_PASSWORD", "environment-secret")
 	s.connectionForm()
 	s.connectProfiles.GetFormItem(0).(*choiceField).SetCurrentOption(1)
+	if s.connectForm.GetFormItem(connectionEnvironmentLabel).(*tuivory.InputField).GetText() != "서울 QA" {
+		t.Fatal("saved environment label was not restored")
+	}
 	if s.connectForm.GetFormItem(connectionPassword).(*tuivory.InputField).GetText() != "" || s.connectForm.GetFormItem(connectionHost).(*tuivory.InputField).GetText() != "updated.example" {
 		t.Fatal("saved profile was not restored or password was reused")
 	}
@@ -172,7 +176,7 @@ func TestConnectionSectionsAndTabCycle(t *testing.T) {
 	if s.connectForm.GetFormItem(0).GetLabel() != s.tr("alias") {
 		t.Fatal("alias must be first")
 	}
-	if s.connectProfiles.GetFormItemCount() != 1 || s.connectForm.GetFormItemCount() != 9 {
+	if s.connectProfiles.GetFormItemCount() != 1 || s.connectForm.GetFormItemCount() != connectionEnvironmentLabel+1 {
 		t.Fatal("profile picker not separate from editable fields")
 	}
 	connectionKey(s, tuivory.KeyBacktab)

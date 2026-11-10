@@ -29,6 +29,7 @@ const (
 	connectionName
 	connectionSavePassword
 	connectionEnvironment
+	connectionEnvironmentLabel
 )
 
 var connectionLabels = []string{"alias", "host", "port", "username", "password", "connection_type", "service_name"}
@@ -47,6 +48,7 @@ func (s *screen) localizeConnection() {
 	environmentIndex, _ := environmentChoice.GetCurrentOption()
 	environmentChoice.SetLabel(s.tr("environment"))
 	environmentChoice.SetOptions([]string{s.tr("environment_none"), s.tr("environment_dev"), s.tr("environment_test"), s.tr("environment_prod")}, nil).SetCurrentOption(environmentIndex)
+	form.GetFormItem(connectionEnvironmentLabel).(*tuivory.InputField).SetLabel(s.tr("environment_label"))
 	form.GetButton(0).SetLabel(s.tr("connect") + " (Alt+C)")
 	form.GetButton(1).SetLabel(s.tr("cancel") + " (Esc)")
 	form.GetButton(2).SetLabel(s.tr("save") + " (Alt+S)")
@@ -106,6 +108,7 @@ func (s *screen) connectionForm() {
 	form.AddCheckbox(s.tr("save_password"), false, nil)
 	environments := []string{"", "dev", "test", "prod"}
 	form.AddFormItem(s.newChoice(s.tr("environment"), []string{s.tr("environment_none"), s.tr("environment_dev"), s.tr("environment_test"), s.tr("environment_prod")}, 0, nil))
+	form.AddInputField(s.tr("environment_label"), "", 24, nil, nil)
 	password := form.GetFormItem(connectionPassword).(*tuivory.InputField)
 	invalidateSecret = func() {
 		if autofilled {
@@ -132,6 +135,7 @@ func (s *screen) connectionForm() {
 		// Always discard the previous password, including environment defaults.
 		form.GetFormItem(connectionSavePassword).(*tuivory.Checkbox).SetChecked(false)
 		form.GetFormItem(connectionEnvironment).(*choiceField).SetCurrentOption(0)
+		form.GetFormItem(connectionEnvironmentLabel).(*tuivory.InputField).SetText("")
 		form.GetFormItem(connectionPassword).(*tuivory.InputField).SetText("")
 		if index <= 0 {
 			for i, value := range map[int]string{connectionAlias: "", connectionHost: env("LAZYORA_HOST", "localhost"), connectionPort: env("LAZYORA_PORT", "1521"), connectionUser: os.Getenv("LAZYORA_USER"), connectionName: os.Getenv("LAZYORA_NAME")} {
@@ -141,6 +145,7 @@ func (s *screen) connectionForm() {
 			return
 		}
 		p := profiles[index-1]
+		form.GetFormItem(connectionEnvironmentLabel).(*tuivory.InputField).SetText(p.EnvironmentLabel)
 		for i, environment := range environments {
 			if environment == p.Environment {
 				form.GetFormItem(connectionEnvironment).(*choiceField).SetCurrentOption(i)
@@ -206,6 +211,19 @@ func (s *screen) connectionForm() {
 		}
 		return config, true
 	}
+	readIdentity := func() (settings.Connection, bool) {
+		environment, _ := form.GetFormItem(connectionEnvironment).(*choiceField).GetCurrentOption()
+		label := strings.TrimSpace(form.GetFormItem(connectionEnvironmentLabel).(*tuivory.InputField).GetText())
+		if !settings.ValidEnvironmentLabel(label) {
+			form.SetTitle(s.tr("environment_label_invalid"))
+			focusForm(s, form, connectionEnvironmentLabel)
+			return settings.Connection{}, false
+		}
+		return settings.Connection{
+			Alias:       strings.TrimSpace(form.GetFormItem(connectionAlias).(*tuivory.InputField).GetText()),
+			Environment: environments[environment], EnvironmentLabel: label,
+		}, true
+	}
 	s.connectAction = func() {
 		if s.busy || s.reconnectDialog != nil {
 			return
@@ -214,8 +232,11 @@ func (s *screen) connectionForm() {
 		if !ok {
 			return
 		}
-		environment, _ := form.GetFormItem(connectionEnvironment).(*choiceField).GetCurrentOption()
-		s.pendingIdentity = settings.Connection{Alias: strings.TrimSpace(form.GetFormItem(connectionAlias).(*tuivory.InputField).GetText()), Environment: environments[environment]}
+		identity, ok := readIdentity()
+		if !ok {
+			return
+		}
+		s.pendingIdentity = identity
 		s.requestReconnect(config)
 	}
 	saveProfile := func() {
@@ -227,13 +248,17 @@ func (s *screen) connectionForm() {
 		if !ok {
 			return
 		}
-		alias := strings.TrimSpace(form.GetFormItem(connectionAlias).(*tuivory.InputField).GetText())
+		profile, ok := readIdentity()
+		if !ok {
+			return
+		}
+		alias := profile.Alias
 		if alias == "" {
 			form.SetTitle(" " + s.tr("alias_required") + " ")
 			return
 		}
-		environment, _ := form.GetFormItem(connectionEnvironment).(*choiceField).GetCurrentOption()
-		profile := settings.Connection{Environment: environments[environment], Alias: alias, Host: config.Host, Port: config.Port, User: config.User, Mode: config.Mode, Name: config.Name}
+		profile.Host, profile.Port, profile.User = config.Host, config.Port, config.User
+		profile.Mode, profile.Name = config.Mode, config.Name
 		next := append([]settings.Connection(nil), profiles...)
 		index := len(next)
 		for i, p := range next {
@@ -367,9 +392,9 @@ func (s *screen) connectionForm() {
 	gap := s.newBox()
 	s.setSurface(gap, surfacePanel)
 	content := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(selector, 5, 0, false).AddItem(gap, 1, 0, false).AddItem(form, 0, 1, true)
-	root := s.formPopup(content, 90, 30, func(width, height int) {
+	root := s.formPopup(content, 90, 32, func(width, height int) {
 		spacing := 1
-		if height < 29 {
+		if height < 31 {
 			spacing = 0
 		}
 		form.SetItemPadding(spacing)

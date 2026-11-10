@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+- LORA-73: 접속별 사용자 지정 환경 라벨을 저장하고 현재 접속과 위험 SQL·스크립트 실행 확인창에 표시합니다.
+- LORA-73: Save a custom environment label per connection and show it on the active connection and risky SQL or script confirmations.
+
 - Tuivory Go v0.12.2를 적용합니다. 팝업 버튼 가운데 정렬과 전용 그리드 헤더 배경색을 적용하고, 현재 셀과 선택 범위의 색상을 구분합니다.
 - Adopt Tuivory Go v0.12.2 for centered popup buttons, a dedicated grid header background, and distinct colors for the current cell and selected range.
 

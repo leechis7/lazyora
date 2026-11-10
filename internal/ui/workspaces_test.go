@@ -37,7 +37,7 @@ func TestWorkspacesKeepSQLTabsResultsAndTransactionsSeparate(t *testing.T) {
 	m, _ := workspaceTestSet(t)
 	first := m.active
 	first.connected = true
-	first.connectionIdentity = settings.Connection{Alias: "First", Environment: "prod", User: "A", Host: "host-a", Port: 1521, Name: "DB_A"}
+	first.connectionIdentity = settings.Connection{Alias: "First", Environment: "prod", EnvironmentLabel: "서울 운영", User: "A", Host: "host-a", Port: 1521, Name: "DB_A"}
 	first.editor.SetText("SELECT 'first' FROM dual", false).Select(7, 14)
 	first.render(oracle.Result{Columns: []string{"VALUE"}, Rows: [][]string{{"first result"}}})
 	first.pendingChanges = true
@@ -65,7 +65,7 @@ func TestWorkspacesKeepSQLTabsResultsAndTransactionsSeparate(t *testing.T) {
 		t.Fatal("tab/result/transaction crossed workspaces")
 	}
 	first.refreshConnectionTitles()
-	if !strings.Contains(first.editor.GetTitle(), "DB_A") || !strings.Contains(first.table.GetTitle(), "PROD") || strings.Contains(first.editor.GetTitle(), "DB_B") {
+	if !strings.Contains(first.editor.GetTitle(), "DB_A") || !strings.Contains(first.table.GetTitle(), "PROD · 서울 운영") || strings.Contains(first.editor.GetTitle(), "DB_B") {
 		t.Fatal("wrong connection identity")
 	}
 	if !m.activate(second) {

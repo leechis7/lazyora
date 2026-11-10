@@ -12,6 +12,7 @@ func TestConnectionEnvironmentIsPublicAndDoesNotChangeCredentialBinding(t *testi
 	}
 	binding := p.Binding()
 	p.Environment = "dev"
+	p.EnvironmentLabel = "서울 QA"
 	p.Alias = "renamed"
 	if p.Binding() != binding {
 		t.Fatal("cosmetic labels invalidated encrypted credentials")
@@ -26,11 +27,16 @@ func TestConnectionEnvironmentIsPublicAndDoesNotChangeCredentialBinding(t *testi
 	}
 	writer.Close()
 	loaded, err := LoadConnections(path)
-	if err != nil || loaded[0].Environment != "dev" {
+	if err != nil || len(loaded) != 1 || loaded[0].Environment != "dev" || loaded[0].EnvironmentLabel != p.EnvironmentLabel {
 		t.Fatal("environment not saved", err)
 	}
 	p.Environment = "invalid"
 	if p.Validate() == nil {
 		t.Fatal("unknown environment accepted")
+	}
+	p.Environment = "dev"
+	p.EnvironmentLabel = "dev\nprod"
+	if p.Validate() == nil {
+		t.Fatal("multiline environment label accepted")
 	}
 }

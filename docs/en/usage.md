@@ -28,7 +28,7 @@ Connection Test/Alt+V uses a temporary connection to authenticate and run a basi
 
 Alt+J opens connection workspaces. N adds one, Enter or Switch confirms selection, Delete closes it. Single/double mouse clicks select only; Cancel/Esc preserves the original workspace. Up to eight can be open; switching/adding is blocked during execution. SQL tabs, result/schema/output/source/bind state and transactions are isolated by workspace. Only tabs within the same workspace share its transaction. Preferences are common. Explicit vault locking clears cached keys across workspaces.
 
-Connection labels and Development/Test/Production markers help identify the target; these are user classifications, not database privileges. `[TX]` marks pending work and `!` an uncertain transaction outcome. Closing a workspace checks its unsaved SQL/source and pending transaction. Ctrl+Q checks all workspaces in order; cancellation preserves remaining workspaces.
+Select Development, Test or Production under Environment (Alt+E). The next field accepts a custom label of up to 24 characters, saved with the connection profile. A marker such as `[PROD · Seoul]` appears in the connection path, SQL editor title and risky SQL or script confirmation. It works without relying on color and does not change database privileges. Existing profiles keep their classification. `[TX]` marks pending work and `!` an uncertain transaction outcome. Closing a workspace checks its unsaved SQL/source and pending transaction. Ctrl+Q checks all workspaces in order; cancellation preserves remaining workspaces.
 
 ## SQL files and tabs
 

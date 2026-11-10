@@ -24,6 +24,8 @@ type job struct {
 	pageID        uint64
 	previewLimit  int
 	related       *relatedRowQuery
+	schemaCompare *schemaCompareRun
+	compareSide   int
 	completion    oracle.CompletionContext
 	refresh       bool
 	routine       oracle.Routine
@@ -215,6 +217,7 @@ type screen struct {
 	objectFocus                              tuivory.Primitive
 	objectTable                              *tuivory.Table
 	objectWorkspace                          *objectWorkspace
+	schemaCompare                            *schemaCompareView
 	foreignRows                              *foreignRowView
 	objectSplit                              tuivory.SplitState
 	objectColumns                            []oracle.Column
@@ -532,6 +535,7 @@ func (s *screen) worker() {
 		var columns []oracle.Column
 		var definition oracle.ObjectDefinition
 		var foreignKeys oracle.ForeignKeyLinks
+		var schemaStructure oracle.SchemaStructure
 		var object oracle.Object
 		var source string
 		var arguments []oracle.Argument
@@ -651,6 +655,8 @@ func (s *screen) worker() {
 			foreignKeys, err = session.ForeignKeys(j.ctx, j.object)
 		case "related_rows":
 			result, err = session.RelatedRows(j.ctx, j.related.link, j.related.headers, j.related.row, objectPreviewStep)
+		case "schema_compare":
+			schemaStructure, err = session.ReadSchemaStructure(j.ctx, j.text)
 		case "source":
 			source, err = session.Source(j.ctx, j.object)
 		case "complete":
@@ -747,6 +753,10 @@ func (s *screen) worker() {
 			}
 			if j.action == "related_rows" {
 				s.acceptRelatedRows(j.related, result, err)
+				return
+			}
+			if j.action == "schema_compare" {
+				j.schemaCompare.accept(j.compareSide, schemaStructure, err)
 				return
 			}
 			if j.action == "object_ddl" || j.action == "object_data" {

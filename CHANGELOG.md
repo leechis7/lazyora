@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+- LORA-82: 두 Oracle 접속의 테이블과 컬럼 정의를 읽기 전용으로 비교합니다.
+- LORA-82: Compare table and column definitions across two Oracle connections without changing either database.
+
 - LORA-81: 스키마 데이터 탭에서 선택한 행의 외래 키를 따라 부모·자식 행을 읽기 전용으로 조회합니다.
 - LORA-81: Follow foreign keys from a selected schema data row to read-only parent or child results.
 

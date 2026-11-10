@@ -78,6 +78,7 @@ var commands = []command{
 	{"workspace_new", "workspace_new", menuSession, nil},
 	{"workspace_close", "workspace_close", menuSession, nil},
 	{"settings", "settings", menuTools, nil},
+	{"schema_compare", "schema_compare", menuTools, nil},
 	{"passwords", "passwords", menuTools, []binding{{"Alt+K", tuivory.KeyRune, tuivory.ModAlt, 'k'}}},
 	{"routine_execute", "routine_execute", menuExecute, nil},
 	{"routine_results", "routine_results", menuView, nil},
@@ -145,6 +146,8 @@ func (s *screen) commandEnabled(id string) bool {
 		return false
 	}
 	switch id {
+	case "schema_compare":
+		return !s.busy && len(s.compareConnections()) >= 2
 	case "workspaces", "workspace_new", "workspace_close":
 		return s.workspaces != nil && !s.busy && !s.vaultBusy
 	case "table_edit_load":
@@ -238,6 +241,8 @@ func (s *screen) invoke(id string) {
 		return
 	}
 	switch id {
+	case "schema_compare":
+		s.showSchemaCompare()
 	case "guide":
 		s.showGuide()
 	case "release_history":

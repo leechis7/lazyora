@@ -76,6 +76,12 @@ Opening a table, view or materialized view from the schema tree shows **Columns 
 
 Select a row in a table's data grid and press **Alt+F** or choose **Related rows** to list enabled foreign keys visible to the connected account. Press **Enter** on a relationship to preview up to 100 parent or child rows in a separate read-only grid. **Esc** returns to the relationships and then the original row. All components of a composite key are compared. NUMBER, CHAR/VARCHAR2, NCHAR/NVARCHAR2, and RAW keys are supported. A key with a NULL component has no matching rows to query.
 
+### Compare table structures across two connections
+
+Open two Oracle connection workspaces and choose **Tools → Compare table structures**. Select the left and right connections. Leave a schema blank to use that session's current schema, or quote a case-sensitive schema name. The comparison shows tables visible only on one side and differences in column names, order, types, length or precision, nullability, and defaults. Press **Enter** for details, **Tab** to cycle panes and buttons, or **Ctrl+C** to copy the focused details.
+
+The comparison uses metadata visible to each connection. Privileges and changes made between reads can affect the results. LazyOra withholds the diff if either read fails or exceeds 12,000 metadata rows or 8 MiB of defaults. **Esc** cancels both reads. The comparison preserves existing SQL results and pending transactions and does not execute DDL.
+
 ## Editor keymaps, search and completion
 
 Settings offers Toad (default), Vim, Notepad++, VS Code and IntelliJ IDEA. The empty/legacy `editor_keymap` value means Toad; other stored values are `vim`, `notepad++`, `vscode`, `intellij`. These provide subsets of familiar Windows/Linux editing behavior, not complete IDE emulation. App-wide execute/commit/rollback/exit/fullscreen keys take priority.

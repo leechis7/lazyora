@@ -43,6 +43,9 @@ func (s *screen) key(event *tuivory.EventKey) *tuivory.EventKey {
 	}
 
 	page, _ = s.pages.GetFrontPage()
+	if page == "schema_compare" || page == "schema_compare_results" {
+		return s.schemaCompareKey(page, event)
+	}
 	if page == "foreign_keys" || page == "related_rows" {
 		return s.foreignRowsKey(page, event)
 	}

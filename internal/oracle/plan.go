@@ -14,6 +14,7 @@ type PlanStep struct {
 	ID, Parent                                                    int
 	HasParent                                                     bool
 	Operation, Options, Owner, Object, Cost, Rows, Access, Filter string
+	Actual                                                        *PlanStatistics
 }
 
 func PlanSQL(text string) (string, error) {

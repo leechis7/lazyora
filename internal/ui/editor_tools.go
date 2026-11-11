@@ -18,6 +18,10 @@ func (s *screen) clearSQL() {
 }
 
 func (s *screen) executeSQL() {
+	s.runSQL(false)
+}
+
+func (s *screen) runSQL(actualPlan bool) {
 	text := s.editor.GetText()
 	if selected, _, _ := s.editor.GetSelection(); selected != "" {
 		text = selected
@@ -33,19 +37,24 @@ func (s *screen) executeSQL() {
 	if s.sqlConfirmText != nil || s.busy {
 		return
 	}
-	if s.connected {
-		if risk := oracle.ExecutionRisk(text); risk != oracle.RiskNone {
-			s.confirmSQL(text, risk)
+	if actualPlan {
+		if _, err := oracle.PlanSQL(text); err != nil {
+			s.setStatus("error", err)
 			return
 		}
 	}
-	s.submitSQL(text)
-}
-
-func (s *screen) submitSQL(text string) {
-	s.withBinds(text, func(values map[string]oracle.BindValue) {
-		s.submit(job{action: "execute", text: text, bindings: values})
-	})
+	submit := func(text string) {
+		s.withBinds(text, func(values map[string]oracle.BindValue) {
+			s.submit(job{action: "execute", text: text, bindings: values, measurePlan: actualPlan})
+		})
+	}
+	if s.connected {
+		if risk := oracle.ExecutionRisk(text); risk != oracle.RiskNone {
+			s.confirmExecution(text, string(risk), submit)
+			return
+		}
+	}
+	submit(text)
 }
 
 func (s *screen) recordSQLHistory(text string) {

@@ -53,6 +53,8 @@ var commands = []command{
 	{"execute", "execute", menuExecute, []binding{{"F9", tuivory.KeyF9, 0, 0}, {"Ctrl+Enter", tuivory.KeyEnter, tuivory.ModCtrl, 0}, {"Alt+Enter", tuivory.KeyEnter, tuivory.ModAlt, 0}, {"Shift+F9", tuivory.KeyF9, tuivory.ModShift, 0}}},
 	{"script", "script", menuExecute, []binding{{"F5", tuivory.KeyF5, 0, 0}}},
 	{"plan", "plan", menuExecute, []binding{{"Ctrl+E", tuivory.KeyCtrlE, 0, 0}}},
+	{"actual_plan_execute", "actual_plan_execute", menuExecute, nil},
+	{"actual_plan_last", "actual_plan_last", menuExecute, nil},
 	{"script_report", "script_report", menuView, nil},
 	{"parse", "parse_unavailable", menuExecute, []binding{{"Ctrl+F9", tuivory.KeyF9, tuivory.ModCtrl, 0}}},
 	{"debug_continue", "debug_unavailable", menuExecute, []binding{{"F11", tuivory.KeyF11, 0, 0}}},
@@ -208,8 +210,10 @@ func (s *screen) commandEnabled(id string) bool {
 		return s.browser != nil
 	case "connect":
 		return !s.busy
-	case "execute", "script", "plan", "commit", "rollback":
+	case "execute", "script", "plan", "actual_plan_execute", "commit", "rollback":
 		return s.connected && !s.busy
+	case "actual_plan_last":
+		return s.connected && !s.busy && s.lastActualPlan != nil
 	case "script_report":
 		return !s.busy && len(s.scriptReport.Steps) > 0
 	case "cancel":
@@ -317,6 +321,10 @@ func (s *screen) invoke(id string) {
 		s.showExport()
 	case "plan":
 		s.explainSQL()
+	case "actual_plan_execute":
+		s.runSQL(true)
+	case "actual_plan_last":
+		s.showActualPlan()
 	case "script":
 		s.executeScript()
 	case "script_report":

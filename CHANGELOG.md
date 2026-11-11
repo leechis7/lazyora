@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+- LORA-83: SQL 한 문장을 실행하고 확인된 커서의 실제 계획과 단계별 실행 통계를 조회합니다.
+- LORA-83: Execute one statement and view the verified cursor's actual plan and row-source statistics.
+
 ## [0.14.0] - 2026-11-11
 
 - LORA-76: 공개 Tuivory Go 패키지를 v0.12.3으로 갱신합니다.

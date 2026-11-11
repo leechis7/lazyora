@@ -24,6 +24,9 @@ func (s *screen) key(event *tuivory.EventKey) *tuivory.EventKey {
 		event = tuivory.NewEventKey(event.Key(), event.Rune(), event.Modifiers())
 	}
 	page, _ := s.pages.GetFrontPage()
+	if page == "session_browser" {
+		return s.sessionBrowserKey(event)
+	}
 	if page == "keymap_compare" {
 		return s.keymapComparisonKey(event)
 	}

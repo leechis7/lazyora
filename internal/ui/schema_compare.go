@@ -9,6 +9,7 @@ import (
 )
 
 type schemaCompareView struct {
+	data         bool
 	form         *tuivory.WidgetForm
 	info, detail *tuivory.WidgetTextView
 	list         *tuivory.WidgetList
@@ -17,6 +18,7 @@ type schemaCompareView struct {
 }
 
 type schemaCompareRun struct {
+	tables     [2]oracle.TableData
 	host       *screen
 	targets    [2]*screen
 	structures [2]oracle.SchemaStructure
@@ -40,14 +42,21 @@ func (s *screen) compareConnections() []*screen {
 	return available
 }
 
-func (s *screen) showSchemaCompare() {
+func (s *screen) showSchemaCompare() { s.showComparison(false) }
+
+func (s *screen) showComparison(data bool) {
 	targets := s.compareConnections()
 	if len(targets) < 2 {
 		return
 	}
+	title, field, hint := "schema_compare", "schema_compare_owner", "schema_compare_hint"
+	if data {
+		title, field, hint = "data_compare", "data_compare_table", "data_compare_hint"
+	}
 	v := &schemaCompareView{
+		data:  data,
 		form:  tuivory.NewWidgetForm(),
-		info:  s.newTextView(textHint).SetWrap(true).SetText(s.tr("schema_compare_hint")),
+		info:  s.newTextView(textHint).SetWrap(true).SetText(s.tr(hint)),
 		focus: s.app.GetFocus(),
 	}
 	s.schemaCompare = v
@@ -61,30 +70,50 @@ func (s *screen) showSchemaCompare() {
 	}
 	right := (left + 1) % len(targets)
 	v.form.AddFormItem(s.newChoice(s.tr("schema_compare_left"), labels, left, nil)).
-		AddInputField(s.tr("schema_compare_owner"), "", 30, nil, nil).
+		AddInputField(s.tr(field), "", 38, nil, nil).
 		AddFormItem(s.newChoice(s.tr("schema_compare_right"), labels, right, nil)).
-		AddInputField(s.tr("schema_compare_owner"), "", 30, nil, nil)
+		AddInputField(s.tr(field), "", 38, nil, nil)
+	if data {
+		v.form.AddInputField(s.tr("data_compare_keys"), "", 38, nil, nil)
+	}
 	start := func() {
 		if v.run != nil {
 			return
 		}
 		run := &schemaCompareRun{host: s, pending: 2}
-		var owners [2]string
-		for side := range owners {
+		var refs [2]string
+		var keys []string
+		for side := range refs {
 			index, _ := v.form.GetFormItem(2 * side).(*choiceField).GetCurrentOption()
 			if index < 0 || index >= len(targets) {
 				return
 			}
 			run.targets[side] = targets[index]
 			raw := strings.TrimSpace(v.form.GetFormItem(2*side + 1).(*tuivory.InputField).GetText())
-			if raw != "" {
+			if data {
+				if _, _, err := oracle.ParseObjectReference(raw); err != nil {
+					v.info.SetText(s.tr("data_compare_invalid_table"))
+					focusForm(s, v.form, 2*side+1)
+					return
+				}
+				refs[side] = raw
+			} else if raw != "" {
 				prefix, name, err := oracle.ParseObjectReference(raw)
 				if err != nil || prefix != "" {
 					v.info.SetText(s.tr("schema_compare_invalid_owner"))
 					focusForm(s, v.form, 2*side+1)
 					return
 				}
-				owners[side] = name
+				refs[side] = name
+			}
+		}
+		if data {
+			var err error
+			keys, err = oracle.ParseDataCompareKeys(v.form.GetFormItem(4).(*tuivory.InputField).GetText())
+			if err != nil {
+				v.info.SetText(s.tr("data_compare_invalid_keys") + "\n" + err.Error())
+				focusForm(s, v.form, 4)
+				return
 			}
 		}
 		if run.targets[0] == run.targets[1] {
@@ -102,11 +131,11 @@ func (s *screen) showSchemaCompare() {
 		v.form.GetButton(0).SetDisabled(true)
 		for side, target := range run.targets {
 			run.status[side], run.statusArgs[side] = target.statusKey, target.statusArgs
-			target.submit(job{action: "schema_compare", text: owners[side], schemaCompare: run, compareSide: side})
+			target.submit(job{action: title, text: refs[side], schemaCompare: run, compareSide: side, compareKeys: keys})
 		}
 	}
 	v.form.AddButton(s.tr("schema_compare_start"), start).AddButton(s.tr("cancel"), s.closeSchemaCompare)
-	v.form.SetTitle(s.tr("schema_compare"))
+	v.form.SetTitle(s.tr(title))
 	s.styleForm(v.form)
 	for i := 0; i < v.form.GetButtonCount(); i++ {
 		s.clickable(v.form.GetButton(i))
@@ -122,6 +151,7 @@ func (s *screen) closeSchemaCompare() {
 	}
 	if v.run != nil {
 		v.run.cancelled = true
+		v.info.SetText(s.tr("schema_compare_cancelling"))
 		for _, target := range v.run.targets {
 			if target.cancel != nil {
 				target.cancel()
@@ -138,7 +168,19 @@ func (s *screen) closeSchemaCompare() {
 func (r *schemaCompareRun) accept(side int, structure oracle.SchemaStructure, err error) {
 	target := r.targets[side]
 	target.setStatus(r.status[side], r.statusArgs[side]...)
-	r.structures[side], r.errors[side] = structure, err
+	r.structures[side] = structure
+	r.acceptSide(side, err)
+}
+
+func (r *schemaCompareRun) acceptData(side int, data oracle.TableData, err error) {
+	target := r.targets[side]
+	target.setStatus(r.status[side], r.statusArgs[side]...)
+	r.tables[side] = data
+	r.acceptSide(side, err)
+}
+
+func (r *schemaCompareRun) acceptSide(side int, err error) {
+	r.errors[side] = err
 	r.pending--
 	if r.pending > 0 {
 		return
@@ -161,41 +203,55 @@ func (r *schemaCompareRun) accept(side int, structure oracle.SchemaStructure, er
 			return
 		}
 	}
-	host.renderSchemaCompare(r.structures)
+	if v.data {
+		host.renderDataCompare(r.tables)
+	} else {
+		host.renderSchemaCompare(r.structures)
+	}
 }
 
 func (s *screen) renderSchemaCompare(structures [2]oracle.SchemaStructure) {
+	differences := oracle.CompareSchemas(structures[0], structures[1])
+	labels := make([]string, len(differences))
+	for i, change := range differences {
+		labels[i] = change.Name + " · " + s.schemaDifferenceKind(change)
+	}
+	summary := fmt.Sprintf(s.tr("schema_compare_summary"), structures[0].Owner, len(structures[0].Tables), structures[1].Owner, len(structures[1].Tables), len(differences))
+	s.showComparisonResults("schema_compare", "schema_compare_equal", summary, labels, func(index int) string {
+		return s.schemaDifferenceText(differences[index])
+	})
+}
+
+func (s *screen) showComparisonResults(title, empty, summary string, labels []string, detail func(int) string) {
 	v := s.schemaCompare
 	v.list = tuivory.NewWidgetList().ShowSecondaryText(false)
 	s.styleList(v.list)
-	v.list.SetBorder(true).SetTitle(s.tr("schema_compare"))
+	v.list.SetBorder(true).SetTitle(s.tr(title))
 	v.detail = s.newTextView().SetDynamicColors(false).SetScrollable(true).SetWrap(false)
 	v.detail.SetBorder(true).SetTitle(s.tr("object_details"))
 	s.styleBox(v.detail.Box)
-	differences := oracle.CompareSchemas(structures[0], structures[1])
 	v.list.SetChangedFunc(func(index int, _, _ string, _ rune) {
-		if index >= 0 && index < len(differences) {
-			v.detail.SetText(s.schemaDifferenceText(differences[index])).ScrollToBeginning()
+		if index >= 0 && index < len(labels) {
+			v.detail.SetText(detail(index)).ScrollToBeginning()
 		}
 	})
 	v.list.SetSelectedFunc(func(index int, _, _ string, _ rune) {
-		if index >= 0 && index < len(differences) {
+		if index >= 0 && index < len(labels) {
 			s.app.SetFocus(v.detail)
 		}
 	})
-	for _, change := range differences {
-		v.list.AddItem(tuivory.Escape(change.Name+" · "+s.schemaDifferenceKind(change)), "", 0, nil)
+	for _, label := range labels {
+		v.list.AddItem(tuivory.Escape(label), "", 0, nil)
 	}
-	if len(differences) > 0 {
-		v.detail.SetText(s.schemaDifferenceText(differences[0]))
+	if len(labels) > 0 {
+		v.detail.SetText(detail(0))
 	} else {
-		v.list.AddItem(s.tr("schema_compare_equal"), "", 0, nil)
+		v.list.AddItem(s.tr(empty), "", 0, nil)
 	}
-	title := fmt.Sprintf(s.tr("schema_compare_summary"), structures[0].Owner, len(structures[0].Tables), structures[1].Owner, len(structures[1].Tables), len(differences))
-	info := s.newTextView(textHint).SetDynamicColors(false).SetText(title)
+	info := s.newTextView(textHint).SetDynamicColors(false).SetWrap(true).SetText(summary)
 	close := s.clickable(tuivory.NewWidgetButton(s.tr("close")).SetSelectedFunc(s.closeSchemaCompareResults))
 	panels := s.newFlex().AddItem(v.list, 0, 2, true).AddItem(v.detail, 0, 3, false)
-	root := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(info, 2, 0, false).AddItem(panels, 0, 1, true).AddItem(close, 1, 0, false)
+	root := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(info, 3, 0, false).AddItem(panels, 0, 1, true).AddItem(close, 1, 0, false)
 	s.pages.AddPage("schema_compare_results", s.formPopup(root, 115, 28, nil), true, true)
 	s.app.SetFocus(v.list)
 }
@@ -238,12 +294,19 @@ func (s *screen) closeSchemaCompareResults() {
 	v := s.schemaCompare
 	s.pages.RemovePage("schema_compare_results")
 	v.list, v.detail = nil, nil
-	v.info.SetText(s.tr("schema_compare_hint"))
+	hint := "schema_compare_hint"
+	if v.data {
+		hint = "data_compare_hint"
+	}
+	v.info.SetText(s.tr(hint))
 	focusForm(s, v.form, 0)
 }
 
 func (s *screen) schemaCompareKey(page string, event *tuivory.EventKey) *tuivory.EventKey {
 	v := s.schemaCompare
+	if s.buttonArrow(event) || page == "schema_compare_results" && s.listDetailArrow(event, v.list, v.detail) {
+		return nil
+	}
 	switch event.Key() {
 	case tuivory.KeyEscape:
 		if page == "schema_compare_results" {

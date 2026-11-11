@@ -246,6 +246,12 @@ func (s *Session) prepareSelectEdit(ctx context.Context, text string) *editSnaps
 	}
 	s.editSequence++
 	snap.id = s.editSequence
+	snap.canDelete = len(snap.columns) == len(columns)+1
+	for i, col := range snap.columns {
+		if i != snap.rowIDColumn && col.Name == "" {
+			snap.canDelete = false
+		}
+	}
 	return snap
 }
 
@@ -306,17 +312,20 @@ func (snap *editSnapshot) appendSelectRow(cells []Cell) bool {
 }
 
 func (snap *editSnapshot) markSelectResult(result *Result) {
-	if snap == nil || len(snap.rows) == 0 {
+	if snap == nil || len(result.Columns) != len(snap.columns) || len(result.Rows) > len(snap.rows) {
 		return
 	}
 	result.EditID, result.EditObject = snap.id, snap.object
 	result.EditRowIDColumn = snap.rowIDColumn + 1
 	result.EditRowIDs = append([]string(nil), snap.rowIDs[len(snap.rowIDs)-len(result.Rows):]...)
+	result.EditCanDelete = snap.canDelete
+	result.EditColumnTypes = make([]string, len(snap.columns))
 	result.EditColumnNames = make([]string, len(snap.columns))
 	result.EditColumns = make([]bool, len(snap.columns))
 	for i, c := range snap.columns {
 		result.EditColumns[i] = c.Name != ""
 		result.EditColumnNames[i] = c.Name
+		result.EditColumnTypes[i] = c.DataType
 	}
 }
 

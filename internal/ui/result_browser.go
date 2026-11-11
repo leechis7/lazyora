@@ -17,6 +17,7 @@ type resultBrowser struct {
 	sortColumn         int
 	sorted, descending bool
 	visible            []int
+	rowIDs             map[string]int
 	columns            []int // Display column -> original query/snapshot column.
 }
 
@@ -120,7 +121,18 @@ func (s *screen) applyResultBrowser(preserveWidths bool) {
 	for col, sourceCol := range view.columns {
 		result.Columns[col] = view.source.Columns[sourceCol]
 	}
+	// New rows do not yet have DB values for defaults or match SQL predicates.
+	// Keep them visible after the sorted and filtered persisted rows.
+	for _, row := range s.addedGridIndices() {
+		if s.gridInserts[row].ID == view.source.EditID {
+			indices = append(indices, row)
+		}
+	}
 	view.visible = indices
+	view.rowIDs = make(map[string]int, len(indices))
+	for i := range indices {
+		view.rowIDs[s.gridViewRowID(i)] = i
+	}
 	result.Rows = nil
 	result.Values = nil
 	for _, row := range indices {

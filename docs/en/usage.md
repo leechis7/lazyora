@@ -116,6 +116,10 @@ SELECT t.ROWID, t.* FROM scott.emp t WHERE t.deptno = 10 ORDER BY t.empno;
 
 Validated ROWID is hidden in the grid, row/range copy and fetched-result export, but retained internally. Full DB export repeats the original SQL and can include ROWID. Joins/views/synonyms/DB links/CTEs/subqueries/DISTINCT/aggregates/calculations/ROWIDTOCHAR or unverifiable origins remain read-only. Supported origins are permanent heap tables and direct columns/`t.*`; omitted schema uses CURRENT_SCHEMA. LOB and unsupported types remain read-only.
 
+In the results grid, **Alt+Insert** or **Edit → Add row draft** starts a new row. Choose **Database default**, **NULL**, or **Value** for each column, then press Ctrl+S to stage it. Unspecified columns use Oracle defaults. A verified empty result can also accept new rows. Select a new row (+) and press Enter to edit its draft again. New drafts stay at the end of the grid when sorted or filtered.
+
+**Alt+Delete** toggles a pending deletion (−) on an existing row or removes a new row draft. An existing row can only be deleted when every original column can be safely checked for changes. **Alt+C** saves additions, deletions, and cell edits together; **Alt+R** discards the drafts. If any operation fails, the attempt is rolled back and the drafts remain. Resolve row drafts before exporting results.
+
 Enter/double-click opens the cell editor. **Enter** stages the value locally. **Tab/Shift+Tab** stages it and moves to the next/previous editable cell. **Esc** cancels the current input. **Ctrl+U** clears and **Alt+Delete** sets NULL. **Alt+D** opens the separate editor, where **Ctrl+S** stages into the same draft.
 
 Draft values remain visible in the grid. **Alt+C** saves the entire batch to Oracle. Changes to multiple columns of a row use one UPDATE. The batch checks the original fetched editable values. A lock, conflict or constraint error rolls back the batch and preserves the drafts. **Alt+R** discards grid drafts and rolls back pending SQL. Successful commit/rollback refreshes the original result and preserves sorting, filter and widths.

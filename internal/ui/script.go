@@ -72,7 +72,7 @@ func (s *screen) showScriptReport() {
 	list.SetChangedFunc(func(index int, _, _ string, _ rune) { selectResult(index) })
 	selectResult(0)
 	use := s.clickable(tuivory.NewWidgetButton(s.tr("script_use_result")).SetSelectedFunc(func() {
-		if len(s.gridDrafts) != 0 {
+		if s.gridDraftCount() != 0 {
 			s.setStatus("grid_resolve_drafts")
 			return
 		}

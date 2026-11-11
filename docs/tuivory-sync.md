@@ -4,6 +4,12 @@
 
 LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 원칙을 제품 UI에 적용합니다. Tuivory의 가이드·견본·도구 개발은 별도 저장소와 Tuivory Jira에서 관리하고, LazyOra의 적용 작업은 LORA Jira에서 관리합니다.
 
+## LORA-84 · Tuivory Go v0.12.4
+
+공개 Go 모듈 태그 `go/v0.12.4`, 원본 커밋 `dd8dc51862c8a139d051cd8eddf412e041b593d9`, 모듈 체크섬 `h1:kqpqHrX7r3NrZBdq8KUJUzKIBk4eFOP5+vR9Mlq7OTs=`을 확인했습니다. [공개 릴리스](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.4)
+
+결과 그리드의 `SetRowEdited` 호출을 `SetRowDraft`로 교체했습니다. LazyOra는 검증된 ROWID와 새 행 초안 ID를 제공하며 Oracle 확인·저장·트랜잭션을 처리합니다. Tuivory가 추가·수정·삭제 표식과 삭제 행 강조를 그립니다. 스키마 데이터 탭의 행 편집은 별도 범위입니다.
+
 ## LORA-76 · Tuivory Go v0.12.3
 
 LazyOra v0.14.0은 공개 Go 모듈 v0.12.3을 사용합니다. Go 프록시에서 태그 `go/v0.12.3`, 원본 커밋 `fe6ce139039dc4e9df18de233fbd8f3ec64d537e`, 체크섬 `h1:k7qOV0WvWVg6hd2g0FYQpIB/CqvEuMuXriSQSsb4/Yw=`를 확인했습니다. [공개 릴리스](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.3)

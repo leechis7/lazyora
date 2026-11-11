@@ -11,7 +11,7 @@ func (s *screen) requestReconnect(config oracle.Config) {
 	if s.busy || s.reconnectDialog != nil {
 		return
 	}
-	if len(s.gridDrafts) != 0 && !s.transactionUncertain {
+	if s.gridDraftCount() != 0 && !s.transactionUncertain {
 		s.setStatus("grid_resolve_drafts")
 		return
 	}

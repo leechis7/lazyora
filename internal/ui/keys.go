@@ -73,6 +73,9 @@ func (s *screen) key(event *tuivory.EventKey) *tuivory.EventKey {
 	if page == "about" {
 		return s.aboutKey(event)
 	}
+	if page == "grid_insert" {
+		return s.gridInsertKey(event)
+	}
 	if page == "grid_edit" {
 		return s.gridEditKey(event)
 	}

@@ -180,7 +180,7 @@ func (s *screen) showRoutineResults(result oracle.RoutineResult) {
 		list.AddItem(tuivory.Escape(label), count+" · "+s.tr("results_title"), 0, nil)
 	}
 	use := func() {
-		if len(s.gridDrafts) != 0 {
+		if s.gridDraftCount() != 0 {
 			s.setStatus("grid_resolve_drafts")
 			return
 		}

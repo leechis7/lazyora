@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+- LORA-85: Oracle 세션과 차단·대기 관계를 조회하고, 권한 및 대상 재확인 후 차단 세션 종료를 요청합니다.
+- LORA-85: Browse Oracle sessions and blocking relationships, and terminate a blocker after rechecking permissions and identity.
+
 ## [0.15.0] - 2026-11-11
 
 - LORA-87: 분할선 클릭 또는 단축키로 스키마·결과 창을 접고 이전 크기로 복원합니다.

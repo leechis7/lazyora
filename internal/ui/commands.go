@@ -48,6 +48,7 @@ var commands = []command{
 	{"connect", "connect", menuSession, []binding{{"Alt+L", tuivory.KeyRune, tuivory.ModAlt, 'l'}}},
 	{"commit", "commit", menuSession, []binding{{"Alt+C", tuivory.KeyRune, tuivory.ModAlt, 'c'}}},
 	{"rollback", "rollback", menuSession, []binding{{"Alt+R", tuivory.KeyRune, tuivory.ModAlt, 'r'}}},
+	{"session_browser", "session_browser", menuSession, nil},
 	{"pending_work", "pending_work", menuSession, nil},
 	{"output_toggle", "output_toggle", menuSession, nil},
 	{"execute", "execute", menuExecute, []binding{{"F9", tuivory.KeyF9, 0, 0}, {"Ctrl+Enter", tuivory.KeyEnter, tuivory.ModCtrl, 0}, {"Alt+Enter", tuivory.KeyEnter, tuivory.ModAlt, 0}, {"Shift+F9", tuivory.KeyF9, tuivory.ModShift, 0}}},
@@ -150,6 +151,8 @@ func (s *screen) commandEnabled(id string) bool {
 		return false
 	}
 	switch id {
+	case "session_browser":
+		return s.connected && !s.busy && !s.workerClosed && !s.transactionUncertain
 	case "schema_compare":
 		return !s.busy && len(s.compareConnections()) >= 2
 	case "workspaces", "workspace_new", "workspace_close":
@@ -251,6 +254,8 @@ func (s *screen) invoke(id string) {
 	switch id {
 	case "schema_compare":
 		s.showSchemaCompare()
+	case "session_browser":
+		s.showSessionBrowser()
 	case "guide":
 		s.showGuide()
 	case "release_history":

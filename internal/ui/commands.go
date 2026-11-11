@@ -39,6 +39,8 @@ var commands = []command{
 	{"copy_preview", "copy_preview", menuEdit, nil},
 	{"table_edit_load", "table_edit_load", menuEdit, nil},
 	{"grid_edit", "grid_edit", menuEdit, []binding{{"Alt+D", tuivory.KeyRune, tuivory.ModAlt, 'd'}}},
+	{"grid_insert", "grid_insert", menuEdit, []binding{{"Alt+Insert", tuivory.KeyInsert, tuivory.ModAlt, 0}}},
+	{"grid_delete", "grid_delete", menuEdit, []binding{{"Alt+Delete", tuivory.KeyDelete, tuivory.ModAlt, 0}}},
 	{"grid_inline", "grid_inline", menuEdit, nil},
 	{"find", "find", menuEdit, []binding{{"Ctrl+F", tuivory.KeyCtrlF, 0, 0}}},
 	{"find_next", "find_next", menuEdit, []binding{{"F3", tuivory.KeyF3, 0, 0}}},
@@ -165,9 +167,16 @@ func (s *screen) commandEnabled(id string) bool {
 		return s.maximized == ""
 	case "collapse_schema", "collapse_results":
 		return s.maximized == "" && s.inlineEdit == nil && (id != "collapse_schema" || s.browser != nil)
+	case "grid_insert":
+		return s.canChangeGridRows() && s.resultBrowser.source.CanInsertRow()
+	case "grid_delete":
+		row, ok := s.selectedGridSourceRow()
+		source := s.resultBrowser.source
+		return s.canChangeGridRows() && ok && (row < 0 || source.EditID != 0 && source.EditCanDelete && row < len(source.EditRowIDs))
 	case "grid_edit", "grid_inline":
-		row, col := s.table.GetSelection()
-		return !s.busy && s.connected && !s.transactionUncertain && s.table.HasFocus() && row > 0 && row <= len(s.resultBrowser.visible) && s.resultBrowser.source.CanEditColumn(s.resultSourceColumn(col))
+		row, ok := s.selectedGridSourceRow()
+		_, col := s.table.GetSelection()
+		return !s.busy && s.connected && !s.transactionUncertain && s.table.HasFocus() && ok && (s.canEditGridCell(row, s.resultSourceColumn(col)) || id == "grid_edit" && row < 0 && s.resultBrowser.source.CanInsertRow())
 
 	case "cell_detail":
 		return !s.busy && s.table.HasFocus() && len(s.resultRows) > 0
@@ -280,6 +289,10 @@ func (s *screen) invoke(id string) {
 		s.resizePanelsCommand()
 	case "collapse_schema", "collapse_results":
 		s.togglePanelCollapse(id == "collapse_schema")
+	case "grid_insert":
+		s.showGridInsert(0)
+	case "grid_delete":
+		s.toggleGridDelete()
 	case "grid_inline":
 		s.startInlineEdit(nil)
 	case "grid_edit":

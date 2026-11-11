@@ -46,6 +46,13 @@ func (s *screen) showGridEdit() {
 		return
 	}
 	index := s.resultBrowser.visible[row-1]
+	if index < 0 {
+		s.showGridInsert(index)
+		return
+	}
+	if !s.canEditGridCell(index, col) {
+		return
+	}
 	old := s.displayedGridCell(index, col)
 	old.Text = editInputText(old)
 	s.editChange = oracle.EditChange{ID: source.EditID, Row: index, Column: col, Text: old.Text, Null: old.Null}

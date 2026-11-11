@@ -17,9 +17,25 @@ type resultPresentation struct {
 type resultSource struct{ owner *screen }
 
 func (r resultSource) Len() int { return len(r.owner.resultRows) }
+func (s *screen) gridViewRowID(index int) string {
+	if index >= 0 && index < len(s.resultBrowser.visible) {
+		logical := s.resultBrowser.visible[index]
+		if logical < 0 {
+			return "new:" + strconv.Itoa(-logical)
+		}
+		if ids := s.resultBrowser.source.EditRowIDs; logical < len(ids) && ids[logical] != "" {
+			return "row:" + ids[logical]
+		}
+	}
+	return strconv.Itoa(index + 1)
+}
+
 func (r resultSource) IndexOf(id string) int {
+	if n, ok := r.owner.resultBrowser.rowIDs[id]; ok && n < r.Len() {
+		return n
+	}
 	n, err := strconv.Atoi(id)
-	if err != nil || n < 1 || n > r.Len() {
+	if err != nil || n < 1 || n > r.Len() || r.owner.gridViewRowID(n-1) != id {
 		return -1
 	}
 	return n - 1
@@ -32,7 +48,7 @@ func (r resultSource) Row(n int) tuivory.GridRecord {
 	for c, v := range r.owner.resultRows[n] {
 		cells[strconv.Itoa(c)] = v
 	}
-	return tuivory.GridRecord{ID: strconv.Itoa(n + 1), Cells: cells}
+	return tuivory.GridRecord{ID: r.owner.gridViewRowID(n), Cells: cells}
 }
 func (s *screen) prepareResultGrid() {
 	p := s.grid.presentation
@@ -48,7 +64,8 @@ func (s *screen) prepareResultGrid() {
 			}
 			columns[c] = tuivory.GridColumn{ID: strconv.Itoa(c), Label: label, Width: max(1, s.grid.widths[c]-2), Editable: true}
 		}
-		model, err := tuivory.NewGrid(columns, resultSource{s})
+		source := resultSource{s}
+		model, err := tuivory.NewGrid(columns, source)
 		if err != nil {
 			panic(err)
 		}
@@ -58,14 +75,14 @@ func (s *screen) prepareResultGrid() {
 		}
 		model.SetEditOptions(tuivory.GridEditOptions{Enabled: true, AllowNull: true,
 			Prepare: func(row tuivory.GridRecord, col tuivory.GridColumn) (tuivory.GridValue, bool) {
-				r, errR := strconv.Atoi(row.ID)
+				r := source.IndexOf(row.ID) + 1
 				c, errC := strconv.Atoi(col.ID)
-				if errR != nil || errC != nil || !s.connected || s.busy || s.transactionUncertain ||
+				if errC != nil || !s.connected || s.busy || s.transactionUncertain ||
 					r < 1 || r > len(s.resultBrowser.visible) || c < 0 || c >= len(s.resultHeaders) {
 					return tuivory.GridValue{}, false
 				}
 				index, sourceCol := s.resultBrowser.visible[r-1], s.resultSourceColumn(c)
-				if !s.resultBrowser.source.CanEditColumn(sourceCol) {
+				if !s.canEditGridCell(index, sourceCol) {
 					return tuivory.GridValue{}, false
 				}
 				cell := s.displayedGridCell(index, sourceCol)
@@ -74,7 +91,7 @@ func (s *screen) prepareResultGrid() {
 		p = &resultPresentation{model: model, view: view}
 		s.grid.presentation = p
 		model.SetCellInfo(func(row tuivory.GridRecord, col tuivory.GridColumn) tuivory.GridCellInfo {
-			r, _ := strconv.Atoi(row.ID)
+			r := source.IndexOf(row.ID) + 1
 			c, _ := strconv.Atoi(col.ID)
 			info := tuivory.GridCellInfo{Display: gridPreview(row.Cells[col.ID]), HasDisplay: true}
 			if r > 0 && r <= len(s.resultValues) && c < len(s.resultValues[r-1]) {
@@ -88,17 +105,24 @@ func (s *screen) prepareResultGrid() {
 			info.State.Edited = s.isEditedCell(r, c)
 			return info
 		})
-		// Published v0.11.0 separates the aggregate gutter marker from cell
-		// colors. Supply identities; the SDK owns marker rendering and styling.
-		model.SetRowEdited(func(row tuivory.GridRecord) bool {
-			r, _ := strconv.Atoi(row.ID)
-			for c := range s.resultHeaders {
-				if s.isEditedCell(r, c) {
-					return true
+		model.SetRowDraft(func(id string) tuivory.GridRowDraft {
+			r := source.IndexOf(id)
+			if r >= 0 && r < len(s.resultBrowser.visible) {
+				logical := s.resultBrowser.visible[r]
+				if logical < 0 {
+					return tuivory.GridRowAdded
+				}
+				if s.gridRowPendingDelete(logical) {
+					return tuivory.GridRowDeleted
 				}
 			}
-			return false
-		})
+			for c := range s.resultHeaders {
+				if s.isEditedCell(r+1, c) {
+					return tuivory.GridRowModified
+				}
+			}
+			return tuivory.GridRowNormal
+		}, true)
 	}
 	model := p.model
 	options, _ := tuivory.GridPreset("data")
@@ -115,7 +139,7 @@ func (s *screen) prepareResultGrid() {
 	model.Labels = map[string]string{"editing": s.tr("grid_inline_editing")}
 	_ = p.view.SetPalette(s.resultPalette())
 	row, col := s.table.GetSelection()
-	model.Focus(strconv.Itoa(row), strconv.Itoa(col))
+	model.Focus(s.gridViewRowID(row-1), strconv.Itoa(col))
 	model.Top, model.Left = s.table.GetOffset()
 	for c, width := range s.grid.widths {
 		id := strconv.Itoa(c)
@@ -124,7 +148,7 @@ func (s *screen) prepareResultGrid() {
 	}
 	if s.resultSelection.active {
 		a := s.resultSelection
-		model.SelectRange(tuivory.GridRange{AnchorRow: strconv.Itoa(a.anchorRow), AnchorColumn: strconv.Itoa(a.anchorCol), EndRow: strconv.Itoa(a.endRow), EndColumn: strconv.Itoa(a.endCol)})
+		model.SelectRange(tuivory.GridRange{AnchorRow: s.gridViewRowID(a.anchorRow - 1), AnchorColumn: strconv.Itoa(a.anchorCol), EndRow: s.gridViewRowID(a.endRow - 1), EndColumn: strconv.Itoa(a.endCol)})
 	} else {
 		if _, editing := model.EditSession(); !editing {
 			model.Handle("cancel", 1)
@@ -144,9 +168,9 @@ func (s *screen) resultGridEvent(e tuivory.GridEvent) {
 	s.table.SetOffset(geo.Top, geo.Left)
 	if model.SelectionMode() == "range" {
 		a := model.SelectedRange()
-		ar, _ := strconv.Atoi(a.AnchorRow)
+		ar := (resultSource{s}).IndexOf(a.AnchorRow) + 1
 		ac, _ := strconv.Atoi(a.AnchorColumn)
-		er, _ := strconv.Atoi(a.EndRow)
+		er := (resultSource{s}).IndexOf(a.EndRow) + 1
 		ec, _ := strconv.Atoi(a.EndColumn)
 		s.resultSelection = resultSelection{anchorRow: ar, anchorCol: ac, endRow: er, endCol: ec, active: ar > 0 && er > 0}
 	} else if model.SelectionMode() == "row" {

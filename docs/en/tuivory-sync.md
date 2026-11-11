@@ -2,6 +2,12 @@
 
 [한국어](../tuivory-sync.md) | **English** · [UI style rules](ui-style.md)
 
+## LORA-84 · Tuivory Go v0.12.4
+
+Verified the public Go tag `go/v0.12.4`, commit `dd8dc51862c8a139d051cd8eddf412e041b593d9`, and module checksum `h1:kqpqHrX7r3NrZBdq8KUJUzKIBk4eFOP5+vR9Mlq7OTs=`. [Public release](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.4)
+
+The results grid replaces `SetRowEdited` with `SetRowDraft`. LazyOra supplies verified ROWIDs and draft IDs and owns Oracle verification, saves, and transactions. Tuivory renders the addition, modification, and deletion markers and dims pending deletions. Schema data tab editing remains separate.
+
 ## LORA-76 · Tuivory Go v0.12.3
 
 LazyOra v0.14.0 uses the public Go module v0.12.3. The Go proxy resolves tag `go/v0.12.3` to commit `fe6ce139039dc4e9df18de233fbd8f3ec64d537e` with checksum `h1:k7qOV0WvWVg6hd2g0FYQpIB/CqvEuMuXriSQSsb4/Yw=`. [Public release](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.3)

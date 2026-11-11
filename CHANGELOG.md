@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+- LORA-84: ROWID가 검증된 단일 테이블 결과에서 행 추가·삭제 초안을 만들고, 기존 셀 수정과 함께 커밋하거나 롤백합니다.
+- LORA-84: Stage row additions and deletions in verified single-table ROWID results, and commit or roll them back alongside cell edits.
+
 ## [0.16.0] - 2026-11-11
 
 - LORA-85: Oracle 세션과 차단·대기 관계를 조회하고, 권한 및 대상 재확인 후 차단 세션 종료를 요청합니다.

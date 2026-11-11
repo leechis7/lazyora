@@ -28,8 +28,9 @@ func (s *screen) isEditedCell(row, col int) bool {
 	if row < 1 || row > len(s.resultBrowser.visible) {
 		return false
 	}
-	_, changed := s.gridDrafts[s.editedCellIdentity(s.resultBrowser.source, s.resultBrowser.visible[row-1], s.resultSourceColumn(col))]
-	return changed
+	index := s.resultBrowser.visible[row-1]
+	_, changed := s.gridDrafts[s.editedCellIdentity(s.resultBrowser.source, index, s.resultSourceColumn(col))]
+	return changed && !s.gridRowPendingDelete(index)
 }
 func (s *screen) editedCellStyle() tuivory.Style {
 	return s.tuivoryStyles().EditedStyle()
@@ -67,6 +68,10 @@ func editInputText(cell oracle.Cell) string {
 // Main-grid activation is an editing request. Keep unavailable cells in place
 // instead of opening a details popup that resembles the separate editor.
 func (s *screen) editSelectedResultCell() {
+	if row, ok := s.selectedGridSourceRow(); ok && row < 0 && s.canChangeGridRows() {
+		s.showGridInsert(row)
+		return
+	}
 	if !s.startInlineEdit(nil) && !s.busy {
 		s.setStatus("grid_inline_unavailable")
 	}
@@ -100,7 +105,7 @@ func (s *screen) startInlineEdit(first *rune) bool {
 func (s *screen) inlineTargetValid(e *inlineCellEditor) bool {
 	return e != nil && s.inlineEdit == e && s.grid.presentation != nil &&
 		s.grid.presentation.model == e.model && s.connected && !s.transactionUncertain &&
-		s.resultBrowser.source.EditID == e.change.ID && s.resultBrowser.source.CanEditColumn(e.change.Column) &&
+		s.resultBrowser.source.EditID == e.change.ID && s.canEditGridCell(e.change.Row, e.change.Column) &&
 		s.editedCellIdentity(s.resultBrowser.source, e.change.Row, e.change.Column) == e.key
 }
 

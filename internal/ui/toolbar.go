@@ -336,6 +336,12 @@ func (s *screen) resultNavigationHint(viewKeys string) string {
 	if s.resultBrowser.source.EditID != 0 {
 		text = shortcut("grid_edit") + " " + s.tr("grid_edit_short") + " | " + text
 	}
+	if s.resultBrowser.source.CanInsertRow() {
+		text = shortcut("grid_insert") + " + | " + text
+	}
+	if s.resultBrowser.source.EditCanDelete && s.resultBrowser.source.EditID != 0 || len(s.gridInserts) != 0 {
+		text = shortcut("grid_delete") + " - | " + text
+	}
 	return text
 }
 

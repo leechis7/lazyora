@@ -20,6 +20,8 @@ type job struct {
 	sessionTarget oracle.SessionEntry
 	gridRefresh   *gridRefreshState
 	edits         []oracle.EditChange
+	deletes       []oracle.EditDelete
+	inserts       []oracle.EditInsert
 	identity      settings.Connection
 	cell          oracle.Cell
 	pageID        uint64
@@ -67,6 +69,10 @@ type screen struct {
 	aboutFocus                       tuivory.Primitive
 	inlineEdit                       *inlineCellEditor
 	gridDrafts                       map[editedCellKey]oracle.EditChange
+	gridDeletes                      map[int]oracle.EditDelete
+	gridInserts                      map[int]oracle.EditInsert
+	gridInsertSeq                    int
+	gridInsert                       *gridInsertDialog
 	editChange                       oracle.EditChange
 	editForm                         *tuivory.WidgetForm
 	editInfo                         *tuivory.WidgetTextView
@@ -475,11 +481,19 @@ func (s *screen) submit(j job) {
 		s.setStatus("connect_first")
 		return
 	}
-	if len(s.gridDrafts) != 0 {
+	if s.gridDraftCount() != 0 {
 		switch j.action {
 		case "commit", "exit_commit":
 			for _, edit := range s.gridDrafts {
-				j.edits = append(j.edits, edit)
+				if !s.gridRowPendingDelete(edit.Row) {
+					j.edits = append(j.edits, edit)
+				}
+			}
+			for _, row := range s.addedGridIndices() {
+				j.inserts = append(j.inserts, s.gridInserts[row])
+			}
+			for _, deletion := range s.gridDeletes {
+				j.deletes = append(j.deletes, deletion)
 			}
 			slices.SortFunc(j.edits, func(a, b oracle.EditChange) int {
 				if a.Row != b.Row {
@@ -640,7 +654,7 @@ func (s *screen) worker() {
 		case "plan":
 			plan, err = session.Explain(j.ctx, j.text, j.bindings)
 		case "commit", "exit_commit":
-			err = session.ApplyEdits(j.ctx, j.edits)
+			err = session.ApplyGridChanges(j.ctx, j.edits, j.deletes, j.inserts)
 			if err == nil {
 				err = session.Finish(true)
 			}
@@ -1027,7 +1041,7 @@ func (s *screen) renderGrid(result oracle.Result) {
 		s.refreshGridHeader(col)
 	}
 	s.table.SetSelectionChangedFunc(func(_, _ int) { s.highlightResults(); s.refreshResultPosition() })
-	if len(s.gridDrafts) > 0 {
+	if s.gridDraftCount() > 0 {
 		s.repaintEditedCells()
 	}
 	s.highlightResults()

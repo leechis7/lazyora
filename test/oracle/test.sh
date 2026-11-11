@@ -11,4 +11,4 @@ set -a
 set +a
 export LAZYORA_INTEGRATION=1
 cd ../..
-go test ./test/oracle -run '^TestOracle(Free|Program|Workflow|Plan|Export|FullExport|Reconnect|Output|Routine|Completion|Format|Definition|Relations|Pages|LOBs|GridEdit|GridBatchEdit|SelectRowIDEdit|ConnectionProbe|Wide|Network|ObjectPreview|RelatedRows|SchemaCompare|ActualPlan|SessionBrowser)Integration$' -v -count=1 -timeout=10m
+go test ./test/oracle -run '^TestOracle(Free|Program|Workflow|Plan|Export|FullExport|Reconnect|Output|Routine|Completion|Format|Definition|Relations|Pages|LOBs|GridEdit|GridBatchEdit|SelectRowIDEdit|ConnectionProbe|Wide|Network|ObjectPreview|RelatedRows|SchemaCompare|ActualPlan|SessionBrowser|GridRowDraft)Integration$' -v -count=1 -timeout=10m

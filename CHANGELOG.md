@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-11-11
+
 - LORA-84: ROWID가 검증된 단일 테이블 결과에서 행 추가·삭제 초안을 만들고, 기존 셀 수정과 함께 커밋하거나 롤백합니다.
 - LORA-84: Stage row additions and deletions in verified single-table ROWID results, and commit or roll them back alongside cell edits.
 
@@ -417,7 +419,8 @@ v0.0.1의 F2 접속은 Alt+L, F4 실행은 F9, F5 커밋은 Alt+C, F6 롤백은 
 - 이 릴리스 시점에는 실제 CentOS 7.4, 구형 Oracle 및 SID 접속 검증이 완료되지 않았습니다. 이후 호환성 수정은 `Unreleased`에 기록합니다.
 - 한 번에 SQL 한 문장 또는 BEGIN/DECLARE 블록 하나를 실행합니다. 여러 문장 일괄 실행, SQL*Plus 스크립트, 바인드 입력, DBMS_OUTPUT 출력은 지원하지 않습니다.
 
-[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.16.0...dev
+[Unreleased]: https://github.com/leechis7/lazyora/compare/v0.17.0...dev
+[0.17.0]: https://github.com/leechis7/lazyora/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/leechis7/lazyora/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/leechis7/lazyora/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/leechis7/lazyora/compare/v0.13.0...v0.14.0

@@ -33,9 +33,15 @@ func (s *screen) rebuildPanels() {
 		s.queryLayout.AddItem(s.resultGrid(), 0, 1, true)
 	default:
 		s.sizing.result = s.resultGrid()
-		s.queryLayout.AddItem(s.editor, 0, 2, true).AddItem(s.sizing.horizontal, 1, 0, false).AddItem(s.sizing.result, 0, 3, false)
+		s.queryLayout.AddItem(s.editor, 0, 2, true).AddItem(s.sizing.horizontal, 1, 0, false)
+		if !s.resultCollapsed() {
+			s.queryLayout.AddItem(s.sizing.result, 0, 3, false)
+		}
 		if s.browser != nil && !s.browserHidden {
-			s.mainLayout.AddItem(s.browserPanel, 0, 1, false).AddItem(s.sizing.vertical, 1, 0, false)
+			if !s.schemaCollapsed() {
+				s.mainLayout.AddItem(s.browserPanel, 0, 1, false)
+			}
+			s.mainLayout.AddItem(s.sizing.vertical, 1, 0, false)
 		}
 	}
 	if !s.fullscreen {
@@ -68,7 +74,7 @@ func (s *screen) togglePanelMode(fullscreen bool) {
 	s.rebuildPanels()
 	if s.maximized == "results" {
 		s.app.SetFocus(s.table)
-	} else if s.maximized == "sql" {
+	} else if s.maximized == "sql" || (s.resultCollapsed() && s.table.HasFocus()) {
 		s.app.SetFocus(s.editor)
 	}
 }
@@ -77,6 +83,8 @@ func (s *screen) focusPanel(panel string) {
 	if s.maximized != "" {
 		s.maximized = panel
 		s.rebuildPanels()
+	} else if panel == "results" && s.resultCollapsed() {
+		s.togglePanelCollapse(false)
 	}
 	if panel == "results" {
 		s.app.SetFocus(s.table)
@@ -94,8 +102,11 @@ func (s *screen) cyclePanel(reverse bool) {
 		}
 		return
 	}
-	panels := []tuivory.Primitive{s.editor, s.table}
-	if s.browser != nil && !s.browserHidden {
+	panels := []tuivory.Primitive{s.editor}
+	if !s.resultCollapsed() {
+		panels = append(panels, s.table)
+	}
+	if s.browserVisible() {
 		panels = append(panels, s.browserUsers, s.browserTypes, s.browserSearch, s.browser)
 	}
 	step := 1
@@ -154,7 +165,11 @@ func (s *screen) togglePanelFullscreen(panel string) {
 		s.focusPanel(panel)
 		return
 	}
-	s.focusPanel(panel)
+	if s.maximized == "" && panel == "results" && s.resultCollapsed() {
+		s.app.SetFocus(s.table)
+	} else {
+		s.focusPanel(panel)
+	}
 	s.toggleFullscreen()
 }
 

@@ -20,7 +20,7 @@ func menuSection(id string) string {
 		return "mg_code"
 	case "table_edit_load", "grid_edit", "grid_inline":
 		return "mg_data_edit"
-	case "fullscreen_sql", "fullscreen_results", "focus_toggle", "context_menu", "maximize", "resize_panels":
+	case "fullscreen_sql", "fullscreen_results", "focus_toggle", "context_menu", "maximize", "resize_panels", "collapse_schema", "collapse_results":
 		return "mg_windows"
 	case "browser", "browser_user", "browser_type", "browser_search", "browser_refresh", "describe", "quick_describe":
 		return "mg_schema"

@@ -108,6 +108,8 @@ var messages = map[string][2]string{
 	"browser_search":               {"Filter objects", "객체 검색"},
 	"browser_search_empty":         {"No matching objects", "일치하는 객체가 없습니다"},
 	"resize_panels":                {"Resize split panels", "패널 크기 조절"},
+	"collapse_schema":              {"Collapse / restore schema pane", "스키마 창 접기·복원"},
+	"collapse_results":             {"Collapse / restore results pane", "결과 창 접기·복원"},
 	"resize_panels_hint":           {"Resize: Up/Down SQL height | Left/Right schema width | Home Reset | Enter/Esc Finish", "크기 조절: ↑↓ SQL 높이 | ←→ 스키마 너비 | Home 초기화 | Enter/Esc 끝내기"},
 	"resize_panels_done":           {"Panel sizes adjusted for this workspace.", "이 작업 공간의 패널 크기를 조절했습니다."},
 	"resize_reset":                 {"Reset", "초기화"},

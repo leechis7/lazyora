@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+- LORA-87: 분할선 클릭 또는 단축키로 스키마·결과 창을 접고 이전 크기로 복원합니다.
+- LORA-87: Click a divider or use a shortcut to collapse or restore the schema and results panes.
+
 - LORA-83: SQL 한 문장을 실행하고 확인된 커서의 실제 계획과 단계별 실행 통계를 조회합니다.
 - LORA-83: Execute one statement and view the verified cursor's actual plan and row-source statistics.
 

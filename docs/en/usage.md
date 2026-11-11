@@ -20,6 +20,8 @@ F2 maximizes/restores the SQL editor; Shift+F2 or F12 controls results. Repeat t
 
 Drag splitters, or use Alt+F8 / View → Panel sizing. Up/Down changes SQL height; Left/Right changes schema width; Home resets and Enter/Esc finishes. Ratios are retained per workspace during the process and survive layout restoration.
 
+Click a divider to collapse its pane, then click again to restore the previous size. **Alt+F7** toggles the schema pane and **Alt+F9** toggles the results pane. Both commands are also in **View**. Dragging still resizes. Tab skips collapsed panes, and collapsing the focused pane moves focus to the SQL editor. Leaving fullscreen restores the previous collapse state.
+
 ## Connections and workspaces
 
 Startup opens the connection dialog except in demo mode. Alt+L reopens it. Enter alias, host, port, username/password and Service Name or SID. Ctrl+Enter/Alt+Enter/Alt+C or Connect connects. The alias is first; saved connections are selected separately from editable fields. Save/Ctrl+S persists profile data, not an implicit connection. Password storage is off by default; [encrypted credentials](credentials.md) are optional.

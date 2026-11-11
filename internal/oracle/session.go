@@ -68,7 +68,10 @@ func Open(ctx context.Context, config Config) (*Session, error) {
 	if err != nil {
 		return nil, err
 	}
-	db.SetMaxOpenConns(1)
+	// The session browser borrows a separate connection so admin SQL
+	// cannot commit or otherwise disturb the pinned editor transaction.
+	db.SetMaxOpenConns(2)
+	db.SetMaxIdleConns(0)
 	conn, err := db.Conn(ctx)
 	if err != nil {
 		db.Close()

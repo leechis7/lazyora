@@ -17,6 +17,7 @@ import (
 )
 
 type job struct {
+	sessionTarget oracle.SessionEntry
 	gridRefresh   *gridRefreshState
 	edits         []oracle.EditChange
 	identity      settings.Connection
@@ -221,6 +222,7 @@ type screen struct {
 	objectTable                              *tuivory.Table
 	objectWorkspace                          *objectWorkspace
 	schemaCompare                            *schemaCompareView
+	sessionBrowser                           *sessionBrowserView
 	foreignRows                              *foreignRowView
 	objectSplit                              tuivory.SplitState
 	objectColumns                            []oracle.Column
@@ -539,6 +541,8 @@ func (s *screen) worker() {
 		var definition oracle.ObjectDefinition
 		var foreignKeys oracle.ForeignKeyLinks
 		var schemaStructure oracle.SchemaStructure
+		var sessionList oracle.SessionList
+		var sessionMarked bool
 		var object oracle.Object
 		var source string
 		var arguments []oracle.Argument
@@ -662,6 +666,10 @@ func (s *screen) worker() {
 			foreignKeys, err = session.ForeignKeys(j.ctx, j.object)
 		case "related_rows":
 			result, err = session.RelatedRows(j.ctx, j.related.link, j.related.headers, j.related.row, objectPreviewStep)
+		case "session_list":
+			sessionList, err = session.ListSessions(j.ctx)
+		case "session_kill":
+			sessionMarked, err = session.TerminateBlockingSession(j.ctx, j.sessionTarget)
 		case "schema_compare":
 			schemaStructure, err = session.ReadSchemaStructure(j.ctx, j.text)
 		case "source":
@@ -760,6 +768,19 @@ func (s *screen) worker() {
 			}
 			if j.action == "related_rows" {
 				s.acceptRelatedRows(j.related, result, err)
+				return
+			}
+			if j.action == "session_list" || j.action == "session_kill" {
+				if err != nil {
+					s.setStatus("error", err)
+				} else {
+					s.setStatus("session_action_done")
+				}
+				if j.action == "session_list" {
+					s.acceptSessions(sessionList, err)
+				} else {
+					s.acceptSessionTermination(sessionMarked, err)
+				}
 				return
 			}
 			if j.action == "schema_compare" {

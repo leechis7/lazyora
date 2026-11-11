@@ -4,6 +4,24 @@ import "fmt"
 
 // SQL, database object names and server errors keep their original content.
 var messages = map[string][2]string{
+	"session_browser":      {"Session browser", "세션 브라우저"},
+	"session_refresh":      {"Refresh", "새로고침"},
+	"session_kill":         {"Terminate blocker", "차단 세션 종료"},
+	"session_current":      {"Current session", "현재 세션"},
+	"session_waiter_count": {"Blocking %d", "%d개 세션 차단 중"},
+	"session_summary":      {"%s · %d visible sessions. Select a row for details.", "%s · 조회된 세션 %d개. 항목을 선택하면 상세를 볼 수 있습니다."},
+	"session_truncated":    {"Only the first 500 sessions are shown; blockers and waiters are listed first.", "최대 500개를 표시하며 차단 및 대기 세션이 먼저 나옵니다."},
+	"session_read_failed":  {"Could not read sessions. Check SELECT access to GV$SESSION.", "세션을 조회하지 못했습니다. GV$SESSION 조회 권한을 확인하세요."},
+	"session_detail":       {"Instance:SID,Serial: %s\nUser: %s\nStatus: %s\nType: %s\nBlocked by: %s\nWaiters: %d\nWait event: %s\nSQL ID: %s\nMachine: %s\nProgram: %s", "인스턴스:SID,Serial: %s\n사용자: %s\n상태: %s\n유형: %s\n차단 세션: %s\n대기 세션 수: %d\n대기 이벤트: %s\nSQL ID: %s\n호스트: %s\n프로그램: %s"},
+	"session_kill_warning": {"Connection: %s\n\nTerminating this session disconnects the user and rolls back its uncommitted work. Lock release may take time.", "접속: %s\n\n종료하면 대상 사용자의 연결이 끊기고 미커밋 작업이 롤백됩니다. 잠금 해제까지 시간이 걸릴 수 있습니다."},
+	"session_kill_target":  {"User: %s\nInstance:SID,Serial: %s\nWaiters at refresh: %d", "사용자: %s\n인스턴스:SID,Serial: %s\n마지막 조회 시 대기 세션 수: %d"},
+	"session_kill_running": {"Rechecking the blocker and requesting termination…", "차단 관계를 다시 확인하고 종료를 요청합니다…"},
+	"session_kill_changed": {"Termination skipped: the blocker changed, is protected, or privileges changed. Refresh to check.", "종료하지 않았습니다. 차단 상태나 권한이 바뀌었거나 보호된 세션입니다. 새로고침으로 확인하세요."},
+	"session_kill_failed":  {"The termination outcome could not be confirmed. Refresh before retrying.", "종료 결과를 확인하지 못했습니다. 다시 시도하기 전에 새로고침하세요."},
+	"session_kill_marked":  {"Oracle marked the session for termination. Refresh to check its state.", "Oracle이 세션을 종료 대상으로 표시했습니다. 새로고침으로 상태를 확인하세요."},
+	"session_kill_sent":    {"Oracle accepted the termination request. Refresh to check its state.", "Oracle이 종료 요청을 처리했습니다. 새로고침으로 상태를 확인하세요."},
+	"session_action_done":  {"Session browser updated.", "세션 브라우저를 갱신했습니다."},
+
 	"schema_compare":               {"Compare table structures", "테이블 구조 비교"},
 	"schema_compare_start":         {"Compare", "비교"},
 	"schema_compare_left":          {"Left connection", "왼쪽 접속"},

@@ -60,6 +60,12 @@ Type in Alt+I object search to filter names immediately within the selected user
 Enter opens details; F4 describes the object at the cursor. Applying or compiling source is DDL.
 Execute → Run procedure/function supports routine arguments. Step debugging is not implemented.
 
+## Session browser
+
+**Session → Session browser** shows the Oracle sessions and blocking relationships visible to the active connection. Blockers and waiters appear first, with up to 500 entries. Select a session with the arrow keys or mouse and use Tab to move between the details and buttons. Choose **Refresh** for the latest snapshot.
+
+Reading sessions requires access to `GV$SESSION`. **Terminate blocker** is available only when the connection has `ALTER SYSTEM` and the target account can be verified as unprotected. The current session, background sessions, and Oracle-maintained accounts are protected. Older databases without account protection metadata are read-only. Verify the connection, user and session ID in the confirmation dialog, which defaults to **Cancel**. LazyOra rechecks the session and blocking relationship immediately before execution. Oracle rolls back the target's uncommitted work, so locks may take time to clear. The SQL editor's transaction stays separate.
+
 ## Browse, copy and inspect results
 
 F6 switches SQL/results. Alt+F8 or View opens panel sizing: Up/Down changes SQL height, Left/Right changes schema width, Home resets, and Enter/Esc finishes. Splitters can also be dragged with the mouse. Use arrows and PgUp/PgDn in the result grid.

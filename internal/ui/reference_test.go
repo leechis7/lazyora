@@ -4,6 +4,7 @@ import (
 	"fmt"
 	resources "lazyora"
 	"lazyora/internal/appinfo"
+	"slices"
 	"strings"
 	"testing"
 
@@ -51,7 +52,10 @@ func TestReferenceGuidesFocusResizeThemeAndRunningSQL(t *testing.T) {
 				s.cancel = func() { cancelled = true }
 				s.invoke("guide")
 				r := s.reference
-				if r == nil || len(r.articles) != 8 || !strings.Contains(r.articles[0].body, "SELECT sysdate") {
+				if r == nil || len(r.articles) == 0 || !strings.Contains(r.articles[0].body, "SELECT sysdate") ||
+					!slices.ContainsFunc(r.articles, func(article referenceArticle) bool {
+						return article.title == s.tr("session_browser") && strings.Contains(article.body, "GV$SESSION")
+					}) {
 					t.Fatal("localized offline guide missing")
 				}
 				_, root := s.pages.GetFrontPage()

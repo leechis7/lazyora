@@ -32,6 +32,12 @@ Alt+J opens connection workspaces. N adds one, Enter or Switch confirms selectio
 
 Select Development, Test or Production under Environment (Alt+E). The next field accepts a custom label of up to 24 characters, saved with the connection profile. A marker such as `[PROD · Seoul]` appears in the connection path, SQL editor title and risky SQL or script confirmation. It works without relying on color and does not change database privileges. Existing profiles keep their classification. `[TX]` marks pending work and `!` an uncertain transaction outcome. Closing a workspace checks its unsaved SQL/source and pending transaction. Ctrl+Q checks all workspaces in order; cancellation preserves remaining workspaces.
 
+## Session browser
+
+**Session → Session browser** shows the Oracle sessions and blocking relationships visible to the active connection. Blockers and waiters appear first, with up to 500 entries. Select a session with the arrow keys or mouse and use Tab to move between the details and buttons. Choose **Refresh** for the latest snapshot.
+
+Reading sessions requires access to `GV$SESSION`. **Terminate blocker** is available only when the connection has `ALTER SYSTEM` and the target account can be verified as unprotected. The current session, background sessions, and Oracle-maintained accounts are protected. Older databases without account protection metadata are read-only. Verify the connection, user and session ID in the confirmation dialog, which defaults to **Cancel**. LazyOra rechecks the session and blocking relationship immediately before execution. Oracle rolls back the target's uncommitted work, so locks may take time to clear. The SQL editor's transaction stays separate.
+
 ## SQL files and tabs
 
 Ctrl+N creates a tab, Ctrl+O opens a file, Ctrl+S saves and Ctrl+Shift+S saves as. Ctrl+W closes; closing the last tab keeps an empty tab. Ctrl+Tab/Ctrl+Shift+Tab or Alt+PgDn/Alt+PgUp cycles tabs; mouse selection works too. The SQL Tabs menu can rename **fileless** tabs with 1–40 characters. Once saved to a file, its filename takes precedence. Running SQL locks tab changes to keep result ownership clear.

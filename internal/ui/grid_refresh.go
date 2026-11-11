@@ -46,7 +46,7 @@ func (s *screen) refreshTransactionGrid(action string) bool {
 		filter: view.filter, sortColumn: view.sortColumn, sorted: view.sorted, descending: view.descending}
 	if row > 0 && row <= len(view.visible) {
 		index := view.visible[row-1]
-		if index < len(source.EditRowIDs) {
+		if index >= 0 && index < len(source.EditRowIDs) {
 			state.rowID = source.EditRowIDs[index]
 		}
 	}
@@ -78,7 +78,7 @@ func (s *screen) acceptTransactionGridRefresh(j job, result oracle.Result, err e
 		row := min(max(1, state.row), len(s.resultRows))
 		if state.rowID != "" {
 			for index, sourceRow := range s.resultBrowser.visible {
-				if sourceRow < len(result.EditRowIDs) && result.EditRowIDs[sourceRow] == state.rowID {
+				if sourceRow >= 0 && sourceRow < len(result.EditRowIDs) && result.EditRowIDs[sourceRow] == state.rowID {
 					row = index + 1
 					break
 				}

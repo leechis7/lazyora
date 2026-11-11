@@ -27,6 +27,7 @@ type editSnapshot struct {
 	rows        [][]Cell
 	rowIDs      []string
 	rowIDColumn int
+	canDelete   bool
 }
 
 // EditableTable creates its own unambiguous single-table query. Arbitrary SQL,
@@ -84,7 +85,7 @@ func (s *Session) EditableTable(ctx context.Context, object Object) (Result, err
 	if len(result.Rows) == 1000 {
 		result.Truncated = true
 	}
-	snapshot := &editSnapshot{object: object, columns: columns}
+	snapshot := &editSnapshot{object: object, columns: columns, canDelete: true}
 	s.editSequence++
 	snapshot.id = s.editSequence
 	result.Columns = result.Columns[1:]
@@ -101,9 +102,11 @@ func (s *Session) EditableTable(ctx context.Context, object Object) (Result, err
 	s.edit = snapshot
 	result.EditID = snapshot.id
 	result.EditObject = object
+	result.EditCanDelete = snapshot.canDelete
 	result.EditRowIDs = append([]string(nil), snapshot.rowIDs...)
 	for _, column := range columns {
 		result.EditColumnNames = append(result.EditColumnNames, column.Name)
+		result.EditColumnTypes = append(result.EditColumnTypes, column.DataType)
 	}
 	return result, nil
 }
@@ -182,17 +185,17 @@ func (s *Session) EditID() uint64 {
 
 // ApplyEdit retains the single-cell entry point for Oracle consumers.
 func (s *Session) ApplyEdit(ctx context.Context, change EditChange) error {
-	return s.applyEdits(ctx, []EditChange{change}, false)
+	return s.applyEdits(ctx, []EditChange{change}, nil, nil, false)
 }
 
 // ApplyEdits validates one snapshot, updates each physical row once, and
 // rolls back the entire batch on failure without undoing earlier SQL work.
 func (s *Session) ApplyEdits(ctx context.Context, changes []EditChange) error {
-	return s.applyEdits(ctx, changes, true)
+	return s.applyEdits(ctx, changes, nil, nil, true)
 }
 
-func (s *Session) applyEdits(ctx context.Context, changes []EditChange, retryable bool) (err error) {
-	if len(changes) == 0 {
+func (s *Session) applyEdits(ctx context.Context, changes []EditChange, deletes []EditDelete, inserts []EditInsert, retryable bool) (err error) {
+	if len(changes) == 0 && len(deletes) == 0 && len(inserts) == 0 {
 		return nil
 	}
 	if s.finishErr != nil {
@@ -203,9 +206,10 @@ func (s *Session) applyEdits(ctx context.Context, changes []EditChange, retryabl
 		return errors.New("editable result expired; reload table data")
 	}
 	type rowUpdate struct {
-		row  int
-		sets []string
-		args []any
+		row    int
+		delete bool
+		sets   []string
+		args   []any
 	}
 	updates := make(map[string]*rowUpdate)
 	var rowIDs []string
@@ -241,10 +245,28 @@ func (s *Session) applyEdits(ctx context.Context, changes []EditChange, retryabl
 		row.sets = append(row.sets, quoteIdentifier(col.Name)+" = "+editBind(":"+bind, col.DataType))
 		row.args = append(row.args, sql.Named(bind, value))
 	}
+	for _, change := range deletes {
+		if change.ID != snap.id || change.Row < 0 || change.Row >= len(snap.rowIDs) || !snap.canDelete {
+			return errors.New("row deletion needs a current snapshot of every original column")
+		}
+		id := snap.rowIDs[change.Row]
+		if _, exists := updates[id]; exists {
+			return errors.New("conflicting changes for the same row")
+		}
+		updates[id] = &rowUpdate{row: change.Row, delete: true}
+		rowIDs = append(rowIDs, id)
+	}
+	preparedInserts, err := snap.prepareInserts(inserts)
+	if err != nil {
+		return err
+	}
 	sort.Strings(rowIDs)
 	s.ClosePage()
 	table := QualifiedObject(snap.object)
 	journal := "UPDATE " + table + " (grid edit batch)"
+	if len(deletes)+len(inserts) != 0 {
+		journal = fmt.Sprintf("Grid edit %s (%d cell updates, %d deletes, %d inserts)", table, len(changes), len(deletes), len(inserts))
+	}
 	var affected int64
 	var nonce [8]byte
 	if _, err = rand.Read(nonce[:]); err != nil {
@@ -302,7 +324,11 @@ func (s *Session) applyEdits(ctx context.Context, changes []EditChange, retryabl
 		if err != nil {
 			return fmt.Errorf("could not lock row without waiting; retry after the other transaction finishes: %w", err)
 		}
-		statement := "UPDATE " + table + " SET " + strings.Join(row.sets, ", ") + " WHERE " + strings.Join(conditions, " AND ")
+		statement := "UPDATE " + table + " SET " + strings.Join(row.sets, ", ")
+		if row.delete {
+			statement = "DELETE FROM " + table
+		}
+		statement += " WHERE " + strings.Join(conditions, " AND ")
 		exec, e := s.tx.ExecContext(ctx, statement, args...)
 		if e != nil {
 			return fmt.Errorf("row %d: %w", row.row+1, e)
@@ -313,6 +339,20 @@ func (s *Session) applyEdits(ctx context.Context, changes []EditChange, retryabl
 		}
 		if count != 1 {
 			return ErrEditConflict
+		}
+		affected++
+	}
+	for i, insert := range preparedInserts {
+		exec, e := s.tx.ExecContext(ctx, insert.statement, insert.args...)
+		if e != nil {
+			return fmt.Errorf("new row %d: %w", i+1, e)
+		}
+		count, e := exec.RowsAffected()
+		if e != nil {
+			return e
+		}
+		if count != 1 {
+			return errors.New("insert did not affect exactly one row")
 		}
 		affected++
 	}

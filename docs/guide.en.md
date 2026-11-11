@@ -80,6 +80,10 @@ If clipboard delivery fails, use Edit → Copy preview and your terminal's selec
 
 Execute `SELECT t.ROWID, t.* FROM table_name t WHERE ...` with F9 to edit verified original columns. The verified physical ROWID is hidden in the grid and retained internally; commit or roll back explicitly. Joins, expressions and ambiguous results stay read-only.
 
+In the results grid, **Alt+Insert** or **Edit → Add row draft** starts a new row. Choose **Database default**, **NULL**, or **Value** for each column, then press Ctrl+S to stage it. Unspecified columns use Oracle defaults. A verified empty result can also accept new rows. Select a new row (+) and press Enter to edit its draft again. New drafts stay at the end of the grid when sorted or filtered.
+
+**Alt+Delete** toggles a pending deletion (−) on an existing row or removes a new row draft. An existing row can only be deleted when every original column can be safely checked for changes. **Alt+C** saves additions, deletions, and cell edits together; **Alt+R** discards the drafts. If any operation fails, the attempt is rolled back and the drafts remain. Resolve row drafts before exporting results.
+
 ## Export, explain plans and output
 
 Alt+W exports CSV, TSV, XLSX or INSERT SQL.

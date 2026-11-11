@@ -58,6 +58,10 @@ func (s *screen) exportDataset(scope int) (exportdata.Dataset, error) {
 const exportFullScope = 3
 
 func (s *screen) showExport() {
+	if len(s.gridInserts)+len(s.gridDeletes) != 0 {
+		s.setStatus("grid_row_export_blocked")
+		return
+	}
 	if s.busy || s.exportForm != nil || len(s.resultHeaders) == 0 {
 		return
 	}

@@ -109,8 +109,8 @@ func (s *screen) showFavorites() {
 		if index < 0 {
 			return
 		}
-		if s.busy || len(s.gridDrafts) != 0 {
-			if len(s.gridDrafts) != 0 {
+		if s.busy || s.gridDraftCount() != 0 {
+			if s.gridDraftCount() != 0 {
 				s.setStatus("grid_resolve_drafts")
 			}
 			return

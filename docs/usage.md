@@ -131,11 +131,19 @@ F5 또는 실행 메뉴의 **스크립트 실행**으로 선택 영역(없으면
 
 ## 예상 실행 계획
 
-**Ctrl+E / 실행 → 실행 계획**은 선택 SQL(없으면 커서 문장)의 예상 계획을 조회합니다. [Toad의 Ctrl+E 배정](https://support.quest.com/toad-for-oracle/kb/4297441/explain-plan-with-ctrl-e-gives-error-ora-00933-sql-command-not-properly-ended)을 따릅니다. SELECT/WITH/INSERT/UPDATE/DELETE/MERGE 한 문장을 지원하며 원 SQL을 실행하지 않습니다. 바인드가 있으면 기존 입력창을 사용합니다. 실제 실행 통계·캐시 커서 계획은 제공하지 않으며, 바인드가 든 예상 계획은 실제 실행 계획과 다를 수 있습니다.
+**Ctrl+E / 실행 → 실행 계획**은 선택 SQL(없으면 커서 문장)의 예상 계획을 조회합니다. [Toad의 Ctrl+E 배정](https://support.quest.com/toad-for-oracle/kb/4297441/explain-plan-with-ctrl-e-gives-error-ora-00933-sql-command-not-properly-ended)을 따릅니다. SELECT/WITH/INSERT/UPDATE/DELETE/MERGE 한 문장을 지원하며 원 SQL을 실행하지 않습니다. 바인드가 있으면 기존 입력창을 사용합니다. 바인드가 든 예상 계획은 실제 실행 계획과 다를 수 있습니다.
 
 트리에서 방향키·클릭으로 Operation/Options·객체·Cost·Rows를 선택하고 Enter로 펼치거나 접습니다. Tab으로 상세 조건식(Access/Filter)·원문 영역과 닫기 버튼으로 이동합니다. Ctrl+C는 상세를 복사하고 Esc는 닫습니다. 편집기와 기존 조회 결과를 유지합니다.
 
 접속 계정에 **PLAN_TABLE 및 INSERT/SELECT/DELETE 권한**이 필요합니다. 없는 경우 오류를 표시하며 테이블을 자동 생성하지 않습니다. 같은 세션·트랜잭션에서 임의의 statement_id로 계획을 만들고 해당 행만 지웁니다. 기존 DML을 커밋·롤백하지 않고 앱의 미커밋 실행 기록에도 계획용 작업은 추가하지 않습니다. Oracle의 EXPLAIN PLAN은 DML이며 병렬 DML 사용 조건 등에 영향을 줄 수 있습니다. [Oracle SQL Reference](https://docs.oracle.com/en/database/oracle/oracle-database/18/sqlrf/EXPLAIN-PLAN.html)와 [Oracle 10g 계획 안내](https://docs.oracle.com/cd/B12037_01/server.101/b10752/ex_plan.htm)를 참고하세요. Oracle 10g에 있는 컬럼을 사용하고 Oracle Free에서 미커밋 DML 보존을 검증했습니다.
+
+### 실제 실행 계획
+
+**실행 → 실행 후 실제 계획 수집**은 선택 SQL 또는 커서 문장(SELECT/WITH/INSERT/UPDATE/DELETE/MERGE)을 한 번 실행하고 SQL ID와 자식 커서 번호로 확인한 계획을 표시합니다. 기존 바인드 입력, 위험 SQL 확인, 커밋·롤백 규칙을 따릅니다. **최근 실제 실행 계획**은 같은 접속에서 마지막으로 수집한 화면을 다시 엽니다. 재접속하면 그 기록을 지웁니다.
+
+단계를 선택하면 실제 처리 행 수, 시작 횟수, 버퍼 접근, 디스크 읽기와 소요 시간을 확인할 수 있습니다. Oracle이 통계를 수집하지 않았다면 계획만 표시합니다. 필요할 때 `GATHER_PLAN_STATISTICS` 힌트를 사용하세요. 조회가 여러 페이지에 걸치면 수집 시점의 첫 페이지만 반영되므로 전체 실행 통계로 해석하지 마세요.
+
+수집 모드는 실행을 구분하기 위해 SQL 앞에 임시 주석을 붙여 별도 커서를 만듭니다. 일반 실행과 하드 파싱 비용이나 실행 계획이 달라질 수 있습니다. 권한 부족·캐시에서 계획을 찾지 못한 경우에도 SQL 실행 결과는 그대로 유지됩니다. 계획 조회에는 `V$SQL`과 `V$SQL_PLAN_STATISTICS_ALL`의 SELECT 권한이 필요합니다. [Oracle 실행 통계 문서](https://docs.oracle.com/en/database/oracle/oracle-database/21/tgsql/optimizer-statistics-concepts.html)
 
 ## 조회 결과 내보내기
 
@@ -411,6 +419,8 @@ ROWID와 **조회된 편집 가능 컬럼**의 원래 값을 비교합니다. �
 ## 패널 크기 조절
 
 SQL·결과 사이 가로선과 스키마·오른쪽 영역 사이 세로선을 마우스로 드래그합니다. **보기 → 패널 크기 조절 / Alt+F8**에서는 ↑↓로 SQL 높이, ←→로 스키마 너비를 조절하고 Home으로 기본 비율을 복원합니다. Enter/Esc로 조절을 끝냅니다. 비율은 이번 실행의 접속 작업 공간별로 유지하며 최대화·전체화면을 복원해도 보존합니다. 작은 터미널에서는 최소 크기를 화면에 맞춰 줄입니다.
+
+분할선을 클릭하면 해당 창을 접고, 다시 클릭하면 이전 크기로 복원합니다. **Alt+F7**은 스키마 창, **Alt+F9**는 결과 창을 접거나 복원합니다. **보기** 메뉴에서도 실행할 수 있습니다. 드래그는 계속 크기를 조절합니다. 접힌 창은 Tab 순환에서 제외되며, 포커스가 있던 창을 접으면 SQL 편집기로 이동합니다. 전체화면에서 돌아오면 이전 접기 상태가 유지됩니다.
 
 ## 스키마 객체 실시간 검색
 

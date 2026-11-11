@@ -93,3 +93,56 @@ func TestPanelResizeFooterShowsOneHintAndWorkingModeButtons(t *testing.T) {
 		}
 	}
 }
+
+func TestPanelCollapseClickKeyboardAndFullscreenPreserveWork(t *testing.T) {
+	s, terminal := resultScreen(t)
+	s.rebuildPanels()
+	draw := func() {
+		terminal.SetSize(120, 35)
+		s.mainLayout.SetRect(0, 0, 120, 35)
+		s.mainLayout.Draw(terminal)
+	}
+	draw()
+	_, _, schemaWidth, _ := s.browserPanel.GetRect()
+	_, _, _, resultHeight := s.table.GetRect()
+	s.table.Select(2, 1)
+	s.app.SetFocus(s.table)
+	s.key(tuivory.NewEventKey(tuivory.KeyF9, 0, tuivory.ModAlt))
+	draw()
+	if !s.resultCollapsed() || !s.editor.HasFocus() || len(s.jobs) != 0 {
+		t.Fatal("result toggle failed or executed SQL")
+	}
+	s.togglePanelFullscreen("results")
+	draw()
+	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
+	draw()
+	if !s.resultCollapsed() || !s.editor.HasFocus() {
+		t.Fatal("fullscreen did not restore the collapsed result state")
+	}
+	click := func(divider *tuivory.Box) {
+		x, y, w, h := divider.GetRect()
+		x, y = x+w/2, y+h/2
+		if !s.resizePanelMouse(tuivory.NewEventMouse(x, y, tuivory.Button1, 0), tuivory.MouseLeftDown) ||
+			!s.resizePanelMouse(tuivory.NewEventMouse(x, y, 0, 0), tuivory.MouseLeftUp) ||
+			!s.resizePanelMouse(tuivory.NewEventMouse(x, y, 0, 0), tuivory.MouseLeftClick) {
+			t.Fatal("divider click was not consumed")
+		}
+		draw()
+	}
+	click(s.sizing.horizontal)
+	if s.resultCollapsed() {
+		t.Fatal("result divider did not restore the pane")
+	}
+	s.app.SetFocus(s.browser)
+	click(s.sizing.vertical)
+	if s.browserVisible() || !s.editor.HasFocus() {
+		t.Fatal("schema divider did not collapse or transfer focus")
+	}
+	click(s.sizing.vertical)
+	_, _, gotSchema, _ := s.browserPanel.GetRect()
+	_, _, _, gotResult := s.table.GetRect()
+	row, col := s.table.GetSelection()
+	if !s.browserVisible() || gotSchema != schemaWidth || gotResult != resultHeight || row != 2 || col != 1 {
+		t.Fatal("restoration changed size or selected cell")
+	}
+}

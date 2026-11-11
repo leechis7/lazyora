@@ -270,7 +270,7 @@ func TestMenuCommandsRespectContextAndNeverAliasScriptToCommit(t *testing.T) {
 	s := demoBrowserScreen(t)
 	s.connected = true
 	s.key(tuivory.NewEventKey(tuivory.KeyRune, 'x', tuivory.ModAlt))
-	if s.menuList == nil || s.menuList.GetItemCount() != 9 {
+	if s.menuList == nil || s.menuIndex != menuExecute {
 		t.Fatal("execute menu not opened")
 	}
 	text, _ := s.menuList.GetItemText(1)

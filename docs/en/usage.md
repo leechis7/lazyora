@@ -20,6 +20,8 @@ F2 maximizes/restores the SQL editor; Shift+F2 or F12 controls results. Repeat t
 
 Drag splitters, or use Alt+F8 / View → Panel sizing. Up/Down changes SQL height; Left/Right changes schema width; Home resets and Enter/Esc finishes. Ratios are retained per workspace during the process and survive layout restoration.
 
+Click a divider to collapse its pane, then click again to restore the previous size. **Alt+F7** toggles the schema pane and **Alt+F9** toggles the results pane. Both commands are also in **View**. Dragging still resizes. Tab skips collapsed panes, and collapsing the focused pane moves focus to the SQL editor. Leaving fullscreen restores the previous collapse state.
+
 ## Connections and workspaces
 
 Startup opens the connection dialog except in demo mode. Alt+L reopens it. Enter alias, host, port, username/password and Service Name or SID. Ctrl+Enter/Alt+Enter/Alt+C or Connect connects. The alias is first; saved connections are selected separately from editable fields. Save/Ctrl+S persists profile data, not an implicit connection. Password storage is off by default; [encrypted credentials](credentials.md) are optional.
@@ -119,6 +121,10 @@ Rerunning a query with drafts prompts for discard. **Cancel** is selected by def
 Alt+W saves CSV/TSV/XLSX/INSERT. **Fetched results** export retained data. **All DB results** reruns the original SELECT with its original IN binds and streams rows without the grid row cap; it can observe newer data. It does not rerun routines/scripts as a substitute. Large output uses buffered streaming; cancellation/errors preserve an existing destination. INSERT export creates SQL text and never executes it. Choose appropriate formats for LOB/type/Excel limits.
 
 Ctrl+E shows the **estimated** plan, not actual runtime statistics and not execution of the target DML. Plan objects/privileges and Oracle version can limit availability.
+
+Choose **Execute → Execute and capture actual plan** to run one selected or cursor statement (SELECT/WITH/INSERT/UPDATE/DELETE/MERGE) once and display the plan for its verified SQL ID and child cursor. Bind prompts, risky SQL confirmation, and transaction rules still apply. **Last actual plan** reopens the last capture for the connection. Reconnecting clears that capture.
+
+Select a step for actual rows, starts, buffers, disk reads, and elapsed time. Oracle can provide a plan without row-source statistics. Use the `GATHER_PLAN_STATISTICS` hint when needed. A paged result reflects the initial fetch at capture time. The capture adds a temporary SQL comment to isolate its cursor, which can change parse overhead or the plan relative to normal execution. Missing permissions or an unavailable cached plan do not undo the executed SQL. Plan capture requires SELECT on `V$SQL` and `V$SQL_PLAN_STATISTICS_ALL`. [Oracle optimizer statistics](https://docs.oracle.com/en/database/oracle/oracle-database/21/tgsql/optimizer-statistics-concepts.html)
 
 Alt+P opens DBMS_OUTPUT; enable it with Alt+E in that view or the Session menu **before** F9/F5. Completed statements collect output, including an attempt after SQL errors. Server buffering is 1,000,000 bytes; collection is capped at 2,000 lines/256 KiB per statement and separately time-limited to three seconds. The display retains the latest 8,000 lines/1 MiB; omitted output is marked and remaining server output is discarded to prevent mixing into later statements. Older Oracle line/buffer limits still apply.
 

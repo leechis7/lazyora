@@ -6,7 +6,7 @@
 
 LazyOra v0.14.0 uses the public Go module v0.12.3. The Go proxy resolves tag `go/v0.12.3` to commit `fe6ce139039dc4e9df18de233fbd8f3ec64d537e` with checksum `h1:k7qOV0WvWVg6hd2g0FYQpIB/CqvEuMuXriSQSsb4/Yw=`. [Public release](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.3)
 
-The existing schema details `SplitView` uses the updated module. [LORA-87](https://leechis7.atlassian.net/browse/LORA-87) tracks wiring the new collapse API to the main schema and results panels, menus and shortcuts.
+The existing schema details `SplitView` uses the updated module. In v0.15.0, [LORA-87](https://leechis7.atlassian.net/browse/LORA-87) uses public SplitControl and SplitGlyph to connect divider clicks and Alt+F7 / Alt+F9 to collapse and restore the main schema and results panes.
 
 ## LORA-50 · Tuivory Go v0.12.2
 

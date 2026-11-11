@@ -8,7 +8,7 @@ LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 �
 
 LazyOra v0.14.0은 공개 Go 모듈 v0.12.3을 사용합니다. Go 프록시에서 태그 `go/v0.12.3`, 원본 커밋 `fe6ce139039dc4e9df18de233fbd8f3ec64d537e`, 체크섬 `h1:k7qOV0WvWVg6hd2g0FYQpIB/CqvEuMuXriSQSsb4/Yw=`를 확인했습니다. [공개 릴리스](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.3)
 
-스키마 상세 화면의 기존 `SplitView`가 새 버전을 사용합니다. 새 접기 API를 기본 스키마·결과 창의 메뉴와 단축키에 연결하는 작업은 [LORA-87](https://leechis7.atlassian.net/browse/LORA-87)에서 진행합니다.
+스키마 상세 화면의 기존 `SplitView`가 새 버전을 사용합니다. [LORA-87](https://leechis7.atlassian.net/browse/LORA-87)은 v0.15.0에서 공개 SplitControl과 SplitGlyph로 기본 스키마·결과 창에 분할선 클릭과 Alt+F7·Alt+F9 접기·복원을 연결합니다.
 
 ## LORA-50 · Tuivory Go v0.12.2
 

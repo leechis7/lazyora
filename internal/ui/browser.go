@@ -39,6 +39,11 @@ func (s *screen) toggleBrowser() {
 	if s.browser == nil {
 		return
 	}
+	if s.schemaCollapsed() && !s.browserHidden && s.maximized == "" {
+		s.togglePanelCollapse(true)
+		s.app.SetFocus(s.browser)
+		return
+	}
 	s.browserHidden = !s.browserHidden
 	wasMaximized := s.maximized != ""
 	s.maximized = ""
@@ -46,6 +51,9 @@ func (s *screen) toggleBrowser() {
 	s.rebuildPanels()
 	if wasMaximized {
 		s.restorePanelOffsets()
+	}
+	if !s.browserHidden && s.schemaCollapsed() {
+		s.togglePanelCollapse(true)
 	}
 	if s.browserHidden {
 		if s.browserHasFocus() {
@@ -101,6 +109,9 @@ func (s *screen) showBrowserSelector(objectType bool) {
 			s.browserHidden = true
 		}
 		s.toggleBrowser()
+	}
+	if s.schemaCollapsed() {
+		s.togglePanelCollapse(true)
 	}
 	if objectType {
 		s.app.SetFocus(s.browserTypes)

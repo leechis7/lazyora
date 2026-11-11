@@ -2,14 +2,9 @@ package ui
 
 import (
 	"fmt"
-	"lazyora/internal/oracle"
 
 	"github.com/leechis7/tuivory/go"
 )
-
-func (s *screen) confirmSQL(text string, risk oracle.SQLRisk) {
-	s.confirmExecution(text, string(risk), s.submitSQL)
-}
 
 func (s *screen) confirmExecution(text, risk string, submit func(string)) {
 	message := s.tr("sql_risk_"+risk) + "\n\n" + s.tr("sql_risk_limits")

@@ -11,6 +11,7 @@ import (
 const MaxRows = 1000
 
 type Result struct {
+	ActualPlan      *ActualPlan
 	EditID          uint64
 	EditObject      Object
 	EditColumns     []bool   // nil: all columns in the explicit table-edit snapshot.
@@ -82,14 +83,14 @@ func Open(ctx context.Context, config Config) (*Session, error) {
 }
 
 func (s *Session) Execute(ctx context.Context, text string, bindings ...map[string]BindValue) (result Result, err error) {
-	return s.execute(ctx, text, false, bindings...)
+	return s.execute(ctx, text, false, "", bindings...)
 }
 
 func (s *Session) ExecutePaged(ctx context.Context, text string, bindings ...map[string]BindValue) (Result, error) {
-	return s.execute(ctx, text, true, bindings...)
+	return s.execute(ctx, text, true, "", bindings...)
 }
 
-func (s *Session) execute(ctx context.Context, text string, keepPage bool, bindings ...map[string]BindValue) (result Result, err error) {
+func (s *Session) execute(ctx context.Context, text string, keepPage bool, tag string, bindings ...map[string]BindValue) (result Result, err error) {
 	start := time.Now()
 	result = Result{Affected: -1}
 	if s.finishErr != nil {
@@ -112,6 +113,7 @@ func (s *Session) execute(ctx context.Context, text string, keepPage bool, bindi
 	if err != nil {
 		return result, err
 	}
+	statement = tag + statement
 	s.edit = nil
 	s.ClosePage()
 	s.clearLOBs()

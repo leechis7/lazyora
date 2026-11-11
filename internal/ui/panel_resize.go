@@ -5,12 +5,15 @@ import (
 )
 
 type panelSizing struct {
-	sql, schema          int
-	horizontal, vertical *tuivory.Box
-	result               tuivory.Primitive
-	drag                 string
-	keyboard             bool
-	keyboardFocus        tuivory.Primitive
+	sql, schema                  int
+	horizontal, vertical         *tuivory.Box
+	result                       tuivory.Primitive
+	resultControl, schemaControl tuivory.SplitControl
+	swallowClick                 bool
+	clickX, clickY               int
+	drag                         string
+	keyboard                     bool
+	keyboardFocus                tuivory.Primitive
 }
 
 func panelSize(total, percent, minimum int) int {
@@ -28,12 +31,14 @@ func (s *screen) initPanelSizing() {
 		box := s.newBox()
 		box.SetDrawFunc(func(screen tuivory.Screen, x, y, w, h int) (int, int, int, int) {
 			style := s.tuivoryStyles().SplitterStyle()
-			char := '│'
+			side, control := tuivory.SplitFirst, &s.sizing.schemaControl
 			if horizontal {
-				char = '─'
+				side, control = tuivory.SplitSecond, &s.sizing.resultControl
 			}
 			for py := y; py < y+h; py++ {
 				for px := x; px < x+w; px++ {
+					grip := px == x+w/2 && py == y+h/2
+					char := tuivory.SplitGlyph(horizontal, s.asciiDisplay(), grip, side, control.Collapsed())
 					screen.SetContent(px, py, char, nil, style)
 				}
 			}
@@ -44,7 +49,7 @@ func (s *screen) initPanelSizing() {
 	if s.sizing.horizontal == nil {
 		s.sizing.horizontal, s.sizing.vertical = divider(true), divider(false)
 		s.queryLayout.SetDrawFunc(func(_ tuivory.Screen, x, y, w, h int) (int, int, int, int) {
-			if s.maximized == "" {
+			if s.maximized == "" && !s.resultCollapsed() {
 				reserved := 3
 				if s.tabBar != nil {
 					reserved++
@@ -54,7 +59,7 @@ func (s *screen) initPanelSizing() {
 			return x, y, w, h
 		})
 		s.mainLayout.SetDrawFunc(func(_ tuivory.Screen, x, y, w, h int) (int, int, int, int) {
-			if s.maximized == "" && !s.browserHidden {
+			if s.maximized == "" && s.browserVisible() {
 				s.mainLayout.ResizeItem(s.browserPanel, panelSize(max(0, w-1), s.sizing.schema, 18), 0)
 			}
 			return x, y, w, h
@@ -101,40 +106,132 @@ func (s *screen) resizePanelKey(e *tuivory.EventKey) bool {
 	}
 	return true
 }
+func (s *screen) resultCollapsed() bool {
+	return s.sizing.resultControl.Collapsed() != tuivory.SplitNeither
+}
+
+func (s *screen) schemaCollapsed() bool {
+	return s.sizing.schemaControl.Collapsed() != tuivory.SplitNeither
+}
+
+func (s *screen) browserVisible() bool {
+	return s.browser != nil && !s.browserHidden && !s.schemaCollapsed()
+}
+
+// Keep the existing percentage-based workspace sizing. The SDK owns the
+// click-versus-drag gesture and the collapsed side.
+func (s *screen) splitGeometry(schema bool) (control *tuivory.SplitControl, side tuivory.SplitSide, spec tuivory.SplitSpec, state tuivory.SplitState, total, origin int) {
+	var percent, minimum int
+	if schema {
+		control, side = &s.sizing.schemaControl, tuivory.SplitFirst
+		percent, minimum = s.sizing.schema, 18
+		origin, _, total, _ = s.mainLayout.GetInnerRect()
+	} else {
+		control, side = &s.sizing.resultControl, tuivory.SplitSecond
+		percent, minimum = s.sizing.sql, 4
+		_, origin, _, total = s.queryLayout.GetInnerRect()
+		total -= 2
+		if s.tabBar != nil {
+			total--
+			origin++
+		}
+	}
+	minimum = max(1, min(minimum, (total-1)/2))
+	spec = tuivory.SplitSpec{FirstMin: minimum, SecondMin: minimum}
+	state.Preferred = panelSize(total-1, percent, minimum)
+	return
+}
+
+func (s *screen) togglePanelCollapse(schema bool) {
+	if s.mainLayout == nil || s.queryLayout == nil || s.maximized != "" || s.inlineEdit != nil || (schema && s.browser == nil) {
+		return
+	}
+	if schema && s.browserHidden {
+		s.browserHidden = false
+		s.rebuildPanels()
+		return
+	}
+	control, side, spec, state, total, _ := s.splitGeometry(schema)
+	if control.Toggle(spec, &state, total, side) {
+		s.applyPanelCollapse()
+	}
+}
+
+func (s *screen) applyPanelCollapse() {
+	if (s.resultCollapsed() && s.table.HasFocus()) || (s.schemaCollapsed() && s.browserHasFocus()) {
+		s.app.SetFocus(s.editor)
+	}
+	s.rebuildPanels()
+}
+
 func (s *screen) resizePanelMouse(event *tuivory.EventMouse, action tuivory.MouseAction) bool {
 	page, _ := s.pages.GetFrontPage()
-	if page != "main" || s.maximized != "" {
+	if page != "main" || s.maximized != "" || s.inlineEdit != nil {
+		s.sizing.resultControl.CancelPointer()
+		s.sizing.schemaControl.CancelPointer()
 		s.sizing.drag = ""
+		s.sizing.swallowClick = false
 		return false
 	}
 	x, y := event.Position()
+	if action == tuivory.MouseLeftClick || action == tuivory.MouseLeftDoubleClick {
+		swallow := s.sizing.swallowClick && x == s.sizing.clickX && y == s.sizing.clickY
+		s.sizing.swallowClick = false
+		return swallow
+	}
 	if action == tuivory.MouseLeftDown {
+		s.sizing.swallowClick = false
+		s.sizing.drag = ""
 		if s.sizing.horizontal != nil && s.sizing.horizontal.InRect(x, y) {
 			s.sizing.drag = "sql"
-		}
-		if !s.browserHidden && s.sizing.vertical != nil && s.sizing.vertical.InRect(x, y) {
+		} else if s.browser != nil && !s.browserHidden && s.sizing.vertical != nil && s.sizing.vertical.InRect(x, y) {
 			s.sizing.drag = "schema"
 		}
 	}
 	if s.sizing.drag == "" {
 		return false
 	}
-	if action == tuivory.MouseMove || action == tuivory.MouseLeftDown {
-		if s.sizing.drag == "sql" {
-			_, top, _, height := s.queryLayout.GetInnerRect()
-			reserved := 3
-			if s.tabBar != nil {
-				top++
-				reserved++
-			}
-			s.sizing.sql = max(10, min(90, 100*(y-top)/max(1, height-reserved)))
-		} else {
-			left, _, width, _ := s.mainLayout.GetInnerRect()
-			s.sizing.schema = max(10, min(70, 100*(x-left)/max(1, width-1)))
+	schema := s.sizing.drag == "schema"
+	control, side, spec, state, total, origin := s.splitGeometry(schema)
+	position, region := y-origin, s.queryLayout
+	if schema {
+		position, region = x-origin, s.mainLayout
+	}
+	kind := ""
+	switch action {
+	case tuivory.MouseLeftDown:
+		kind = "down"
+	case tuivory.MouseLeftUp:
+		kind = "up"
+	case tuivory.MouseMove:
+		kind = "move"
+		if event.Buttons()&tuivory.Button1 == 0 {
+			kind = "cancel"
 		}
 	}
-	if action == tuivory.MouseLeftUp || event.Buttons()&tuivory.Button1 == 0 && action == tuivory.MouseMove {
+	if kind == "" {
+		return true
+	}
+	if kind == "down" && control.Collapsed() == tuivory.SplitNeither {
+		*control = tuivory.SplitControl{}
+	}
+	before := control.Collapsed()
+	preferred := state.Preferred
+	handled := control.Pointer(spec, &state, total, position, region.InRect(x, y), kind, side)
+	if state.Preferred != preferred && total > 1 {
+		percent := 100 * state.Preferred / (total - 1)
+		if schema {
+			s.sizing.schema = max(10, min(70, percent))
+		} else {
+			s.sizing.sql = max(10, min(90, percent))
+		}
+	}
+	if !control.Captured() {
 		s.sizing.drag = ""
 	}
-	return true
+	if control.Collapsed() != before {
+		s.sizing.swallowClick, s.sizing.clickX, s.sizing.clickY = true, x, y
+		s.applyPanelCollapse()
+	}
+	return handled
 }

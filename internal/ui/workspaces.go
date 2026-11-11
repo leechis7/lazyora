@@ -387,6 +387,7 @@ func (s *screen) workspaceKey(e *tuivory.EventKey) *tuivory.EventKey {
 // or cached metadata from the old server, including results in inactive tabs.
 func (s *screen) clearConnectionResults() {
 	s.clearBindValues()
+	s.lastActualPlan, s.lastActualSQL = nil, ""
 	s.definitionCache = nil
 	s.definitionTrail = nil
 	s.cellValue = oracle.Cell{}

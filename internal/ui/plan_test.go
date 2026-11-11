@@ -29,3 +29,22 @@ func TestExplainKeyUsesCursorSQLAndPreservesResult(t *testing.T) {
 		t.Fatal("plan display modified results or DB")
 	}
 }
+
+func TestActualPlanCommandUsesExistingRiskConfirmation(t *testing.T) {
+	s := shortcutScreen(t)
+	s.editor.SetText("DELETE FROM items", false)
+	s.invoke("actual_plan_execute")
+	if s.sqlConfirmText == nil || len(s.jobs) != 0 {
+		t.Fatal("actual-plan command bypassed DML confirmation")
+	}
+	warningKey(s, tuivory.NewEventKey(tuivory.KeyLeft, 0, 0))
+	warningKey(s, tuivory.NewEventKey(tuivory.KeyEnter, 0, 0))
+	select {
+	case j := <-s.jobs:
+		if j.action != "execute" || !j.measurePlan || j.text != "DELETE FROM items" {
+			t.Fatal("approved measured statement changed")
+		}
+	default:
+		t.Fatal("approved statement was not queued")
+	}
+}

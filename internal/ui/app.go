@@ -26,6 +26,7 @@ type job struct {
 	related       *relatedRowQuery
 	schemaCompare *schemaCompareRun
 	compareSide   int
+	measurePlan   bool
 	completion    oracle.CompletionContext
 	refresh       bool
 	routine       oracle.Routine
@@ -123,6 +124,8 @@ type screen struct {
 	planTree               *tuivory.WidgetTreeView
 	planText               *tuivory.WidgetTextView
 	planFocus              tuivory.Primitive
+	lastActualPlan         *oracle.ActualPlan
+	lastActualSQL          string
 	bindForm               *tuivory.WidgetForm
 	bindSQL                string
 	bindValues             map[string]oracle.BindValue
@@ -619,7 +622,11 @@ func (s *screen) worker() {
 			session, err = oracle.Reconnect(j.ctx, session, j.config, j.resolution)
 			j.config.Password = ""
 		case "execute":
-			result, err = session.ExecutePaged(j.ctx, j.text, j.bindings)
+			if j.measurePlan {
+				result, err = session.ExecuteWithActualPlan(j.ctx, j.text, j.bindings)
+			} else {
+				result, err = session.ExecutePaged(j.ctx, j.text, j.bindings)
+			}
 		case "fetch_more":
 			result, err = session.FetchPage(j.ctx, j.pageID)
 		case "output_toggle":
@@ -867,6 +874,12 @@ func (s *screen) worker() {
 						}
 					} else {
 						s.setStatus("executed", result.Affected, result.Elapsed.Round(time.Millisecond))
+					}
+					if result.ActualPlan != nil {
+						s.lastActualPlan, s.lastActualSQL = result.ActualPlan, j.text
+						if !s.quitting {
+							s.showActualPlan()
+						}
 					}
 				case "commit":
 					s.clearGridDrafts()

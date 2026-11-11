@@ -53,6 +53,8 @@ var commands = []command{
 	{"execute", "execute", menuExecute, []binding{{"F9", tuivory.KeyF9, 0, 0}, {"Ctrl+Enter", tuivory.KeyEnter, tuivory.ModCtrl, 0}, {"Alt+Enter", tuivory.KeyEnter, tuivory.ModAlt, 0}, {"Shift+F9", tuivory.KeyF9, tuivory.ModShift, 0}}},
 	{"script", "script", menuExecute, []binding{{"F5", tuivory.KeyF5, 0, 0}}},
 	{"plan", "plan", menuExecute, []binding{{"Ctrl+E", tuivory.KeyCtrlE, 0, 0}}},
+	{"actual_plan_execute", "actual_plan_execute", menuExecute, nil},
+	{"actual_plan_last", "actual_plan_last", menuExecute, nil},
 	{"script_report", "script_report", menuView, nil},
 	{"parse", "parse_unavailable", menuExecute, []binding{{"Ctrl+F9", tuivory.KeyF9, tuivory.ModCtrl, 0}}},
 	{"debug_continue", "debug_unavailable", menuExecute, []binding{{"F11", tuivory.KeyF11, 0, 0}}},
@@ -67,6 +69,8 @@ var commands = []command{
 	{"context_menu", "context_menu", menuView, []binding{{"Shift+F10", tuivory.KeyF10, tuivory.ModShift, 0}}},
 	{"maximize", "maximize", menuView, nil},
 	{"resize_panels", "resize_panels", menuView, []binding{{"Alt+F8", tuivory.KeyF8, tuivory.ModAlt, 0}}},
+	{"collapse_schema", "collapse_schema", menuView, []binding{{"Alt+F7", tuivory.KeyF7, tuivory.ModAlt, 0}}},
+	{"collapse_results", "collapse_results", menuView, []binding{{"Alt+F9", tuivory.KeyF9, tuivory.ModAlt, 0}}},
 	{"browser", "schemas", menuView, []binding{{"Alt+B", tuivory.KeyRune, tuivory.ModAlt, 'b'}}},
 	{"browser_search", "browser_search", menuView, []binding{{"Alt+I", tuivory.KeyRune, tuivory.ModAlt, 'i'}}},
 	{"browser_user", "browser_user", menuView, []binding{{"Alt+U", tuivory.KeyRune, tuivory.ModAlt, 'u'}}},
@@ -156,6 +160,8 @@ func (s *screen) commandEnabled(id string) bool {
 		return !s.busy && s.document != nil && s.document.Path == "" && len(s.tabs) > 0
 	case "resize_panels":
 		return s.maximized == ""
+	case "collapse_schema", "collapse_results":
+		return s.maximized == "" && s.inlineEdit == nil && (id != "collapse_schema" || s.browser != nil)
 	case "grid_edit", "grid_inline":
 		row, col := s.table.GetSelection()
 		return !s.busy && s.connected && !s.transactionUncertain && s.table.HasFocus() && row > 0 && row <= len(s.resultBrowser.visible) && s.resultBrowser.source.CanEditColumn(s.resultSourceColumn(col))
@@ -208,8 +214,10 @@ func (s *screen) commandEnabled(id string) bool {
 		return s.browser != nil
 	case "connect":
 		return !s.busy
-	case "execute", "script", "plan", "commit", "rollback":
+	case "execute", "script", "plan", "actual_plan_execute", "commit", "rollback":
 		return s.connected && !s.busy
+	case "actual_plan_last":
+		return s.connected && !s.busy && s.lastActualPlan != nil
 	case "script_report":
 		return !s.busy && len(s.scriptReport.Steps) > 0
 	case "cancel":
@@ -265,6 +273,8 @@ func (s *screen) invoke(id string) {
 		s.loadEditTable()
 	case "resize_panels":
 		s.resizePanelsCommand()
+	case "collapse_schema", "collapse_results":
+		s.togglePanelCollapse(id == "collapse_schema")
 	case "grid_inline":
 		s.startInlineEdit(nil)
 	case "grid_edit":
@@ -317,6 +327,10 @@ func (s *screen) invoke(id string) {
 		s.showExport()
 	case "plan":
 		s.explainSQL()
+	case "actual_plan_execute":
+		s.runSQL(true)
+	case "actual_plan_last":
+		s.showActualPlan()
 	case "script":
 		s.executeScript()
 	case "script_report":

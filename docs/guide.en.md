@@ -60,6 +60,8 @@ Type in Alt+I object search to filter names immediately within the selected user
 Enter opens details; F4 describes the object at the cursor. Applying or compiling source is DDL.
 Execute → Run procedure/function supports routine arguments. Step debugging is not implemented.
 
+**Tools → Compare table data** compares tables in two Oracle connections using shared keys such as `EMP_ID, DEPT_ID`. Keys must be unique and non-NULL. View one-sided rows and changed columns; Enter shows details and Esc cancels both reads. This read-only comparison supports up to 5,000 rows per table and never presents an incomplete comparison.
+
 ## Session browser
 
 **Session → Session browser** shows the Oracle sessions and blocking relationships visible to the active connection. Blockers and waiters appear first, with up to 500 entries. Select a session with the arrow keys or mouse and use Tab to move between the details and buttons. Choose **Refresh** for the latest snapshot.

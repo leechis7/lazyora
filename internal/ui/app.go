@@ -29,6 +29,7 @@ type job struct {
 	related       *relatedRowQuery
 	schemaCompare *schemaCompareRun
 	compareSide   int
+	compareKeys   []string
 	measurePlan   bool
 	completion    oracle.CompletionContext
 	refresh       bool
@@ -555,6 +556,7 @@ func (s *screen) worker() {
 		var definition oracle.ObjectDefinition
 		var foreignKeys oracle.ForeignKeyLinks
 		var schemaStructure oracle.SchemaStructure
+		var compareData oracle.TableData
 		var sessionList oracle.SessionList
 		var sessionMarked bool
 		var object oracle.Object
@@ -684,6 +686,8 @@ func (s *screen) worker() {
 			sessionList, err = session.ListSessions(j.ctx)
 		case "session_kill":
 			sessionMarked, err = session.TerminateBlockingSession(j.ctx, j.sessionTarget)
+		case "data_compare":
+			compareData, err = session.ReadTableData(j.ctx, j.text, j.compareKeys)
 		case "schema_compare":
 			schemaStructure, err = session.ReadSchemaStructure(j.ctx, j.text)
 		case "source":
@@ -795,6 +799,10 @@ func (s *screen) worker() {
 				} else {
 					s.acceptSessionTermination(sessionMarked, err)
 				}
+				return
+			}
+			if j.action == "data_compare" {
+				j.schemaCompare.acceptData(j.compareSide, compareData, err)
 				return
 			}
 			if j.action == "schema_compare" {

@@ -90,6 +90,14 @@ Open two Oracle connection workspaces and choose **Tools → Compare table struc
 
 The comparison uses metadata visible to each connection. Privileges and changes made between reads can affect the results. LazyOra withholds the diff if either read fails or exceeds 12,000 metadata rows or 8 MiB of defaults. **Esc** cancels both reads. The comparison preserves existing SQL results and pending transactions and does not execute DDL.
 
+### Compare table data across two connections
+
+Open two Oracle workspaces, then choose **Tools → Compare table data** and enter a table name or `schema.table` for each connection. Enter shared key columns separated by commas, for example `EMP_ID, DEPT_ID`. Double-quote case-sensitive identifiers. Key values must be unique and non-NULL.
+
+The result separates left-only, right-only, and changed rows. Press **Enter** or **Right** to enter details, **Tab** to cycle the list, details and Close button, or **Ctrl+C** to copy focused details. **Esc** cancels both reads while a comparison is running.
+
+Column names and types must match; physical column order can differ. Supported types are NUMBER, CHAR/VARCHAR2, NCHAR/NVARCHAR2, DATE, TIMESTAMP without a time zone, and RAW. LazyOra withholds the comparison if keys are invalid, a column is unsupported, or a table exceeds 5,000 rows, 64 columns, or approximately 16 MiB. Each read uses that connection's current transaction and may see its own uncommitted work. There is no shared snapshot time across connections. Comparison does not write to or commit either database.
+
 ## Editor keymaps, search and completion
 
 Settings offers Toad (default), Vim, Notepad++, VS Code and IntelliJ IDEA. The empty/legacy `editor_keymap` value means Toad; other stored values are `vim`, `notepad++`, `vscode`, `intellij`. These provide subsets of familiar Windows/Linux editing behavior, not complete IDE emulation. App-wide execute/commit/rollback/exit/fullscreen keys take priority.

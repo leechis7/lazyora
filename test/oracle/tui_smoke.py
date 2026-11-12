@@ -288,8 +288,15 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         send(b"\x1b[B\r")  # F5 via Execute menu, review first.
         wait_for("Run these statements in order?")
         send(b"\t\t\r")  # Cancel -> SQL preview -> Execute.
-        wait_for("Script results")
-        send(b"\x1b")
+        wait_for("Script processed")
+        send(b"\x1b[17~\x1b[Z\x1b[C\r\t")  # SQL -> results -> tab strip -> Messages -> report.
+        output.clear()
+        send(b"\x03")
+        wait_for(b"\x1b]52;c;")
+        summaries = re.findall(rb"\x1b\]52;c;([^\x07\x1b]*)", output)
+        assert summaries and b"rows 1" in base64.b64decode(summaries[-1])
+        send(b"\x1b")  # Return to the grid.
+        send(b"\x1b[17~")  # Return to SQL.
         output.clear()
         send(b"\x05")  # Ctrl+E expected plan; never executes source SQL.
         wait_for("Estimated execution plan")

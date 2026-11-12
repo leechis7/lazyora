@@ -158,7 +158,7 @@ func (s *screen) togglePanelCollapse(schema bool) {
 }
 
 func (s *screen) applyPanelCollapse() {
-	if (s.resultCollapsed() && s.table.HasFocus()) || (s.schemaCollapsed() && s.browserHasFocus()) {
+	if (s.resultCollapsed() && s.resultAreaHasFocus()) || (s.schemaCollapsed() && s.browserHasFocus()) {
 		s.app.SetFocus(s.editor)
 	}
 	s.rebuildPanels()

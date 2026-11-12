@@ -59,6 +59,7 @@ var commands = []command{
 	{"actual_plan_execute", "actual_plan_execute", menuExecute, nil},
 	{"actual_plan_last", "actual_plan_last", menuExecute, nil},
 	{"script_report", "script_report", menuView, nil},
+	{"result_area_grid", "result_area_grid", menuView, nil},
 	{"parse", "parse_unavailable", menuExecute, []binding{{"Ctrl+F9", tuivory.KeyF9, tuivory.ModCtrl, 0}}},
 	{"debug_continue", "debug_unavailable", menuExecute, []binding{{"F11", tuivory.KeyF11, 0, 0}}},
 	{"cancel", "cancel_execution", menuExecute, []binding{{"Esc", tuivory.KeyEscape, 0, 0}}},
@@ -206,7 +207,7 @@ func (s *screen) commandEnabled(id string) bool {
 	case "fullscreen_sql", "fullscreen_results":
 		return true
 	case "maximize":
-		return s.editor.HasFocus() || s.table.HasFocus()
+		return s.editor.HasFocus() || s.resultAreaHasFocus()
 	case "file_new", "file_open", "file_save", "file_save_as", "file_close", "tab_next", "tab_previous":
 		return !s.busy
 	case "find", "find_next", "find_previous", "replace", "clear_sql":
@@ -231,8 +232,8 @@ func (s *screen) commandEnabled(id string) bool {
 		return s.connected && !s.busy
 	case "actual_plan_last":
 		return s.connected && !s.busy && s.lastActualPlan != nil
-	case "script_report":
-		return !s.busy && len(s.scriptReport.Steps) > 0
+	case "script_report", "result_area_grid":
+		return true
 	case "cancel":
 		return s.busy
 	case "describe", "quick_describe":
@@ -356,6 +357,8 @@ func (s *screen) invoke(id string) {
 		s.executeScript()
 	case "script_report":
 		s.showScriptReport()
+	case "result_area_grid":
+		s.selectResultSection("grid", true)
 	case "tab_rename":
 		s.showTabRename()
 	case "file_new":

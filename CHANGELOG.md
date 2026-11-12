@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+- LORA-74: 조회 결과, 실행 메시지, DBMS_OUTPUT을 같은 작업 영역의 탭으로 전환합니다. 실행이 끝나도 편집기 포커스를 유지합니다.
+- LORA-74: Switch between results, execution messages, and DBMS_OUTPUT in the same area. Finishing a run keeps editor focus.
+
 ## [0.18.0] - 2026-11-12
 
 - LORA-86: 두 Oracle 접속의 테이블 데이터를 공통 키로 비교하여 한쪽에만 있는 행과 값이 달라진 컬럼을 조회합니다.

@@ -20,6 +20,7 @@ type sqlTab struct {
 	bindSQL    string
 	bindValues map[string]oracle.BindValue
 	script     oracle.ScriptReport
+	resultArea resultAreaState
 	editor     *tuivory.TextArea
 	table      *tuivory.Table
 	document   *sqlfile.Document
@@ -51,6 +52,7 @@ func (s *screen) stashTab() {
 	tab.query = s.resultQuery
 	tab.values, tab.truncated = s.resultValues, s.resultTruncated
 	tab.script = s.scriptReport
+	tab.resultArea = s.resultState
 	tab.bindSQL, tab.bindValues = s.bindSQL, s.bindValues
 	tab.editor, tab.table, tab.document = s.editor, s.table, s.document
 	tab.rows, tab.headers, tab.selection = s.resultRows, s.resultHeaders, s.resultSelection
@@ -73,12 +75,13 @@ func (s *screen) switchTab(index int) {
 	tab := s.tabs[index]
 	s.resultQuery = tab.query
 	s.resultValues, s.resultTruncated = tab.values, tab.truncated
-	s.scriptReport = tab.script
+	s.scriptReport, s.resultState = tab.script, tab.resultArea
 	s.bindSQL, s.bindValues = tab.bindSQL, tab.bindValues
 	s.editor, s.table, s.document = tab.editor, tab.table, tab.document
 	s.resultRows, s.resultHeaders, s.resultSelection = tab.rows, tab.headers, tab.selection
 	s.grid = tab.grid
 	s.resultBrowser = tab.browser
+	s.resetResultPaneForTab()
 	s.repaintEditedCells()
 	s.setStatus(tab.status, tab.statusArgs...)
 	s.rebuildPanels()
@@ -156,6 +159,8 @@ func (s *screen) closeTab() {
 			s.resultTruncated = false
 			s.resultQuery = nil
 			s.scriptReport = oracle.ScriptReport{}
+			s.resultState = resultAreaState{}
+			s.resetResultPaneForTab()
 			s.bindSQL = ""
 			s.bindValues = nil
 			s.setStatus("tab_shared")
@@ -169,12 +174,13 @@ func (s *screen) closeTab() {
 		tab := s.tabs[s.activeTab]
 		s.resultQuery = tab.query
 		s.resultValues, s.resultTruncated = tab.values, tab.truncated
-		s.scriptReport = tab.script
+		s.scriptReport, s.resultState = tab.script, tab.resultArea
 		s.bindSQL, s.bindValues = tab.bindSQL, tab.bindValues
 		s.editor, s.table, s.document = tab.editor, tab.table, tab.document
 		s.resultRows, s.resultHeaders, s.resultSelection = tab.rows, tab.headers, tab.selection
 		s.grid = tab.grid
 		s.resultBrowser = tab.browser
+		s.resetResultPaneForTab()
 		s.setStatus(tab.status, tab.statusArgs...)
 		s.rebuildPanels()
 		s.refreshDocumentTitle()

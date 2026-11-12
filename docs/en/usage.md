@@ -108,6 +108,12 @@ Search is case-sensitive literal text, wraps at the end and supports next/previo
 
 Completion uses available metadata and SQL context, not a full Oracle parser. CTE/derived-column inference, synonym/DB-link/package-member resolution and PL/SQL local symbol analysis are limited or unsupported; unavailable metadata is reported. Formatting is not SQL validation. macOS Command combinations, multiple cursors and full IDE/project features are not implied. Syntax-check Ctrl+F9 and debugger-continue F11 are reserved/unsupported, not DB execution shortcuts.
 
+## Result area tabs
+
+The result area has **Results · Messages · DBMS_OUTPUT** tabs. From the result area, press **Shift+Tab** to reach the tab strip, **Left/Right** to choose a tab, **Enter** to activate it, and **Tab** to enter its contents. You can also click a tab or open it from **View**. **Alt+P** opens DBMS_OUTPUT. Result fullscreen hides the tab strip; **Esc** restores split view.
+
+Finishing a run keeps the selected tab and editor focus. New content is marked with `*`, and execution or output errors with `!`. Results, the last execution message, and the F5 statement report belong to the SQL tab. SQL tabs in one connection share DBMS_OUTPUT; other connections have their own output.
+
 ## Results, large cells and editing
 
 F9 SELECT fetches from the same cursor in batches of 1,000, retaining at most 10,000 rows or an estimated 64 MiB. Fetch Next continues that cursor. Loaded-row sort/filter does not change server WHERE/ORDER BY, fetch missing rows or process the entire DB result. Numeric DB types retain precision; NULL sorts last; string/date ordering can differ from Oracle NLS. New pages reapply the tab's sort/filter. Reset restores fetched order.

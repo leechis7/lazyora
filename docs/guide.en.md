@@ -86,6 +86,8 @@ In the results grid, **Alt+Insert** or **Edit → Add row draft** starts a new r
 
 **Alt+Delete** toggles a pending deletion (−) on an existing row or removes a new row draft. An existing row can only be deleted when every original column can be safely checked for changes. **Alt+C** saves additions, deletions, and cell edits together; **Alt+R** discards the drafts. If any operation fails, the attempt is rolled back and the drafts remain. Resolve row drafts before exporting results.
 
+The result area has **Results · Messages · DBMS_OUTPUT** tabs. From the result area, press **Shift+Tab** to reach the tab strip, **Left/Right** to choose a tab, **Enter** to activate it, and **Tab** to enter its contents. You can also click a tab or open it from **View**. **Alt+P** opens DBMS_OUTPUT. Result fullscreen hides the tab strip; **Esc** restores split view.
+
 ## Export, explain plans and output
 
 Alt+W exports CSV, TSV, XLSX or INSERT SQL.

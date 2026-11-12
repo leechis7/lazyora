@@ -341,6 +341,11 @@ var messages = map[string][2]string{
 	"routine_done":           {"Routine completed · View > Routine results", "루틴 실행 완료 · 보기 > 루틴 실행 결과"},
 	"routine_result_hint":    {"Enter: open selected output in the result grid for copying/export. Cursor display is capped at 1,000 rows; export includes loaded rows only and never calls the routine again. Ctrl+C copies selection, Alt+Y copies a row, Alt+W exports. Esc returns to choose another output. View > Routine results reopens outputs.", "Enter: 선택한 출력을 결과창에서 복사·내보내기. 커서는 최대 1,000행이며 가져온 행만 저장하고 루틴을 재실행하지 않습니다. Ctrl+C 선택 복사, Alt+Y 행 복사, Alt+W 내보내기. Esc로 다른 출력을 선택합니다. 보기 > 루틴 실행 결과에서도 다시 열 수 있습니다."},
 	"footer_routine":         {"Enter Choose | F9 Run input form | Tab Fields / buttons | F1 Help | Esc Back / cancel execution", "Enter 선택 | F9 입력 화면 실행 | Tab 입력 / 버튼 | F1 도움말 | Esc 뒤로 / 실행 취소"},
+	"result_area_grid":        {"Results", "조회 결과"},
+	"result_area_messages":    {"Messages", "실행 메시지"},
+	"result_area_no_messages": {"No SQL execution in this tab yet.", "이 SQL 탭에서 아직 실행한 문장이 없습니다."},
+	"result_area_tab_hint":     {"Shift+Tab Tabs", "Shift+Tab 결과 탭"},
+	"footer_result_tabs":      {"Left/Right Choose | Enter Activate | Tab Content | F6 SQL editor", "←→ 탭 선택 | Enter 열기 | Tab 내용 | F6 SQL 편집기"},
 	"output_copy":            {"Copy output", "출력 복사"},
 	"output_view":            {"DBMS_OUTPUT", "DBMS_OUTPUT 출력"},
 	"output_toggle":          {"Enable / disable DBMS_OUTPUT", "DBMS_OUTPUT 켜기 / 끄기"},
@@ -354,7 +359,7 @@ var messages = map[string][2]string{
 	"output_truncated":       {"Some output was omitted: up to 2,000 lines / 256 KiB per statement; recent 8,000 lines / 1 MiB retained. Server buffer is 1,000,000 bytes; overflow can fail the SQL.", "일부 출력이 생략됐습니다. 문장당 최대 2,000행 / 256 KiB, 최근 보관량 8,000행 / 1 MiB입니다. 서버 버퍼는 1,000,000바이트이며 초과하면 SQL 오류가 날 수 있습니다."},
 	"output_error":           {"Output collection warning (SQL outcome unchanged)", "출력 수집 경고(SQL 처리 결과와 별개)"},
 	"output_warning":         {"SQL completed; DBMS_OUTPUT collection failed: %s · Alt+P details", "SQL 완료; DBMS_OUTPUT 수집 실패: %s · Alt+P 상세"},
-	"footer_output":          {"Arrows / PgUp/PgDn Scroll | Tab Output / buttons | Alt+E Enable/disable | Ctrl+C Copy | Alt+D Clear display | Esc Close", "방향키 / PgUp/PgDn 스크롤 | Tab 출력 / 버튼 | Alt+E 켜기·끄기 | Ctrl+C 복사 | Alt+D 표시 지우기 | Esc 닫기"},
+	"footer_output":          {"Arrows / PgUp/PgDn Scroll | Shift+Tab Tabs | Tab Output / buttons | Alt+E Enable/disable | Ctrl+C Copy | Alt+D Clear display | Esc Results", "방향키 / PgUp/PgDn 스크롤 | Shift+Tab 탭 | Tab 출력 / 버튼 | Alt+E 켜기·끄기 | Ctrl+C 복사 | Alt+D 표시 지우기 | Esc 조회 결과"},
 	"syntax_colors":          {"SQL colors: blue keywords, teal functions, purple types/numbers, red strings, green comments, ochre binds. Selection overrides syntax colors.", "SQL 색상: 파랑 키워드 · 청록 함수 · 보라 타입/숫자 · 빨강 문자열 · 초록 주석 · 갈색 바인드. 선택 영역은 기존 강조색이 우선합니다."},
 	"export":                 {"Export results", "조회 결과 내보내기"},
 	"export_format":          {"Format", "파일 형식"},
@@ -405,14 +410,14 @@ var messages = map[string][2]string{
 	"bind_hint":              {"IN only: Text, NUMBER, DATE (YYYY-MM-DD), TIMESTAMP (YYYY-MM-DD HH:MM:SS[.fraction]), NULL. Up to 32 names. Values stay in memory for this tab's last SQL, never in history/files. Reconnect/clear removes them.", "IN 전용: 문자열·NUMBER·DATE(YYYY-MM-DD)·TIMESTAMP(YYYY-MM-DD HH:MM:SS[.소수초])·NULL, 최대 32개. 값은 탭의 최근 SQL에 대해 메모리에만 기억하며 이력·파일에는 저장하지 않습니다. 재접속·값 지우기로 제거합니다."},
 	"footer_bind":            {"Tab Fields / buttons | Ctrl+Enter / Alt+Enter Run | F1 Help | Esc Cancel", "Tab 입력 / 버튼 | Ctrl+Enter / Alt+Enter 실행 | F1 도움말 | Esc 취소"},
 	"script":                 {"Run script", "스크립트 실행"},
-	"script_report":          {"Script results", "스크립트 실행 내역"},
+	"script_report":          {"Execution messages", "실행 메시지"},
 	"script_ok":              {"OK", "성공"},
 	"script_error":           {"Error / cancelled", "오류 / 취소"},
 	"script_step":            {"%d · L%d · %s · %s rows / %d affected", "%d · %d행 · %s · 결과 %s행 / 변경 %d행"},
 	"script_use_result":      {"Use selected result", "선택 결과를 결과창으로"},
 	"script_done":            {"Script processed %d/%d statements", "스크립트 %d/%d문장 처리"},
 	"sql_risk_script":        {"Run these statements in order? Stops on first error or cancellation. Prior successful DML stays pending. COMMIT/ROLLBACK in this script affect all tabs; DDL/PLSQL can commit implicitly. SQL*Plus commands are unsupported.", "아래 문장을 순서대로 실행하시겠습니까? 첫 오류·취소에서 중단하고 앞서 성공한 DML은 미커밋으로 남깁니다. 스크립트의 COMMIT/ROLLBACK은 모든 탭에 적용되며 DDL/PLSQL은 암시적으로 커밋할 수 있습니다. SQL*Plus 명령은 지원하지 않습니다."},
-	"footer_script":          {"Arrows Select / scroll | Tab List / SQL / results / buttons | Ctrl+C Summary | Esc Close", "방향키 선택 / 스크롤 | Tab 목록 / SQL / 결과 / 버튼 | Ctrl+C 요약 복사 | Esc 닫기"},
+	"footer_script":          {"Arrows Select / scroll | Shift+Tab Tabs | Tab Content | Ctrl+C Copy | Esc Results", "방향키 선택 / 스크롤 | Shift+Tab 탭 | Tab 내용 | Ctrl+C 복사 | Esc 조회 결과"},
 	"tab_session":            {"This DB", "현재 DB"},
 	"tab_next":               {"Next SQL tab", "다음 SQL 탭"},
 	"tab_previous":           {"Previous SQL tab", "이전 SQL 탭"},
@@ -751,6 +756,7 @@ func (s *screen) setStatus(key string, args ...any) {
 }
 
 func (s *screen) refreshLabels() {
+	s.localizeResultArea()
 	s.refreshMenuLabels()
 	s.localizeBrowser()
 	s.refreshDocumentTitle()

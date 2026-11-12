@@ -18,6 +18,13 @@ func (s *screen) rebuildPanels() {
 	s.queryLayout.Clear()
 	s.editor.SetRect(0, 0, 0, 0)
 	s.table.SetRect(0, 0, 0, 0)
+	if w := s.resultArea; w != nil {
+		w.root.SetRect(0, 0, 0, 0)
+		w.tab.SetRect(0, 0, 0, 0)
+		for _, control := range w.controls {
+			control.SetRect(0, 0, 0, 0)
+		}
+	}
 	if s.browser != nil {
 		s.hideBrowserRect()
 	}
@@ -30,9 +37,9 @@ func (s *screen) rebuildPanels() {
 	case "sql":
 		s.queryLayout.AddItem(s.editor, 0, 1, true)
 	case "results":
-		s.queryLayout.AddItem(s.resultGrid(), 0, 1, true)
+		s.queryLayout.AddItem(s.resultPane(), 0, 1, true)
 	default:
-		s.sizing.result = s.resultGrid()
+		s.sizing.result = s.resultPane()
 		s.queryLayout.AddItem(s.editor, 0, 2, true).AddItem(s.sizing.horizontal, 1, 0, false)
 		if !s.resultCollapsed() {
 			s.queryLayout.AddItem(s.sizing.result, 0, 3, false)
@@ -65,7 +72,7 @@ func (s *screen) togglePanelMode(fullscreen bool) {
 			s.splitOffsets.editorRow, s.splitOffsets.editorCol = s.editor.GetOffset()
 			s.splitOffsets.resultRow, s.splitOffsets.resultCol = s.table.GetOffset()
 			s.maximized = "sql"
-			if s.table.HasFocus() {
+			if s.resultAreaHasFocus() {
 				s.maximized = "results"
 			}
 		}
@@ -73,8 +80,8 @@ func (s *screen) togglePanelMode(fullscreen bool) {
 	}
 	s.rebuildPanels()
 	if s.maximized == "results" {
-		s.app.SetFocus(s.table)
-	} else if s.maximized == "sql" || (s.resultCollapsed() && s.table.HasFocus()) {
+		s.app.SetFocus(s.resultAreaContent())
+	} else if s.maximized == "sql" || (s.resultCollapsed() && s.resultAreaHasFocus()) {
 		s.app.SetFocus(s.editor)
 	}
 }
@@ -87,7 +94,7 @@ func (s *screen) focusPanel(panel string) {
 		s.togglePanelCollapse(false)
 	}
 	if panel == "results" {
-		s.app.SetFocus(s.table)
+		s.app.SetFocus(s.resultAreaContent())
 	} else {
 		s.app.SetFocus(s.editor)
 	}
@@ -104,7 +111,7 @@ func (s *screen) cyclePanel(reverse bool) {
 	}
 	panels := []tuivory.Primitive{s.editor}
 	if !s.resultCollapsed() {
-		panels = append(panels, s.table)
+		panels = append(panels, s.resultAreaContent())
 	}
 	if s.browserVisible() {
 		panels = append(panels, s.browserUsers, s.browserTypes, s.browserSearch, s.browser)
@@ -166,7 +173,7 @@ func (s *screen) togglePanelFullscreen(panel string) {
 		return
 	}
 	if s.maximized == "" && panel == "results" && s.resultCollapsed() {
-		s.app.SetFocus(s.table)
+		s.app.SetFocus(s.resultAreaContent())
 	} else {
 		s.focusPanel(panel)
 	}

@@ -29,18 +29,16 @@ func (s *screen) submitScript(text string) {
 	})
 }
 
-func (s *screen) showScriptReport() {
-	if len(s.scriptReport.Steps) == 0 {
-		return
-	}
-	s.scriptFocus = s.app.GetFocus()
+func (s *screen) showScriptReport() { s.selectResultSection("messages", true) }
+
+func (s *screen) buildScriptReport(body *tuivory.Flex) []tuivory.Primitive {
 	list := tuivory.NewWidgetList().SetMainTextColor(s.colors().text).SetSecondaryTextColor(s.colors().muted).SetShortcutColor(s.colors().accent).ShowSecondaryText(false).SetSelectedStyle(s.focusStyle())
 	list.SetBorder(true).SetTitle(s.tr("script_report"))
 	s.styleList(list)
 	table := s.newDataTable().SetFixed(1, 0).SetSelectable(true, true).SetSelectedStyle(s.focusStyle())
 	table.SetBorder(true).SetTitle(s.tr("results_title"))
 	s.styleBox(table.Box)
-	preview := s.newTextView().SetWrap(false).SetScrollable(true)
+	preview := s.newTextView().SetDynamicColors(false).SetWrap(false).SetScrollable(true)
 	preview.SetBorder(true)
 	s.styleBox(preview.Box)
 	preview.SetTextColor(s.colors().text)
@@ -59,19 +57,18 @@ func (s *screen) showScriptReport() {
 		}
 	}
 	for i, step := range s.scriptReport.Steps {
-		status := s.tr("script_ok")
-		if step.Error != "" {
-			status = s.tr("script_error")
-		}
-		rows := strconv.Itoa(len(step.Result.Rows))
-		if step.Result.Truncated {
-			rows += "+"
-		}
-		list.AddItem(fmt.Sprintf(s.tr("script_step"), i+1, step.Statement.Line, status, rows, step.Result.Affected), "", 0, nil)
+		list.AddItem(s.scriptStepLabel(i, step), "", 0, nil)
 	}
-	list.SetChangedFunc(func(index int, _, _ string, _ rune) { selectResult(index) })
+	list.SetChangedFunc(func(index int, _, _ string, _ rune) {
+		if index >= 0 && index < len(s.scriptReport.Steps) {
+			selectResult(index)
+		}
+	})
 	selectResult(0)
 	use := s.clickable(tuivory.NewWidgetButton(s.tr("script_use_result")).SetSelectedFunc(func() {
+		if s.busy {
+			return
+		}
 		if s.gridDraftCount() != 0 {
 			s.setStatus("grid_resolve_drafts")
 			return
@@ -79,25 +76,24 @@ func (s *screen) showScriptReport() {
 		step := s.scriptReport.Steps[list.GetCurrentItem()]
 		if len(step.Result.Columns) > 0 {
 			s.render(step.Result)
-			s.closeScriptReport()
-			s.focusPanel("results")
+			s.selectResultSection("grid", true)
 		}
 	}))
-	close := s.clickable(tuivory.NewWidgetButton(s.tr("close")).SetSelectedFunc(s.closeScriptReport))
-	buttons := s.newFlex().AddItem(use, 0, 1, false).AddItem(close, 0, 1, false)
-	root := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(list, 0, 1, true).AddItem(preview, 0, 1, false).AddItem(table, 0, 2, false).AddItem(buttons, 1, 0, false)
-	s.pages.AddPage("script", root, true, true)
-	s.app.SetFocus(list)
+	upper := s.newFlex().AddItem(list, 0, 2, true).AddItem(preview, 0, 3, false)
+	body.AddItem(upper, 0, 1, true).AddItem(table, 0, 1, false).AddItem(use, 1, 0, false)
+	return []tuivory.Primitive{list, preview, table, use}
 }
 
-func (s *screen) closeScriptReport() {
-	s.pages.RemovePage("script")
-	s.scriptList = nil
-	s.scriptResult = nil
-	s.scriptText = nil
-	if s.scriptFocus != nil {
-		s.app.SetFocus(s.scriptFocus)
+func (s *screen) scriptStepLabel(index int, step oracle.ScriptStep) string {
+	status := s.tr("script_ok")
+	if step.Error != "" {
+		status = s.tr("script_error")
 	}
+	rows := strconv.Itoa(len(step.Result.Rows))
+	if step.Result.Truncated {
+		rows += "+"
+	}
+	return fmt.Sprintf(s.tr("script_step"), index+1, step.Statement.Line, status, rows, step.Result.Affected)
 }
 
 func (s *screen) scriptKey(event *tuivory.EventKey) *tuivory.EventKey {
@@ -105,17 +101,15 @@ func (s *screen) scriptKey(event *tuivory.EventKey) *tuivory.EventKey {
 		return nil
 	}
 	switch event.Key() {
-	case tuivory.KeyEscape:
-		s.closeScriptReport()
-		return nil
 	case tuivory.KeyF1:
 		s.showHelp()
 		return nil
-	case tuivory.KeyTab, tuivory.KeyBacktab:
-		s.dialogTab(event, s.scriptList, s.scriptText, s.scriptResult)
-		return nil
 	case tuivory.KeyCtrlC:
-		s.sendClipboard(s.scriptReport.Summary())
+		if len(s.scriptReport.Steps) > 0 {
+			s.sendClipboard(s.scriptReport.Summary())
+		} else if note := s.resultState.note; note.key != "" {
+			s.sendClipboard(fmt.Sprintf(s.tr(note.key), note.args...))
+		}
 		return nil
 	}
 	return event

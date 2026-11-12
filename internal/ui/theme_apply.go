@@ -32,6 +32,10 @@ func (s *screen) applyTheme(previous string) {
 			_ = w.SetPalette(s.componentPalette())
 			visit(w.Child)
 			return
+		case *tuivory.TabView:
+			_ = w.SetPalette(s.componentPalette())
+			w.ASCII = s.asciiDisplay()
+			return
 		case *tuivory.MenuView:
 			_ = w.SetPalette(s.componentPalette())
 			w.ASCII = s.asciiDisplay()

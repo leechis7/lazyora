@@ -162,9 +162,6 @@ func (s *screen) refreshFooter() {
 	case "bind":
 		hint = "footer_bind"
 		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Ctrl+Enter", "execute", tuivory.KeyEnter, tuivory.ModCtrl}, {"Esc", "cancel", tuivory.KeyEscape, 0}}
-	case "script":
-		hint = "footer_script"
-		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Esc", "close", tuivory.KeyEscape, 0}}
 	case "main":
 		keys = nil
 		for _, id := range []string{"help", "connect", "commit", "rollback", "quit"} {
@@ -174,13 +171,20 @@ func (s *screen) refreshFooter() {
 			}
 			keys = append(keys, footerKey{key.label, id, key.key, key.mod})
 		}
-		if s.table.HasFocus() {
+		if s.resultAreaHasFocus() {
 			s.resultsFocused = true
 		} else if s.editor.HasFocus() {
 			s.resultsFocused = false
 		}
 		if s.resultsFocused {
 			hint = "footer_results"
+			if s.resultArea != nil && s.resultArea.tab.HasFocus() {
+				hint = "footer_result_tabs"
+			} else if s.resultSection() == "output" {
+				hint = "footer_output"
+			} else if s.resultSection() == "messages" {
+				hint = "footer_script"
+			}
 		}
 		if s.browserHasFocus() {
 			hint = "footer_browser"
@@ -191,9 +195,6 @@ func (s *screen) refreshFooter() {
 	case "pending":
 		hint = "footer_pending"
 		keys = []footerKey{{"Esc", "close", tuivory.KeyEscape, 0}}
-	case "output":
-		hint = "footer_output"
-		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Esc", "close", tuivory.KeyEscape, 0}}
 	case "history":
 		hint = "footer_history"
 		keys = []footerKey{{"Esc", "close", tuivory.KeyEscape, 0}}
@@ -314,7 +315,7 @@ func (s *screen) refreshFooter() {
 		}
 
 	}
-	if s.busy && page != "help" && page != "output" && page != "reference" {
+	if s.busy && page != "help" && !(page == "main" && s.resultSection() == "output" && s.resultAreaHasFocus()) && page != "reference" {
 		text = s.tr("footer_busy") + " | " + text
 	}
 	s.footer.SetText(text)
@@ -341,6 +342,9 @@ func (s *screen) resultNavigationHint(viewKeys string) string {
 	}
 	if s.resultBrowser.source.EditCanDelete && s.resultBrowser.source.EditID != 0 || len(s.gridInserts) != 0 {
 		text = shortcut("grid_delete") + " - | " + text
+	}
+	if !s.fullscreen {
+		text += " | " + s.tr("result_area_tab_hint")
 	}
 	return text
 }

@@ -4,6 +4,11 @@
 
 LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 원칙을 제품 UI에 적용합니다. Tuivory의 가이드·견본·도구 개발은 별도 저장소와 Tuivory Jira에서 관리하고, LazyOra의 적용 작업은 LORA Jira에서 관리합니다.
 
+## LORA-74 · Tuivory Go v0.12.4
+
+결과 영역 탭은 공개 `go/v0.12.4`(커밋 `dd8dc51862c8a139d051cd8eddf412e041b593d9`)의 `TabView`와 `TabState`를 사용합니다. 탭 그리기와 입력은 Tuivory가, Oracle 조회 결과·실행 메시지·출력 소유 범위는 LazyOra가 담당합니다. 기존 편집기 호환 의존성은 유지합니다.
+Oracle Free 실제 터미널에서 F9/F5 실행 후 포커스, 세 탭, DBMS_OUTPUT 켜기·복사·비우기를 확인했습니다. 전체화면 회귀는 linux·ansi·xterm·xterm-256color에서 통과했습니다. 전체 터미널 시나리오의 스키마 컬럼 `CHANGED_AT` 대기 실패는 변경 전 v0.18.0에서도 재현됐습니다.
+
 ## LORA-84 · Tuivory Go v0.12.4
 
 공개 Go 모듈 태그 `go/v0.12.4`, 원본 커밋 `dd8dc51862c8a139d051cd8eddf412e041b593d9`, 모듈 체크섬 `h1:kqpqHrX7r3NrZBdq8KUJUzKIBk4eFOP5+vR9Mlq7OTs=`을 확인했습니다. [공개 릴리스](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.4)

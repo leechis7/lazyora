@@ -39,12 +39,10 @@ func TestScriptReportResultSelectionPreservesSQLAndDB(t *testing.T) {
 	}
 	s.key(tuivory.NewEventKey(tuivory.KeyF1, 0, 0))
 	s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
-	if page, _ := s.pages.GetFrontPage(); page != "script" {
+	if page, _ := s.pages.GetFrontPage(); page != "main" || s.resultSection() != "messages" {
 		t.Fatal("help lost report")
 	}
-	_, root := s.pages.GetFrontPage()
-	flex := root.(*tuivory.Flex)
-	button := flex.GetItem(flex.GetItemCount() - 1).(*tuivory.Flex).GetItem(0).(*tuivory.WidgetButton)
+	button := s.resultArea.controls[3].(*tuivory.WidgetButton)
 	button.InputHandler()(tuivory.NewEventKey(tuivory.KeyEnter, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
 	if s.resultRows[0][0] != "2" || !s.pendingChanges || len(s.jobs) != 0 || s.editor.GetText() != "SELECT 1 FROM dual;" {
 		t.Fatal("report adoption changed SQL/DB or lost result")

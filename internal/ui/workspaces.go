@@ -400,8 +400,12 @@ func (s *screen) clearConnectionResults() {
 		tab.grid = gridState{}
 		tab.selection = resultSelection{}
 		tab.script = oracle.ScriptReport{}
+		tab.resultArea = resultAreaState{}
 	}
+	s.scriptReport = oracle.ScriptReport{}
+	s.resultState = resultAreaState{}
 	s.render(oracle.Result{})
+	s.resetResultPaneForTab()
 }
 
 func (s *screen) canSwitchWorkspace() bool {

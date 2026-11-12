@@ -24,6 +24,9 @@ func (s *screen) addOutput(out oracle.Output) {
 	if drop > 0 {
 		s.outputLines = append([]string(nil), s.outputLines[drop:]...)
 	}
+	if (len(out.Lines) > 0 || out.Truncated || out.Error != "") && !s.resultSectionVisible("output") {
+		s.outputNew = true
+	}
 	s.outputTruncated = s.outputTruncated || out.Truncated || drop > 0
 	if out.Error != "" {
 		s.outputError = out.Error
@@ -32,9 +35,13 @@ func (s *screen) addOutput(out oracle.Output) {
 }
 
 func (s *screen) clearOutput() {
+	s.outputNew = false
 	s.outputLines, s.outputSize = nil, 0
 	s.outputTruncated, s.outputError = false, ""
 	s.refreshOutput()
+	if s.outputText != nil {
+		s.outputText.ScrollToBeginning()
+	}
 }
 
 func (s *screen) outputContents() string {
@@ -53,6 +60,7 @@ func (s *screen) requestOutputToggle() {
 }
 
 func (s *screen) refreshOutput() {
+	s.refreshResultAreaTabs()
 	if s.outputText == nil {
 		return
 	}
@@ -69,53 +77,34 @@ func (s *screen) refreshOutput() {
 	}
 	s.outputInfo.SetText(info)
 	s.outputToggle.SetLabel(s.tr(action) + " (Alt+E)").SetDisabled(!s.connected || s.busy || s.transactionUncertain)
-	s.outputText.SetText(s.outputContents())
+	row, col := s.outputText.GetScrollOffset()
+	s.outputText.SetText(s.outputContents()).ScrollTo(row, col)
 }
 
-func (s *screen) showOutput() {
-	if s.outputText != nil {
-		return
-	}
-	s.outputFocus = s.app.GetFocus()
-	s.outputText = s.newTextView().SetWrap(false).SetScrollable(true)
+func (s *screen) showOutput()  { s.selectResultSection("output", true) }
+func (s *screen) closeOutput() { s.closeResultSection() }
+
+func (s *screen) buildOutput(body *tuivory.Flex) []tuivory.Primitive {
+	s.outputText = s.newTextView().SetDynamicColors(false).SetWrap(false).SetScrollable(true)
 	s.outputText.SetBorder(true).SetTitle("DBMS_OUTPUT")
 	s.styleBox(s.outputText.Box)
-	s.outputText.SetTextColor(s.colors().text)
-	s.outputInfo = s.newTextView(textHint).SetWrap(true).SetWordWrap(true)
-	s.outputInfo.SetTextColor(s.colors().muted).SetBackgroundColor(s.colors().background)
+	s.outputInfo = s.newTextView(textHint).SetDynamicColors(false).SetWrap(true).SetWordWrap(true).SetScrollable(true)
 	s.outputToggle = s.clickable(tuivory.NewWidgetButton("").SetSelectedFunc(s.requestOutputToggle))
-	copy := s.clickable(tuivory.NewWidgetButton(s.tr("output_copy") + " (Ctrl+C)").SetSelectedFunc(func() { s.sendClipboard(s.outputContents()) }))
-	clear := s.clickable(tuivory.NewWidgetButton(s.tr("output_clear") + " (Alt+D)").SetSelectedFunc(s.clearOutput))
-	close := s.clickable(tuivory.NewWidgetButton(s.tr("close") + " (Esc)").SetSelectedFunc(s.closeOutput))
-	buttons := s.newFlex().AddItem(s.outputToggle, 0, 1, false).AddItem(copy, 0, 1, false).AddItem(clear, 0, 1, false).AddItem(close, 0, 1, false)
-	root := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(s.outputInfo, 6, 0, false).AddItem(s.outputText, 0, 1, true).AddItem(buttons, 1, 0, false)
-	s.pages.AddPage("output", root, true, true)
+	copy := s.clickable(tuivory.NewWidgetButton(s.tr("output_copy")).SetSelectedFunc(func() { s.sendClipboard(s.outputContents()) }))
+	clear := s.clickable(tuivory.NewWidgetButton(s.tr("output_clear")).SetSelectedFunc(s.clearOutput))
+	buttons := s.newFlex().AddItem(s.outputToggle, 0, 1, false).AddItem(copy, 0, 1, false).AddItem(clear, 0, 1, false)
+	body.AddItem(s.outputInfo, 0, 1, false).AddItem(s.outputText, 0, 3, true).AddItem(buttons, 1, 0, false)
 	s.refreshOutput()
-	s.app.SetFocus(s.outputText)
-}
-
-func (s *screen) closeOutput() {
-	s.pages.RemovePage("output")
-	s.outputText, s.outputInfo, s.outputToggle = nil, nil, nil
-	if s.outputFocus != nil {
-		s.app.SetFocus(s.outputFocus)
-	}
-	s.outputFocus = nil
+	return []tuivory.Primitive{s.outputText, s.outputInfo, s.outputToggle, copy, clear}
 }
 
 func (s *screen) outputKey(event *tuivory.EventKey) *tuivory.EventKey {
 	switch event.Key() {
-	case tuivory.KeyEscape:
-		s.closeOutput()
-		return nil
 	case tuivory.KeyF1:
 		s.showHelp()
 		return nil
 	case tuivory.KeyCtrlC:
 		s.sendClipboard(s.outputContents())
-		return nil
-	case tuivory.KeyTab, tuivory.KeyBacktab:
-		s.dialogTab(event, s.outputText)
 		return nil
 	case tuivory.KeyRune:
 		if event.Modifiers()&tuivory.ModAlt != 0 {

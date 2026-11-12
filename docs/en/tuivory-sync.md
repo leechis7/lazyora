@@ -2,6 +2,11 @@
 
 [한국어](../tuivory-sync.md) | **English** · [UI style rules](ui-style.md)
 
+## LORA-74 · Tuivory Go v0.12.4
+
+The result area uses `TabView` and `TabState` from the public `go/v0.12.4` tag (commit `dd8dc51862c8a139d051cd8eddf412e041b593d9`). Tuivory handles tab rendering and input. LazyOra owns Oracle results, execution messages, and output scope. Existing editor compatibility dependencies remain.
+The Oracle Free PTY check covered focus after F9/F5, the three tabs, and enabling, copying, and clearing DBMS_OUTPUT. Fullscreen regression checks passed on linux, ansi, xterm, and xterm-256color. The full terminal scenario also timed out at the schema column `CHANGED_AT` on the unmodified v0.18.0 baseline.
+
 ## LORA-84 · Tuivory Go v0.12.4
 
 Verified the public Go tag `go/v0.12.4`, commit `dd8dc51862c8a139d051cd8eddf412e041b593d9`, and module checksum `h1:kqpqHrX7r3NrZBdq8KUJUzKIBk4eFOP5+vR9Mlq7OTs=`. [Public release](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.4)

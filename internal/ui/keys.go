@@ -52,7 +52,7 @@ func (s *screen) key(event *tuivory.EventKey) *tuivory.EventKey {
 	if page == "foreign_keys" || page == "related_rows" {
 		return s.foreignRowsKey(page, event)
 	}
-	if page == "main" && s.resizePanelKey(event) {
+	if page == "main" && (s.resizePanelKey(event) || s.resultAreaKey(event)) {
 		return nil
 	}
 	if page == "favorite_edit" && s.favoriteEditKey != nil {
@@ -141,12 +141,6 @@ func (s *screen) key(event *tuivory.EventKey) *tuivory.EventKey {
 	}
 	if page == "completion" {
 		return s.completionKey(event)
-	}
-	if page == "output" {
-		return s.outputKey(event)
-	}
-	if page == "script" {
-		return s.scriptKey(event)
 	}
 	if page == "routines" || page == "routine_input" || page == "routine_results" || page == "routine_grid" {
 		return s.routineKey(event, page)

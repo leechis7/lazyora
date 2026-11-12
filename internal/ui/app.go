@@ -118,9 +118,11 @@ type screen struct {
 	outputLines                          []string
 	outputSize                           int
 	outputError                          string
+	outputNew                            bool
+	resultState                          resultAreaState
+	resultArea                           *resultArea
 	outputText, outputInfo               *tuivory.WidgetTextView
 	outputToggle                         *tuivory.WidgetButton
-	outputFocus                          tuivory.Primitive
 
 	resultQuery            *oracle.QuerySpec
 	exportForm             *tuivory.WidgetForm
@@ -142,14 +144,14 @@ type screen struct {
 	scriptList             *tuivory.WidgetList
 	scriptResult           *tuivory.Table
 	scriptText             *tuivory.WidgetTextView
-	scriptFocus            tuivory.Primitive
-	tabs                   []*sqlTab
-	activeTab              int
-	tabBar                 *tuivory.Flex
-	document               *sqlfile.Document
-	fileDialog             *fileDialog
-	renameForm             *tuivory.WidgetForm
-	documentModal          *tuivory.Modal
+
+	tabs          []*sqlTab
+	activeTab     int
+	tabBar        *tuivory.Flex
+	document      *sqlfile.Document
+	fileDialog    *fileDialog
+	renameForm    *tuivory.WidgetForm
+	documentModal *tuivory.Modal
 
 	sqlConfirmText  *tuivory.WidgetTextView
 	sqlConfirmFocus tuivory.Primitive
@@ -852,7 +854,6 @@ func (s *screen) worker() {
 						s.render(step.Result)
 					}
 				}
-				s.showScriptReport()
 				s.setStatus("script_done", len(script.Steps), script.Total)
 			}
 			if err != nil {
@@ -984,6 +985,7 @@ func (s *screen) worker() {
 				}
 				s.setStatus(key)
 			}
+			s.recordResultExecution(j.action, result, script, err)
 			s.refreshOutput()
 		})
 	}

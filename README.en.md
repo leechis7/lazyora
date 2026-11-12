@@ -15,7 +15,7 @@ v0.18.0 compares table data across two Oracle connections using shared keys. See
 - Oracle SQL/PL/SQL syntax highlighting, files and multiple SQL tabs, cursor-statement execution, F5 scripts and IN bind variables.
 - Estimated execution plans, result copying, CSV/TSV/Excel/INSERT export, and manual commit/rollback.
 - Schema objects, columns and comments, source and arguments, source editing and compilation.
-- DBMS_OUTPUT, routine execution, object DDL/privileges/dependencies, additional result fetching, sorting/filtering, cell details and guarded editing.
+- Results, execution messages, and DBMS_OUTPUT tabs; routine execution, object DDL/privileges/dependencies, additional result fetching, sorting/filtering, cell details and guarded editing.
 - Toad (default), Vim, Notepad++, VS Code and IntelliJ IDEA editor keymaps; completion, formatting, dark/light/black-and-white themes, and Korean/English UI.
 
 Common menus and result grids use the same Tuivory package. Resize columns by dragging header dividers or using existing menus. See [scope and verification](docs/en/tuivory-sync.md).

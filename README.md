@@ -11,11 +11,11 @@ Toad를 설치하고 상용 라이선스를 구매하는 부담 없이, 터미�
 
 SQL·PL/SQL 편집부터 스키마 탐색, 실행 결과 확인과 내보내기까지 하나의 화면에서 이어가고, SSH로 접속한 서버에서도 실행파일 하나로 사용할 수 있도록 개발합니다. Toad의 모든 기능을 갖춘 단계는 아니며, 실제 Oracle 작업에 필요한 기능을 차근차근 확장하고 있습니다.
 
-현재 버전: **0.19.0** · **Linux / Windows / macOS · AMD64 / ARM64**
+현재 버전: **0.20.0** · **Linux / Windows / macOS · AMD64 / ARM64**
 
-v0.19.0은 Tuivory Go v0.12.4의 공통 그리드로 행 추가·수정·삭제 초안을 표시합니다. [현재 적용 기록](docs/tuivory-sync.md)을 확인하세요.
+v0.20.0은 Tuivory Go v0.12.4의 공통 그리드로 행 추가·수정·삭제 초안을 표시합니다. [현재 적용 기록](docs/tuivory-sync.md)을 확인하세요.
 
-v0.19.0은 조회 결과·실행 메시지·DBMS_OUTPUT을 한 영역에서 전환할 수 있습니다. [릴리스 설명](docs/releases/v0.19.0.md)을 참고하세요.
+v0.20.0은 중단점과 단계 실행을 지원하는 첫 PL/SQL 디버거를 추가했습니다. [릴리스 설명](docs/releases/v0.20.0.md)을 참고하세요.
 
 - Oracle SQL·PL/SQL 구문 색상, SQL 파일·여러 편집 탭, 커서 문장·F5 스크립트 실행과 IN 바인드 입력
 - 예상 실행 계획, 결과 조회·복사와 CSV·TSV·Excel·INSERT 내보내기, 수동 커밋·롤백
@@ -26,7 +26,7 @@ v0.19.0은 조회 결과·실행 메시지·DBMS_OUTPUT을 한 영역에서 전�
 
 공통 메뉴·결과 그리드도 같은 Tuivory 패키지를 사용합니다. 열 너비는 헤더 구분선 드래그 또는 기존 메뉴로 조절합니다. [적용 범위·검증](docs/tuivory-sync.md)을 참고하세요.
 
-v0.19.0은 Tuivory v0.12.4 공개 파사드를 사용하며 앱·테스트의 tview/tcell 직접 import는 0개입니다. 기존 편집기 replace 제거와 추가 공통 배치 전환은 남아 있습니다. [적용 범위와 선행 요청](docs/tuivory-sync.md)을 참고하세요.
+v0.20.0은 Tuivory v0.12.4 공개 파사드를 사용하며 앱·테스트의 tview/tcell 직접 import는 0개입니다. 기존 편집기 replace 제거와 추가 공통 배치 전환은 남아 있습니다. [적용 범위와 선행 요청](docs/tuivory-sync.md)을 참고하세요.
 
 ![LazyOra 한국어 UI 전체 화면: 상단 메뉴, 스키마 브라우저, SQL 편집기, 결과 그리드와 하단 단축키](docs/images/lazyora-overview-ko.png)
 
@@ -92,7 +92,7 @@ F9는 커서 문장을, F5는 스크립트를 실행합니다. F9 SELECT 결과�
 
 ## 구현과 공통 UI
 
-**v0.19.0은 [Tuivory](https://github.com/leechis7/tuivory) v0.12.4**을 가져와 테마·색상 프로필·입력·선택·버튼·표·팝업·그리드·SQL 문법색을 공통 패키지로 적용합니다. Go 모듈은 `github.com/leechis7/tuivory/go`이며, 실행파일 사용자에게 별도 설치는 필요하지 않습니다.
+**v0.20.0은 [Tuivory](https://github.com/leechis7/tuivory) v0.12.4**을 가져와 테마·색상 프로필·입력·선택·버튼·표·팝업·그리드·SQL 문법색을 공통 패키지로 적용합니다. Go 모듈은 `github.com/leechis7/tuivory/go`이며, 실행파일 사용자에게 별도 설치는 필요하지 않습니다.
 
 tview/tcell이 화면·입력을, go-ora가 Oracle 통신을 담당합니다. Oracle 실행·트랜잭션·SQL lexer·Toad 키맵·그리드 데이터와 화면별 상태는 LazyOra에서 관리합니다. [UI 스타일 규칙](docs/ui-style.md) · [Tuivory 적용·갱신 기록](docs/tuivory-sync.md)을 참고하세요.
 

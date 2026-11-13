@@ -61,7 +61,7 @@ var commands = []command{
 	{"script_report", "script_report", menuView, nil},
 	{"result_area_grid", "result_area_grid", menuView, nil},
 	{"parse", "parse_unavailable", menuExecute, []binding{{"Ctrl+F9", tuivory.KeyF9, tuivory.ModCtrl, 0}}},
-	{"debug_continue", "debug_unavailable", menuExecute, []binding{{"F11", tuivory.KeyF11, 0, 0}}},
+	{"debug_start", "debug_start", menuExecute, nil},
 	{"cancel", "cancel_execution", menuExecute, []binding{{"Esc", tuivory.KeyEscape, 0, 0}}},
 	{"history", "history", menuView, []binding{{"F8", tuivory.KeyF8, 0, 0}}},
 	{"favorites", "favorites", menuView, nil},
@@ -155,7 +155,7 @@ func (s *screen) commandEnabled(id string) bool {
 		return false
 	}
 	switch id {
-	case "session_browser":
+	case "session_browser", "debug_start":
 		return s.connected && !s.busy && !s.workerClosed && !s.transactionUncertain
 	case "schema_compare", "data_compare":
 		return !s.busy && len(s.compareConnections()) >= 2
@@ -252,7 +252,7 @@ func (s *screen) commandEnabled(id string) bool {
 
 func (s *screen) invoke(id string) {
 	if !s.commandEnabled(id) {
-		if id == "parse" || id == "debug_continue" {
+		if id == "parse" {
 			s.setStatus(commandFor(id).label)
 		}
 		if id == "execute" || id == "script" || id == "plan" || id == "commit" || id == "rollback" {
@@ -269,6 +269,8 @@ func (s *screen) invoke(id string) {
 		s.showComparison(true)
 	case "session_browser":
 		s.showSessionBrowser()
+	case "debug_start":
+		s.showDebugger()
 	case "guide":
 		s.showGuide()
 	case "release_history":

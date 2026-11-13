@@ -122,6 +122,9 @@ func (s *screen) key(event *tuivory.EventKey) *tuivory.EventKey {
 	if s.buttonArrow(event) {
 		return nil
 	}
+	if page == "debugger" {
+		return s.debuggerKey(event)
+	}
 	if page == "definition" {
 		return s.definitionKey(event)
 	}

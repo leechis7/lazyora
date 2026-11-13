@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+- LORA-88: Oracle Free에서 검증한 PL/SQL 디버거를 추가합니다. 인자 없는 독립 프로시저에서 중단점, 단계 실행, 변수와 호출 스택 조회를 지원합니다.
+- LORA-88: Add a PL/SQL debugger verified on Oracle Free, with breakpoints, stepping, scalar watches and call stacks for standalone parameterless procedures.
+
 ## [0.19.0] - 2026-11-12
 
 - LORA-74: 조회 결과, 실행 메시지, DBMS_OUTPUT을 같은 작업 영역의 탭으로 전환합니다. 실행이 끝나도 편집기 포커스를 유지합니다.

@@ -40,7 +40,7 @@ func menuSection(id string) string {
 		return "mg_files"
 	case "execute", "script", "routine_execute":
 		return "mg_run"
-	case "plan", "actual_plan_execute", "actual_plan_last", "parse", "debug_continue":
+	case "plan", "actual_plan_execute", "actual_plan_last", "parse", "debug_start":
 		return "mg_analysis"
 	case "help", "guide", "release_history":
 		return "mg_help"

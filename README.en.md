@@ -17,6 +17,7 @@ v0.19.0 adds Results, Messages, and DBMS_OUTPUT tabs to the result area. See the
 - Schema objects, columns and comments, source and arguments, source editing and compilation.
 - Results, execution messages, and DBMS_OUTPUT tabs; routine execution, object DDL/privileges/dependencies, additional result fetching, sorting/filtering, cell details and guarded editing.
 - Toad (default), Vim, Notepad++, VS Code and IntelliJ IDEA editor keymaps; completion, formatting, dark/light/black-and-white themes, and Korean/English UI.
+- PL/SQL debugger: breakpoints, stepping, scalar watches, and call stacks for debug-compiled parameterless procedures.
 
 Common menus and result grids use the same Tuivory package. Resize columns by dragging header dividers or using existing menus. See [scope and verification](docs/en/tuivory-sync.md).
 

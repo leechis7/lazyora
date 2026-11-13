@@ -62,6 +62,8 @@ Execute → Run procedure/function supports routine arguments. Step debugging is
 
 **Tools → Compare table data** compares tables in two Oracle connections using shared keys such as `EMP_ID, DEPT_ID`. Keys must be unique and non-NULL. View one-sided rows and changed columns; Enter shows details and Esc cancels both reads. This read-only comparison supports up to 5,000 rows per table and never presents an incomplete comparison.
 
+**Execute → PL/SQL debugger** runs a standalone parameterless procedure owned by the login user. Ask the DBA for `DEBUG CONNECT SESSION` and compile the target beforehand with `ALTER PROCEDURE name COMPILE DEBUG`. Compilation is DDL; use a connection with no pending work.
+
 ## Session browser
 
 **Session → Session browser** shows the Oracle sessions and blocking relationships visible to the active connection. Blockers and waiters appear first, with up to 500 entries. Select a session with the arrow keys or mouse and use Tab to move between the details and buttons. Choose **Refresh** for the latest snapshot.

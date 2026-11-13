@@ -17,6 +17,8 @@ import (
 )
 
 type job struct {
+	debugLine     int
+	debugActions  <-chan oracle.DebugAction
 	sessionTarget oracle.SessionEntry
 	gridRefresh   *gridRefreshState
 	edits         []oracle.EditChange
@@ -51,6 +53,7 @@ type job struct {
 }
 
 type screen struct {
+	debugger                            *debuggerView
 	textRoles                           map[*tuivory.WidgetTextView]textRole
 	surfaceRoles                        map[*tuivory.Box]surfaceRole
 	treeRoles                           map[*tuivory.WidgetTreeNode]textRole
@@ -529,7 +532,7 @@ func (s *screen) submit(j job) {
 	s.busy = true
 	if j.action == "test_connect" {
 		j.ctx, s.cancel = context.WithTimeout(context.Background(), 15*time.Second)
-	} else if j.action == "cell_save" || j.action == "export" && j.query != nil {
+	} else if j.action == "debug_start" || j.action == "cell_save" || j.action == "export" && j.query != nil {
 		j.ctx, s.cancel = context.WithCancel(context.Background())
 	} else {
 		j.ctx, s.cancel = context.WithTimeout(context.Background(), 60*time.Second)
@@ -577,6 +580,10 @@ func (s *screen) worker() {
 			session.ClosePage()
 		}
 		switch j.action {
+		case "debug_start":
+			err = session.DebugProcedure(j.ctx, j.text, j.debugLine, j.debugActions, func(state oracle.DebugState, err error) {
+				s.app.QueueUpdateDraw(func() { s.acceptDebugUpdate(state, err) })
+			})
 		case "test_connect":
 			err = oracle.ProbeConnection(j.ctx, j.config)
 		case "edit_load":
@@ -721,6 +728,10 @@ func (s *screen) worker() {
 					s.requestQuitLocal()
 				}
 			}()
+			if j.action == "debug_start" {
+				s.acceptDebugFinish(err)
+				return
+			}
 			if j.action == "test_connect" {
 				s.acceptConnectionProbe(err, j.config)
 				return

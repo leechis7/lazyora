@@ -113,6 +113,9 @@ func (s *screen) refreshFooter() {
 	}
 	hint := "footer_sql"
 	switch page {
+	case "debugger":
+		hint = "debug_keys"
+		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Esc", "debug_stop", tuivory.KeyEscape, 0}}
 	case "workspaces":
 		hint = "footer_workspaces"
 		keys = []footerKey{{"F1", "help", tuivory.KeyF1, 0}, {"Esc", "close", tuivory.KeyEscape, 0}}

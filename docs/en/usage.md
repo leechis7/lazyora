@@ -78,7 +78,7 @@ Ctrl+R refreshes schema/object lists or the current detail panel. Enter opens ob
 
 Table/view details include column comments. Program objects offer source and argument views, source editing and compilation, plus compile errors. Source apply/compile are **DDL**, with confirmation and implicit-commit implications; they are not read-only lookup. Object detail offers DDL (Alt+D), constraints (Alt+C), indexes (Alt+I), privileges/dependencies and relations as available. In DDL/constraints/index views, 1/2/3 switches views and Ctrl+R refreshes. Copy actions use the displayed original DDL/detail/TSV, not rewritten SQL. Metadata availability depends on privileges/version.
 
-Execute → Run procedure/function is distinct from a step debugger: LazyOra has **no breakpoint/step debugger**. The runner supports its documented scalar IN/OUT/IN OUT arguments and REF CURSOR results; up to four cursors, up to 1,000 fetched rows each. Routine export uses fetched results and does not rerun the routine. Record/collection/LOB/timezone-specific argument types are not generally supported. See the [debugger design record](plsql-debugger.md) for planned, unimplemented work.
+Execute → Run procedure/function is separate from the PL/SQL debugger. The runner supports its documented scalar IN/OUT/IN OUT arguments and REF CURSOR results; up to four cursors, up to 1,000 fetched rows each. Routine export uses fetched results and does not rerun the routine. Record/collection/LOB/timezone-specific argument types are not generally supported. See the [debugger design record](plsql-debugger.md) for the design history.
 
 Opening a table, view or materialized view from the schema tree shows **Columns · Data · DDL** on the right. Press **Tab** to focus the tab strip and use **Left/Right and Enter**, or click a tab. **Alt+V** opens the Data tab, and **Alt+D** opens the existing DDL detail screen. Narrow screens show the detail pane alone. Data loads when the tab is opened. **Ctrl+R** refreshes and **Ctrl+N** reruns the preview with a limit 100 rows higher, up to 1,000 rows or approximately 8 MiB. Row order is unspecified, and LOB values may be partial. The preview is read-only and preserves existing SQL tabs, result cursors and uncommitted changes.
 
@@ -106,7 +106,7 @@ F1 → Editor keymaps explains the active mode, including Vim NORMAL/INSERT. Hel
 
 Search is case-sensitive literal text, wraps at the end and supports next/previous with F3/Shift+F3; Ctrl+F finds and Ctrl+R replaces in normal editor use. Ctrl+H is not used for replace because it collides with terminal Backspace. Completion/formatting/line commands vary by keymap: Toad uses Ctrl+T completion and Ctrl+Shift+F formatting, while Notepad++/VS Code/IDEA provide Ctrl+Space completion. Use menus if the terminal cannot send modifiers.
 
-Completion uses available metadata and SQL context, not a full Oracle parser. CTE/derived-column inference, synonym/DB-link/package-member resolution and PL/SQL local symbol analysis are limited or unsupported; unavailable metadata is reported. Formatting is not SQL validation. macOS Command combinations, multiple cursors and full IDE/project features are not implied. Syntax-check Ctrl+F9 and debugger-continue F11 are reserved/unsupported, not DB execution shortcuts.
+Completion uses available metadata and SQL context, not a full Oracle parser. CTE/derived-column inference, synonym/DB-link/package-member resolution and PL/SQL local symbol analysis are limited or unsupported; unavailable metadata is reported. Formatting is not SQL validation. macOS Command combinations, multiple cursors and full IDE/project features are not implied. Syntax-check Ctrl+F9 is reserved. F11 continues execution only inside the debugger.
 
 ## Result area tabs
 
@@ -170,3 +170,11 @@ v0.12.1 uses Tuivory v0.5.0 shared shadows and backdrop dimming. Background colo
 
 
 Tuivory renders edited-cell backgrounds, cell and row `*` markers, and the real cell cursor. Cursor shape and blink follow terminal settings.
+
+## PL/SQL debugger
+
+**Execute → PL/SQL debugger** runs a standalone parameterless procedure owned by the login user. Ask the DBA for `DEBUG CONNECT SESSION` and compile the target beforehand with `ALTER PROCEDURE name COMPILE DEBUG`. Compilation is DDL; use a connection with no pending work.
+
+Enter an Oracle source line to set the first breakpoint. **F11** continues, **F8** steps over, **F7** steps into, **Alt+O** returns to the caller, and **Esc** stops or closes. While paused, use **Alt+B** to add a breakpoint to the displayed procedure or **Alt+W** to read a scalar by name in the current frame. The source marks the current line with `>`. Use **Alt+V** to focus the source and **Tab** to move to the call stack and controls.
+
+The first version was tested on Oracle Free 23. It uses two temporary Oracle sessions, separate from the editor transaction, with no listening port. Uncommitted work on the debug connection is rolled back at the end. COMMIT, DDL, and autonomous transactions in the procedure can still have persistent effects. Oracle 10g, 19c and RAC have not been tested live. Starting a function or package directly and editing parameters or variables are unsupported.

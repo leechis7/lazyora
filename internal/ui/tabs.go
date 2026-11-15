@@ -110,8 +110,8 @@ func (s *screen) newTab() {
 	s.styleEditor(editor)
 	editor.SetClipboard(s.sendClipboard, func() string { return s.clipboardText })
 	editor.SetMouseCapture(func(action tuivory.MouseAction, event *tuivory.EventMouse) (tuivory.MouseAction, *tuivory.EventMouse) {
-		if action == tuivory.MouseRightClick {
-			s.app.SetFocus(s.editor)
+		if action == tuivory.MouseRightClick && editor.InRect(event.Position()) {
+			s.app.SetFocus(editor)
 			s.showContextMenu()
 			return tuivory.MouseConsumed, nil
 		}

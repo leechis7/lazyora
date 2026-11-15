@@ -4,6 +4,32 @@
 
 LazyOra는 [Tuivory](https://github.com/leechis7/tuivory)의 공통 스타일 원칙을 제품 UI에 적용합니다. Tuivory의 가이드·견본·도구 개발은 별도 저장소와 Tuivory Jira에서 관리하고, LazyOra의 적용 작업은 LORA Jira에서 관리합니다.
 
+## LORA-77 · Tuivory Go v0.12.6
+
+공개 [Go v0.12.6](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.6), 커밋 `e2ab5ae123fe527654a0693c05079f04398e6126`, 모듈 체크섬 `h1:aRX6SKDdEltUmzMo8UXHZdiZT1VAsH5H0jAQd8S6FrM=`을 적용했습니다. LazyOra의 객체 상세와 결과 탭은 창 크기와 관계없이 한 줄을 유지합니다. [TVR-37](https://leechis7.atlassian.net/browse/TVR-37)도 한 줄을 예제와 가이드의 기본으로 두고 3줄 테두리를 선택 사항으로 제공합니다.
+
+공통 폼 팝업은 `ShadowOptions.HideTopCap`으로 오른쪽 위 첫 칸을 비웁니다. 밝은 배경의 하단 모서리 연결은 [TVR-35](https://leechis7.atlassian.net/browse/TVR-35)의 공통 렌더러가 처리합니다. 객체 상세에 이미 사용 중인 `SplitView`는 실제 포커스를 기준으로 키와 붙여넣기를 전달합니다. [TVR-36](https://leechis7.atlassian.net/browse/TVR-36)의 `ContainerView.SetFrontInput`은 기존 `Pages`의 교체가 필요하므로 이번에는 연결을 보류합니다. 페이지별 입력 차단과 Oracle 업무 포커스 동작을 유지합니다.
+
+## LORA-77 · Tuivory Go v0.12.5 및 공통 입력 요청
+
+공개 [Go v0.12.5](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.5), 커밋 `c4212e335adb68ab06095386c94eedcb8141ac0d`, 모듈 체크섬 `h1:IXg5357iMtY/qp3ojzQXJUnJzqGnNT1734Gaoe9WJmY=`를 적용했습니다. 이번 버전의 탭 테두리·활성색은 SQL, 결과 영역, 객체 상세에 공통 적용됩니다. 그림자 소스는 v0.12.4와 같아 상단 첫 칸과 하단 모서리 개선은 보류했습니다.
+
+겹친 화면의 마우스·키보드·붙여넣기, 화면 전환 시 드래그 취소, 분할창의 호버와 키보드 포커스 분리를 [Tuivory TVR-36](https://leechis7.atlassian.net/browse/TVR-36)에 요청했습니다. LazyOra에서 시험한 공통 입력 처리는 제거했습니다. 객체 상세의 전체 화면 전환과 해당 편집기 영역에서만 문맥 메뉴를 여는 동작은 앱 정책으로 유지합니다. 공통 입력 차단은 Tuivory의 공개 API가 나오면 연동·검증합니다.
+
+## LORA-77 · Tuivory Go v0.12.4
+
+객체 상세가 열리면 뒤쪽 SQL 화면을 숨겨 마우스 누름이 가려진 편집기로 전달되지 않도록 합니다. Tuivory 탭의 클릭 처리는 그대로 사용합니다.
+
+설정창 하단의 문자 표시 안내는 좌우 여백을 둔 테두리 안에서 줄바꿈합니다. 하단 그림자의 오른쪽 끝은 Tuivory ShadowAuto가 그리는 위쪽 반각 문자(▀)이며, 배경에 따라 그림자 색을 셀 단위로 계산합니다. 밝은 배경 위에서도 아래쪽 그림자와 오른쪽 끝이 이어져 보이는지 8·16색에서 확인하는 항목을 TVR-29 관련 보완 제안에 추가합니다.
+
+접속창은 두 상자를 붙이고 필드·버튼에 맞춘 높이를 사용합니다. 공개 ShadowAuto는 OffsetY=1에서 오른쪽 첫 칸을 하단 반각 문자(▄)로 그립니다. 그 한 칸만 생략하면서 하단 반 줄을 유지하는 옵션은 없어 기존 그림자를 유지합니다. Tuivory 후속 요청 제안(TVR-29 관련): 오른쪽 첫 셀의 배경과 문자를 유지하고, 나머지 오른쪽 그림자 및 하단 반 줄은 보존하는 모드를 Go·Rust 공통 계약으로 제공.
+
+상단 메뉴는 Tuivory의 탐색 위치를 유지하되 팝업을 닫으면 기본 메뉴 색으로 돌아갑니다.
+
+결과 그리드는 공개 토큰의 `grid.header`를 사용해 8색·16색·256색·True Color에서 헤더와 본문을 구분합니다. 활성 컬럼은 같은 배경에 굵게 표시합니다.
+
+공개 [Tuivory Go v0.12.4](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.4)의 커밋 `dd8dc51862c8a139d051cd8eddf412e041b593d9`를 유지합니다. 좁은 화면에서는 객체 상세에 기존 SplitView의 두 번째 슬롯을 선택하고 실행 메시지·출력의 행 배정을 조정했습니다. [한영 검증 기록](audits/lora-77-ui-regression.md)
+
 ## LORA-74 · Tuivory Go v0.12.4
 
 결과 영역 탭은 공개 `go/v0.12.4`(커밋 `dd8dc51862c8a139d051cd8eddf412e041b593d9`)의 `TabView`와 `TabState`를 사용합니다. 탭 그리기와 입력은 Tuivory가, Oracle 조회 결과·실행 메시지·출력 소유 범위는 LazyOra가 담당합니다. 기존 편집기 호환 의존성은 유지합니다.

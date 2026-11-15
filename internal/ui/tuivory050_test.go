@@ -65,7 +65,7 @@ func TestPopupBottomShadowUsesSharedHalfRow(t *testing.T) {
 					s.prefs.Theme, s.prefs.DisplayMode = theme, mode
 					form := tuivory.NewWidgetForm().AddFormItem(s.newInputField().SetText("한글"))
 					popup := s.formPopup(form, 40, 12, nil)
-					checked := 0
+					checked, caps := 0, 0
 					for _, size := range [][2]int{{80, 24}, {40, 12}, {80, 24}} {
 						terminal.SetSize(size[0], size[1])
 						terminal.Clear()
@@ -75,6 +75,16 @@ func TestPopupBottomShadowUsesSharedHalfRow(t *testing.T) {
 						l := popup.shadow.Layout()
 						if l.Shadow.Height <= l.Card.Height {
 							continue
+						}
+						side := l.ShadowRegions()[0]
+						if side.Width > 0 && side.Height > 0 {
+							terminal.SetContent(side.X, side.Y, 'X', nil, tuivory.StyleDefault)
+							popup.Draw(terminal)
+							if glyph, _, _, _ := terminal.GetContent(side.X, side.Y); glyph != 'X' {
+								t.Fatalf("popup painted the top-right shadow cap over the backdrop: %q", glyph)
+							}
+							terminal.Show()
+							caps++
 						}
 						x, y := l.Shadow.X, l.Shadow.Y+l.Shadow.Height-1
 						cells, w, _ := terminal.GetContents()
@@ -95,8 +105,8 @@ func TestPopupBottomShadowUsesSharedHalfRow(t *testing.T) {
 						}
 						checked++
 					}
-					if checked < 2 {
-						t.Fatalf("did not recheck shadow after resize: %d", checked)
+					if checked < 2 || caps < 2 {
+						t.Fatalf("did not recheck shadow after resize: bottom=%d top=%d", checked, caps)
 					}
 				})
 			}

@@ -389,30 +389,26 @@ func (s *screen) connectionForm() {
 	if loadErr != nil {
 		form.SetTitle(" " + fmt.Sprintf(s.tr("connection_load_error"), loadErr) + " ")
 	}
-	gap := s.newBox()
-	s.setSurface(gap, surfacePanel)
-	content := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(selector, 5, 0, false).AddItem(gap, 1, 0, false).AddItem(form, 0, 1, true)
-	root := s.formPopup(content, 90, 32, func(width, height int) {
-		spacing := 1
-		if height < 31 {
-			spacing = 0
+	// One selector row and its borders; keep the two frames adjacent.
+	const selectorRows = 3
+	fields := form.GetFormItemCount()
+	compactRows := selectorRows + 2 + fields + 2 // borders, fields, gap and buttons
+	spaciousRows := compactRows + fields + 1     // field spacing and vertical padding
+	selector.SetBorderPadding(0, 0, 2, 2)
+	content := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(selector, selectorRows, 0, false).AddItem(form, 0, 1, true)
+	root := s.responsiveFormPopup(content, 90, func(available int) int {
+		if available >= spaciousRows {
+			return spaciousRows
 		}
-		form.SetItemPadding(spacing)
-		profileHeight := 5
-		if height < 24 {
-			profileHeight = 3
-			selector.SetBorderPadding(0, 0, 2, 2)
+		return compactRows
+	}, func(width, height int) {
+		if height < spaciousRows {
+			form.SetItemPadding(0)
 			form.SetBorderPadding(0, 0, 2, 2)
 		} else {
-			selector.SetBorderPadding(1, 1, 2, 2)
+			form.SetItemPadding(1)
 			form.SetBorderPadding(1, 1, 2, 2)
 		}
-		content.ResizeItem(selector, profileHeight, 0)
-		gapHeight := 1
-		if height < 20 {
-			gapHeight = 0
-		}
-		content.ResizeItem(gap, gapHeight, 0)
 		if width < 88 {
 			form.GetButton(0).SetLabel(s.tr("connect"))
 			form.GetButton(1).SetLabel(s.tr("cancel"))

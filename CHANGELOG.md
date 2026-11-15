@@ -4,6 +4,30 @@
 
 ## [Unreleased]
 
+- LORA-77: Tuivory Go v0.12.6을 적용했습니다. 객체 상세와 결과 탭은 한 줄로 표시하고, 공통 폼 팝업의 오른쪽 위 그림자 한 칸을 비웁니다.
+- LORA-77: Adopt Tuivory Go v0.12.6. Object details and result tabs stay on one row, and shared form popups leave the top-right shadow cell clear.
+
+- LORA-77: 스키마 객체 상세의 컬럼·데이터·DDL 탭을 마우스로 전환할 수 있도록 수정했습니다.
+- LORA-77: Restore mouse switching between the Columns, Data, and DDL tabs in schema object details.
+
+- LORA-77: 설정 팝업 하단의 문자 표시 안내를 여백이 있는 테두리 안으로 옮겼습니다.
+- LORA-77: Inset and frame the character display note at the bottom of Settings.
+
+- LORA-77: 접속 팝업에서 저장된 접속과 접속 정보 상자를 붙이고 버튼 밑의 여백을 줄였습니다.
+- LORA-77: Bring the saved connections and connection details panels together and reduce space below the buttons.
+
+- LORA-77: 메뉴를 닫으면 상단 메뉴의 선택 강조를 지웁니다.
+- LORA-77: Clear the menu bar highlight when closing a menu.
+
+- LORA-77: 결과 그리드 헤더 배경이 본문과 구분되도록 복원했습니다.
+- LORA-77: Restore a distinct background for the result grid header.
+
+- LORA-77: 원본 행에 작은 소수가 있을 때 그리드 커밋이 변경 충돌로 잘못 실패하는 문제를 수정했습니다.
+- LORA-77: Fix false grid commit conflicts on rows containing small decimal values.
+
+- LORA-77: 높이가 낮은 터미널에서 실행 메시지 목록과 DBMS_OUTPUT에 공간을 우선 배정하고, 보이지 않는 컨트롤은 Tab 이동에서 건너뜁니다. 폭이 좁으면 객체 상세 탭을 먼저 표시합니다.
+- LORA-77: Prioritize the Messages statement list and DBMS_OUTPUT in short terminals, and skip invisible controls when tabbing. In narrow terminals, keep object details visible.
+
 ## [0.20.0] - 2026-11-13
 
 - LORA-88: Oracle Free에서 검증한 PL/SQL 디버거를 추가합니다. 인자 없는 독립 프로시저에서 중단점, 단계 실행, 변수와 호출 스택 조회를 지원합니다.

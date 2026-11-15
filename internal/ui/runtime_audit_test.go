@@ -44,7 +44,12 @@ func TestRuntimeUIAudit(t *testing.T) {
 		{"rename", func(s *screen) { s.showTabRename() }},
 		{"file", func(s *screen) { s.showFileDialog("open", nil) }},
 		{"export", func(s *screen) { s.showExport() }},
-		{"output", func(s *screen) { s.showOutput() }},
+		{"output", func(s *screen) {
+			s.showOutput()
+			if s.resultSection() != "output" || !s.outputText.HasFocus() {
+				t.Error("DBMS_OUTPUT tab did not receive focus")
+			}
+		}},
 		{"bind", func(s *screen) {
 			s.withBinds("SELECT :id FROM dual", func(map[string]oracle.BindValue) { t.Error("audit executed bind callback") })
 		}},
@@ -73,6 +78,27 @@ func TestRuntimeUIAudit(t *testing.T) {
 		{"history", func(s *screen) { s.showHistory() }},
 		{"describe", func(s *screen) { s.describe(true) }},
 		{"object", func(s *screen) { s.openObject(oracle.Object{Owner: "AUDIT", Name: "SAMPLE_ROWS", Kind: "TABLE"}) }},
+		{"schema_search", func(s *screen) {
+			s.invoke("browser_search")
+			s.browserSearch.SetText("sample_rows")
+			if s.browserObjectCount() != 1 || !s.browserSearch.HasFocus() {
+				t.Error("schema filter did not keep the matching object and search focus")
+			}
+		}},
+		{"object_data", func(s *screen) {
+			s.openObjectDetails(oracle.Object{Owner: "LAZYORA", Name: "SAMPLE_ROWS", Kind: "TABLE"}, true)
+			s.selectObjectTab("data")
+			if s.objectWorkspace == nil || s.objectWorkspace.section != "data" || s.objectWorkspace.dataGrid == nil {
+				t.Error("docked object data did not open")
+			}
+		}},
+		{"object_ddl", func(s *screen) {
+			s.openObjectDetails(oracle.Object{Owner: "LAZYORA", Name: "SAMPLE_ROWS", Kind: "TABLE"}, true)
+			s.selectObjectTab("ddl")
+			if s.objectWorkspace == nil || !strings.Contains(s.objectWorkspace.ddl.GetText(false), "CREATE TABLE") {
+				t.Error("docked object DDL did not open")
+			}
+		}},
 		{"arguments", func(s *screen) {
 			s.object = oracle.Object{Owner: "AUDIT", Name: "P", Kind: "PROCEDURE"}
 			s.showArguments()
@@ -87,11 +113,19 @@ func TestRuntimeUIAudit(t *testing.T) {
 		{"script", func(s *screen) {
 			s.scriptReport = oracle.ScriptReport{Total: 1, Steps: []oracle.ScriptStep{{Statement: oracle.Statement{Text: "SELECT 1 FROM dual", Line: 1}, Result: oracle.Result{Columns: []string{"N"}, Rows: [][]string{{"1"}}}}}}
 			s.showScriptReport()
+			if s.resultSection() != "messages" || !s.scriptList.HasFocus() {
+				t.Error("script report did not focus the Messages tab's statement list")
+			}
 		}},
 		{"copy", func(s *screen) { s.app.SetFocus(s.table); s.clipboardText = "audit\t한글"; s.copyPreview() }},
 		{"cell", func(s *screen) { auditGridData(s); s.showCellDetail() }},
 		{"grid_edit", func(s *screen) { auditGridData(s); s.showGridEdit() }},
-		{"grid_inline", func(s *screen) { auditGridData(s); s.startInlineEdit(nil) }},
+		{"grid_inline", func(s *screen) {
+			auditGridData(s)
+			if !s.startInlineEdit(nil) || s.inlineEdit == nil || !s.table.HasFocus() {
+				t.Error("result cell did not enter inline edit")
+			}
+		}},
 		{"result_filter", func(s *screen) { s.showResultFilter() }},
 		{"pending", func(s *screen) { s.pendingChanges = true; s.showPendingWork() }},
 		{"program_confirm", func(s *screen) { s.showProgramConfirm("Audit confirmation", func() {}) }},
@@ -159,6 +193,10 @@ func TestRuntimeUIAudit(t *testing.T) {
 							expected = "reference"
 						case "context":
 							expected = "menu"
+						case "output", "script", "grid_inline", "schema_search":
+							expected = "main"
+						case "object_data", "object_ddl":
+							expected = "object"
 						}
 						if strings.HasPrefix(expected, "menu") {
 							expected = "menu"
@@ -180,6 +218,12 @@ func TestRuntimeUIAudit(t *testing.T) {
 							}
 							if s.editor.GetText() != before && scenario.name != "completion" {
 								t.Error("drawing changed original SQL")
+							}
+							if size == ([2]int{40, 16}) && theme == "dark" && colors == 8 {
+								switch scenario.name {
+								case "script", "output", "object_data", "object_ddl":
+									auditDump(t, raw, fmt.Sprintf("compact-%s-%s", lang, scenario.name))
+								}
 							}
 							if size == ([2]int{80, 24}) && lang == "ko" {
 								switch scenario.name {

@@ -117,6 +117,7 @@ func (s *screen) rebuildResultBody() {
 		return
 	}
 	w.body.Clear()
+	w.body.SetDrawFunc(nil)
 	w.message = nil
 	s.outputText, s.outputInfo, s.outputToggle = nil, nil, nil
 	s.scriptList, s.scriptResult, s.scriptText = nil, nil, nil
@@ -227,6 +228,11 @@ func (s *screen) resultAreaKey(event *tuivory.EventKey) bool {
 				continue
 			}
 			for _, next := range w.controls[i+1:] {
+				// A short result pane can leave secondary controls with no rows.
+				_, _, width, height := next.GetRect()
+				if width <= 0 || height <= 0 {
+					continue
+				}
 				if button, ok := next.(*tuivory.WidgetButton); !ok || !button.IsDisabled() {
 					s.app.SetFocus(next)
 					return true
@@ -333,5 +339,13 @@ func (s *screen) buildExecutionMessages(body *tuivory.Flex) []tuivory.Primitive 
 		return []tuivory.Primitive{status}
 	}
 	body.AddItem(status, 3, 0, false)
+	body.SetDrawFunc(func(_ tuivory.Screen, x, y, w, h int) (int, int, int, int) {
+		rows := 3
+		if h < 10 {
+			rows = 0 // Reserve the short pane for statements and their results.
+		}
+		body.ResizeItem(status, rows, 0)
+		return x, y, w, h
+	})
 	return append(s.buildScriptReport(body), status)
 }

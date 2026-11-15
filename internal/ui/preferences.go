@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"lazyora/internal/settings"
+	"strings"
 
 	"github.com/leechis7/tuivory/go"
 )
@@ -56,9 +57,10 @@ func (s *screen) settingsForm() {
 		}
 	}
 	form.AddFormItem(s.newChoice(s.tr("display_mode"), []string{s.tr("display_auto"), "Unicode", "ASCII"}, modeIndex, nil))
-	info := s.newTextView(textHint).SetWrap(true).SetScrollable(false)
+	info := s.newTextView(textHint).SetWrap(true).SetWordWrap(true).SetScrollable(false)
 	info.SetText(s.tr("display_effective") + ": " + s.displaySummary())
 	s.textSurface(info, surfacePanel)
+	info.SetBorder(true).SetBorderPadding(0, 0, 1, 1)
 	s.savePrefs = func() {
 		index, _ := form.GetFormItem(0).(*choiceField).GetCurrentOption()
 		language := "en"
@@ -96,7 +98,14 @@ func (s *screen) settingsForm() {
 	s.styleForm(form)
 	content := s.newFlex().SetDirection(tuivory.FlexRow).AddItem(form, 0, 1, true).AddItem(info, 3, 0, false)
 	root := s.formPopup(content, 84, 26, func(width, height int) {
-		infoHeight := min(3, max(0, height-12))
+		lines := 0
+		for _, paragraph := range strings.Split(info.GetText(false), "\n") {
+			lines += max(1, len(tuivory.WordWrap(paragraph, max(1, width-4))))
+		}
+		infoHeight := min(lines+2, max(0, height-12))
+		if infoHeight < 3 { // Keep the form usable if there is no room for a framed note.
+			infoHeight = 0
+		}
 		content.ResizeItem(info, infoHeight, 0)
 		if infoHeight == 0 {
 			info.SetRect(0, 0, 0, 0)

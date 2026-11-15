@@ -457,7 +457,7 @@ func (s *screen) commandKey(event *tuivory.EventKey) bool {
 
 func (s *screen) menuBar() *tuivory.Flex {
 	s.refreshMenuLabels()
-	view, err := tuivory.NewMenuBarView(s.mainMenu, s.componentPalette(), func(e tuivory.MenuEvent) {
+	view, err := tuivory.NewMenuBarView(s.mainMenu, s.menuBarPalette(), func(e tuivory.MenuEvent) {
 		if e.Kind != "open_request" {
 			return
 		}

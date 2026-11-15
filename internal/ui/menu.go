@@ -71,8 +71,22 @@ func (s *screen) refreshMenuLabels() {
 		}
 	}
 	s.mainMenu.BackLabel = strings.TrimPrefix(s.tr("mg_back"), "← ")
+	s.refreshMenuBarPalette()
+}
+
+func (s *screen) menuBarPalette() tuivory.Palette {
+	palette := s.componentPalette()
+	// Tuivory retains the last menu group for navigation and horizontal
+	// scrolling. Only an open top-level popup should show that selection.
+	if s.mainMenu == nil || !s.mainMenu.Opened() {
+		palette["selection"] = palette["header"]
+	}
+	return palette
+}
+
+func (s *screen) refreshMenuBarPalette() {
 	if s.menuBarView != nil {
-		_ = s.menuBarView.SetPalette(s.componentPalette())
+		_ = s.menuBarView.SetPalette(s.menuBarPalette())
 	}
 }
 func (s *screen) showMenu(index int) {
@@ -124,6 +138,7 @@ func (s *screen) openCommandMenu(title string, entries []command, index int) {
 func (s *screen) openMenuModel(model *tuivory.Menu, root string) {
 	s.menuModel = model
 	model.Open(root, "panel")
+	s.refreshMenuBarPalette()
 	view, err := tuivory.NewMenuView(model, s.componentPalette(), s.asciiDisplay(), s.menuEvent)
 	if err != nil {
 		panic(err)
@@ -203,6 +218,7 @@ func (s *screen) closeMenu() {
 	if s.menuModel != nil {
 		s.menuModel.Close()
 	}
+	s.refreshMenuBarPalette()
 	s.pages.RemovePage("menu")
 	s.menuList = nil
 	s.menuModel = nil

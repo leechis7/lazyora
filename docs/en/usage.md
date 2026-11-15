@@ -74,6 +74,8 @@ Treat an uncertain result or failed transaction recovery as uncertain, not succe
 
 Alt+B toggles the browser, Alt+U selects the user (initially the connected account), and Alt+O selects object type. Tables/views, functions/procedures/packages and other supported object categories appear by type. Alt+I immediately filters object names within the loaded user/type without a DB requery; Down/Enter enters the list and Esc clears. User/reconnect changes reset search; type changes retain it. Workspaces keep their own browser state.
 
+In a narrow terminal, opening table or view details gives the Columns, Data, and DDL tabs the available width. Widen the terminal to bring the schema list back beside them.
+
 Ctrl+R refreshes schema/object lists or the current detail panel. Enter opens object/column details; F4 describes the selected/cursor object. In Toad mode Ctrl+D opens named-object lookup; editor keymaps can reassign Ctrl+D. Tab includes visible browser user/type/list controls; F6 switches SQL/results. Hidden browser controls are excluded from focus traversal.
 
 Table/view details include column comments. Program objects offer source and argument views, source editing and compilation, plus compile errors. Source apply/compile are **DDL**, with confirmation and implicit-commit implications; they are not read-only lookup. Object detail offers DDL (Alt+D), constraints (Alt+C), indexes (Alt+I), privileges/dependencies and relations as available. In DDL/constraints/index views, 1/2/3 switches views and Ctrl+R refreshes. Copy actions use the displayed original DDL/detail/TSV, not rewritten SQL. Metadata availability depends on privileges/version.
@@ -113,6 +115,8 @@ Completion uses available metadata and SQL context, not a full Oracle parser. CT
 The result area has **Results · Messages · DBMS_OUTPUT** tabs. From the result area, press **Shift+Tab** to reach the tab strip, **Left/Right** to choose a tab, **Enter** to activate it, and **Tab** to enter its contents. You can also click a tab or open it from **View**. **Alt+P** opens DBMS_OUTPUT. Result fullscreen hides the tab strip; **Esc** restores split view.
 
 Finishing a run keeps the selected tab and editor focus. New content is marked with `*`, and execution or output errors with `!`. Results, the last execution message, and the F5 statement report belong to the SQL tab. SQL tabs in one connection share DBMS_OUTPUT; other connections have their own output.
+
+In a short terminal, the Messages statement list and the DBMS_OUTPUT body get space first. Press Shift+F2 or F12 to expand results if a summary is hidden or clipped.
 
 ## Results, large cells and editing
 

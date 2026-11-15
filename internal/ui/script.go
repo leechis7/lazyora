@@ -80,6 +80,11 @@ func (s *screen) buildScriptReport(body *tuivory.Flex) []tuivory.Primitive {
 		}
 	}))
 	upper := s.newFlex().AddItem(list, 0, 2, true).AddItem(preview, 0, 3, false)
+	upper.SetDrawFunc(func(_ tuivory.Screen, x, y, w, h int) (int, int, int, int) {
+		list.SetBorder(h >= 3)
+		preview.SetBorder(h >= 3)
+		return x, y, w, h
+	})
 	body.AddItem(upper, 0, 1, true).AddItem(table, 0, 1, false).AddItem(use, 1, 0, false)
 	return []tuivory.Primitive{list, preview, table, use}
 }

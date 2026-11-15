@@ -1,0 +1,16 @@
+  File (F)  SQL tabs (G)  Edit (E)  Se~>
+Schema: LAZYORA    Object:
+SAMPLE_ROWS    Type: TABLE
+   Columns   >[Data]    DDL
+2 preview rows · Read only
+
+  #│ ID                 │ TITLE
+ >1│ 1                  │ First row
+  2│ 2                  │ Second row
+
+
+
+
+raints (exes (Alnts (Altlose (Esd rows (
+Tab Focus | Alt+V Data | Ctrl+R Refresh
+F1 HelpUp PreviPgDn NexEsc Clos  v0.20.0

@@ -380,6 +380,10 @@ func (s *screen) openObjectDetails(object oracle.Object, docked bool) {
 	if useWorkspace {
 		root = s.makeObjectWorkspace(buttons)
 	}
+	// Object details fill the page and reuse the browser. Keeping main visible
+	// also lets its covered editor capture the mouse press before the tabs can
+	// receive the click on release.
+	s.pages.HidePage("main")
 	s.pages.AddPage("object", root, true, true)
 	s.app.SetFocus(s.objectTable)
 	if !object.HasColumns() {
@@ -430,6 +434,7 @@ func (s *screen) renderObject(columns []oracle.Column) {
 
 func (s *screen) closeObject() {
 	s.pages.RemovePage("object")
+	s.pages.ShowPage("main")
 	s.objectWorkspace = nil
 	if s.objectFocus != nil {
 		s.app.SetFocus(s.objectFocus)

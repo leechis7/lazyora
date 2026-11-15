@@ -6,7 +6,7 @@ import (
 	"github.com/leechis7/tuivory/go"
 )
 
-var gridSelectionPalettes = sync.OnceValue(func() map[string]tuivory.Palette {
+var gridRolePalettes = sync.OnceValue(func() map[string]tuivory.Palette {
 	doc, err := tuivory.CandidateTokens()
 	if err != nil {
 		panic(err)
@@ -14,6 +14,7 @@ var gridSelectionPalettes = sync.OnceValue(func() map[string]tuivory.Palette {
 	palettes := make(map[string]tuivory.Palette, len(doc.Palettes))
 	for key, raw := range doc.Palettes {
 		palette, err := tuivory.Resolve(tuivory.TokenPalette{
+			"grid.header": raw["grid.header"],
 			"grid.active": raw["grid.active"],
 			"grid.range":  raw["grid.range"],
 		})
@@ -47,8 +48,6 @@ func (s *screen) componentPalette() tuivory.Palette {
 func (s *screen) resultPalette() tuivory.Palette {
 	p := s.tuivoryStyles()
 	out := s.componentPalette()
-	// Keep the active column distinguishable without breaking the header band.
-	out["grid.header-active"] = stylePair(p.GridHeaderStyle(false).Bold(true))
 	out["surface"] = stylePair(p.GridCellStyle(tuivory.CellState{Row: 1}))
 	for role, style := range map[string]tuivory.Style{
 		"grid.base":        p.GridCellStyle(tuivory.CellState{Row: 1}),
@@ -61,9 +60,13 @@ func (s *screen) resultPalette() tuivory.Palette {
 	} {
 		out[role] = stylePair(style)
 	}
-	for role, pair := range gridSelectionPalettes()[s.tuivoryTheme()+"-"+s.tuivoryProfile()] {
+	for role, pair := range gridRolePalettes()[s.tuivoryTheme()+"-"+s.tuivoryProfile()] {
 		out[role] = pair
 	}
+	// Keep the active column distinguishable without breaking the header band.
+	header := out["grid.header"]
+	header.Bold = true
+	out["grid.header-active"] = header
 	if s.table != nil {
 		row, col := s.table.GetSelection()
 		switch {

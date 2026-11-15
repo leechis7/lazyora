@@ -3,6 +3,7 @@ package oracle_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -36,7 +37,8 @@ func TestOracleGridRowDraftIntegration(t *testing.T) {
 		}
 	})
 	execute(s, "INSERT INTO lazyora_row_drafts (id) VALUES (1)")
-	execute(s, "INSERT INTO lazyora_row_drafts (id) VALUES (2)")
+	execute(s, "INSERT INTO lazyora_row_drafts (id, qty) VALUES (2, -0.0001)")
+	execute(s, "INSERT INTO lazyora_row_drafts (id, qty) VALUES (4, 0.0001)")
 	finish(s, true)
 	query := func(text string) oracle.Result {
 		t.Helper()
@@ -56,7 +58,7 @@ func TestOracleGridRowDraftIntegration(t *testing.T) {
 	}
 	const all = "SELECT t.ROWID, t.id, t.qty, t.note FROM lazyora_row_drafts t ORDER BY id"
 	snap := query(all)
-	if !snap.EditCanDelete || snap.EditRowIDColumn != 1 || len(snap.EditRowIDs) != 2 {
+	if !snap.EditCanDelete || snap.EditRowIDColumn != 1 || len(snap.EditRowIDs) != 3 {
 		t.Fatal("full verified snapshot lost delete metadata")
 	}
 	// An earlier change must survive when a later INSERT fails after a DELETE.
@@ -68,12 +70,16 @@ func TestOracleGridRowDraftIntegration(t *testing.T) {
 	}
 	execute(s, "UPDATE lazyora_row_drafts SET qty = 55 WHERE id = 1")
 	snap = query(all)
-	update := []oracle.EditChange{{ID: snap.EditID, Row: 0, Column: 3, Text: "edited"}}
+	// Compare original small decimals for both UPDATE and DELETE.
+	update := []oracle.EditChange{
+		{ID: snap.EditID, Row: 0, Column: 3, Text: "edited"},
+		{ID: snap.EditID, Row: 2, Column: 3, Text: "also edited"},
+	}
 	deleteRow := []oracle.EditDelete{{ID: snap.EditID, Row: 1}}
 	insert := func(id string) []oracle.EditInsert {
 		return []oracle.EditInsert{{ID: snap.EditID, Fields: map[int]oracle.EditInsertField{1: {Text: id}, 3: {Null: true}}}}
 	}
-	if err := s.ApplyGridChanges(ctx, update, deleteRow, insert("1")); err == nil || !s.PendingChanges() || s.EditID() != snap.EditID {
+	if err := s.ApplyGridChanges(ctx, update, deleteRow, insert("1")); err == nil || !strings.Contains(err.Error(), "ORA-00001") || !s.PendingChanges() || s.EditID() != snap.EditID {
 		t.Fatalf("failed batch didn't retain earlier work and snapshot: %v", err)
 	}
 	// A retry against the same snapshot proves that the attempted UPDATE
@@ -83,13 +89,14 @@ func TestOracleGridRowDraftIntegration(t *testing.T) {
 	}
 	read := "SELECT id, qty, note FROM lazyora_row_drafts ORDER BY id"
 	before := execute(observer, read).Values
-	if len(before) != 2 || before[0][1].Text != "42" || before[0][2].Text != "external" || before[1][0].Text != "2" {
+	if len(before) != 3 || before[0][1].Text != "42" || before[0][2].Text != "external" || before[1][0].Text != "2" || before[2][2].Text != "default" {
 		t.Fatalf("drafts visible to another session before commit: %+v", before)
 	}
 	finish(s, true)
 	after := execute(observer, read).Values
-	if len(after) != 2 || after[0][1].Text != "55" || after[0][2].Text != "edited" ||
-		after[1][0].Text != "3" || after[1][1].Text != "42" || !after[1][2].Null {
+	if len(after) != 3 || after[0][1].Text != "55" || after[0][2].Text != "edited" ||
+		after[1][0].Text != "3" || after[1][1].Text != "42" || !after[1][2].Null ||
+		after[2][0].Text != "4" || after[2][1].Text != "0.0001" || after[2][2].Text != "also edited" {
 		t.Fatalf("expected committed update, delete, default and explicit NULL: %+v", after)
 	}
 }

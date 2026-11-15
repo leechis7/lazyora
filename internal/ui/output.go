@@ -94,6 +94,18 @@ func (s *screen) buildOutput(body *tuivory.Flex) []tuivory.Primitive {
 	clear := s.clickable(tuivory.NewWidgetButton(s.tr("output_clear")).SetSelectedFunc(s.clearOutput))
 	buttons := s.newFlex().AddItem(s.outputToggle, 0, 1, false).AddItem(copy, 0, 1, false).AddItem(clear, 0, 1, false)
 	body.AddItem(s.outputInfo, 0, 1, false).AddItem(s.outputText, 0, 3, true).AddItem(buttons, 1, 0, false)
+	body.SetDrawFunc(func(_ tuivory.Screen, x, y, w, h int) (int, int, int, int) {
+		infoRows, infoWeight := 0, 1
+		if h < 8 {
+			infoRows, infoWeight = 1, 0
+			if h <= 3 {
+				infoRows = 0
+			}
+		}
+		body.ResizeItem(s.outputInfo, infoRows, infoWeight)
+		s.outputText.SetBorder(h >= 6)
+		return x, y, w, h
+	})
 	s.refreshOutput()
 	return []tuivory.Primitive{s.outputText, s.outputInfo, s.outputToggle, copy, clear}
 }

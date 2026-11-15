@@ -51,9 +51,22 @@ func (v BindValue) Value() (any, error) {
 			normalized = "0"
 		} else {
 			decimalExponent := exponent + len(whole) - first - 1
-			if decimalExponent < -130 || decimalExponent >= 126 || len(strings.Trim(digits, "0")) > 38 {
+			significant := strings.TrimRight(digits[first:], "0")
+			if decimalExponent < -130 || decimalExponent >= 126 || len(significant) > 38 {
 				return nil, fmt.Errorf("NUMBER exceeds Oracle precision/range (38 digits)")
 			}
+			// go-ora can encode a noncanonical Oracle NUMBER if the
+			// mantissa begins with zero digits (for example -0.0001).
+			// Pass a normalized decimal without losing precision to float64.
+			sign := ""
+			if strings.HasPrefix(normalized, "-") {
+				sign = "-"
+			}
+			normalized = sign + significant[:1]
+			if len(significant) > 1 {
+				normalized += "." + significant[1:]
+			}
+			normalized += "e" + strconv.Itoa(decimalExponent)
 		}
 		value, err := types.NewNumber(normalized)
 		if err != nil {

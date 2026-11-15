@@ -2,6 +2,8 @@
 
 [한국어](../ui-style.md) | **English** · [Documentation](index.md)
 
+On small screens, prioritize the selected content over its summary and skip controls that are not drawn when tabbing. See the 40-column object details and 40×16 result area cases in the [LORA-77 audit](../audits/lora-77-ui-regression.md#english).
+
 In **v0.12.2**, common styles come from **Tuivory v0.10.2**, the public Go module `github.com/leechis7/tuivory/go`. Its single `tuivory` package supplies `Styles`, `Styler`, `Choice` and state-style methods. The pinned version is in `go.mod`; see [integration and updates](tuivory-sync.md).
 
 LazyOra's `internal/ui/style_tokens.go` adapts package values to product roles. It does not own a second palette. `theme.go` and `widgets.go` apply styles to existing widgets. Oracle execution, transactions, Toad keymaps, grid data, focus and modal input routing remain application responsibilities.

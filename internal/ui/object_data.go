@@ -72,6 +72,8 @@ func (s *screen) makeObjectWorkspace(buttons *tuivory.Flex) tuivory.Primitive {
 		s.objectSplit.Preferred = 30
 	}
 	w.split, _ = tuivory.NewSplitView(s.browserPanel, w.right, &s.objectSplit, tuivory.SplitSpec{FirstMin: 16, SecondMin: 24}, s.componentPalette())
+	// On compact terminals, give the details the space the user opened them for.
+	w.split.ActiveSecond = true
 	return w.split
 }
 

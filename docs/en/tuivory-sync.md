@@ -2,6 +2,32 @@
 
 [한국어](../tuivory-sync.md) | **English** · [UI style rules](ui-style.md)
 
+## LORA-77 · Tuivory Go v0.12.6
+
+Uses published [Go v0.12.6](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.6), commit `e2ab5ae123fe527654a0693c05079f04398e6126`, module checksum `h1:aRX6SKDdEltUmzMo8UXHZdiZT1VAsH5H0jAQd8S6FrM=`. LazyOra keeps object details and result tabs on one row regardless of window height. [TVR-37](https://leechis7.atlassian.net/browse/TVR-37) makes one row the default in the guide and demos and provides the three-row frame as an option.
+
+Shared form popups use `ShadowOptions.HideTopCap` to leave the first cell at the top right clear. The shared renderer in [TVR-35](https://leechis7.atlassian.net/browse/TVR-35) keeps the bottom corner connected on bright backdrops. The existing object detail `SplitView` routes keys and paste to the pane that holds focus. Integrating `ContainerView.SetFrontInput` from [TVR-36](https://leechis7.atlassian.net/browse/TVR-36) requires replacing `Pages` and is deferred for this update. Existing page input guards and Oracle workflow focus behavior remain in place.
+
+## LORA-77 · Tuivory Go v0.12.5 and shared input request
+
+Uses published [Go v0.12.5](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.5), commit `c4212e335adb68ab06095386c94eedcb8141ac0d`, checksum `h1:IXg5357iMtY/qp3ojzQXJUnJzqGnNT1734Gaoe9WJmY=`. The updated borders and active colors cover SQL, result-area and object-detail tabs. Shadow code is unchanged from v0.12.4, so the two corner changes remain pending.
+
+[Tuivory TVR-36](https://leechis7.atlassian.net/browse/TVR-36) tracks overlay mouse, keyboard and paste isolation, drag cancellation on layer changes, and keeping keyboard focus independent of split-pane hover. The local shared-input experiment was removed. LazyOra still chooses when object details replace the main screen and opens an editor context menu only inside its editor. Integration and verification of shared input isolation await a published Tuivory API.
+
+## LORA-77 · Tuivory Go v0.12.4
+
+Object details hide the underlying SQL screen to prevent the covered editor from capturing mouse presses. Tab clicks still use Tuivory’s own handler.
+
+The character display note in Settings wraps within a bordered area with horizontal padding. Tuivory ShadowAuto draws the lower-right corner as an upper half-block (▀), with shade calculated per backdrop cell. The follow-up related to TVR-29 should check that the bottom shadow remains visually continuous at this corner on bright backdrops in 8- and 16-color terminals.
+
+The connection dialog uses adjacent panels and sizes their height to the fields and buttons. Published ShadowAuto paints a lower half-block (▄) in the first right-hand cell with OffsetY=1. It has no option to omit only that cell while retaining the half-row bottom shadow, so the existing shadow remains. Suggested Tuivory follow-up (related to TVR-29): offer a shared Go/Rust contract that preserves the backdrop in the first right-hand cell while retaining the rest of the right edge and the lower half-row.
+
+The menu bar retains Tuivory’s navigation position but restores its normal colors when the popup closes.
+
+The result grid uses the published `grid.header` token to distinguish the header from the body in 8-color, 16-color, 256-color and truecolor profiles. The active column is bold on the same background.
+
+This audit retains published [Tuivory Go v0.12.4](https://github.com/leechis7/tuivory/releases/tag/go/v0.12.4) at commit `dd8dc51862c8a139d051cd8eddf412e041b593d9`. The app chooses the existing SplitView second slot for object details in compact mode and adjusts row allocation for Messages and DBMS_OUTPUT. [Bilingual verification record](../audits/lora-77-ui-regression.md)
+
 ## LORA-74 · Tuivory Go v0.12.4
 
 The result area uses `TabView` and `TabState` from the public `go/v0.12.4` tag (commit `dd8dc51862c8a139d051cd8eddf412e041b593d9`). Tuivory handles tab rendering and input. LazyOra owns Oracle results, execution messages, and output scope. Existing editor compatibility dependencies remain.

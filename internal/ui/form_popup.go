@@ -35,13 +35,18 @@ func (s *screen) formDialog(form *tuivory.WidgetForm, info *tuivory.WidgetTextVi
 // Keep the underlying work visible, but route every mouse event through the
 // modal layer. The returned Flex retains normal Form/DropDown event routing.
 func (s *screen) formPopup(content tuivory.Primitive, preferredWidth, preferredHeight int, layout func(width, height int)) *formPopupLayer {
+	return s.responsiveFormPopup(content, preferredWidth, func(int) int { return preferredHeight }, layout)
+}
+
+func (s *screen) responsiveFormPopup(content tuivory.Primitive, preferredWidth int, preferredHeight func(available int) int, layout func(width, height int)) *formPopupLayer {
 	// The content and its layout remain host-owned; shared surfaces/shadows
 	// and wide-glyph protection are delegated to published Tuivory components.
 	card, err := tuivory.NewSurfaceView(content, s.componentPalette())
 	if err != nil {
 		panic(err)
 	}
-	shadow, err := tuivory.NewShadowView(card, s.componentPalette(), tuivory.ShadowOptions{Mode: tuivory.ShadowAuto, OffsetX: 1, OffsetY: 1})
+	shadowOptions := tuivory.ShadowOptions{Mode: tuivory.ShadowAuto, OffsetX: 1, OffsetY: 1, HideTopCap: true}
+	shadow, err := tuivory.NewShadowView(card, s.componentPalette(), shadowOptions)
 	if err != nil {
 		panic(err)
 	}
@@ -55,10 +60,12 @@ func (s *screen) formPopup(content tuivory.Primitive, preferredWidth, preferredH
 		if height < 12 {
 			insetY = 0
 		}
-		w, h := max(0, min(preferredWidth, width-2*insetX)), max(0, min(preferredHeight, height-2*insetY))
+		available := max(0, height-2*insetY)
+		w, h := max(0, min(preferredWidth, width-2*insetX)), max(0, min(preferredHeight(available), available))
 		left, top := x+(width-w)/2, y+(height-h)/2
 		dx, dy := min(1, max(0, x+width-left-w)), min(1, max(0, y+height-top-h))
-		options := tuivory.ShadowOptions{Mode: tuivory.ShadowAuto, OffsetX: dx, OffsetY: dy}
+		options := shadowOptions
+		options.OffsetX, options.OffsetY = dx, dy
 		if dx == 0 && dy == 0 {
 			options.Mode = tuivory.ShadowOff
 		}

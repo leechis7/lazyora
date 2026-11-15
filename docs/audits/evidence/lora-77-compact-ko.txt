@@ -1,0 +1,16 @@
+  파일 (F)  SQL 탭 (G)  편집 (E)  세션~>
+스키마: LAZYORA    객체: SAMPLE_ROWS
+종류: TABLE
+   컬럼   >[데이터]    DDL
+미리보기 2행 · 읽기 전용
+
+  #│ ID                 │ TITLE
+ >1│ 1                  │ First row
+  2│ 2                  │ Second row
+
+
+
+
+조건 (Al스 (Alt+한 (Alt+기 (Esc) 행 (Alt
+Tab 포커스 | Alt+V 데이터 | Ctrl+R 새로고
+1 도움말gUp 이전gDn 다음sc 닫기  v0.20.0

@@ -70,6 +70,12 @@ func TestFormPopupsResizeSpacingAndButtonAccess(t *testing.T) {
 					root.SetRect(0, 0, size[0], size[1])
 					root.Draw(terminal)
 					x, y, w, h := form.GetRect()
+					if page == "connect" {
+						_, sy, _, sh := s.connectProfiles.GetRect()
+						if sh != 3 || y != sy+sh {
+							t.Fatalf("saved connections and edit form are not adjacent at %v", size)
+						}
+					}
 					if x < 0 || y < 0 || x+w > size[0] || y+h > size[1] {
 						t.Fatalf("form clipped at %v: %d,%d %dx%d", size, x, y, w, h)
 					}
@@ -98,10 +104,45 @@ func TestFormPopupsResizeSpacingAndButtonAccess(t *testing.T) {
 						if bw < 4 || by < y || by+bh > y+h || bx+bw > x+w {
 							t.Fatalf("button %d inaccessible at %v: %d,%d %dx%d", i, size, bx, by, bw, bh)
 						}
+						if page == "connect" && size[1] >= 24 && y+h-(by+bh) > 2 {
+							t.Fatalf("edit form has excess space below buttons at %v", size)
+						}
 					}
 				}
 			})
 		}
+	}
+}
+
+func TestSettingsDisplayNoteKeepsTextInsideItsBorder(t *testing.T) {
+	for _, width := range []int{62, 80, 120} {
+		t.Run(fmt.Sprint(width), func(t *testing.T) {
+			s, terminal := resultScreen(t)
+			s.prefs.Language, s.prefs.DisplayMode = "ko", "unicode"
+			terminal.SetSize(width, 30)
+			s.settingsForm()
+			_, primitive := s.pages.GetFrontPage()
+			popup := primitive.(*formPopupLayer)
+			popup.SetRect(0, 0, width, 30)
+			popup.Draw(terminal)
+			terminal.Show()
+			info := popup.content.(*tuivory.Flex).GetItem(1)
+			x, y, w, h := info.GetRect()
+			if h < 4 {
+				t.Fatal("display note is missing or has no space")
+			}
+			for row := y + 1; row < y+h-1; row++ {
+				left, _, _, _ := terminal.GetContent(x, row)
+				right, _, _, _ := terminal.GetContent(x+w-1, row)
+				if left != '│' || right != '│' {
+					t.Fatalf("note text touched the border at row %d: %q / %q", row, left, right)
+				}
+				pad, _, _, _ := terminal.GetContent(x+1, row)
+				if pad != ' ' {
+					t.Fatalf("left note padding is missing at row %d: %q", row, pad)
+				}
+			}
+		})
 	}
 }
 func TestPopupBackdropClickDoesNotActivateUnderlyingUI(t *testing.T) {

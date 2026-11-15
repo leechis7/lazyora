@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/leechis7/tuivory/go"
 )
 
 // Exercise the actual consumer metadata against the published grid renderer:
@@ -63,21 +65,36 @@ func TestSharedGridDirtyMarkersStayCellSpecific(t *testing.T) {
 }
 
 func TestSharedGridHeaderUsesOneBackground(t *testing.T) {
-	s, terminal := inlineFixture(t)
-	s.table.SetRect(0, 0, 80, 16)
 	for _, theme := range []string{"dark", "light", "blackwhite"} {
-		t.Run(theme, func(t *testing.T) {
-			s.prefs.Theme = theme
-			s.resultGrid().Draw(terminal)
-			x, y, w, _ := s.table.GetInnerRect()
-			_, want, _ := s.tuivoryStyles().GridHeaderStyle(false).Decompose()
-			for col := x; col < x+w; col++ {
-				_, _, style, _ := terminal.GetContent(col, y)
-				_, bg, _ := style.Decompose()
-				if bg != want {
-					t.Fatalf("header cell %d has background %v, want %v", col, bg, want)
+		for _, colors := range []int{8, 16, 256, 1 << 24} {
+			t.Run(fmt.Sprintf("%s/%d", theme, colors), func(t *testing.T) {
+				s, terminal := inlineFixture(t)
+				s.prefs.Theme = theme
+				s.terminal = auditTerminal{terminal, colors}
+				s.limitedColors = colors <= 16
+				s.table.SetRect(0, 0, 80, 16)
+				s.resultGrid().Draw(terminal)
+				x, y, w, _ := s.table.GetInnerRect()
+				_, _, header, _ := terminal.GetContent(x+w-1, y)
+				_, _, body, _ := terminal.GetContent(x+w-1, y+1)
+				_, bg, _ := header.Decompose()
+				_, bodyBG, _ := body.Decompose()
+				if bg == bodyBG {
+					t.Fatal("header background is indistinguishable from body")
 				}
-			}
-		})
+				bold := false
+				for col := x; col < x+w; col++ {
+					r, _, style, _ := terminal.GetContent(col, y)
+					fg, cellBG, attrs := style.Decompose()
+					if cellBG != bg || (r != ' ' && fg == cellBG) {
+						t.Fatalf("header cell %d is unreadable or breaks the band: %v", col, style)
+					}
+					bold = bold || r == 'C' && attrs&tuivory.AttrBold != 0
+				}
+				if !bold {
+					t.Fatal("focused column heading is no longer bold")
+				}
+			})
+		}
 	}
 }

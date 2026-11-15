@@ -17,6 +17,7 @@ architecture = {"aarch64": "arm64", "x86_64": "amd64"}[platform.machine()]
 with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
     pid, fd = pty.fork()
     if pid == 0:
+        fcntl.ioctl(0, termios.TIOCSWINSZ, struct.pack("HHHH", 32, 120, 0, 0))
         environment = dict(os.environ, TERM="xterm", TCELL_TRUECOLOR="disable", LC_ALL="C.UTF-8",
                            LAZYORA_CONFIG=folder + "/settings.json", LAZYORA_HOST="127.0.0.1",
                            LAZYORA_PORT=os.environ.get("ORACLE_PORT", "1521"), LAZYORA_USER="lazyora",
@@ -70,7 +71,7 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
     def request_exit():
         output.clear()
         send(b"\x11")
-        wait_for("SQL editor changes have not been saved")
+        wait_for("Save, discard for this action")
         send(b"\x1b[D\r")  # Cancel -> Discard for exit only, then DB confirmation.
 
     try:
@@ -93,9 +94,18 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         wait_for("SAMPLE_ROWS")
         send(b"\x1bu\rLAZYORA\r")  # Alt+U user chooser, keep login account.
         output.clear()
-        send(b"\t\t\r")  # User -> Type -> object list -> table details.
+        # Select the fixture by name: the schema can contain other tables.
+        send(b"\x1biSAMPLE_ROWS\r")  # Alt+I -> filter -> tree.
+        send(b"\r")  # Open the selected table's details.
         wait_for("CHANGED_AT")  # Wait for actual columns, not the loading title.
-        send(b"\x1bd")
+        output.clear()
+        send(b"\x1bv")  # Select the docked Data tab.
+        wait_for("preview rows")
+        output.clear()
+        send(b"\x1b[C\r")  # Data -> docked DDL tab.
+        wait_for("CREATE TABLE", seconds=65)
+        output.clear()
+        send(b"\x1bd")  # Open the separate definition browser.
         wait_for("CREATE TABLE", seconds=65)
         output.clear()
         send(b"\x03")
@@ -159,7 +169,9 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         send(b"\x03")
         copied("PTY output 한글 [red]\n")
         send(b"\x1bd")
-        wait_for("0 retained lines")
+        output.clear()
+        send(b"\x03")
+        assert b"\x1b]52;c;" not in output, "clearing output left retained data"
         send(b"\x1be")
         wait_for("DBMS_OUTPUT disabled")
         send(b"\x1b")
@@ -170,7 +182,7 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         # a default-cancel confirmation, and the normal raw-value grid copy.
         send(b"\x1bOQ\x1bOQ\x01\x0bBROWSER_FUNCTION")
         output.clear()
-        send(b"\x1bx\x1b[F\r")  # Execute menu -> last item: routine execution.
+        send(b"\x1bx\x1b[H\x1b[B\x1b[B\r")  # Execute -> Run SQL, Run Script, Execute procedure/function.
         wait_for("P_VALUE IN NUMBER")
         send(b"\r")  # Select standalone function signature.
         send(b"\r\x1b[H\r\t42")  # Default selector -> Value, input 42.
@@ -188,8 +200,9 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         # Separate Escape events: adjacent ESC bytes may decode as Alt+Esc.
         for _ in range(4):
             send(b"\x1b")  # Grid -> outputs -> inputs -> routines -> main.
+        output.clear()
         send(b"\x1br")
-        wait_for("Rollback completed.")
+        wait_for("Rollback completed")
         print("Routine metadata, value input, default-cancel, F9 run, output grid and raw copy: passed")
         send(b"\x1bOQ\x1bOQ\x01\x0bSELECT * FROM sam")
         output.clear()
@@ -215,7 +228,8 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         original_format_sql = "SELECT 11 AS ELEVEN,22 AS TWENTYTWO FROM dual"
         send(b"\x1bOQ\x1bOQ\x01\x0b" + original_format_sql.encode())
         output.clear()
-        send(b"\x1be\x1b[F\r")  # Edit menu -> Format (Shift shortcut fallback).
+        send(b"\x1be\x1b[F\r")  # Edit -> Completion / formatting.
+        send(b"\x1b[F\r")  # Submenu -> Format SQL / PL/SQL.
         wait_for("Code formatted")
         output.clear()
         send(b"\x1b[20~")
@@ -269,9 +283,9 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         output.clear()
         send(b"\x03")
         copied("11\t22\n33\t44")
-        send(b"\x1be")  # Edit menu.
+        send(b"\x1be\x1b[H\x1b[B\r")  # Edit -> Copy / export.
         wait_for("Copy preview")
-        send(b"\x1b[H" + b"\x1b[B" * 8 + b"\r")  # Copy preview after the editor actions.
+        send(b"\x1b[F\r")  # Copy preview is the last item in the submenu.
         wait_for("Mouse reporting is off")
         send(b"\x1b")
         send(b"\x1b[1;2Q")  # Shift+F2 restores split.
@@ -284,8 +298,8 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         wait_for("Comment")
         send(b"\x1b")
         sql("SELECT 21 AS script_value FROM dual")
-        send(b"\x1bx")
-        send(b"\x1b[B\r")  # F5 via Execute menu, review first.
+        output.clear()
+        send(b"\x1b[15~")  # F5 Run Script, review first.
         wait_for("Run these statements in order?")
         send(b"\t\t\r")  # Cancel -> SQL preview -> Execute.
         wait_for("Script processed")
@@ -326,23 +340,24 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         wait_for("partial result")
         send(b"\x1b[17~")  # F6 -> results.
         output.clear()
-        send(b"\x1b[21~\x1b[H" + b"\x1b[B" * 7 + b"\r")
+        send(b"\x1b[21;2~\x1b[H" + b"\x1b[B" * 7 + b"\r")  # Results context -> Fetch next.
         wait_for("2000 of 2000 loaded rows")
         output.clear()
-        send(b"\x1b[21~\x1b[H" + b"\x1b[B" * 7 + b"\r")
+        send(b"\x1b[21;2~\x1b[H" + b"\x1b[B" * 7 + b"\r")
         wait_for("2507 of 2507 loaded rows")
         output.clear()
-        send(b"\x1b[21~\x1b[H" + b"\x1b[B" * 9 + b"\r\x03")
+        # The exhausted cursor disables Fetch next, so navigation skips it.
+        send(b"\x1b[21;2~\x1b[H" + b"\x1b[B" * 8 + b"\r\x03")
         copied("2507")
         output.clear()
-        send(b"\x1b[21~\x1b[H" + b"\x1b[B" * 10 + b"\r")
+        send(b"\x1b[21;2~\x1b[H" + b"\x1b[B" * 9 + b"\r")
         wait_for("Filter loaded rows")
         send(b"2507\t\r")
         wait_for("1 of 2507 loaded rows")
         output.clear()
         send(b"\x1by")
         copied("2507")
-        send(b"\x1b[21~\x1b[H" + b"\x1b[B" * 11 + b"\r")
+        send(b"\x1b[21;2~\x1b[H" + b"\x1b[B" * 10 + b"\r")
         output.clear()
         send(b"\x03")
         copied("1")
@@ -413,11 +428,9 @@ with tempfile.TemporaryDirectory(prefix="lazyora-tui-") as folder:
         output.clear()
         send(b"\x1b[20~")
         wait_for("affected rows: 1")
-        output.clear()
         request_exit()
-        # Connection context changes modal placement. Screen differences may
-        # omit an unchanged numeric suffix; the rendered count is unit-tested.
-        wait_for("Tracked statements:")
+        # Exercise the pending branch by opening and copying its journal.
+        # The exact count label is checked on a full simulated screen.
         send(b"\x1bv")  # Exit > View pending work.
         wait_for("Client execution log")
         output.clear()

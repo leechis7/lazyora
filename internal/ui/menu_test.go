@@ -367,3 +367,52 @@ func TestMouseMenuUsesTheFocusedResultPanel(t *testing.T) {
 		t.Fatal("mouse-opened menu did not copy the focused row")
 	}
 }
+
+func TestMenuBarHighlightClearsWhenPopupCloses(t *testing.T) {
+	for _, method := range []string{"Escape", "F10", "outside click", "command"} {
+		t.Run(method, func(t *testing.T) {
+			s, terminal := inlineEntryScreen(t, 8, "ko")
+			bar := s.menuLayout
+			bar.SetRect(0, 0, 120, 1)
+			assertBar := func(wantOpen bool) {
+				t.Helper()
+				bar.Draw(terminal)
+				palette := s.componentPalette()
+				checked := false
+				for _, cell := range s.mainMenu.BarLayout(120).Cells {
+					_, _, style, _ := terminal.GetContent(cell.Start+1, 0)
+					want := palette["header"]
+					if wantOpen && cell.ID == menuRoot(menuEdit) {
+						want = palette["selection"]
+						checked = true
+					}
+					fg, bg, _ := style.Decompose()
+					if fg != want.FG || bg != want.BG {
+						t.Fatalf("open=%v %s has colors %v/%v, want %v/%v", wantOpen, cell.ID, fg, bg, want.FG, want.BG)
+					}
+				}
+				if wantOpen && !checked {
+					t.Fatal("Edit label was not rendered")
+				}
+			}
+			assertBar(false)
+			s.key(tuivory.NewEventKey(tuivory.KeyRune, 'e', tuivory.ModAlt))
+			assertBar(true)
+			switch method {
+			case "Escape":
+				s.key(tuivory.NewEventKey(tuivory.KeyEscape, 0, 0))
+			case "F10":
+				s.key(tuivory.NewEventKey(tuivory.KeyF10, 0, 0))
+			case "outside click":
+				s.menuList.SetRect(15, 2, 25, 8)
+				s.pages.MouseHandler()(tuivory.MouseLeftClick, tuivory.NewEventMouse(110, 25, 0, 0), func(p tuivory.Primitive) { s.app.SetFocus(p) })
+			case "command":
+				selectMenuCommand(t, s, "copy_row")
+			}
+			if page, _ := s.pages.GetFrontPage(); page != "main" || !s.table.HasFocus() {
+				t.Fatal("closing the menu did not restore result focus")
+			}
+			assertBar(false)
+		})
+	}
+}

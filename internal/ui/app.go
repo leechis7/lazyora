@@ -321,7 +321,7 @@ func newWorkspaceScreenWithDisplay(app *tuivory.Application, terminal tuivory.Sc
 	s.editor.SetBorder(true)
 	s.initDocument()
 	s.editor.SetMouseCapture(func(action tuivory.MouseAction, event *tuivory.EventMouse) (tuivory.MouseAction, *tuivory.EventMouse) {
-		if action == tuivory.MouseRightClick {
+		if action == tuivory.MouseRightClick && s.editor.InRect(event.Position()) {
 			s.app.SetFocus(s.editor)
 			s.showContextMenu()
 			return tuivory.MouseConsumed, nil
@@ -754,7 +754,9 @@ func (s *screen) worker() {
 					s.setStatus("error", err)
 				} else {
 					s.render(result)
-					s.app.SetFocus(s.table)
+					if page, _ := s.pages.GetFrontPage(); page == "main" {
+						s.app.SetFocus(s.table)
+					}
 					s.setStatus("edit_loaded")
 				}
 				return
